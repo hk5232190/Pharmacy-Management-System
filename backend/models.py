@@ -220,3 +220,22 @@ class PurchaseReturnItem(Base):
     RefundAmount = Column(Numeric(18, 2), nullable=False)
 
     purchase_return = relationship("PurchaseReturn", back_populates="items")
+
+class StockAdjustment(Base):
+    __tablename__ = "stock_adjustments"
+
+    AdjustmentId = Column(Integer, primary_key=True, autoincrement=True)
+    BatchId = Column(Integer, ForeignKey("stock_batches.BatchId"), nullable=False)
+    UserId = Column(Integer, ForeignKey("users.UserId"), nullable=False)
+    AdjustmentType = Column(String(20), nullable=False) # 'Increase' or 'Decrease'
+    Quantity = Column(Integer, nullable=False)
+    Reason = Column(Text, nullable=False)
+    AdjustmentDate = Column(DateTime, server_default=func.now())
+
+    batch = relationship("StockBatch")
+    user = relationship("User")
+
+    __table_args__ = (
+        CheckConstraint("AdjustmentType IN ('Increase', 'Decrease')", name='check_adjustment_type'),
+        CheckConstraint("Quantity > 0", name='check_adjustment_qty_positive'),
+    )

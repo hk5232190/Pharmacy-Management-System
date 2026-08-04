@@ -20,7 +20,8 @@ import {
   Building2,
   Truck,
   Users,
-  PlusSquare
+  PlusSquare,
+  Database
 } from "lucide-react";
 import { useState } from "react";
 
@@ -31,7 +32,7 @@ const NAV_ITEMS = [
     href: "/dashboard",
   },
   {
-    title: "Masters",
+    title: "Master Data",
     icon: Layers,
     href: "/dashboard/masters",
     subItems: [
@@ -48,19 +49,14 @@ const NAV_ITEMS = [
     href: "/dashboard/purchases",
   },
   {
-    title: "Sales",
-    icon: TrendingUp,
-    href: "/dashboard/sales",
-  },
-  {
     title: "Inventory",
     icon: Package,
     href: "/dashboard/inventory",
   },
   {
-    title: "Accounts",
-    icon: Wallet,
-    href: "/dashboard/accounts",
+    title: "Sales & POS Billing",
+    icon: TrendingUp,
+    href: "/dashboard/sales",
   },
   {
     title: "Reports",
@@ -68,14 +64,14 @@ const NAV_ITEMS = [
     href: "/dashboard/reports",
   },
   {
+    title: "Backup & Restore",
+    icon: Database,
+    href: "/dashboard/backup",
+  },
+  {
     title: "Settings",
     icon: Settings,
     href: "/dashboard/settings",
-  },
-  {
-    title: "Utilities",
-    icon: Wrench,
-    href: "/dashboard/utilities",
   }
 ];
 
