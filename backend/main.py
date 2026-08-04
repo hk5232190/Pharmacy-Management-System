@@ -8,7 +8,7 @@ from core.exceptions import (
     general_exception_handler
 )
 
-from api.v1 import license, auth, category, company, supplier, customer, medicine
+from api.v1 import license, auth, category, company, supplier, customer, medicine, purchase, purchase_return
 
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -38,6 +38,8 @@ app.include_router(company.router, prefix=f"{settings.API_V1_STR}/companies", ta
 app.include_router(supplier.router, prefix=f"{settings.API_V1_STR}/suppliers", tags=["Suppliers"])
 app.include_router(customer.router, prefix=f"{settings.API_V1_STR}/customers", tags=["Customers"])
 app.include_router(medicine.router, prefix=f"{settings.API_V1_STR}/medicines", tags=["Medicines"])
+app.include_router(purchase.router, prefix=f"{settings.API_V1_STR}/purchases", tags=["Purchases"])
+app.include_router(purchase_return.router, prefix=f"{settings.API_V1_STR}/purchase-returns", tags=["Purchase Returns"])
 
 # Register Custom Exception Handlers
 app.add_exception_handler(PMSException, pms_exception_handler)

@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { apiClient } from "@/lib/api-client";
 
 interface Category {
   CategoryId: number;
@@ -35,11 +36,7 @@ export default function CategoriesPage() {
   const fetchCategories = async () => {
     setLoading(true);
     try {
-      const url = new URL("http://localhost:8000/api/v1/categories");
-      if (search) url.searchParams.append("search", search);
-      
-      const res = await fetch(url.toString());
-      const data = await res.json();
+      const data = await apiClient.get("/categories", { params: search ? { search } : undefined });
       if (data.success) {
         setCategories(data.data);
       } else {
@@ -62,8 +59,7 @@ export default function CategoriesPage() {
 
   const handleToggleStatus = async (id: number) => {
     try {
-      const res = await fetch(`http://localhost:8000/api/v1/categories/${id}/status`, { method: "PUT" });
-      const data = await res.json();
+      const data = await apiClient.put(`/categories/${id}/status`);
       if (data.success) {
         toast.success(data.message);
         setCategories(categories.map(c => c.CategoryId === id ? { ...c, IsActive: !c.IsActive } : c));
@@ -85,18 +81,13 @@ export default function CategoriesPage() {
     try {
       const isEditing = !!currentCategory.CategoryId;
       const url = isEditing 
-        ? `http://localhost:8000/api/v1/categories/${currentCategory.CategoryId}`
-        : `http://localhost:8000/api/v1/categories`;
+        ? `/categories/${currentCategory.CategoryId}`
+        : `/categories`;
       
-      const method = isEditing ? "PUT" : "POST";
+      const data = isEditing 
+        ? await apiClient.put(url, currentCategory)
+        : await apiClient.post(url, currentCategory);
       
-      const res = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(currentCategory)
-      });
-      
-      const data = await res.json();
       if (data.success) {
         toast.success(data.message);
         setIsDialogOpen(false);

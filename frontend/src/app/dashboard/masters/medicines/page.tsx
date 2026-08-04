@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { apiClient } from "@/lib/api-client";
 
 interface Medicine {
   MedicineId: number;
@@ -57,25 +58,22 @@ export default function MedicinesPage() {
     setLoading(true);
     try {
       // Fetch Medicines
-      const url = new URL("http://localhost:8000/api/v1/medicines");
-      if (search) url.searchParams.append("search", search);
-      if (filterCategory) url.searchParams.append("category_id", filterCategory.toString());
-      if (filterCompany) url.searchParams.append("company_id", filterCompany.toString());
+      const params: any = {};
+      if (search) params.search = search;
+      if (filterCategory) params.category_id = filterCategory.toString();
+      if (filterCompany) params.company_id = filterCompany.toString();
       
-      const res = await fetch(url.toString());
-      const data = await res.json();
+      const data = await apiClient.get("/medicines", { params });
       if (data.success) {
         setMedicines(data.data);
       }
       
       // Fetch dropdown data only once if not loaded
       if (categories.length === 0) {
-        const catRes = await fetch("http://localhost:8000/api/v1/categories");
-        const catData = await catRes.json();
+        const catData = await apiClient.get("/categories");
         if (catData.success) setCategories(catData.data.filter((c: any) => c.IsActive));
         
-        const compRes = await fetch("http://localhost:8000/api/v1/companies");
-        const compData = await compRes.json();
+        const compData = await apiClient.get("/companies");
         if (compData.success) setCompanies(compData.data.filter((c: any) => c.IsActive));
       }
     } catch (error) {
@@ -94,8 +92,7 @@ export default function MedicinesPage() {
 
   const handleToggleStatus = async (id: number) => {
     try {
-      const res = await fetch(`http://localhost:8000/api/v1/medicines/${id}/status`, { method: "PUT" });
-      const data = await res.json();
+      const data = await apiClient.put(`/medicines/${id}/status`);
       if (data.success) {
         toast.success(data.message);
         setMedicines(medicines.map(m => m.MedicineId === id ? { ...m, IsActive: !m.IsActive } : m));
@@ -121,10 +118,8 @@ export default function MedicinesPage() {
     try {
       const isEditing = !!currentMedicine.MedicineId;
       const url = isEditing 
-        ? `http://localhost:8000/api/v1/medicines/${currentMedicine.MedicineId}`
-        : `http://localhost:8000/api/v1/medicines`;
-      
-      const method = isEditing ? "PUT" : "POST";
+        ? `/medicines/${currentMedicine.MedicineId}`
+        : `/medicines`;
       
       const payload = {
         ...currentMedicine,
@@ -133,19 +128,16 @@ export default function MedicinesPage() {
         ReorderLevel: Number(currentMedicine.ReorderLevel)
       };
       
-      const res = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
+      const data = isEditing 
+        ? await apiClient.put(url, payload)
+        : await apiClient.post(url, payload);
       
-      const data = await res.json();
       if (data.success) {
         toast.success(data.message);
         setIsDialogOpen(false);
         fetchData();
       } else {
-        toast.error(data.error || data.detail?.[0]?.msg || "Failed to save medicine");
+        toast.error(data.error || "Failed to save medicine");
       }
     } catch (error) {
       toast.error("Network error while saving");
@@ -173,8 +165,10 @@ export default function MedicinesPage() {
     setIsImporting(true);
     toast.info("Importing medicines...");
     try {
+      const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
       const res = await fetch("http://localhost:8000/api/v1/medicines/import", {
         method: "POST",
+        headers: token ? { "Authorization": `Bearer ${token}` } : {},
         body: formData,
       });
       const data = await res.json();
@@ -188,7 +182,6 @@ export default function MedicinesPage() {
       toast.error("Network error during import");
     } finally {
       setIsImporting(false);
-      // reset file input
       e.target.value = '';
     }
   };

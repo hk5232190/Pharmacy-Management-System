@@ -81,6 +81,7 @@ class StockBatch(Base):
     Quantity = Column(Integer, nullable=False)
     CostPrice = Column(Numeric(18, 2), nullable=False)
     SellingPrice = Column(Numeric(18, 2), nullable=False)
+    ManufacturingDate = Column(Date, nullable=True)
     ExpiryDate = Column(Date, nullable=False)
     ReceivedDate = Column(DateTime, server_default=func.now())
 
@@ -98,7 +99,18 @@ class Purchase(Base):
     PurchaseId = Column(Integer, primary_key=True, autoincrement=True)
     SupplierId = Column(Integer, ForeignKey("suppliers.SupplierId"), nullable=False)
     InvoiceNumber = Column(String(50), nullable=False)
-    TotalAmount = Column(Numeric(18, 2), nullable=False)
+    SupplierInvNo = Column(String(50), nullable=True)
+    PaymentStatus = Column(String(20), nullable=False, default="Unpaid")
+    PaymentMethod = Column(String(50), nullable=True)
+    Notes = Column(Text, nullable=True)
+    
+    SubTotal = Column(Numeric(18, 2), nullable=False, default=0)
+    TotalDiscount = Column(Numeric(18, 2), nullable=False, default=0)
+    TotalTax = Column(Numeric(18, 2), nullable=False, default=0)
+    GrandTotal = Column(Numeric(18, 2), nullable=False, default=0)
+    PaidAmount = Column(Numeric(18, 2), nullable=False, default=0)
+    RemainingBalance = Column(Numeric(18, 2), nullable=False, default=0)
+    
     PurchaseDate = Column(DateTime, nullable=False)
 
     supplier = relationship("Supplier", back_populates="purchases")
@@ -112,8 +124,13 @@ class PurchaseItem(Base):
     MedicineId = Column(Integer, ForeignKey("medicines.MedicineId"), nullable=False)
     BatchCode = Column(String(50), nullable=False)
     Quantity = Column(Integer, nullable=False)
+    FreeQty = Column(Integer, nullable=False, default=0)
     CostPrice = Column(Numeric(18, 2), nullable=False)
     SellingPrice = Column(Numeric(18, 2), nullable=False)
+    Discount = Column(Numeric(18, 2), nullable=False, default=0)
+    TaxPercentage = Column(Numeric(18, 2), nullable=False, default=0)
+    LineTotal = Column(Numeric(18, 2), nullable=False)
+    ManufacturingDate = Column(Date, nullable=True)
     ExpiryDate = Column(Date, nullable=False)
 
     purchase = relationship("Purchase", back_populates="items")
@@ -178,3 +195,28 @@ class AuditLog(Base):
     Timestamp = Column(DateTime, server_default=func.now())
 
     user = relationship("User", back_populates="audit_logs")
+
+class PurchaseReturn(Base):
+    __tablename__ = "purchase_returns"
+
+    ReturnId = Column(Integer, primary_key=True, autoincrement=True)
+    PurchaseId = Column(Integer, ForeignKey("purchases.PurchaseId"), nullable=False)
+    SupplierId = Column(Integer, ForeignKey("suppliers.SupplierId"), nullable=False)
+    ReturnInvoiceNumber = Column(String(50), unique=True, nullable=False)
+    ReturnDate = Column(DateTime, server_default=func.now())
+    TotalRefundAmount = Column(Numeric(18, 2), nullable=False)
+    Reason = Column(Text, nullable=True)
+
+    items = relationship("PurchaseReturnItem", back_populates="purchase_return")
+
+class PurchaseReturnItem(Base):
+    __tablename__ = "purchase_return_items"
+
+    ReturnItemId = Column(Integer, primary_key=True, autoincrement=True)
+    ReturnId = Column(Integer, ForeignKey("purchase_returns.ReturnId"), nullable=False)
+    MedicineId = Column(Integer, ForeignKey("medicines.MedicineId"), nullable=False)
+    BatchCode = Column(String(50), nullable=False)
+    ReturnQuantity = Column(Integer, nullable=False)
+    RefundAmount = Column(Numeric(18, 2), nullable=False)
+
+    purchase_return = relationship("PurchaseReturn", back_populates="items")

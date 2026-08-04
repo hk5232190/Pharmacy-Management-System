@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { apiClient } from "@/lib/api-client";
 
 interface Supplier {
   SupplierId: number;
@@ -38,11 +39,7 @@ export default function SuppliersPage() {
   const fetchSuppliers = async () => {
     setLoading(true);
     try {
-      const url = new URL("http://localhost:8000/api/v1/suppliers");
-      if (search) url.searchParams.append("search", search);
-      
-      const res = await fetch(url.toString());
-      const data = await res.json();
+      const data = await apiClient.get("/suppliers", { params: search ? { search } : undefined });
       if (data.success) {
         setSuppliers(data.data);
       } else {
@@ -65,8 +62,7 @@ export default function SuppliersPage() {
 
   const handleToggleStatus = async (id: number) => {
     try {
-      const res = await fetch(`http://localhost:8000/api/v1/suppliers/${id}/status`, { method: "PUT" });
-      const data = await res.json();
+      const data = await apiClient.put(`/suppliers/${id}/status`);
       if (data.success) {
         toast.success(data.message);
         setSuppliers(suppliers.map(s => s.SupplierId === id ? { ...s, IsActive: !s.IsActive } : s));
@@ -92,18 +88,13 @@ export default function SuppliersPage() {
     try {
       const isEditing = !!currentSupplier.SupplierId;
       const url = isEditing 
-        ? `http://localhost:8000/api/v1/suppliers/${currentSupplier.SupplierId}`
-        : `http://localhost:8000/api/v1/suppliers`;
+        ? `/suppliers/${currentSupplier.SupplierId}`
+        : `/suppliers`;
       
-      const method = isEditing ? "PUT" : "POST";
+      const data = isEditing 
+        ? await apiClient.put(url, currentSupplier)
+        : await apiClient.post(url, currentSupplier);
       
-      const res = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(currentSupplier)
-      });
-      
-      const data = await res.json();
       if (data.success) {
         toast.success(data.message);
         setIsDialogOpen(false);

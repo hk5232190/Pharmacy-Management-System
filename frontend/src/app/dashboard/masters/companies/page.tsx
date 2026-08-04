@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { apiClient } from "@/lib/api-client";
 
 interface Company {
   CompanyId: number;
@@ -35,11 +36,7 @@ export default function CompaniesPage() {
   const fetchCompanies = async () => {
     setLoading(true);
     try {
-      const url = new URL("http://localhost:8000/api/v1/companies");
-      if (search) url.searchParams.append("search", search);
-      
-      const res = await fetch(url.toString());
-      const data = await res.json();
+      const data = await apiClient.get("/companies", { params: search ? { search } : undefined });
       if (data.success) {
         setCompanies(data.data);
       } else {
@@ -62,8 +59,7 @@ export default function CompaniesPage() {
 
   const handleToggleStatus = async (id: number) => {
     try {
-      const res = await fetch(`http://localhost:8000/api/v1/companies/${id}/status`, { method: "PUT" });
-      const data = await res.json();
+      const data = await apiClient.put(`/companies/${id}/status`);
       if (data.success) {
         toast.success(data.message);
         setCompanies(companies.map(c => c.CompanyId === id ? { ...c, IsActive: !c.IsActive } : c));
@@ -85,18 +81,13 @@ export default function CompaniesPage() {
     try {
       const isEditing = !!currentCompany.CompanyId;
       const url = isEditing 
-        ? `http://localhost:8000/api/v1/companies/${currentCompany.CompanyId}`
-        : `http://localhost:8000/api/v1/companies`;
+        ? `/companies/${currentCompany.CompanyId}`
+        : `/companies`;
       
-      const method = isEditing ? "PUT" : "POST";
+      const data = isEditing 
+        ? await apiClient.put(url, currentCompany)
+        : await apiClient.post(url, currentCompany);
       
-      const res = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(currentCompany)
-      });
-      
-      const data = await res.json();
       if (data.success) {
         toast.success(data.message);
         setIsDialogOpen(false);

@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { apiClient } from "@/lib/api-client";
 
 interface Customer {
   CustomerId: number;
@@ -37,11 +38,7 @@ export default function CustomersPage() {
   const fetchCustomers = async () => {
     setLoading(true);
     try {
-      const url = new URL("http://localhost:8000/api/v1/customers");
-      if (search) url.searchParams.append("search", search);
-      
-      const res = await fetch(url.toString());
-      const data = await res.json();
+      const data = await apiClient.get("/customers", { params: search ? { search } : undefined });
       if (data.success) {
         setCustomers(data.data);
       } else {
@@ -87,18 +84,13 @@ export default function CustomersPage() {
     try {
       const isEditing = !!currentCustomer.CustomerId;
       const url = isEditing 
-        ? `http://localhost:8000/api/v1/customers/${currentCustomer.CustomerId}`
-        : `http://localhost:8000/api/v1/customers`;
+        ? `/customers/${currentCustomer.CustomerId}`
+        : `/customers`;
       
-      const method = isEditing ? "PUT" : "POST";
+      const data = isEditing 
+        ? await apiClient.put(url, currentCustomer)
+        : await apiClient.post(url, currentCustomer);
       
-      const res = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(currentCustomer)
-      });
-      
-      const data = await res.json();
       if (data.success) {
         toast.success(data.message);
         setIsDialogOpen(false);
