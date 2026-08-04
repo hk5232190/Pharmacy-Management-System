@@ -66,7 +66,7 @@ class Supplier(Base):
     SupplierId = Column(Integer, primary_key=True, autoincrement=True)
     Name = Column(String(100), nullable=False)
     Phone = Column(String(20), nullable=False)
-    TaxNumber = Column(String(50), nullable=True)
+    Email = Column(String(100), nullable=True)
     Address = Column(Text, nullable=True)
     IsActive = Column(Boolean, default=True)
 
@@ -156,8 +156,12 @@ class Sale(Base):
     UserId = Column(Integer, ForeignKey("users.UserId"), nullable=False)
     SubTotal = Column(Numeric(18, 2), nullable=False)
     DiscountAmount = Column(Numeric(18, 2), default=0.00, nullable=False)
+    TaxAmount = Column(Numeric(18, 2), default=0.00, nullable=False)
     GrandTotal = Column(Numeric(18, 2), nullable=False)
+    PaidAmount = Column(Numeric(18, 2), default=0.00, nullable=False)
     PaymentMethod = Column(String(20), nullable=False)
+    Status = Column(String(50), default="Completed")
+    PrescriptionRef = Column(String(100), nullable=True)
     TransactionDate = Column(DateTime, server_default=func.now())
 
     customer = relationship("Customer", back_populates="sales")
@@ -176,6 +180,8 @@ class SaleItem(Base):
     BatchId = Column(Integer, ForeignKey("stock_batches.BatchId"), nullable=False)
     Quantity = Column(Integer, nullable=False)
     UnitPrice = Column(Numeric(18, 2), nullable=False)
+    Discount = Column(Numeric(18, 2), default=0.00)
+    Tax = Column(Numeric(18, 2), default=0.00)
     TotalPrice = Column(Numeric(18, 2), nullable=False)
 
     sale = relationship("Sale", back_populates="items")
@@ -238,4 +244,37 @@ class StockAdjustment(Base):
     __table_args__ = (
         CheckConstraint("AdjustmentType IN ('Increase', 'Decrease')", name='check_adjustment_type'),
         CheckConstraint("Quantity > 0", name='check_adjustment_qty_positive'),
+    )
+
+class SaleReturn(Base):
+    __tablename__ = "sale_returns"
+
+    ReturnId = Column(Integer, primary_key=True, autoincrement=True)
+    SalesId = Column(Integer, ForeignKey("sales.SalesId"), nullable=False)
+    UserId = Column(Integer, ForeignKey("users.UserId"), nullable=False)
+    ReturnInvoiceNumber = Column(String(50), unique=True, nullable=False)
+    TotalRefundAmount = Column(Numeric(18, 2), nullable=False)
+    Reason = Column(Text, nullable=False)
+    ReturnDate = Column(DateTime, server_default=func.now())
+
+    sale = relationship("Sale")
+    user = relationship("User")
+    items = relationship("SaleReturnItem", back_populates="sale_return")
+
+class SaleReturnItem(Base):
+    __tablename__ = "sale_return_items"
+
+    ReturnItemId = Column(Integer, primary_key=True, autoincrement=True)
+    ReturnId = Column(Integer, ForeignKey("sale_returns.ReturnId"), nullable=False)
+    BatchId = Column(Integer, ForeignKey("stock_batches.BatchId"), nullable=False)
+    ReturnQuantity = Column(Integer, nullable=False)
+    RefundAmount = Column(Numeric(18, 2), nullable=False)
+    ItemCondition = Column(String(50), nullable=False) # 'Restockable' or 'Damaged/Quarantine'
+
+    sale_return = relationship("SaleReturn", back_populates="items")
+    batch = relationship("StockBatch")
+
+    __table_args__ = (
+        CheckConstraint("ItemCondition IN ('Restockable', 'Damaged/Quarantine')", name='check_sale_return_condition'),
+        CheckConstraint('ReturnQuantity > 0', name='check_sale_return_qty_positive'),
     )

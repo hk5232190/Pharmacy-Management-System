@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     SECRET_KEY: str = "super_secret_key_change_in_production"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    DEFAULT_TAX_RATE: float = 12.0
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
