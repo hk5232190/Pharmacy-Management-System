@@ -1,0 +1,23 @@
+# Backend Python Virtual Environment & Cache
+backend/venv/
+backend/__pycache__/
+backend/.pytest_cache/
+*.pyc
+
+# Environment Variables (Never push secrets!)
+.env
+.env.local
+backend/.env
+frontend/.env.local
+
+# Frontend Node Modules
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/build/
+
+# IDEs and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
