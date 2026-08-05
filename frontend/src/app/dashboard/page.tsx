@@ -35,6 +35,7 @@ export default function DashboardPage() {
   const [timeframe, setTimeframe] = useState("today");
   const [dateRange, setDateRange] = useState<{start: string, end: string} | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
     // Don't fetch if custom is selected but no date range has been applied yet
@@ -42,8 +43,9 @@ export default function DashboardPage() {
     fetchSummary();
   }, [timeframe, dateRange]);
 
-  const fetchSummary = async () => {
-    setLoading(true);
+  const fetchSummary = async (showRefreshSpinner = false) => {
+    if (showRefreshSpinner) setIsRefreshing(true);
+    else setLoading(true);
     try {
       let url = `/dashboard/summary?timeframe=${timeframe}`;
       if (timeframe === 'custom' && dateRange) {
@@ -59,6 +61,7 @@ export default function DashboardPage() {
       toast.error(err.message || "Error fetching dashboard summary");
     } finally {
       setLoading(false);
+      setIsRefreshing(false);
     }
   };
 
@@ -85,14 +88,15 @@ export default function DashboardPage() {
         <div className="flex items-center space-x-4">
           <Button 
             onClick={() => {
-              fetchSummary();
+              fetchSummary(true);
               setRefreshTrigger(prev => prev + 1);
             }} 
             variant="outline" 
+            disabled={isRefreshing}
             className="rounded-full shadow-sm bg-white hover:bg-slate-50 dark:bg-card dark:hover:bg-slate-900 border-border"
           >
-            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-            Refresh Dashboard
+            <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+            {isRefreshing ? 'Refreshing...' : 'Refresh Dashboard'}
           </Button>
         </div>
       </div>
