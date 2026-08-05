@@ -86,3 +86,130 @@ class PurchaseReportResponse(BaseModel):
     suppliers: List[SupplierStats]
     top_medicines: List[TopPurchasedMedicineStats]
     transactions: List[PurchaseTransaction]
+
+class InventoryReportSummary(BaseModel):
+    TotalCostValue: float
+    TotalRetailValue: float
+    ExpiredWrittenOffValuation: float
+    TotalItemsInStock: int
+    LowStockCount: int
+    OutOfStockCount: int
+
+class InventoryMovementSummary(BaseModel):
+    PurchasedQty: int
+    SoldQty: int
+    ManualAdjustmentsQty: int
+    ExpiredWrittenOffQty: int
+
+class MedicineMovementItem(BaseModel):
+    MedicineName: str
+    StartingStock: int
+    PurchasedQty: int
+    SoldQty: int
+    AdjustedQty: int
+    ExpiredQty: int
+    ClosingStock: int
+
+class InventoryStockItem(BaseModel):
+    MedicineName: str
+    Category: str
+    BatchCode: str
+    Quantity: int
+    CostPrice: float
+    SellingPrice: float
+    TotalCostValue: float
+    TotalRetailValue: float
+    ExpiryDate: datetime
+    Status: str
+
+class StockValueByCategory(BaseModel):
+    name: str
+    value: float
+
+class InventoryReportResponse(BaseModel):
+    summary: InventoryReportSummary
+    movement_summary: Optional[InventoryMovementSummary] = None
+    stock_items: List[InventoryStockItem]
+    movement_items: Optional[List[MedicineMovementItem]] = None
+    category_valuation: List[StockValueByCategory]
+
+
+class MedicineExpiryItem(BaseModel):
+    MedicineName: str
+    BatchCode: str
+    Quantity: int
+    ExpiryDate: datetime
+    DaysToExpiry: int
+    Status: str
+
+class MedicineLowStockItem(BaseModel):
+    MedicineName: str
+    Category: str
+    CurrentStock: int
+    ReorderLevel: int
+    Deficit: int
+    SuggestedReorderQty: int
+
+class MedicineMovementAnalyticsItem(BaseModel):
+    MedicineName: str
+    Category: str
+    SoldQuantity: int
+    SalesVelocity: float
+    Revenue: float
+    Classification: str
+
+class MedicineReportSummary(BaseModel):
+    TotalExpiredBatches: int
+    ExpiringSoonBatches: int
+    LowStockMedicines: int
+    FastMovingCount: int
+    SlowMovingCount: int
+    DeadStockCount: int
+
+class MedicineReportResponse(BaseModel):
+    summary: MedicineReportSummary
+    expiry_items: List[MedicineExpiryItem]
+    low_stock_items: List[MedicineLowStockItem]
+    movement_items: Optional[List[MedicineMovementAnalyticsItem]] = None
+
+# Financial Reports Schemas
+class FinancialBreakdownItem(BaseModel):
+    Category: str
+    Amount: float
+
+class FinancialReportSummary(BaseModel):
+    GrossSales: float
+    DiscountsApplied: float
+    SalesReturns: float
+    TotalRevenue: float
+    TotalCOGS: float
+    InventoryLoss: float
+    GrossProfit: float
+    TotalExpenses: float
+    NetProfit: float
+    ProfitMargin: float
+
+class FinancialTrendPoint(BaseModel):
+    label: str
+    revenue: float
+    expenses: float
+    profit: float
+
+class FinancialReportResponse(BaseModel):
+    summary: FinancialReportSummary
+    income_breakdown: List[FinancialBreakdownItem]
+    expense_breakdown: List[FinancialBreakdownItem]
+    trend_data: List[FinancialTrendPoint]
+
+
+class PDFExportRequest(BaseModel):
+    timeframe: str = 'this_month'
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
+    chart_image: Optional[str] = None  # Base64 encoded PNG or JPEG image of the chart
+    
+    # Specific filters depending on tab
+    customer_id: Optional[str] = None
+    payment_method: Optional[str] = None
+    supplier_id: Optional[str] = None
+    report_type: Optional[str] = 'expiry' # for medicine tab
