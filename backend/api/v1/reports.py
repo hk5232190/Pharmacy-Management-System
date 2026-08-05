@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query, Response
+from fastapi import APIRouter, Depends, Query, Response, Body
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import func
@@ -8,11 +8,12 @@ import openpyxl
 
 from reportlab.lib.pagesizes import letter, A4
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image as RLImage
-from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
 import base64
 import os
 import tempfile
+from reportlab.lib.enums import TA_CENTER, TA_RIGHT, TA_LEFT
 
 from openpyxl.styles import Font, PatternFill
 from openpyxl.utils import get_column_letter
@@ -27,6 +28,20 @@ from schemas.reports import (
     InventoryReportResponse, InventoryReportSummary, InventoryMovementSummary, InventoryStockItem, StockValueByCategory, MedicineMovementItem,
     MedicineReportResponse, MedicineReportSummary, MedicineExpiryItem, MedicineLowStockItem, MedicineMovementAnalyticsItem
 )
+
+
+from pydantic import BaseModel
+from typing import Optional
+
+class PDFExportRequest(BaseModel):
+    timeframe: str = 'this_month'
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
+    chart_image: Optional[str] = None
+    customer_id: Optional[str] = None
+    payment_method: Optional[str] = None
+    supplier_id: Optional[str] = None
+    report_type: Optional[str] = 'expiry'
 
 router = APIRouter()
 
@@ -1214,6 +1229,48 @@ def export_financial_report_excel(
 
 
 
+
+def get_premium_styles():
+    styles = getSampleStyleSheet()
+    styles.add(ParagraphStyle(name='PremiumTitle', parent=styles['Heading1'], fontName='Helvetica-Bold', fontSize=24, textColor=colors.HexColor('#0F172A'), alignment=TA_CENTER, spaceAfter=20))
+    styles.add(ParagraphStyle(name='PremiumSubtitle', parent=styles['Normal'], fontName='Helvetica', fontSize=12, textColor=colors.HexColor('#64748B'), alignment=TA_CENTER, spaceAfter=30))
+    styles.add(ParagraphStyle(name='HeaderLabel', parent=styles['Normal'], fontName='Helvetica-Bold', fontSize=10, textColor=colors.HexColor('#94A3B8')))
+    styles.add(ParagraphStyle(name='HeaderValue', parent=styles['Normal'], fontName='Helvetica-Bold', fontSize=16, textColor=colors.HexColor('#0F172A')))
+    return styles
+
+def build_premium_header(title_text, subtitle_text):
+    styles = get_premium_styles()
+    return [
+        Paragraph(title_text, styles['PremiumTitle']),
+        Paragraph(subtitle_text, styles['PremiumSubtitle']),
+    ]
+
+def build_kpi_table(kpi_data):
+    # kpi_data is a list of tuples: (Label, Value, HexColor)
+    # We will arrange them in a horizontal grid.
+    styles = get_premium_styles()
+    
+    table_data = [[]]
+    for label, value, color in kpi_data:
+        cell_data = [
+            Paragraph(label, styles['HeaderLabel']),
+            Spacer(1, 5),
+            Paragraph(str(value), ParagraphStyle(name='Temp', parent=styles['HeaderValue'], textColor=colors.HexColor(color)))
+        ]
+        table_data[0].append(cell_data)
+        
+    kpi_table = Table(table_data, colWidths=[500/len(kpi_data)] * len(kpi_data))
+    kpi_table.setStyle(TableStyle([
+        ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+        ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+        ('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#F8FAFC')),
+        ('BOX', (0,0), (-1,-1), 1, colors.HexColor('#E2E8F0')),
+        ('INNERGRID', (0,0), (-1,-1), 1, colors.HexColor('#E2E8F0')),
+        ('TOPPADDING', (0,0), (-1,-1), 15),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 15),
+    ]))
+    return [kpi_table, Spacer(1, 30)]
+
 def embed_chart_in_pdf(elements, chart_image_b64):
     if chart_image_b64:
         try:
@@ -1225,18 +1282,30 @@ def embed_chart_in_pdf(elements, chart_image_b64):
                 tmp_path = tmp.name
             
             img = RLImage(tmp_path)
-            # Scale image to fit A4 width (A4 width is approx 595 points, usable ~500)
-            img.drawWidth = 500
-            img.drawHeight = img.drawWidth * (img.imageHeight / img.imageWidth)
-            elements.append(img)
-            elements.append(Spacer(1, 20))
             
-            # Need to delete the temp file later or let OS clean it up
+            # Maintain aspect ratio beautifully, don't just stretch
+            aspect = img.imageHeight / float(img.imageWidth)
+            # Max width is 500, max height is 300
+            desired_width = min(500, img.imageWidth)
+            desired_height = desired_width * aspect
+            
+            if desired_height > 250:
+                desired_height = 250
+                desired_width = desired_height / aspect
+                
+            img.drawWidth = desired_width
+            img.drawHeight = desired_height
+            
+            elements.append(img)
+            elements.append(Spacer(1, 30))
+            
         except Exception as e:
             print("Failed to embed chart:", e)
 
+
 @router.post("/sales/export/pdf")
-def export_sales_report_pdf(req: schemas.PDFExportRequest, db: Session = Depends(get_db)):
+def export_sales_report_pdf(req: dict = Body(...), db: Session = Depends(get_db)):
+    req = PDFExportRequest(**req)
     sd, ed = get_reports_date_range(req.timeframe, req.start_date, req.end_date)
     report_data = fetch_sales_report_data(db, sd, ed, req.customer_id, req.payment_method)
     
@@ -1245,15 +1314,15 @@ def export_sales_report_pdf(req: schemas.PDFExportRequest, db: Session = Depends
     elements = []
     styles = getSampleStyleSheet()
     
-    elements.append(Paragraph(f"Sales Report ({sd} to {ed})", styles['Title']))
-    elements.append(Spacer(1, 12))
+    elements.extend(build_premium_header("Sales Report", f"Period: {sd} to {ed}"))
     
-    # Summary KPIs
-    elements.append(Paragraph(f"Total Gross Sales: {report_data.summary.TotalGrossSales}", styles['Normal']))
-    elements.append(Paragraph(f"Total Returns: {report_data.summary.TotalReturns}", styles['Normal']))
-    elements.append(Paragraph(f"Net Sales: {report_data.summary.NetSales}", styles['Normal']))
-    elements.append(Paragraph(f"Total Invoices: {report_data.summary.TotalInvoices}", styles['Normal']))
-    elements.append(Spacer(1, 20))
+    kpi_data = [
+        ("Gross Sales", f"Rs. {report_data.summary.TotalGrossSales}", "#3B82F6"),
+        ("Returns", f"Rs. {report_data.summary.TotalReturns}", "#EF4444"),
+        ("Net Sales", f"Rs. {report_data.summary.NetSales}", "#10B981"),
+        ("Invoices", str(report_data.summary.TotalInvoices), "#6366F1"),
+    ]
+    elements.extend(build_kpi_table(kpi_data))
     
     # Chart
     embed_chart_in_pdf(elements, req.chart_image)
@@ -1273,13 +1342,17 @@ def export_sales_report_pdf(req: schemas.PDFExportRequest, db: Session = Depends
         
     t = Table(data, repeatRows=1)
     t.setStyle(TableStyle([
-        ('BACKGROUND', (0,0), (-1,0), colors.grey),
+        ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#0F172A')),
         ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
         ('ALIGN', (0,0), (-1,-1), 'CENTER'),
         ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0,0), (-1,0), 11),
         ('BOTTOMPADDING', (0,0), (-1,0), 12),
-        ('BACKGROUND', (0,1), (-1,-1), colors.beige),
-        ('GRID', (0,0), (-1,-1), 1, colors.black)
+        ('TOPPADDING', (0,0), (-1,0), 12),
+        ('ROWBACKGROUNDS', (0,1), (-1,-1), [colors.HexColor('#FFFFFF'), colors.HexColor('#F8FAFC')]),
+        ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#E2E8F0')),
+        ('FONTNAME', (0,1), (-1,-1), 'Helvetica'),
+        ('FONTSIZE', (0,1), (-1,-1), 10),
     ]))
     elements.append(t)
     
@@ -1289,7 +1362,8 @@ def export_sales_report_pdf(req: schemas.PDFExportRequest, db: Session = Depends
     return response
 
 @router.post("/purchases/export/pdf")
-def export_purchase_report_pdf(req: schemas.PDFExportRequest, db: Session = Depends(get_db)):
+def export_purchase_report_pdf(req: dict = Body(...), db: Session = Depends(get_db)):
+    req = PDFExportRequest(**req)
     sd, ed = get_reports_date_range(req.timeframe, req.start_date, req.end_date)
     report_data = fetch_purchase_report_data(db, sd, ed, req.supplier_id)
     
@@ -1338,7 +1412,8 @@ def export_purchase_report_pdf(req: schemas.PDFExportRequest, db: Session = Depe
     return response
 
 @router.post("/inventory/export/pdf")
-def export_inventory_report_pdf(req: schemas.PDFExportRequest, db: Session = Depends(get_db)):
+def export_inventory_report_pdf(req: dict = Body(...), db: Session = Depends(get_db)):
+    req = PDFExportRequest(**req)
     sd, ed = get_reports_date_range(req.timeframe, req.start_date, req.end_date)
     report_data = fetch_inventory_report_data(db, sd, ed)
     
@@ -1388,7 +1463,8 @@ def export_inventory_report_pdf(req: schemas.PDFExportRequest, db: Session = Dep
     return response
 
 @router.post("/medicine/export/pdf")
-def export_medicine_report_pdf(req: schemas.PDFExportRequest, db: Session = Depends(get_db)):
+def export_medicine_report_pdf(req: dict = Body(...), db: Session = Depends(get_db)):
+    req = PDFExportRequest(**req)
     sd, ed = get_reports_date_range(req.timeframe, req.start_date, req.end_date)
     report_data = fetch_medicine_report_data(db, sd, ed)
     
@@ -1431,7 +1507,8 @@ def export_medicine_report_pdf(req: schemas.PDFExportRequest, db: Session = Depe
     return response
 
 @router.post("/financial/export/pdf")
-def export_financial_report_pdf(req: schemas.PDFExportRequest, db: Session = Depends(get_db)):
+def export_financial_report_pdf(req: dict = Body(...), db: Session = Depends(get_db)):
+    req = PDFExportRequest(**req)
     sd, ed = get_reports_date_range(req.timeframe, req.start_date, req.end_date)
     report_data = fetch_financial_report_data(db, sd, ed)
     

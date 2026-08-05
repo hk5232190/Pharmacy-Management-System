@@ -366,7 +366,7 @@ export default function ReportsPage() {
       )}
 
       {data && activeTab === 'sales' && (
-        <div id="report-charts" className="space-y-6 animate-in fade-in duration-300">
+        <div className="space-y-6 animate-in fade-in duration-300">
           {/* Summary KPIs */}
           <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
             <Card className="p-4 border border-blue-100 dark:border-blue-900/50 bg-blue-50/50 dark:bg-blue-950/20 rounded-xl">
@@ -489,7 +489,7 @@ export default function ReportsPage() {
             </div>
 
             {/* Right Column: Charts */}
-            <div className="space-y-6">
+            <div id="report-charts" className="space-y-6">
               
               <Card className="p-4 border border-border shadow-sm rounded-xl">
                 <h3 className="font-semibold mb-4">Sales vs Profit Trend</h3>
@@ -559,7 +559,7 @@ export default function ReportsPage() {
       )}
 
       {data && activeTab === 'inventory' && (
-        <div id="report-charts" className="space-y-6 animate-in fade-in duration-300">
+        <div className="space-y-6 animate-in fade-in duration-300">
           {/* Summary KPIs */}
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
             <Card className="p-4 border border-blue-100 dark:border-blue-900/50 bg-blue-50/50 dark:bg-blue-950/20 rounded-xl">
@@ -692,7 +692,7 @@ export default function ReportsPage() {
             </div>
 
             {/* Right Column: Charts */}
-            <div className="space-y-6">
+            <div id="report-charts" className="space-y-6">
               
               <Card className="p-4 border border-border shadow-sm rounded-xl">
                 <h3 className="font-semibold mb-4">Valuation by Category</h3>
@@ -768,7 +768,7 @@ export default function ReportsPage() {
 
 
       {data && activeTab === 'purchases' && (
-        <div id="report-charts" className="space-y-6 animate-in fade-in duration-300">
+        <div className="space-y-6 animate-in fade-in duration-300">
           {/* Summary KPIs */}
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <Card className="p-4 border border-blue-100 dark:border-blue-900/50 bg-blue-50/50 dark:bg-blue-950/20 rounded-xl">
@@ -872,7 +872,7 @@ export default function ReportsPage() {
             </div>
 
             {/* Right Column: Charts */}
-            <div className="space-y-6">
+            <div id="report-charts" className="space-y-6">
               
               <Card className="p-4 border border-border shadow-sm rounded-xl">
                 <h3 className="font-semibold mb-4">Purchase Trend</h3>
@@ -941,7 +941,7 @@ export default function ReportsPage() {
       )}
 
       {data && activeTab === 'medicine' && (
-        <div id="report-charts" className="space-y-6 animate-in fade-in duration-300">
+        <div className="space-y-6 animate-in fade-in duration-300">
           {/* Summary KPIs */}
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
             <Card className="p-4 border border-rose-100 dark:border-rose-900/50 bg-rose-50/50 dark:bg-rose-950/20 rounded-xl">
@@ -1105,7 +1105,7 @@ export default function ReportsPage() {
       )}
 
       {data && activeTab === 'financial' && (
-        <div id="report-charts" className="space-y-6 animate-in fade-in duration-300">
+        <div className="space-y-6 animate-in fade-in duration-300">
           {/* Summary KPIs */}
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <Card className="p-4 border border-blue-100 dark:border-blue-900/50 bg-blue-50/50 dark:bg-blue-950/20 rounded-xl">
@@ -1194,7 +1194,7 @@ export default function ReportsPage() {
             </div>
 
             {/* Right Column: Charts */}
-            <div className="space-y-6">
+            <div id="report-charts" className="space-y-6">
               <Card className="p-4 border border-border shadow-sm rounded-xl">
                 <h3 className="font-semibold mb-4 text-center">Net Profit Trend</h3>
                 <div className="h-64">
