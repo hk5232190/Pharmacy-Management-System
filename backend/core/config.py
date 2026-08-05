@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     DEFAULT_TAX_RATE: float = 12.0
+    EXPIRY_ALERT_DAYS: int = 30
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 

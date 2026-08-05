@@ -3,11 +3,11 @@
 import React, { useState, useEffect, useRef } from "react";
 import { apiClient } from "@/lib/api-client";
 import { toast } from "react-hot-toast";
-import { 
-  ShoppingCart, 
-  Search, 
-  Barcode, 
-  Trash2, 
+import {
+  ShoppingCart,
+  Search,
+  Barcode,
+  Trash2,
   Printer,
   Pause,
   ArrowRight,
@@ -79,19 +79,19 @@ export default function POSBillingPage() {
   const [prescriptionPromptObj, setPrescriptionPromptObj] = useState<ProductSearchResponse | null>(null);
   const [completedReceipt, setCompletedReceipt] = useState<any>(null);
   const [isPrintingThermal, setIsPrintingThermal] = useState(false);
-  
+
   // --- Return States ---
   const [returnInvoiceNo, setReturnInvoiceNo] = useState("");
   const [returnInvoiceData, setReturnInvoiceData] = useState<any>(null);
   const [returnItems, setReturnItems] = useState<any[]>([]); // holds ReturnQty and Condition per SalesItemId
   const [returnReason, setReturnReason] = useState("");
-  
+
   // --- History States ---
   const [historyItems, setHistoryItems] = useState<any[]>([]);
   const [historyFilters, setHistoryFilters] = useState({ startDate: "", endDate: "", paymentMethod: "", userId: "", q: "" });
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [isReprintMode, setIsReprintMode] = useState(false);
-  
+
   // --- Initialization ---
   useEffect(() => {
     fetchInitData();
@@ -120,8 +120,8 @@ export default function POSBillingPage() {
 
       const userStr = localStorage.getItem('user');
       if (userStr) {
-          const user = JSON.parse(userStr);
-          setSalesperson(user.FullName || user.Username || "Admin");
+        const user = JSON.parse(userStr);
+        setSalesperson(user.FullName || user.Username || "Admin");
       }
 
       const custRes = await apiClient.get('/customer');
@@ -188,7 +188,7 @@ export default function POSBillingPage() {
     const bestBatch = product.Batches[0];
 
     const uniqueId = `${product.MedicineId}-${bestBatch.BatchId}`;
-    
+
     setCart(prev => {
       const existing = prev.find(i => i.id === uniqueId);
       if (existing) {
@@ -196,8 +196,8 @@ export default function POSBillingPage() {
           toast.error(`Cannot add more. Only ${existing.AvailableStock} in stock.`);
           return prev;
         }
-        return prev.map(i => 
-          i.id === uniqueId 
+        return prev.map(i =>
+          i.id === uniqueId
             ? { ...i, Quantity: i.Quantity + 1, LineTotal: calculateLineTotal(i.Quantity + 1, i.UnitPrice, i.Discount, i.TaxPercent) }
             : i
         );
@@ -238,14 +238,14 @@ export default function POSBillingPage() {
         const updated = { ...item, [field]: value };
         // Recalculate if qty, discount, or tax changed
         if (['Quantity', 'Discount', 'TaxPercent'].includes(field)) {
-            // enforce stock limit
-            if (field === 'Quantity' && value > item.AvailableStock) {
-                toast.error(`Only ${item.AvailableStock} units available in this batch.`);
-                updated.Quantity = item.AvailableStock;
-            }
-            if (field === 'Quantity' && value < 1) updated.Quantity = 1;
+          // enforce stock limit
+          if (field === 'Quantity' && value > item.AvailableStock) {
+            toast.error(`Only ${item.AvailableStock} units available in this batch.`);
+            updated.Quantity = item.AvailableStock;
+          }
+          if (field === 'Quantity' && value < 1) updated.Quantity = 1;
 
-            updated.LineTotal = calculateLineTotal(updated.Quantity, updated.UnitPrice, updated.Discount, updated.TaxPercent);
+          updated.LineTotal = calculateLineTotal(updated.Quantity, updated.UnitPrice, updated.Discount, updated.TaxPercent);
         }
         return updated;
       }
@@ -261,7 +261,7 @@ export default function POSBillingPage() {
   const subtotal = cart.reduce((sum, item) => sum + (item.Quantity * item.UnitPrice), 0);
   const totalDiscount = cart.reduce((sum, item) => sum + item.Discount, 0);
   const discountedSubtotal = subtotal - totalDiscount;
-  
+
   // Actually line total already includes tax, but for summary we want total tax
   const totalTax = cart.reduce((sum, item) => {
     const base = item.Quantity * item.UnitPrice - item.Discount;
@@ -276,7 +276,7 @@ export default function POSBillingPage() {
 
   const handleCompleteSale = async () => {
     if (cart.length === 0) return;
-    
+
     // Check prescription requirement
     const needsPrescription = cart.some(item => item.RequiresPrescription);
     if (needsPrescription && !prescriptionRef) {
@@ -310,12 +310,12 @@ export default function POSBillingPage() {
       const res = await apiClient.post('/sales', payload);
       if (res.success) {
         toast.success(`Sale completed! Invoice: ${res.data.InvoiceNumber}`);
-        
+
         // Populate Receipt Data
         setCompletedReceipt({
           InvoiceNumber: res.data.InvoiceNumber,
           SalesId: res.data.SalesId,
-          Date: new Date().toLocaleDateString('en-GB') + ' ' + new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'}),
+          Date: new Date().toLocaleDateString('en-GB') + ' ' + new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
           Cashier: salesperson,
           Items: cart,
           SubTotal: subtotal,
@@ -382,8 +382,8 @@ export default function POSBillingPage() {
         if (field === 'ReturnQuantity') {
           const maxRet = item.Quantity - item.ReturnedQuantity;
           if (val > maxRet) {
-             val = maxRet;
-             toast.error(`Cannot return more than ${maxRet}`);
+            val = maxRet;
+            toast.error(`Cannot return more than ${maxRet}`);
           }
           if (val < 0) val = 0;
         }
@@ -394,9 +394,9 @@ export default function POSBillingPage() {
   };
 
   const totalRefundPreview = returnItems.reduce((sum, item) => {
-     if (item.ReturnQuantity <= 0) return sum;
-     const ratio = item.ReturnQuantity / item.Quantity;
-     return sum + (item.TotalPrice * ratio);
+    if (item.ReturnQuantity <= 0) return sum;
+    const ratio = item.ReturnQuantity / item.Quantity;
+    return sum + (item.TotalPrice * ratio);
   }, 0);
 
   const handleSubmitReturn = async () => {
@@ -409,10 +409,10 @@ export default function POSBillingPage() {
         InvoiceNumber: returnInvoiceData.InvoiceNumber,
         Reason: returnReason,
         Items: itemsToReturn.map(i => ({
-           SalesItemId: i.SalesItemId,
-           BatchId: i.BatchId,
-           ReturnQuantity: i.ReturnQuantity,
-           ItemCondition: i.ItemCondition
+          SalesItemId: i.SalesItemId,
+          BatchId: i.BatchId,
+          ReturnQuantity: i.ReturnQuantity,
+          ItemCondition: i.ItemCondition
         }))
       };
       const res = await apiClient.post('/sales/return', payload);
@@ -438,7 +438,7 @@ export default function POSBillingPage() {
       if (historyFilters.paymentMethod) params.append("payment_method", historyFilters.paymentMethod);
       if (historyFilters.userId) params.append("user_id", historyFilters.userId);
       if (historyFilters.q) params.append("q", historyFilters.q);
-      
+
       const res = await apiClient.get(`/sales/history?${params.toString()}`);
       if (res.success) {
         setHistoryItems(res.data);
@@ -467,13 +467,13 @@ export default function POSBillingPage() {
           Date: res.data.TransactionDate,
           Cashier: cashierName,
           Items: res.data.Items.map((i: any) => ({
-             id: i.SalesItemId,
-             MedicineName: i.MedicineName,
-             BatchCode: i.BatchCode,
-             ExpiryDate: "", 
-             Quantity: i.Quantity,
-             UnitPrice: i.UnitPrice,
-             LineTotal: i.TotalPrice
+            id: i.SalesItemId,
+            MedicineName: i.MedicineName,
+            BatchCode: i.BatchCode,
+            ExpiryDate: "",
+            Quantity: i.Quantity,
+            UnitPrice: i.UnitPrice,
+            LineTotal: i.TotalPrice
           })),
           SubTotal: res.data.SubTotal,
           Discount: res.data.DiscountAmount,
@@ -490,7 +490,7 @@ export default function POSBillingPage() {
   return (
     <div className="flex flex-col min-h-full bg-slate-50/50 dark:bg-background relative">
       <div className="flex-1 p-4 lg:p-6 pb-6">
-        
+
         {/* Header */}
         <div className="mb-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
@@ -522,318 +522,318 @@ export default function POSBillingPage() {
 
         {/* Action Tabs */}
         <div className="flex gap-2 mb-6 bg-white dark:bg-card p-1.5 rounded-lg border border-border shadow-sm w-fit">
-           <Button onClick={() => setActiveTab('pos')} variant={activeTab === 'pos' ? "default" : "ghost"} size="sm" className={cn("px-4 shadow-none", activeTab === 'pos' ? "bg-blue-600 hover:bg-blue-700 text-white" : "text-muted-foreground hover:text-foreground")}><ShoppingCart className="w-4 h-4 mr-2"/> New Sale (POS)</Button>
-           <Button onClick={() => setActiveTab('history')} variant={activeTab === 'history' ? "default" : "ghost"} size="sm" className={cn("px-4 shadow-none", activeTab === 'history' ? "bg-blue-600 hover:bg-blue-700 text-white" : "text-muted-foreground hover:text-foreground")}><FileText className="w-4 h-4 mr-2"/> Sales History</Button>
-           <Button onClick={() => setActiveTab('return')} variant={activeTab === 'return' ? "default" : "ghost"} size="sm" className={cn("px-4 shadow-none", activeTab === 'return' ? "bg-rose-600 hover:bg-rose-700 text-white" : "text-muted-foreground hover:text-foreground")}><Trash2 className="w-4 h-4 mr-2"/> Sales Return</Button>
+          <Button onClick={() => setActiveTab('pos')} variant={activeTab === 'pos' ? "default" : "ghost"} size="sm" className={cn("px-4 shadow-none", activeTab === 'pos' ? "bg-blue-600 hover:bg-blue-700 text-white" : "text-muted-foreground hover:text-foreground")}><ShoppingCart className="w-4 h-4 mr-2" /> New Sale (POS)</Button>
+          <Button onClick={() => setActiveTab('history')} variant={activeTab === 'history' ? "default" : "ghost"} size="sm" className={cn("px-4 shadow-none", activeTab === 'history' ? "bg-blue-600 hover:bg-blue-700 text-white" : "text-muted-foreground hover:text-foreground")}><FileText className="w-4 h-4 mr-2" /> Sales History</Button>
+          <Button onClick={() => setActiveTab('return')} variant={activeTab === 'return' ? "default" : "ghost"} size="sm" className={cn("px-4 shadow-none", activeTab === 'return' ? "bg-rose-600 hover:bg-rose-700 text-white" : "text-muted-foreground hover:text-foreground")}><Trash2 className="w-4 h-4 mr-2" /> Sales Return</Button>
         </div>
 
         {/* POS Grid */}
         {activeTab === 'pos' && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          
-          {/* Left Column (Customer & Invoice) */}
-          <div className="lg:col-span-3 space-y-6">
-            <div className="bg-white dark:bg-card rounded-xl border border-border shadow-sm p-4">
-              <h3 className="font-semibold text-foreground mb-4">1. Customer & Invoice</h3>
-              
-              <div className="space-y-4">
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground mb-1 block">Invoice No.</label>
-                  <Input readOnly value={invoiceNo} className="bg-secondary/30 font-mono text-sm" placeholder="Generating..." />
-                </div>
-                
-                <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+            {/* Left Column (Customer & Invoice) */}
+            <div className="lg:col-span-3 space-y-6">
+              <div className="bg-white dark:bg-card rounded-xl border border-border shadow-sm p-4">
+                <h3 className="font-semibold text-foreground mb-4">1. Customer & Invoice</h3>
+
+                <div className="space-y-4">
                   <div>
-                    <label className="text-xs font-medium text-muted-foreground mb-1 block">Sale Date</label>
-                    <Input readOnly value={new Date().toLocaleDateString('en-GB')} className="bg-secondary/30 text-sm" />
+                    <label className="text-xs font-medium text-muted-foreground mb-1 block">Invoice No.</label>
+                    <Input readOnly value={invoiceNo} className="bg-secondary/30 font-mono text-sm" placeholder="Generating..." />
                   </div>
-                  <div>
-                    <label className="text-xs font-medium text-muted-foreground mb-1 block">Time</label>
-                    <Input readOnly value={new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'})} className="bg-secondary/30 text-sm" />
-                  </div>
-                </div>
 
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground mb-1 block">Customer <span className="text-[10px] bg-secondary px-1 py-0.5 rounded ml-1">F4</span></label>
-                  <div className="flex gap-2">
-                    <select 
-                      id="customer-select"
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                      value={selectedCustomerId}
-                      onChange={e => setSelectedCustomerId(e.target.value)}
-                    >
-                      <option value="walkin">Walk-in Customer</option>
-                      {customers.map((c: any) => (
-                        <option key={c.CustomerId} value={c.CustomerId}>{c.Name} {c.Phone ? `(${c.Phone})` : ''}</option>
-                      ))}
-                    </select>
-                    <Button variant="outline" size="icon" className="shrink-0"><Plus className="w-4 h-4"/></Button>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground mb-1 block">Prescription Ref. (Optional)</label>
-                  <Input 
-                    id="prescription-ref-input"
-                    placeholder="Enter Prescription Ref" 
-                    value={prescriptionRef}
-                    onChange={e => setPrescriptionRef(e.target.value)}
-                    className="text-sm"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground mb-1 block">Salesperson</label>
-                  <Input value={salesperson} onChange={(e) => setSalesperson(e.target.value)} className="text-sm" placeholder="Enter salesperson name" />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Middle Column (Search & Cart) */}
-          <div className="lg:col-span-6 space-y-6 flex flex-col">
-            <div className="bg-white dark:bg-card rounded-xl border border-border shadow-sm p-4 relative z-20">
-              <h3 className="font-semibold text-foreground mb-3 flex justify-between items-center">
-                2. Search Medicine
-                <div className="text-xs font-normal text-muted-foreground flex items-center gap-1">
-                  <span className="bg-secondary px-1.5 py-0.5 rounded">F2</span> Focus
-                </div>
-              </h3>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input 
-                  ref={searchInputRef}
-                  placeholder="Search medicine by name, barcode, or code..." 
-                  className="pl-9 pr-10 text-base py-6"
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                />
-                <Barcode className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground cursor-pointer hover:text-foreground transition-colors" />
-                
-                {/* Search Dropdown */}
-                {searchQuery.trim().length >= 2 && (
-                  <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-card border border-border rounded-lg shadow-xl overflow-hidden max-h-80 overflow-y-auto">
-                    {isSearching ? (
-                      <div className="p-4 text-center text-sm text-muted-foreground">Searching...</div>
-                    ) : searchResults.length === 0 ? (
-                      <div className="p-4 text-center text-sm text-muted-foreground">No medicines found with available stock.</div>
-                    ) : (
-                      <ul className="divide-y divide-border">
-                        {searchResults.map((res) => (
-                          <li 
-                            key={res.MedicineId} 
-                            className="p-3 hover:bg-secondary/20 cursor-pointer transition-colors flex justify-between items-center"
-                            onClick={() => handleSelectProduct(res)}
-                          >
-                            <div>
-                              <p className="font-medium text-foreground flex items-center gap-2">
-                                {res.MedicineName}
-                                {res.RequiresPrescription && <span className="text-[10px] bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-400 px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider">Rx</span>}
-                              </p>
-                              <p className="text-xs text-muted-foreground">{res.GenericName}</p>
-                            </div>
-                            <div className="text-right">
-                              <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">₹ {res.Batches[0].UnitPrice.toFixed(2)}</p>
-                              <p className="text-xs text-muted-foreground">Stock: {res.Batches[0].AvailableStock}</p>
-                            </div>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                )}
-              </div>
-              
-              {/* Popular Suggestions */}
-              <div className="mt-4">
-                <p className="text-xs font-medium text-muted-foreground mb-2">Popular Suggestions</p>
-                <div className="flex flex-wrap gap-2">
-                  {["Paracetamol 500mg", "Amoxicillin 250mg", "Cetirizine 10mg", "Ibuprofen 400mg", "Omeprazole 20mg"].map(pill => (
-                    <button 
-                      key={pill}
-                      onClick={() => handleSearch(pill)}
-                      className="px-3 py-1.5 bg-secondary/50 hover:bg-secondary text-muted-foreground hover:text-foreground text-xs rounded-full border border-border transition-colors whitespace-nowrap"
-                    >
-                      {pill}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white dark:bg-card rounded-xl border border-border shadow-sm flex-1 flex flex-col overflow-hidden relative z-10 min-h-[400px]">
-              <div className="p-4 border-b border-border bg-slate-50/50 dark:bg-secondary/20">
-                <h3 className="font-semibold text-foreground">3. Sales Cart</h3>
-              </div>
-              <div className="flex-1 overflow-auto custom-scrollbar">
-                <table className="w-full text-left text-sm border-collapse min-w-[700px]">
-                  <thead className="sticky top-0 z-10 bg-white dark:bg-card shadow-sm">
-                    <tr className="text-muted-foreground text-[11px] uppercase tracking-wider border-b border-border">
-                      <th className="px-3 py-3 font-semibold">#</th>
-                      <th className="px-3 py-3 font-semibold">Medicine</th>
-                      <th className="px-3 py-3 font-semibold">Batch</th>
-                      <th className="px-3 py-3 font-semibold text-center">Avail. Stock</th>
-                      <th className="px-3 py-3 font-semibold text-right">Unit Price</th>
-                      <th className="px-3 py-3 font-semibold text-center w-28">Qty</th>
-                      <th className="px-3 py-3 font-semibold text-right">Discount</th>
-                      <th className="px-3 py-3 font-semibold text-center">Tax (%)</th>
-                      <th className="px-3 py-3 font-semibold text-right">Line Total</th>
-                      <th className="px-3 py-3 font-semibold text-center"></th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border">
-                    {cart.length === 0 ? (
-                      <tr>
-                        <td colSpan={10} className="py-16 text-center">
-                          <ShoppingCart className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
-                          <p className="text-muted-foreground">Your cart is empty.</p>
-                          <p className="text-xs text-muted-foreground mt-1">Search and select a medicine to begin.</p>
-                        </td>
-                      </tr>
-                    ) : (
-                      cart.map((item, idx) => (
-                        <tr key={item.id} className="hover:bg-secondary/10 transition-colors">
-                          <td className="px-3 py-3 text-muted-foreground">{idx + 1}</td>
-                          <td className="px-3 py-3 font-medium text-foreground">
-                            {item.MedicineName}
-                            {item.RequiresPrescription && <span className="ml-2 text-[10px] text-rose-500 font-bold">Rx</span>}
-                          </td>
-                          <td className="px-3 py-3 font-mono text-xs text-muted-foreground">{item.BatchCode}</td>
-                          <td className="px-3 py-3 text-center text-muted-foreground text-xs">{item.AvailableStock}</td>
-                          <td className="px-3 py-3 text-right">₹ {item.UnitPrice.toFixed(2)}</td>
-                          <td className="px-3 py-3 text-center">
-                            <div className="flex items-center border border-input rounded-md overflow-hidden h-8">
-                              <button onClick={() => updateCartItem(item.id, 'Quantity', item.Quantity - 1)} className="px-2 bg-secondary/50 hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors">-</button>
-                              <input 
-                                type="number" 
-                                className="w-10 text-center bg-transparent border-none focus:ring-0 text-sm h-full"
-                                value={item.Quantity}
-                                onChange={(e) => updateCartItem(item.id, 'Quantity', parseInt(e.target.value) || 1)}
-                              />
-                              <button onClick={() => updateCartItem(item.id, 'Quantity', item.Quantity + 1)} className="px-2 bg-secondary/50 hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors">+</button>
-                            </div>
-                          </td>
-                          <td className="px-3 py-3">
-                            <Input 
-                              type="number" 
-                              className="h-8 w-20 text-right mx-auto" 
-                              value={item.Discount}
-                              onChange={(e) => updateCartItem(item.id, 'Discount', parseFloat(e.target.value) || 0)}
-                            />
-                          </td>
-                          <td className="px-3 py-3 text-center">
-                            <Input 
-                              type="number" 
-                              className="h-8 w-16 text-center mx-auto" 
-                              value={item.TaxPercent}
-                              onChange={(e) => updateCartItem(item.id, 'TaxPercent', parseFloat(e.target.value) || 0)}
-                            />
-                          </td>
-                          <td className="px-3 py-3 text-right font-bold">₹ {item.LineTotal.toFixed(2)}</td>
-                          <td className="px-3 py-3 text-center">
-                            <Button onClick={() => removeCartItem(item.id)} variant="ghost" size="icon" className="h-8 w-8 text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30">
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-              <div className="p-3 border-t border-border bg-slate-50/50 dark:bg-secondary/20 flex justify-between items-center text-sm text-muted-foreground">
-                <Button onClick={() => setCart([])} variant="outline" size="sm" className="h-8 text-rose-500 hover:text-rose-600 hover:bg-rose-50 border-rose-200 dark:border-rose-900/50">
-                  <Trash2 className="w-3.5 h-3.5 mr-2" /> Clear Cart
-                </Button>
-                <div className="flex gap-6">
-                  <span>Total Items: <strong className="text-foreground">{totalItemsCount}</strong></span>
-                  <span>Total Quantity: <strong className="text-foreground">{totalQtyCount}</strong></span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Right Column (Bill Summary) */}
-          <div className="lg:col-span-3 space-y-6">
-            <div className="bg-white dark:bg-card rounded-xl border border-border shadow-sm p-4 sticky top-6">
-              <h3 className="font-semibold text-foreground mb-4">4. Bill Summary</h3>
-              
-              <div className="space-y-3 text-sm">
-                <div className="flex justify-between text-muted-foreground">
-                  <span>Total Items</span>
-                  <span className="font-medium text-foreground">{totalItemsCount}</span>
-                </div>
-                <div className="flex justify-between text-muted-foreground">
-                  <span>Subtotal</span>
-                  <span className="font-medium text-foreground">₹ {subtotal.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between text-muted-foreground">
-                  <span>Discount</span>
-                  <span className="font-medium text-rose-500">- ₹ {totalDiscount.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between text-muted-foreground">
-                  <span>Tax ({taxRate}%)</span>
-                  <span className="font-medium text-foreground">₹ {totalTax.toFixed(2)}</span>
-                </div>
-                
-                <div className="border-t border-dashed border-border my-4 pt-4">
-                  <div className="flex justify-between items-center mb-4">
-                    <span className="text-lg font-bold text-blue-600 dark:text-blue-400">Grand Total</span>
-                    <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">₹ {grandTotal.toFixed(2)}</span>
-                  </div>
-                </div>
-
-                <div className="space-y-3 bg-secondary/30 p-3 rounded-lg border border-border/50">
-                  <div className="flex justify-between items-center">
-                    <span className="font-medium text-muted-foreground">Paid Amount</span>
-                    <div className="flex items-center gap-1">
-                      <span className="text-muted-foreground font-medium">₹</span>
-                      <Input 
-                        type="number" 
-                        className="w-24 h-9 font-bold text-right" 
-                        value={paidAmount || ""}
-                        onChange={(e) => setPaidAmount(parseFloat(e.target.value) || 0)}
-                      />
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground mb-1 block">Sale Date</label>
+                      <Input readOnly value={new Date().toLocaleDateString('en-GB')} className="bg-secondary/30 text-sm" />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground mb-1 block">Time</label>
+                      <Input readOnly value={new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })} className="bg-secondary/30 text-sm" />
                     </div>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="font-medium text-emerald-600 dark:text-emerald-500">Change Due</span>
-                    <span className="font-bold text-emerald-600 dark:text-emerald-500 text-lg">₹ {changeDue.toFixed(2)}</span>
+
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground mb-1 block">Customer <span className="text-[10px] bg-secondary px-1 py-0.5 rounded ml-1">F4</span></label>
+                    <div className="flex gap-2">
+                      <select
+                        id="customer-select"
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        value={selectedCustomerId}
+                        onChange={e => setSelectedCustomerId(e.target.value)}
+                      >
+                        <option value="walkin">Walk-in Customer</option>
+                        {customers.map((c: any) => (
+                          <option key={c.CustomerId} value={c.CustomerId}>{c.Name} {c.Phone ? `(${c.Phone})` : ''}</option>
+                        ))}
+                      </select>
+                      <Button variant="outline" size="icon" className="shrink-0"><Plus className="w-4 h-4" /></Button>
+                    </div>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="font-medium text-rose-600 dark:text-rose-500">Remaining Bal.</span>
-                    <span className="font-bold text-rose-600 dark:text-rose-500">₹ {remainingBalance.toFixed(2)}</span>
+
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground mb-1 block">Prescription Ref. (Optional)</label>
+                    <Input
+                      id="prescription-ref-input"
+                      placeholder="Enter Prescription Ref"
+                      value={prescriptionRef}
+                      onChange={e => setPrescriptionRef(e.target.value)}
+                      className="text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground mb-1 block">Salesperson</label>
+                    <Input value={salesperson} onChange={(e) => setSalesperson(e.target.value)} className="text-sm" placeholder="Enter salesperson name" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Middle Column (Search & Cart) */}
+            <div className="lg:col-span-6 space-y-6 flex flex-col">
+              <div className="bg-white dark:bg-card rounded-xl border border-border shadow-sm p-4 relative z-20">
+                <h3 className="font-semibold text-foreground mb-3 flex justify-between items-center">
+                  2. Search Medicine
+                  <div className="text-xs font-normal text-muted-foreground flex items-center gap-1">
+                    <span className="bg-secondary px-1.5 py-0.5 rounded">F2</span> Focus
+                  </div>
+                </h3>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    ref={searchInputRef}
+                    placeholder="Search medicine by name, barcode, or code..."
+                    className="pl-9 pr-10 text-base py-6"
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                  />
+                  <Barcode className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground cursor-pointer hover:text-foreground transition-colors" />
+
+                  {/* Search Dropdown */}
+                  {searchQuery.trim().length >= 2 && (
+                    <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-card border border-border rounded-lg shadow-xl overflow-hidden max-h-80 overflow-y-auto">
+                      {isSearching ? (
+                        <div className="p-4 text-center text-sm text-muted-foreground">Searching...</div>
+                      ) : searchResults.length === 0 ? (
+                        <div className="p-4 text-center text-sm text-muted-foreground">No medicines found with available stock.</div>
+                      ) : (
+                        <ul className="divide-y divide-border">
+                          {searchResults.map((res) => (
+                            <li
+                              key={res.MedicineId}
+                              className="p-3 hover:bg-secondary/20 cursor-pointer transition-colors flex justify-between items-center"
+                              onClick={() => handleSelectProduct(res)}
+                            >
+                              <div>
+                                <p className="font-medium text-foreground flex items-center gap-2">
+                                  {res.MedicineName}
+                                  {res.RequiresPrescription && <span className="text-[10px] bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-400 px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider">Rx</span>}
+                                </p>
+                                <p className="text-xs text-muted-foreground">{res.GenericName}</p>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">₹ {res.Batches[0].UnitPrice.toFixed(2)}</p>
+                                <p className="text-xs text-muted-foreground">Stock: {res.Batches[0].AvailableStock}</p>
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Popular Suggestions */}
+                <div className="mt-4">
+                  <p className="text-xs font-medium text-muted-foreground mb-2">Popular Suggestions</p>
+                  <div className="flex flex-wrap gap-2">
+                    {["Paracetamol 500mg", "Amoxicillin 250mg", "Cetirizine 10mg", "Ibuprofen 400mg", "Omeprazole 20mg"].map(pill => (
+                      <button
+                        key={pill}
+                        onClick={() => handleSearch(pill)}
+                        className="px-3 py-1.5 bg-secondary/50 hover:bg-secondary text-muted-foreground hover:text-foreground text-xs rounded-full border border-border transition-colors whitespace-nowrap"
+                      >
+                        {pill}
+                      </button>
+                    ))}
                   </div>
                 </div>
               </div>
 
-              <div className="mt-6 space-y-3">
-                <Button id="complete-sale-btn" onClick={handleCompleteSale} className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white text-base font-bold shadow-lg shadow-blue-500/20" disabled={cart.length === 0}>
-                  Complete Sale <span className="ml-2 text-[10px] bg-blue-500 px-1 rounded border border-blue-400">F10</span> <ArrowRight className="ml-2 w-5 h-5" />
-                </Button>
-                <Button className="w-full h-11 bg-emerald-600 hover:bg-emerald-700 text-white font-medium shadow-md">
-                  <Printer className="mr-2 w-4 h-4" /> Save & Print
-                </Button>
-                <Button variant="outline" className="w-full h-11 border-blue-200 text-blue-600 hover:bg-blue-50 dark:border-blue-900/50 dark:text-blue-400 font-medium">
-                  <Pause className="mr-2 w-4 h-4" /> Hold Sale
-                </Button>
-                <Button variant="outline" onClick={() => setCart([])} className="w-full h-11 border-rose-200 text-rose-600 hover:bg-rose-50 dark:border-rose-900/50 dark:text-rose-400 font-medium">
-                  <Trash2 className="mr-2 w-4 h-4" /> Clear Cart
-                </Button>
+              <div className="bg-white dark:bg-card rounded-xl border border-border shadow-sm flex-1 flex flex-col overflow-hidden relative z-10 min-h-[400px]">
+                <div className="p-4 border-b border-border bg-slate-50/50 dark:bg-secondary/20">
+                  <h3 className="font-semibold text-foreground">3. Sales Cart</h3>
+                </div>
+                <div className="flex-1 overflow-auto custom-scrollbar">
+                  <table className="w-full text-left text-sm border-collapse min-w-[700px]">
+                    <thead className="sticky top-0 z-10 bg-white dark:bg-card shadow-sm">
+                      <tr className="text-muted-foreground text-[11px] uppercase tracking-wider border-b border-border">
+                        <th className="px-3 py-3 font-semibold">#</th>
+                        <th className="px-3 py-3 font-semibold">Medicine</th>
+                        <th className="px-3 py-3 font-semibold">Batch</th>
+                        <th className="px-3 py-3 font-semibold text-center">Avail. Stock</th>
+                        <th className="px-3 py-3 font-semibold text-right">Unit Price</th>
+                        <th className="px-3 py-3 font-semibold text-center w-28">Qty</th>
+                        <th className="px-3 py-3 font-semibold text-right">Discount</th>
+                        <th className="px-3 py-3 font-semibold text-center">Tax (%)</th>
+                        <th className="px-3 py-3 font-semibold text-right">Line Total</th>
+                        <th className="px-3 py-3 font-semibold text-center"></th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border">
+                      {cart.length === 0 ? (
+                        <tr>
+                          <td colSpan={10} className="py-16 text-center">
+                            <ShoppingCart className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
+                            <p className="text-muted-foreground">Your cart is empty.</p>
+                            <p className="text-xs text-muted-foreground mt-1">Search and select a medicine to begin.</p>
+                          </td>
+                        </tr>
+                      ) : (
+                        cart.map((item, idx) => (
+                          <tr key={item.id} className="hover:bg-secondary/10 transition-colors">
+                            <td className="px-3 py-3 text-muted-foreground">{idx + 1}</td>
+                            <td className="px-3 py-3 font-medium text-foreground">
+                              {item.MedicineName}
+                              {item.RequiresPrescription && <span className="ml-2 text-[10px] text-rose-500 font-bold">Rx</span>}
+                            </td>
+                            <td className="px-3 py-3 font-mono text-xs text-muted-foreground">{item.BatchCode}</td>
+                            <td className="px-3 py-3 text-center text-muted-foreground text-xs">{item.AvailableStock}</td>
+                            <td className="px-3 py-3 text-right">₹ {item.UnitPrice.toFixed(2)}</td>
+                            <td className="px-3 py-3 text-center">
+                              <div className="flex items-center border border-input rounded-md overflow-hidden h-8">
+                                <button onClick={() => updateCartItem(item.id, 'Quantity', item.Quantity - 1)} className="px-2 bg-secondary/50 hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors">-</button>
+                                <input
+                                  type="number"
+                                  className="w-10 text-center bg-transparent border-none focus:ring-0 text-sm h-full"
+                                  value={item.Quantity}
+                                  onChange={(e) => updateCartItem(item.id, 'Quantity', parseInt(e.target.value) || 1)}
+                                />
+                                <button onClick={() => updateCartItem(item.id, 'Quantity', item.Quantity + 1)} className="px-2 bg-secondary/50 hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors">+</button>
+                              </div>
+                            </td>
+                            <td className="px-3 py-3">
+                              <Input
+                                type="number"
+                                className="h-8 w-20 text-right mx-auto"
+                                value={item.Discount}
+                                onChange={(e) => updateCartItem(item.id, 'Discount', parseFloat(e.target.value) || 0)}
+                              />
+                            </td>
+                            <td className="px-3 py-3 text-center">
+                              <Input
+                                type="number"
+                                className="h-8 w-16 text-center mx-auto"
+                                value={item.TaxPercent}
+                                onChange={(e) => updateCartItem(item.id, 'TaxPercent', parseFloat(e.target.value) || 0)}
+                              />
+                            </td>
+                            <td className="px-3 py-3 text-right font-bold">₹ {item.LineTotal.toFixed(2)}</td>
+                            <td className="px-3 py-3 text-center">
+                              <Button onClick={() => removeCartItem(item.id)} variant="ghost" size="icon" className="h-8 w-8 text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30">
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="p-3 border-t border-border bg-slate-50/50 dark:bg-secondary/20 flex justify-between items-center text-sm text-muted-foreground">
+                  <Button onClick={() => setCart([])} variant="outline" size="sm" className="h-8 text-rose-500 hover:text-rose-600 hover:bg-rose-50 border-rose-200 dark:border-rose-900/50">
+                    <Trash2 className="w-3.5 h-3.5 mr-2" /> Clear Cart
+                  </Button>
+                  <div className="flex gap-6">
+                    <span>Total Items: <strong className="text-foreground">{totalItemsCount}</strong></span>
+                    <span>Total Quantity: <strong className="text-foreground">{totalQtyCount}</strong></span>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
 
-        </div>
+            {/* Right Column (Bill Summary) */}
+            <div className="lg:col-span-3 space-y-6">
+              <div className="bg-white dark:bg-card rounded-xl border border-border shadow-sm p-4 sticky top-6">
+                <h3 className="font-semibold text-foreground mb-4">4. Bill Summary</h3>
+
+                <div className="space-y-3 text-sm">
+                  <div className="flex justify-between text-muted-foreground">
+                    <span>Total Items</span>
+                    <span className="font-medium text-foreground">{totalItemsCount}</span>
+                  </div>
+                  <div className="flex justify-between text-muted-foreground">
+                    <span>Subtotal</span>
+                    <span className="font-medium text-foreground">₹ {subtotal.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-muted-foreground">
+                    <span>Discount</span>
+                    <span className="font-medium text-rose-500">- ₹ {totalDiscount.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-muted-foreground">
+                    <span>Tax ({taxRate}%)</span>
+                    <span className="font-medium text-foreground">₹ {totalTax.toFixed(2)}</span>
+                  </div>
+
+                  <div className="border-t border-dashed border-border my-4 pt-4">
+                    <div className="flex justify-between items-center mb-4">
+                      <span className="text-lg font-bold text-blue-600 dark:text-blue-400">Grand Total</span>
+                      <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">₹ {grandTotal.toFixed(2)}</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3 bg-secondary/30 p-3 rounded-lg border border-border/50">
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium text-muted-foreground">Paid Amount</span>
+                      <div className="flex items-center gap-1">
+                        <span className="text-muted-foreground font-medium">₹</span>
+                        <Input
+                          type="number"
+                          className="w-24 h-9 font-bold text-right"
+                          value={paidAmount || ""}
+                          onChange={(e) => setPaidAmount(parseFloat(e.target.value) || 0)}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium text-emerald-600 dark:text-emerald-500">Change Due</span>
+                      <span className="font-bold text-emerald-600 dark:text-emerald-500 text-lg">₹ {changeDue.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium text-rose-600 dark:text-rose-500">Remaining Bal.</span>
+                      <span className="font-bold text-rose-600 dark:text-rose-500">₹ {remainingBalance.toFixed(2)}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-6 space-y-3">
+                  <Button id="complete-sale-btn" onClick={handleCompleteSale} className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white text-base font-bold shadow-lg shadow-blue-500/20" disabled={cart.length === 0}>
+                    Complete Sale <span className="ml-2 text-[10px] bg-blue-500 px-1 rounded border border-blue-400">F10</span> <ArrowRight className="ml-2 w-5 h-5" />
+                  </Button>
+                  <Button className="w-full h-11 bg-emerald-600 hover:bg-emerald-700 text-white font-medium shadow-md">
+                    <Printer className="mr-2 w-4 h-4" /> Save & Print
+                  </Button>
+                  <Button variant="outline" className="w-full h-11 border-blue-200 text-blue-600 hover:bg-blue-50 dark:border-blue-900/50 dark:text-blue-400 font-medium">
+                    <Pause className="mr-2 w-4 h-4" /> Hold Sale
+                  </Button>
+                  <Button variant="outline" onClick={() => setCart([])} className="w-full h-11 border-rose-200 text-rose-600 hover:bg-rose-50 dark:border-rose-900/50 dark:text-rose-400 font-medium">
+                    <Trash2 className="mr-2 w-4 h-4" /> Clear Cart
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+          </div>
         )}
 
         {/* Sales Return Grid */}
         {activeTab === 'return' && (
           <div className="bg-white dark:bg-card rounded-xl border border-border shadow-sm p-6 mt-6">
-            <h2 className="text-xl font-bold mb-4 text-rose-600 flex items-center gap-2"><Trash2 className="w-5 h-5"/> Process Sales Return</h2>
+            <h2 className="text-xl font-bold mb-4 text-rose-600 flex items-center gap-2"><Trash2 className="w-5 h-5" /> Process Sales Return</h2>
             <div className="flex gap-4 mb-6">
-              <Input 
-                placeholder="Enter Invoice Number (e.g. INV-2608-0001)" 
+              <Input
+                placeholder="Enter Invoice Number (e.g. INV-2608-0001)"
                 value={returnInvoiceNo}
                 onChange={(e) => setReturnInvoiceNo(e.target.value.toUpperCase())}
                 className="max-w-xs uppercase font-mono"
@@ -876,7 +876,7 @@ export default function POSBillingPage() {
                         const ratio = item.ReturnQuantity > 0 ? (item.ReturnQuantity / item.Quantity) : 0;
                         const refund = item.TotalPrice * ratio;
                         const isFullyReturned = item.Quantity === item.ReturnedQuantity;
-                        
+
                         return (
                           <tr key={item.SalesItemId} className={isFullyReturned ? "opacity-50 bg-secondary/20" : "hover:bg-secondary/10"}>
                             <td className="px-3 py-3 font-medium text-foreground">{item.MedicineName}</td>
@@ -884,8 +884,8 @@ export default function POSBillingPage() {
                             <td className="px-3 py-3 text-center">{item.Quantity}</td>
                             <td className="px-3 py-3 text-center text-rose-500 font-bold">{item.ReturnedQuantity}</td>
                             <td className="px-3 py-3 text-center">
-                              <Input 
-                                type="number" 
+                              <Input
+                                type="number"
                                 disabled={isFullyReturned}
                                 min={0}
                                 max={item.Quantity - item.ReturnedQuantity}
@@ -895,7 +895,7 @@ export default function POSBillingPage() {
                               />
                             </td>
                             <td className="px-3 py-3">
-                              <select 
+                              <select
                                 disabled={isFullyReturned || item.ReturnQuantity === 0}
                                 value={item.ItemCondition}
                                 onChange={(e) => updateReturnItem(item.SalesItemId, 'ItemCondition', e.target.value)}
@@ -916,7 +916,7 @@ export default function POSBillingPage() {
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 bg-slate-50 dark:bg-card border border-border rounded-lg p-6">
                   <div className="flex-1 w-full">
                     <label className="text-sm font-semibold mb-2 block text-foreground">Return Reason (Mandatory) <span className="text-rose-500">*</span></label>
-                    <textarea 
+                    <textarea
                       placeholder="e.g. Expired, Adverse Reaction, Wrong Item Dispensed..."
                       className="w-full flex min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
                       value={returnReason}
@@ -939,44 +939,44 @@ export default function POSBillingPage() {
         {/* Sales History Grid */}
         {activeTab === 'history' && (
           <div className="bg-white dark:bg-card rounded-xl border border-border shadow-sm p-6 mt-6">
-            <h2 className="text-xl font-bold mb-4 text-foreground flex items-center gap-2"><FileText className="w-5 h-5 text-blue-500"/> Sales History</h2>
-            
+            <h2 className="text-xl font-bold mb-4 text-foreground flex items-center gap-2"><FileText className="w-5 h-5 text-blue-500" /> Sales History</h2>
+
             <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-6 bg-secondary/30 p-4 rounded-lg border border-border">
               <div className="md:col-span-2">
                 <label className="text-xs font-medium text-muted-foreground mb-1 block">Search Invoice / Customer</label>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input 
-                    placeholder="Search..." 
+                  <Input
+                    placeholder="Search..."
                     className="pl-9"
                     value={historyFilters.q}
-                    onChange={e => setHistoryFilters({...historyFilters, q: e.target.value})}
+                    onChange={e => setHistoryFilters({ ...historyFilters, q: e.target.value })}
                     onKeyDown={e => e.key === 'Enter' && fetchHistory()}
                   />
                 </div>
               </div>
               <div>
                 <label className="text-xs font-medium text-muted-foreground mb-1 block">Start Date</label>
-                <Input 
-                  type="date" 
+                <Input
+                  type="date"
                   value={historyFilters.startDate}
-                  onChange={e => setHistoryFilters({...historyFilters, startDate: e.target.value})}
+                  onChange={e => setHistoryFilters({ ...historyFilters, startDate: e.target.value })}
                 />
               </div>
               <div>
                 <label className="text-xs font-medium text-muted-foreground mb-1 block">End Date</label>
-                <Input 
-                  type="date" 
+                <Input
+                  type="date"
                   value={historyFilters.endDate}
-                  onChange={e => setHistoryFilters({...historyFilters, endDate: e.target.value})}
+                  onChange={e => setHistoryFilters({ ...historyFilters, endDate: e.target.value })}
                 />
               </div>
               <div>
                 <label className="text-xs font-medium text-muted-foreground mb-1 block">Payment</label>
-                <select 
+                <select
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                   value={historyFilters.paymentMethod}
-                  onChange={e => setHistoryFilters({...historyFilters, paymentMethod: e.target.value})}
+                  onChange={e => setHistoryFilters({ ...historyFilters, paymentMethod: e.target.value })}
                 >
                   <option value="">All</option>
                   <option value="Cash">Cash</option>
@@ -1019,16 +1019,16 @@ export default function POSBillingPage() {
                           <span className={cn(
                             "px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider",
                             item.Status === "Completed" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400" :
-                            item.Status === "Partially Returned" ? "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400" :
-                            "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-400"
+                              item.Status === "Partially Returned" ? "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400" :
+                                "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-400"
                           )}>
                             {item.Status}
                           </span>
                         </td>
                         <td className="px-3 py-3 text-center">
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
+                          <Button
+                            variant="outline"
+                            size="sm"
                             className="h-8 text-blue-600 border-blue-200 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-900/50 dark:hover:bg-blue-950/30"
                             onClick={() => handleReprint(item.InvoiceNumber, item.CashierName, item.PaymentMethod)}
                           >
@@ -1048,24 +1048,24 @@ export default function POSBillingPage() {
       {/* Footer Shortcuts */}
       <div className="sticky bottom-0 left-0 right-0 z-50 h-16 bg-white dark:bg-card border-t border-border flex items-center px-6 gap-6 shadow-[0_-10px_30px_rgba(0,0,0,0.1)] overflow-x-auto whitespace-nowrap mt-auto">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-           <span className="bg-secondary/80 text-foreground font-mono px-2 py-1 rounded text-xs font-semibold shadow-sm border border-border/50">F2</span>
-           <span className="font-medium">Search Medicine</span>
+          <span className="bg-secondary/80 text-foreground font-mono px-2 py-1 rounded text-xs font-semibold shadow-sm border border-border/50">F2</span>
+          <span className="font-medium">Search Medicine</span>
         </div>
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-           <span className="bg-secondary/80 text-foreground font-mono px-2 py-1 rounded text-xs font-semibold shadow-sm border border-border/50">F4</span>
-           <span className="font-medium">Customer</span>
+          <span className="bg-secondary/80 text-foreground font-mono px-2 py-1 rounded text-xs font-semibold shadow-sm border border-border/50">F4</span>
+          <span className="font-medium">Customer</span>
         </div>
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-           <span className="bg-secondary/80 text-foreground font-mono px-2 py-1 rounded text-xs font-semibold shadow-sm border border-border/50">F5</span>
-           <span className="font-medium">Hold Sale</span>
+          <span className="bg-secondary/80 text-foreground font-mono px-2 py-1 rounded text-xs font-semibold shadow-sm border border-border/50">F5</span>
+          <span className="font-medium">Hold Sale</span>
         </div>
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-           <span className="bg-secondary/80 text-foreground font-mono px-2 py-1 rounded text-xs font-semibold shadow-sm border border-border/50">F8</span>
-           <span className="font-medium">Recent Sales</span>
+          <span className="bg-secondary/80 text-foreground font-mono px-2 py-1 rounded text-xs font-semibold shadow-sm border border-border/50">F8</span>
+          <span className="font-medium">Recent Sales</span>
         </div>
         <div className="ml-auto flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400">
-           <Barcode className="w-5 h-5" />
-           <span className="font-medium">Barcode Scanner Ready</span>
+          <Barcode className="w-5 h-5" />
+          <span className="font-medium">Barcode Scanner Ready</span>
         </div>
       </div>
 
@@ -1079,9 +1079,9 @@ export default function POSBillingPage() {
             <p className="text-muted-foreground text-sm mb-6">
               <strong>{prescriptionPromptObj.MedicineName}</strong> requires a valid prescription before it can be dispensed. Please enter the prescription reference or doctor details.
             </p>
-            <Input 
+            <Input
               autoFocus
-              placeholder="e.g. Dr. Smith / RX-7742" 
+              placeholder="e.g. Dr. Smith / RX-7742"
               className="mb-6"
               onKeyDown={(e) => {
                 if (e.key === 'Enter') confirmPrescription((e.target as HTMLInputElement).value || 'Verified');
@@ -1101,7 +1101,7 @@ export default function POSBillingPage() {
       {completedReceipt && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-md flex flex-col max-h-full overflow-hidden">
-            
+
             {/* Modal Header Actions */}
             <div className="flex justify-between items-center p-4 border-b border-border bg-slate-50">
               <h2 className="font-bold text-foreground">{isReprintMode ? "Receipt Reprint" : "Transaction Complete"}</h2>
@@ -1110,10 +1110,10 @@ export default function POSBillingPage() {
 
             {/* Receipt Preview Area */}
             <div className="p-6 overflow-y-auto bg-slate-100 flex justify-center">
-              
+
               {/* Actual Printable Receipt (Styled like Thermal) */}
               <div id="print-area" className="bg-white p-6 shadow-sm w-full max-w-[80mm] text-black font-mono text-xs mx-auto relative">
-                
+
                 {isReprintMode && (
                   <div className="absolute inset-0 pointer-events-none flex items-center justify-center opacity-10 overflow-hidden">
                     <span className="text-4xl font-bold transform -rotate-45 whitespace-nowrap text-black">DUPLICATE / REPRINT</span>
@@ -1125,7 +1125,7 @@ export default function POSBillingPage() {
                   <p>123 Health Ave, Medical City</p>
                   <p>Tel: +1 234 567 8900</p>
                 </div>
-                
+
                 {isReprintMode && (
                   <div className="text-center font-bold text-sm mb-4 border-y border-black py-1 relative z-10">
                     *** DUPLICATE / REPRINT ***
