@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { Button } from "@/components/ui/button";
 import { apiClient } from "@/lib/api-client";
 import ChartsSection from "./charts-section";
 import WidgetsSection from "./widgets-section";
@@ -23,7 +23,8 @@ import {
   Skull,
   TrendingUp,
   Download,
-  Wallet
+  Wallet,
+  RefreshCw
 } from "lucide-react";
 
 export default function DashboardPage() {
@@ -33,6 +34,7 @@ export default function DashboardPage() {
   // Global Filter State
   const [timeframe, setTimeframe] = useState("today");
   const [dateRange, setDateRange] = useState<{start: string, end: string} | null>(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   useEffect(() => {
     fetchSummary();
@@ -79,7 +81,17 @@ export default function DashboardPage() {
           <p className="text-sm text-muted-foreground mt-1">Live metrics from your pharmacy operations</p>
         </div>
         <div className="flex items-center space-x-4">
-          <ThemeToggle />
+          <Button 
+            onClick={() => {
+              fetchSummary();
+              setRefreshTrigger(prev => prev + 1);
+            }} 
+            variant="outline" 
+            className="rounded-full shadow-sm bg-white hover:bg-slate-50 dark:bg-card dark:hover:bg-slate-900 border-border"
+          >
+            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            Refresh Dashboard
+          </Button>
         </div>
       </div>
 
@@ -257,9 +269,9 @@ export default function DashboardPage() {
         </div>
       </div>
       
-      <WidgetsSection timeframe={timeframe} dateRange={dateRange} />
+      <WidgetsSection timeframe={timeframe} dateRange={dateRange} refreshTrigger={refreshTrigger} />
       
-      <ChartsSection timeframe={timeframe} dateRange={dateRange} />
+      <ChartsSection timeframe={timeframe} dateRange={dateRange} refreshTrigger={refreshTrigger} />
     </div>
   );
 }

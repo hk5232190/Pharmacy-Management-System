@@ -8,7 +8,7 @@ from core.exceptions import (
     general_exception_handler
 )
 
-from api.v1 import license, auth, category, company, supplier, customer, medicine, purchase, purchase_return, inventory, sales, dashboard
+from api.v1 import license, auth, category, company, supplier, customer, medicine, purchase, purchase_return, inventory, sales, dashboard, reports
 
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -45,6 +45,7 @@ api_router.include_router(purchase_return.router, prefix="/purchase-returns", ta
 api_router.include_router(inventory.router, prefix="/inventory", tags=["Inventory"])
 api_router.include_router(sales.router, prefix="/sales", tags=["Sales"])
 api_router.include_router(dashboard.router, prefix="/dashboard", tags=["Dashboard"])
+api_router.include_router(reports.router, prefix="/reports", tags=["Reports"])
 
 app.include_router(api_router)
 

@@ -10,15 +10,16 @@ import Link from "next/link";
 interface WidgetsSectionProps {
   timeframe?: string;
   dateRange?: { start: string; end: string } | null;
+  refreshTrigger?: number;
 }
 
-export default function WidgetsSection({ timeframe = 'today', dateRange = null }: WidgetsSectionProps) {
+export default function WidgetsSection({ timeframe = 'today', dateRange = null, refreshTrigger = 0 }: WidgetsSectionProps) {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<any>(null);
 
   useEffect(() => {
     fetchWidgets();
-  }, [timeframe, dateRange]);
+  }, [timeframe, dateRange, refreshTrigger]);
 
   const fetchWidgets = async () => {
     setLoading(true);

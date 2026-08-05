@@ -28,15 +28,16 @@ const COLORS = ['#0ea5e9', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#ec4899'
 interface ChartsSectionProps {
   timeframe?: string;
   dateRange?: { start: string; end: string } | null;
+  refreshTrigger?: number;
 }
 
-export default function ChartsSection({ timeframe = 'last_30_days', dateRange = null }: ChartsSectionProps) {
+export default function ChartsSection({ timeframe = 'last_30_days', dateRange = null, refreshTrigger = 0 }: ChartsSectionProps) {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<any>(null);
 
   useEffect(() => {
     fetchCharts();
-  }, [timeframe, dateRange]);
+  }, [timeframe, dateRange, refreshTrigger]);
 
   const fetchCharts = async () => {
     setLoading(true);
