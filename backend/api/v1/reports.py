@@ -1137,9 +1137,9 @@ def export_medicine_report_excel(
         if report_type == 'expiry':
             ws.append([t.MedicineId, t.MedicineName, getattr(t, 'BatchNumber', 'N/A'), getattr(t, 'StockQuantity', 0), getattr(t, 'ExpiryDate', '').strftime("%Y-%m-%d") if getattr(t, 'ExpiryDate', None) else 'N/A', getattr(t, 'DaysToExpiry', 0), getattr(t, 'RiskLevel', 'Unknown')])
         elif report_type == 'low_stock':
-            ws.append([t.MedicineId, t.MedicineName, getattr(t, 'CurrentStock', 0), getattr(t, 'ReorderLevel', 0), getattr(t, 'SuggestedReorderQty', 0), 'Low Stock'])
+            ws.append([getattr(t, 'MedicineId', 'N/A'), t.MedicineName, getattr(t, 'CurrentStock', 0), getattr(t, 'ReorderLevel', 0), getattr(t, 'SuggestedReorderQty', 0), 'Low Stock'])
         else:
-            ws.append([t.MedicineId, t.MedicineName, getattr(t, 'SoldQuantity', 0), round(getattr(t, 'Revenue', 0.0), 2), round(getattr(t, 'SalesVelocity', 0.0), 2), 0, getattr(t, 'Classification', 'Unknown')])
+            ws.append([getattr(t, 'MedicineId', 'N/A'), t.MedicineName, getattr(t, 'SoldQuantity', 0), round(getattr(t, 'Revenue', 0.0), 2), round(getattr(t, 'SalesVelocity', 0.0), 2), 0, getattr(t, 'Classification', 'Unknown')])
             
     for col in ws.columns:
         max_length = 0
@@ -1409,11 +1409,11 @@ def export_medicine_report_pdf(req: schemas.PDFExportRequest, db: Session = Depe
     elif req.report_type == 'low_stock':
         data = [['Med ID', 'Brand Name', 'Current Stock', 'Min Level', 'Reorder Qty', 'Status']]
         for t in report_data.low_stock_items[:200]:
-            data.append([str(t.MedicineId), t.MedicineName[:15], str(getattr(t, 'CurrentStock', 0)), str(getattr(t, 'ReorderLevel', 0)), str(getattr(t, 'SuggestedReorderQty', 0)), 'Low Stock'])
+            data.append([str(getattr(t, 'MedicineId', 'N/A')), t.MedicineName[:15], str(getattr(t, 'CurrentStock', 0)), str(getattr(t, 'ReorderLevel', 0)), str(getattr(t, 'SuggestedReorderQty', 0)), 'Low Stock'])
     else:
         data = [['Med ID', 'Brand Name', 'Qty Sold', 'Revenue', 'Avg Daily', 'Stock', 'Class']]
         for t in report_data.movement_items[:200]:
-            data.append([str(t.MedicineId), t.MedicineName[:15], str(getattr(t, 'SoldQuantity', 0)), str(round(getattr(t, 'Revenue', 0.0), 2)), str(round(getattr(t, 'SalesVelocity', 0.0), 2)), '0', getattr(t, 'Classification', 'Unknown')])
+            data.append([str(getattr(t, 'MedicineId', 'N/A')), t.MedicineName[:15], str(getattr(t, 'SoldQuantity', 0)), str(round(getattr(t, 'Revenue', 0.0), 2)), str(round(getattr(t, 'SalesVelocity', 0.0), 2)), '0', getattr(t, 'Classification', 'Unknown')])
             
     t = Table(data, repeatRows=1)
     t.setStyle(TableStyle([
