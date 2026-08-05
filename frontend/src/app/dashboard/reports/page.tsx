@@ -34,6 +34,9 @@ export default function ReportsPage() {
   const [activeMedicineTab, setActiveMedicineTab] = useState("expiry");
 
   useEffect(() => {
+    // Don't fetch if custom is selected but no date range has been applied yet
+    if (timeframe === 'custom' && !dateRange) return;
+
     if (activeTab === "sales") {
       fetchSalesReports();
     } else if (activeTab === "purchases") {
@@ -159,6 +162,8 @@ export default function ReportsPage() {
     } else {
       setShowCustom(false);
       setDateRange(null);
+      setStartDate("");
+      setEndDate("");
       setTimeframe(tf);
     }
   };
@@ -339,21 +344,33 @@ export default function ReportsPage() {
             </Button>
           ))}
           {showCustom && (
-            <div className="flex items-center gap-2 ml-4">
+            <div className="flex items-center gap-2 ml-4 animate-in fade-in duration-200">
               <input 
                 type="date" 
-                className="text-sm border border-border rounded-md p-1.5 bg-background text-foreground"
+                className="text-sm border border-border rounded-md p-1.5 bg-background text-foreground focus:ring-2 focus:ring-primary outline-none"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
               />
               <span className="text-muted-foreground">to</span>
               <input 
                 type="date" 
-                className="text-sm border border-border rounded-md p-1.5 bg-background text-foreground"
+                className="text-sm border border-border rounded-md p-1.5 bg-background text-foreground focus:ring-2 focus:ring-primary outline-none"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
               />
-              <Button size="sm" onClick={handleApplyCustom}>Apply</Button>
+              <Button 
+                size="sm" 
+                onClick={handleApplyCustom}
+                disabled={!startDate || !endDate}
+                className="bg-primary text-primary-foreground"
+              >
+                Apply
+              </Button>
+              {dateRange && (
+                <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1">
+                  ✓ Applied
+                </span>
+              )}
             </div>
           )}
         </div>

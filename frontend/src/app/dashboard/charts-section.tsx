@@ -36,6 +36,7 @@ export default function ChartsSection({ timeframe = 'last_30_days', dateRange = 
   const [data, setData] = useState<any>(null);
 
   useEffect(() => {
+    if (timeframe === 'custom' && !dateRange) return;
     fetchCharts();
   }, [timeframe, dateRange, refreshTrigger]);
 

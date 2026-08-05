@@ -199,8 +199,13 @@ def generate_date_sequence(start_date, end_date, interval='daily'):
     return dates
 
 @router.get("/charts", response_model=DashboardChartsResponse)
-def get_dashboard_charts(timeframe: str = 'last_30_days', db: Session = Depends(get_db)):
-    start_date, end_date = get_date_range(timeframe)
+def get_dashboard_charts(
+    timeframe: str = 'last_30_days', 
+    start_date: str = None, 
+    end_date: str = None,
+    db: Session = Depends(get_db)
+):
+    start_date, end_date = get_date_range(timeframe, start_date, end_date)
     interval = 'monthly' if timeframe == 'this_year' else 'daily'
     date_seq = generate_date_sequence(start_date, end_date, interval)
 

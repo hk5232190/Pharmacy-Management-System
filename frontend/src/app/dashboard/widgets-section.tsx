@@ -18,6 +18,7 @@ export default function WidgetsSection({ timeframe = 'today', dateRange = null, 
   const [data, setData] = useState<any>(null);
 
   useEffect(() => {
+    if (timeframe === 'custom' && !dateRange) return;
     fetchWidgets();
   }, [timeframe, dateRange, refreshTrigger]);
 

@@ -37,6 +37,8 @@ export default function DashboardPage() {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   useEffect(() => {
+    // Don't fetch if custom is selected but no date range has been applied yet
+    if (timeframe === 'custom' && !dateRange) return;
     fetchSummary();
   }, [timeframe, dateRange]);
 

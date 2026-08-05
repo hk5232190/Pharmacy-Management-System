@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "lucide-react";
+import { Calendar, Check } from "lucide-react";
 
 interface DashboardFilterProps {
   timeframe: string;
@@ -23,6 +23,8 @@ export default function DashboardFilter({ timeframe, setTimeframe, dateRange, se
     } else {
       setShowCustom(false);
       setDateRange(null);
+      setStart("");
+      setEnd("");
       setTimeframe(tf);
     }
   };
@@ -58,25 +60,40 @@ export default function DashboardFilter({ timeframe, setTimeframe, dateRange, se
             className="rounded-full"
           >
             {f.label}
+            {f.id === 'custom' && dateRange && (
+              <Check className="w-3 h-3 ml-1 text-emerald-400" />
+            )}
           </Button>
         ))}
 
         {showCustom && (
-          <div className="flex items-center gap-2 ml-4">
+          <div className="flex items-center gap-2 ml-4 animate-in fade-in duration-200">
             <input 
               type="date" 
-              className="text-sm border border-border rounded-md p-1.5 bg-background text-foreground"
+              className="text-sm border border-border rounded-md p-1.5 bg-background text-foreground focus:ring-2 focus:ring-primary outline-none"
               value={start}
               onChange={(e) => setStart(e.target.value)}
             />
             <span className="text-muted-foreground">to</span>
             <input 
               type="date" 
-              className="text-sm border border-border rounded-md p-1.5 bg-background text-foreground"
+              className="text-sm border border-border rounded-md p-1.5 bg-background text-foreground focus:ring-2 focus:ring-primary outline-none"
               value={end}
               onChange={(e) => setEnd(e.target.value)}
             />
-            <Button size="sm" onClick={handleApplyCustom}>Apply</Button>
+            <Button 
+              size="sm" 
+              onClick={handleApplyCustom}
+              disabled={!start || !end}
+              className="bg-primary text-primary-foreground"
+            >
+              Apply
+            </Button>
+            {dateRange && (
+              <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1">
+                <Check className="w-3 h-3" /> Applied
+              </span>
+            )}
           </div>
         )}
       </div>
