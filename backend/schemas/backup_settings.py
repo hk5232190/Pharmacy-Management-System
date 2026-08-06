@@ -6,9 +6,10 @@ class BackupSettingsBase(BaseModel):
     BackupFrequency: str = "Daily"
     BackupTime: str = "23:00"
     BackupLocation: str = "./backups/automatic"
-    RetentionCount: int = 7
-    BackupOnStartup: bool = False
-    CompressBackup: bool = True
+    RetentionCount: Optional[int] = 7
+    BackupOnStartup: Optional[bool] = False
+    CompressBackup: Optional[bool] = True
+    AutoVerify: Optional[bool] = False
 
 class BackupSettingsResponse(BackupSettingsBase):
     SettingsId: int

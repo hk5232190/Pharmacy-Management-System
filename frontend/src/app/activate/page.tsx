@@ -17,7 +17,7 @@ export default function ActivatePage() {
 
   useEffect(() => {
     // Fetch HWID on mount
-    fetch("http://localhost:8000/api/v1/license/hwid")
+    fetch("http://127.0.0.1:8000/api/v1/license/hwid")
       .then((res) => res.json())
       .then((data) => setHwid(data.hwid))
       .catch(() => setError("Failed to fetch Hardware ID from backend. Is the server running?"));
@@ -38,7 +38,7 @@ export default function ActivatePage() {
     setError("");
 
     try {
-      const response = await fetch("http://localhost:8000/api/v1/license/activate", {
+      const response = await fetch("http://127.0.0.1:8000/api/v1/license/activate", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

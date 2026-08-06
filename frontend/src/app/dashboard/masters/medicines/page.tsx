@@ -152,7 +152,7 @@ export default function MedicinesPage() {
   };
 
   const handleExport = () => {
-    window.open("http://localhost:8000/api/v1/medicines/export", "_blank");
+    window.open("http://127.0.0.1:8000/api/v1/medicines/export", "_blank");
   };
 
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -166,7 +166,7 @@ export default function MedicinesPage() {
     toast.info("Importing medicines...");
     try {
       const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
-      const res = await fetch("http://localhost:8000/api/v1/medicines/import", {
+      const res = await fetch("http://127.0.0.1:8000/api/v1/medicines/import", {
         method: "POST",
         headers: token ? { "Authorization": `Bearer ${token}` } : {},
         body: formData,

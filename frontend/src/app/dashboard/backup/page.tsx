@@ -63,7 +63,7 @@ export default function BackupRestorePage() {
     setIsLoadingHistory(true);
     try {
       const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
-      const res = await fetch("http://localhost:8000/api/v1/backup/history", {
+      const res = await fetch("http://127.0.0.1:8000/api/v1/backup/history", {
         headers: { "Authorization": `Bearer ${token}` }
       });
       if (res.ok) {
@@ -80,7 +80,7 @@ export default function BackupRestorePage() {
   const fetchSettings = async () => {
     try {
       const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
-      const res = await fetch("http://localhost:8000/api/v1/backup-settings", {
+      const res = await fetch("http://127.0.0.1:8000/api/v1/backup-settings", {
         headers: { "Authorization": `Bearer ${token}` }
       });
       if (res.ok) {
@@ -96,7 +96,7 @@ export default function BackupRestorePage() {
     setIsSavingSettings(true);
     try {
       const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
-      const res = await fetch("http://localhost:8000/api/v1/backup-settings", {
+      const res = await fetch("http://127.0.0.1:8000/api/v1/backup-settings", {
         method: "PUT",
         headers: { 
           "Authorization": `Bearer ${token}`,
@@ -125,7 +125,7 @@ export default function BackupRestorePage() {
     setIsBackingUp(true);
     try {
       const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
-      const res = await fetch("http://localhost:8000/api/v1/backup/manual", {
+      const res = await fetch("http://127.0.0.1:8000/api/v1/backup/manual", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -166,7 +166,7 @@ export default function BackupRestorePage() {
     try {
       const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
       
-      const res = await fetch("http://localhost:8000/api/v1/backup/restore", {
+      const res = await fetch("http://127.0.0.1:8000/api/v1/backup/restore", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -201,7 +201,7 @@ export default function BackupRestorePage() {
 
   const handleBrowseFolder = async () => {
     try {
-      const res = await fetch("http://localhost:8000/api/v1/backup/browse-folder");
+      const res = await fetch("http://127.0.0.1:8000/api/v1/backup/browse-folder");
       const data = await res.json();
       if (data.path) {
         setBackupLocation(data.path);
@@ -213,7 +213,7 @@ export default function BackupRestorePage() {
 
   const handleBrowseSettingsFolder = async () => {
     try {
-      const res = await fetch("http://localhost:8000/api/v1/backup/browse-folder");
+      const res = await fetch("http://127.0.0.1:8000/api/v1/backup/browse-folder");
       const data = await res.json();
       if (data.path) {
         setSettings({ ...settings, BackupLocation: data.path });
@@ -225,7 +225,7 @@ export default function BackupRestorePage() {
 
   const handleBrowseFile = async () => {
     try {
-      const res = await fetch("http://localhost:8000/api/v1/backup/browse-file");
+      const res = await fetch("http://127.0.0.1:8000/api/v1/backup/browse-file");
       const data = await res.json();
       if (data.path) {
         setRestoreFilePath(data.path);
@@ -240,7 +240,7 @@ export default function BackupRestorePage() {
     
     try {
       const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
-      const res = await fetch(`http://localhost:8000/api/v1/backup/history/${id}`, {
+      const res = await fetch(`http://127.0.0.1:8000/api/v1/backup/history/${id}`, {
         method: "DELETE",
         headers: { "Authorization": `Bearer ${token}` }
       });
@@ -262,7 +262,7 @@ export default function BackupRestorePage() {
     setIsVerifyModalOpen(true);
     try {
       const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
-      const res = await fetch(`http://localhost:8000/api/v1/backup/history/${id}/verify`, {
+      const res = await fetch(`http://127.0.0.1:8000/api/v1/backup/history/${id}/verify`, {
         method: "POST",
         headers: { "Authorization": `Bearer ${token}` }
       });
@@ -284,7 +284,7 @@ export default function BackupRestorePage() {
   const handleOpenFolder = async (id: number) => {
     try {
       const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
-      const res = await fetch(`http://localhost:8000/api/v1/backup/history/${id}/open-folder`, {
+      const res = await fetch(`http://127.0.0.1:8000/api/v1/backup/history/${id}/open-folder`, {
         method: "POST",
         headers: { "Authorization": `Bearer ${token}` }
       });
@@ -734,6 +734,15 @@ export default function BackupRestorePage() {
                       onCheckedChange={(c) => setSettings({ ...settings, CompressBackup: c as boolean })} 
                     />
                     <Label htmlFor="compressAuto" className="text-sm font-normal cursor-pointer">Compress to ZIP</Label>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2 pt-2">
+                    <Checkbox 
+                      id="autoVerify" 
+                      checked={settings.AutoVerify} 
+                      onCheckedChange={(c) => setSettings({ ...settings, AutoVerify: c as boolean })} 
+                    />
+                    <Label htmlFor="autoVerify" className="text-sm font-normal cursor-pointer text-green-700 dark:text-green-500 font-medium">Run Deep Verification after backup (AES-256 + Integrity)</Label>
                   </div>
                 </div>
 

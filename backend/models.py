@@ -302,3 +302,4 @@ class BackupSettings(Base):
     RetentionCount = Column(Integer, default=7)
     BackupOnStartup = Column(Boolean, default=False)
     CompressBackup = Column(Boolean, default=True)
+    AutoVerify = Column(Boolean, default=False)

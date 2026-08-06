@@ -61,7 +61,7 @@ export default function CustomersPage() {
 
   const handleToggleStatus = async (id: number) => {
     try {
-      const res = await fetch(`http://localhost:8000/api/v1/customers/${id}/status`, { method: "PUT" });
+      const res = await fetch(`http://127.0.0.1:8000/api/v1/customers/${id}/status`, { method: "PUT" });
       const data = await res.json();
       if (data.success) {
         toast.success(data.message);

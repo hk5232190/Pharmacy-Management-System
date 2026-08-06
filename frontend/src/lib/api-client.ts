@@ -1,7 +1,7 @@
 // A centralized API client that automatically handles attaching the JWT token
 // to all requests. This ensures authentication is never missing.
 
-const BASE_URL = "http://localhost:8000/api/v1";
+const BASE_URL = "http://127.0.0.1:8000/api/v1";
 
 interface FetchOptions extends RequestInit {
   params?: Record<string, string>;

@@ -13,7 +13,7 @@ export function StartupProvider({ children }: { children: React.ReactNode }) {
     const initializeApp = async () => {
       try {
         // Step 1: Check License
-        const licenseRes = await fetch("http://localhost:8000/api/v1/license/status");
+        const licenseRes = await fetch("http://127.0.0.1:8000/api/v1/license/status");
         if (!licenseRes.ok) throw new Error("License server error");
         
         const licenseData = await licenseRes.json();
@@ -41,7 +41,7 @@ export function StartupProvider({ children }: { children: React.ReactNode }) {
         }
 
         // Verify token validity
-        const authRes = await fetch("http://localhost:8000/api/v1/auth/me", {
+        const authRes = await fetch("http://127.0.0.1:8000/api/v1/auth/me", {
           headers: {
             Authorization: `Bearer ${token}`
           }

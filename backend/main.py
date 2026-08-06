@@ -61,7 +61,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 
 def run_automatic_backup_job():
     from database import SessionLocal
-    from api.v1.backup import execute_backup
+    from api.v1.backup import execute_backup, verify_backup
     from models import BackupSettings
     db = SessionLocal()
     try:
@@ -69,7 +69,13 @@ def run_automatic_backup_job():
         if not settings or not settings.IsAutoBackupEnabled:
             return
         logger.info("Executing scheduled automatic backup...")
-        execute_backup(db, f"AutoBackup_{datetime.now().strftime('%Y_%m_%d_%H%M%S')}", settings.BackupLocation, settings.CompressBackup, "Automatic")
+        record = execute_backup(db, f"AutoBackup_{datetime.now().strftime('%Y_%m_%d_%H%M%S')}", settings.BackupLocation, settings.CompressBackup, "Automatic")
+        
+        if settings.AutoVerify and record and record.Status == "Success":
+            logger.info("AutoVerify enabled. Running deep verification on new automatic backup...")
+            report = verify_backup(record.BackupId, db, current_user=None)
+            logger.info(f"Verification complete. Overall status: {report.get('overall')}")
+            
     except Exception as e:
         logger.error(f"Automatic backup failed: {e}")
     finally:

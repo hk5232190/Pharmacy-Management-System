@@ -37,11 +37,17 @@ def get_mac_address() -> str:
     mac_hex = ''.join(['{:02x}'.format((mac_num >> elements) & 0xff) for elements in range(0, 8*6, 8)][::-1])
     return mac_hex
 
+_cached_hwid = None
+
 def generate_hwid() -> str:
     """
     Generates a hardware ID based on SRS Chapter 2 exact formula:
     SHA256(CPU_ID + Motherboard_UUID + MAC_Address)
     """
+    global _cached_hwid
+    if _cached_hwid is not None:
+        return _cached_hwid
+        
     cpu_id = get_cpu_id()
     mb_uuid = get_motherboard_uuid()
     mac_addr = get_mac_address()
@@ -58,4 +64,5 @@ def generate_hwid() -> str:
     short_hash = full_hash[:16]
     formatted_hwid = f"PMS-{short_hash[:4]}-{short_hash[4:8]}-{short_hash[8:12]}-{short_hash[12:16]}"
     
+    _cached_hwid = formatted_hwid
     return formatted_hwid

@@ -177,7 +177,7 @@ export default function ReportsPage() {
   const exportReport = async (type: 'csv' | 'excel' | 'pdf') => {
     let endpoint = activeTab === 'sales' ? '/reports/sales/export/' + type : activeTab === 'purchases' ? '/reports/purchases/export/' + type : activeTab === 'inventory' ? '/reports/inventory/export/' + type : activeTab === 'financial' ? '/reports/financial/export/' + type : '/reports/medicine/export/' + type;
     
-    let url = `http://localhost:8000/api/v1${endpoint}`;
+    let url = `http://127.0.0.1:8000/api/v1${endpoint}`;
     
     let params = `?timeframe=${timeframe}`;
     if (activeTab === 'medicine') {
