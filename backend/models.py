@@ -290,3 +290,15 @@ class BackupHistory(Base):
     Status = Column(String(50), nullable=False) # 'Success', 'Failed'
     ChecksumSHA256 = Column(String(64), nullable=True)
     CreatedAt = Column(DateTime, server_default=func.now())
+
+class BackupSettings(Base):
+    __tablename__ = "backup_settings"
+
+    SettingsId = Column(Integer, primary_key=True, autoincrement=True)
+    IsAutoBackupEnabled = Column(Boolean, default=False)
+    BackupFrequency = Column(String(50), default="Daily") # Daily, Weekly, Monthly
+    BackupTime = Column(String(10), default="23:00")
+    BackupLocation = Column(String(500), default="./backups/automatic")
+    RetentionCount = Column(Integer, default=7)
+    BackupOnStartup = Column(Boolean, default=False)
+    CompressBackup = Column(Boolean, default=True)

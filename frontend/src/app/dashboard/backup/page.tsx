@@ -5,7 +5,7 @@ import {
   RefreshCw, Settings, Calendar, Database, HardDrive, HeartPulse, 
   ShieldCheck, Clock, DownloadCloud, RotateCcw, History, Edit2, 
   FolderOpen, Info, CheckCircle2, Search, Filter, Shield, 
-  CloudRain, ArrowRight, Loader2
+  CloudRain, ArrowRight, Loader2, Trash2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,16 +25,33 @@ export default function BackupRestorePage() {
   const [backupHistory, setBackupHistory] = useState<any[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [historySearchQuery, setHistorySearchQuery] = useState("");
   const [expandedBackupId, setExpandedBackupId] = useState<number | null>(null);
+
+  const [verificationReport, setVerificationReport] = useState<any>(null);
+  const [isVerifyModalOpen, setIsVerifyModalOpen] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
 
   const [restoreFilePath, setRestoreFilePath] = useState("");
   const [isRestoring, setIsRestoring] = useState(false);
   const [restoreStatus, setRestoreStatus] = useState("");
 
+  const [settings, setSettings] = useState({
+    IsAutoBackupEnabled: false,
+    BackupFrequency: "Daily",
+    BackupTime: "23:00",
+    BackupLocation: "./backups/automatic",
+    RetentionCount: 7,
+    BackupOnStartup: false,
+    CompressBackup: true
+  });
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
+
   // Initialize backup name
   useEffect(() => {
     generateBackupName();
     fetchHistory();
+    fetchSettings();
   }, []);
 
   const generateBackupName = () => {
@@ -57,6 +74,45 @@ export default function BackupRestorePage() {
       console.error("Failed to fetch backup history", error);
     } finally {
       setIsLoadingHistory(false);
+    }
+  };
+
+  const fetchSettings = async () => {
+    try {
+      const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
+      const res = await fetch("http://localhost:8000/api/v1/backup-settings", {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSettings(data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch settings", error);
+    }
+  };
+
+  const handleSaveSettings = async () => {
+    setIsSavingSettings(true);
+    try {
+      const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
+      const res = await fetch("http://localhost:8000/api/v1/backup-settings", {
+        method: "PUT",
+        headers: { 
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(settings)
+      });
+      if (res.ok) {
+        toast.success("Backup settings saved successfully.");
+      } else {
+        toast.error("Failed to save settings.");
+      }
+    } catch (e) {
+      toast.error("Error saving settings.");
+    } finally {
+      setIsSavingSettings(false);
     }
   };
 
@@ -155,6 +211,18 @@ export default function BackupRestorePage() {
     }
   };
 
+  const handleBrowseSettingsFolder = async () => {
+    try {
+      const res = await fetch("http://localhost:8000/api/v1/backup/browse-folder");
+      const data = await res.json();
+      if (data.path) {
+        setSettings({ ...settings, BackupLocation: data.path });
+      }
+    } catch (e) {
+      toast.error("Could not open folder browser.");
+    }
+  };
+
   const handleBrowseFile = async () => {
     try {
       const res = await fetch("http://localhost:8000/api/v1/backup/browse-file");
@@ -164,6 +232,68 @@ export default function BackupRestorePage() {
       }
     } catch (e) {
       toast.error("Could not open file browser.");
+    }
+  };
+
+  const handleDeleteBackup = async (id: number) => {
+    if (!confirm("Are you sure you want to permanently delete this backup file? This cannot be undone.")) return;
+    
+    try {
+      const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
+      const res = await fetch(`http://localhost:8000/api/v1/backup/history/${id}`, {
+        method: "DELETE",
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      if (res.ok) {
+        toast.success("Backup permanently deleted.");
+        fetchHistory();
+      } else {
+        const err = await res.json();
+        toast.error(err.detail || "Failed to delete backup.");
+      }
+    } catch (e) {
+      toast.error("An error occurred while deleting.");
+    }
+  };
+
+  const handleVerifyBackup = async (id: number) => {
+    setIsVerifying(true);
+    setVerificationReport(null);
+    setIsVerifyModalOpen(true);
+    try {
+      const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
+      const res = await fetch(`http://localhost:8000/api/v1/backup/history/${id}/verify`, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setVerificationReport(data);
+      } else {
+        toast.error(data.detail || "Failed to verify backup.");
+        setIsVerifyModalOpen(false);
+      }
+    } catch (e) {
+      toast.error("An error occurred during verification.");
+      setIsVerifyModalOpen(false);
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  const handleOpenFolder = async (id: number) => {
+    try {
+      const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
+      const res = await fetch(`http://localhost:8000/api/v1/backup/history/${id}/open-folder`, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        toast.error(err.detail || "Failed to open folder.");
+      }
+    } catch (e) {
+      toast.error("Could not send open folder command.");
     }
   };
 
@@ -447,9 +577,20 @@ export default function BackupRestorePage() {
 
           {activeTab === "history" && (
             <Card>
-              <CardHeader>
-                <CardTitle>Full Backup History</CardTitle>
-                <CardDescription>A complete log of all manual and automatic backups across the entire lifespan of the system.</CardDescription>
+              <CardHeader className="flex flex-col md:flex-row md:items-center justify-between pb-4">
+                <div>
+                  <CardTitle>Full Backup History</CardTitle>
+                  <CardDescription>A complete log of all manual and automatic backups across the entire lifespan of the system.</CardDescription>
+                </div>
+                <div className="relative mt-4 md:mt-0">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input 
+                    className="pl-9 w-full md:w-[250px]" 
+                    placeholder="Search backups..." 
+                    value={historySearchQuery}
+                    onChange={(e) => setHistorySearchQuery(e.target.value)}
+                  />
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="overflow-x-auto rounded-md border">
@@ -461,15 +602,16 @@ export default function BackupRestorePage() {
                         <th className="px-4 py-3">Size</th>
                         <th className="px-4 py-3">Type</th>
                         <th className="px-4 py-3">Status</th>
+                        <th className="px-4 py-3 text-right">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {backupHistory.map((backup) => (
+                      {backupHistory.filter(b => b.BackupName.toLowerCase().includes(historySearchQuery.toLowerCase())).map((backup) => (
                         <tr key={backup.BackupId} className="border-b dark:border-slate-800 last:border-0 hover:bg-slate-50 dark:hover:bg-slate-900/30 transition-colors">
                           <td className="px-4 py-3 font-medium text-slate-900 dark:text-white whitespace-nowrap">
                             {format(new Date(backup.CreatedAt + "Z"), "dd MMM yyyy, hh:mm a")}
                           </td>
-                          <td className="px-4 py-3">{backup.BackupName}</td>
+                          <td className="px-4 py-3 font-medium text-slate-900 dark:text-white">{backup.BackupName}</td>
                           <td className="px-4 py-3 whitespace-nowrap">{formatBytes(backup.SizeBytes)}</td>
                           <td className="px-4 py-3 whitespace-nowrap">{backup.BackupType}</td>
                           <td className="px-4 py-3 whitespace-nowrap">
@@ -477,11 +619,38 @@ export default function BackupRestorePage() {
                               {backup.Status}
                             </span>
                           </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-right">
+                            <div className="flex items-center justify-end space-x-1">
+                              {backup.Status === "Success" && (
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  className="h-8 px-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                                  onClick={() => {
+                                    setRestoreFilePath(`${backup.BackupLocation}/${backup.BackupName}`.replace(/\\/g, '/'));
+                                    setActiveTab("restore");
+                                  }}
+                                  title="Restore"
+                                >
+                                  <RotateCcw className="h-4 w-4" />
+                                </Button>
+                              )}
+                              <Button variant="ghost" size="sm" className="h-8 px-2 text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20" onClick={() => handleVerifyBackup(backup.BackupId)} title="Verify">
+                                <CheckCircle2 className="h-4 w-4" />
+                              </Button>
+                              <Button variant="ghost" size="sm" className="h-8 px-2 text-slate-600 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800" onClick={() => handleOpenFolder(backup.BackupId)} title="Open Folder">
+                                <FolderOpen className="h-4 w-4" />
+                              </Button>
+                              <Button variant="ghost" size="sm" className="h-8 px-2 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20" onClick={() => handleDeleteBackup(backup.BackupId)} title="Delete">
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </td>
                         </tr>
                       ))}
-                      {backupHistory.length === 0 && (
+                      {backupHistory.filter(b => b.BackupName.toLowerCase().includes(historySearchQuery.toLowerCase())).length === 0 && (
                         <tr>
-                          <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">
+                          <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">
                             No backup history found.
                           </td>
                         </tr>
@@ -492,6 +661,108 @@ export default function BackupRestorePage() {
               </CardContent>
             </Card>
           )}
+
+          {activeTab === "settings" && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Automatic Backup Settings</CardTitle>
+                <CardDescription>Configure background schedules, retention policies, and startup events for automatic backups.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="flex items-center space-x-2 pb-4 border-b">
+                  <Checkbox 
+                    id="autoBackup" 
+                    checked={settings.IsAutoBackupEnabled} 
+                    onCheckedChange={(c) => setSettings({ ...settings, IsAutoBackupEnabled: c as boolean })} 
+                  />
+                  <Label htmlFor="autoBackup" className="font-semibold text-base cursor-pointer">Enable Automatic Scheduled Backups</Label>
+                </div>
+                
+                <div className={`space-y-6 ${!settings.IsAutoBackupEnabled ? 'opacity-50 pointer-events-none' : ''}`}>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label>Backup Frequency</Label>
+                      <select 
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                        value={settings.BackupFrequency}
+                        onChange={(e) => setSettings({ ...settings, BackupFrequency: e.target.value })}
+                      >
+                        <option value="Daily">Daily</option>
+                        <option value="Weekly">Weekly</option>
+                        <option value="Monthly">Monthly</option>
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Time of Day</Label>
+                      <Input 
+                        type="time"
+                        value={settings.BackupTime}
+                        onChange={(e) => setSettings({ ...settings, BackupTime: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Backup Location</Label>
+                    <div className="flex space-x-2">
+                      <Input 
+                        value={settings.BackupLocation} 
+                        onChange={(e) => setSettings({ ...settings, BackupLocation: e.target.value })} 
+                      />
+                      <Button variant="outline" type="button" onClick={handleBrowseSettingsFolder}>
+                        <FolderOpen className="mr-2 h-4 w-4"/> Browse
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label>Retention Policy (Max backups to keep)</Label>
+                    <Input 
+                      type="number"
+                      min={1}
+                      max={100}
+                      value={settings.RetentionCount}
+                      onChange={(e) => setSettings({ ...settings, RetentionCount: parseInt(e.target.value) || 7 })}
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">Older automatic backups will be safely deleted to save disk space.</p>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2 pt-2">
+                    <Checkbox 
+                      id="compressAuto" 
+                      checked={settings.CompressBackup} 
+                      onCheckedChange={(c) => setSettings({ ...settings, CompressBackup: c as boolean })} 
+                    />
+                    <Label htmlFor="compressAuto" className="text-sm font-normal cursor-pointer">Compress to ZIP</Label>
+                  </div>
+                </div>
+
+                <div className="pt-6 border-t space-y-4">
+                  <h4 className="font-semibold text-sm">System Events</h4>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox 
+                      id="startupBackup" 
+                      checked={settings.BackupOnStartup} 
+                      onCheckedChange={(c) => setSettings({ ...settings, BackupOnStartup: c as boolean })} 
+                    />
+                    <Label htmlFor="startupBackup" className="text-sm font-normal cursor-pointer">Create a backup automatically when the application starts</Label>
+                  </div>
+                  <p className="text-xs text-muted-foreground ml-6">A 24-hour cooldown prevents spam if the app restarts multiple times.</p>
+                </div>
+
+              </CardContent>
+              <CardFooter className="flex justify-end border-t p-4 bg-slate-50 dark:bg-slate-900/50 rounded-b-xl">
+                <Button 
+                  onClick={handleSaveSettings} 
+                  disabled={isSavingSettings}
+                  className="w-32 bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  {isSavingSettings ? "Saving..." : "Save Settings"}
+                </Button>
+              </CardFooter>
+            </Card>
+          )}
+
           {/* Promotional Footer Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-8">
             <div className="flex items-start space-x-3 p-4 border rounded-xl bg-white dark:bg-slate-950">
@@ -581,7 +852,7 @@ export default function BackupRestorePage() {
                       >
                         Restore
                       </Button>
-                      <Button size="sm" variant="outline" className="flex-1 h-8 text-green-600 border-green-200 hover:bg-green-50 dark:hover:bg-green-950">
+                      <Button size="sm" variant="outline" className="flex-1 h-8 text-green-600 border-green-200 hover:bg-green-50 dark:hover:bg-green-950" onClick={() => handleVerifyBackup(backup.BackupId)}>
                         <CheckCircle2 className="h-3.5 w-3.5 mr-1" /> Verify
                       </Button>
                       <Button 
@@ -622,6 +893,73 @@ export default function BackupRestorePage() {
           </Card>
         </div>
       </div>
+
+      {isVerifyModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-6 rounded-xl shadow-xl w-full max-w-lg">
+            <h3 className="text-xl font-bold mb-2 flex items-center">
+              <ShieldCheck className="mr-2 h-6 w-6 text-blue-500" /> Deep Verification Engine
+            </h3>
+            <p className="text-sm text-muted-foreground mb-6">
+              Executing AES-256 decryption and internal structure traversal via SQLite C-engine.
+            </p>
+            
+            <div className="space-y-4">
+              {/* Checksum Stage */}
+              <div className="flex items-start space-x-4 p-3 rounded-lg border bg-slate-50 dark:bg-slate-900/50">
+                <div className="mt-0.5">
+                  {isVerifying && !verificationReport ? <Loader2 className="h-5 w-5 animate-spin text-blue-500" /> : 
+                   verificationReport?.report?.checksum?.status === "Passed" ? <CheckCircle2 className="h-5 w-5 text-green-500" /> : 
+                   <div className="h-5 w-5 rounded-full bg-red-100 flex items-center justify-center text-red-500 font-bold text-xs">X</div>}
+                </div>
+                <div>
+                  <h4 className="text-sm font-semibold">Stage 1: Cryptographic Checksum</h4>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {verificationReport?.report?.checksum?.message || "Reading physical file in 64KB chunks to calculate SHA-256..."}
+                  </p>
+                </div>
+              </div>
+
+              {/* Integrity Stage */}
+              <div className="flex items-start space-x-4 p-3 rounded-lg border bg-slate-50 dark:bg-slate-900/50">
+                <div className="mt-0.5">
+                  {isVerifying && !verificationReport ? <Loader2 className="h-5 w-5 animate-spin text-blue-500" /> : 
+                   verificationReport?.report?.integrity?.status === "Passed" ? <CheckCircle2 className="h-5 w-5 text-green-500" /> : 
+                   verificationReport?.report?.integrity?.status === "Skipped" ? <Info className="h-5 w-5 text-yellow-500" /> :
+                   <div className="h-5 w-5 rounded-full bg-red-100 flex items-center justify-center text-red-500 font-bold text-xs">X</div>}
+                </div>
+                <div>
+                  <h4 className="text-sm font-semibold">Stage 2: AES-256 Decryption & B-Tree Integrity</h4>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {verificationReport?.report?.integrity?.message || "Decrypting using HWID key and running PRAGMA integrity_check..."}
+                  </p>
+                </div>
+              </div>
+
+              {/* Schema Stage */}
+              <div className="flex items-start space-x-4 p-3 rounded-lg border bg-slate-50 dark:bg-slate-900/50">
+                <div className="mt-0.5">
+                  {isVerifying && !verificationReport ? <Loader2 className="h-5 w-5 animate-spin text-blue-500" /> : 
+                   verificationReport?.report?.schema?.status === "Passed" ? <CheckCircle2 className="h-5 w-5 text-green-500" /> : 
+                   <div className="h-5 w-5 rounded-full bg-red-100 flex items-center justify-center text-red-500 font-bold text-xs">X</div>}
+                </div>
+                <div>
+                  <h4 className="text-sm font-semibold">Stage 3: Schema Validation</h4>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {verificationReport?.report?.schema?.message || "Comparing alembic_version between backup and live database..."}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-end">
+              <Button onClick={() => setIsVerifyModalOpen(false)} disabled={isVerifying} className={verificationReport?.overall === "Passed" ? "bg-green-600 hover:bg-green-700 text-white" : ""}>
+                {isVerifying ? "Verifying..." : "Close Report"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
