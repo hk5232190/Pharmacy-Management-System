@@ -278,3 +278,15 @@ class SaleReturnItem(Base):
         CheckConstraint("ItemCondition IN ('Restockable', 'Damaged/Quarantine')", name='check_sale_return_condition'),
         CheckConstraint('ReturnQuantity > 0', name='check_sale_return_qty_positive'),
     )
+
+class BackupHistory(Base):
+    __tablename__ = "backup_history"
+
+    BackupId = Column(Integer, primary_key=True, autoincrement=True)
+    BackupName = Column(String(255), nullable=False)
+    BackupLocation = Column(String(500), nullable=False)
+    SizeBytes = Column(Integer, nullable=False)
+    BackupType = Column(String(50), nullable=False) # 'Manual' or 'Automatic'
+    Status = Column(String(50), nullable=False) # 'Success', 'Failed'
+    ChecksumSHA256 = Column(String(64), nullable=True)
+    CreatedAt = Column(DateTime, server_default=func.now())
