@@ -1,16 +1,18 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, File, UploadFile
 from fastapi.responses import Response
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy import or_
 from typing import List
 import random
 import csv
 import io
 
-from models import Medicine, Category, Company
+from models import Medicine, Category, Company, StockBatch, SaleItem, PurchaseItem
 from schemas.medicine import MedicineCreate, MedicineUpdate, MedicineResponse
 from schemas.base import BaseResponse
 from api.deps import get_current_user, get_db
+from core.logger import logger
 
 router = APIRouter()
 
@@ -195,9 +197,180 @@ def toggle_medicine_status(
     medicine.IsActive = not medicine.IsActive
     db.commit()
     db.refresh(medicine)
+    return {"data": medicine, "message": f"Medicine status changed to {'Active' if medicine.IsActive else 'Inactive'}"}
+
+
+@router.get("/export", summary="Export all medicines to CSV")
+def export_medicines(db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+    try:
+        medicines = db.query(Medicine).all()
+        
+        output = io.StringIO()
+        writer = csv.writer(output)
+        
+        # Write header
+        writer.writerow([
+            "BrandName", "GenericName", "CategoryName", "CompanyName", 
+            "RackNumber", "ReorderLevel", "RequiresPrescription", 
+            "Unit", "Barcode", "DefaultCostPrice", "DefaultSellingPrice", "IsActive"
+        ])
+        
+        # Write rows
+        for med in medicines:
+            cat_name = med.category.Name if med.category else ""
+            comp_name = med.company.Name if med.company else ""
+            writer.writerow([
+                med.BrandName, med.GenericName, cat_name, comp_name,
+                med.RackNumber, med.ReorderLevel, med.RequiresPrescription,
+                med.Unit, med.Barcode, med.DefaultCostPrice, med.DefaultSellingPrice, med.IsActive
+            ])
+            
+        logger.info(f"AUDIT: User {current_user.Username} exported {len(medicines)} medicines to CSV.")
+        
+        return Response(
+            content=output.getvalue(),
+            media_type="text/csv",
+            headers={"Content-Disposition": "attachment; filename=medicines_export.csv"}
+        )
+    except Exception as e:
+        logger.error(f"Error exporting medicines: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to export medicines")
+
+@router.post("/import", summary="Import medicines from CSV")
+def import_medicines(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    if not file.filename.endswith('.csv'):
+        raise HTTPException(status_code=400, detail="Only CSV files are allowed")
+        
+    try:
+        contents = file.file.read().decode('utf-8')
+        csv_reader = csv.DictReader(io.StringIO(contents))
+        
+        imported_count = 0
+        skipped_count = 0
+        errors = []
+        
+        for row_idx, row in enumerate(csv_reader, start=2): # Row 1 is header
+            try:
+                brand = row.get("BrandName", "").strip()
+                generic = row.get("GenericName", "").strip()
+                cat_name = row.get("CategoryName", "").strip()
+                comp_name = row.get("CompanyName", "").strip()
+                unit = row.get("Unit", "Box").strip()
+                
+                if not brand or not generic or not cat_name or not comp_name:
+                    skipped_count += 1
+                    errors.append(f"Row {row_idx}: BrandName, GenericName, CategoryName, and CompanyName are required")
+                    continue
+                
+                # Resolve Category
+                category = db.query(Category).filter(Category.Name.ilike(cat_name)).first()
+                if not category:
+                    skipped_count += 1
+                    errors.append(f"Row {row_idx}: Category '{cat_name}' not found")
+                    continue
+                    
+                # Resolve Company
+                company = db.query(Company).filter(Company.Name.ilike(comp_name)).first()
+                if not company:
+                    skipped_count += 1
+                    errors.append(f"Row {row_idx}: Company '{comp_name}' not found")
+                    continue
+                
+                is_active_str = row.get("IsActive", "True").strip().lower()
+                is_active = is_active_str in ('true', '1', 'yes')
+                
+                req_presc_str = row.get("RequiresPrescription", "False").strip().lower()
+                req_presc = req_presc_str in ('true', '1', 'yes')
+                
+                # Check uniqueness by brand name
+                existing = db.query(Medicine).filter(Medicine.BrandName.ilike(brand)).first()
+                if existing:
+                    skipped_count += 1
+                    continue
+                    
+                new_med = Medicine(
+                    BrandName=brand,
+                    GenericName=generic,
+                    CategoryId=category.CategoryId,
+                    CompanyId=company.CompanyId,
+                    RackNumber=row.get("RackNumber", "").strip() or None,
+                    ReorderLevel=int(row.get("ReorderLevel", "10").strip() or 10),
+                    RequiresPrescription=req_presc,
+                    Unit=unit,
+                    Barcode=row.get("Barcode", "").strip() or f"MED{random.randint(10000, 99999)}",
+                    DefaultCostPrice=float(row.get("DefaultCostPrice", "0").strip() or 0),
+                    DefaultSellingPrice=float(row.get("DefaultSellingPrice", "0").strip() or 0),
+                    IsActive=is_active
+                )
+                db.add(new_med)
+                imported_count += 1
+                
+            except Exception as e:
+                skipped_count += 1
+                errors.append(f"Row {row_idx}: {str(e)}")
+        
+        if imported_count > 0:
+            db.commit()
+            
+        logger.info(f"AUDIT: User {current_user.Username} imported {imported_count} medicines. Skipped: {skipped_count}. Errors: {len(errors)}")
+        
+        return {
+            "data": {
+                "imported_count": imported_count,
+                "skipped_count": skipped_count,
+                "errors": errors
+            },
+            "message": f"Successfully imported {imported_count} medicines. Skipped: {skipped_count}."
+        }
+        
+    except Exception as e:
+        db.rollback()
+        logger.error(f"AUDIT: User {current_user.Username} failed to import medicines. Error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to import medicines: {str(e)}")
+
+
+@router.delete("/{medicine_id}", summary="Delete a medicine")
+def delete_medicine(
+    medicine_id: int,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    medicine = db.query(Medicine).filter(Medicine.MedicineId == medicine_id).first()
+    if not medicine:
+        raise HTTPException(status_code=404, detail="Medicine not found")
+        
+    # Comprehensive Dependency Check
+    has_batches = db.query(StockBatch).filter(StockBatch.MedicineId == medicine_id).count() > 0
+    has_sales = db.query(SaleItem).filter(SaleItem.BatchId.in_(
+        db.query(StockBatch.BatchId).filter(StockBatch.MedicineId == medicine_id)
+    )).count() > 0
+    has_purchases = db.query(PurchaseItem).filter(PurchaseItem.MedicineId == medicine_id).count() > 0
     
-    response_data = {c.name: getattr(medicine, c.name) for c in medicine.__table__.columns}
-    response_data["CategoryName"] = medicine.category.CategoryName if medicine.category else None
-    response_data["CompanyName"] = medicine.company.CompanyName if medicine.company else None
-    
-    return {"data": response_data, "message": f"Medicine status changed to {'Active' if medicine.IsActive else 'Inactive'}"}
+    if has_batches or has_sales or has_purchases:
+        logger.warning(f"AUDIT: User {current_user.Username} attempted to delete medicine {medicine_id} ({medicine.BrandName}) but was blocked. Reason: Dependency records exist (Batches: {has_batches}, Sales: {has_sales}, Purchases: {has_purchases}).")
+        raise HTTPException(
+            status_code=400, 
+            detail="Cannot delete medicine because sales, purchases, or stock batch records exist. Please set its status to Inactive instead."
+        )
+        
+    try:
+        med_name = medicine.BrandName
+        db.delete(medicine)
+        db.commit()
+        logger.info(f"AUDIT: User {current_user.Username} successfully deleted medicine {medicine_id} ({med_name}).")
+        return {"success": True, "message": "Medicine deleted successfully"}
+    except IntegrityError as e:
+        db.rollback()
+        logger.error(f"AUDIT: User {current_user.Username} encountered IntegrityError deleting medicine {medicine_id}. Error: {str(e)}")
+        raise HTTPException(
+            status_code=400,
+            detail="Cannot delete this medicine due to database constraints."
+        )
+    except Exception as e:
+        db.rollback()
+        logger.error(f"AUDIT: User {current_user.Username} failed to delete medicine {medicine_id}. Error: {str(e)}")
+        raise HTTPException(status_code=500, detail="An error occurred while deleting the medicine")

@@ -66,3 +66,9 @@ NoneType: None
 2026-08-08 02:06:19,311 - apscheduler.scheduler - INFO - Scheduler started
 2026-08-08 02:07:22,686 - pms - INFO - AUDIT: User admin exported 6 suppliers to CSV.
 2026-08-08 02:07:52,599 - pms - WARNING - AUDIT: User admin attempted to delete supplier 1 (ali) but was blocked. Reason: 3 purchase orders exist.
+2026-08-08 02:17:12,465 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-08 02:17:12,603 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-08 02:18:08,550 - pms - INFO - AUDIT: User admin exported 1 customers to CSV.
+2026-08-08 02:18:31,686 - pms - INFO - AUDIT: User admin successfully deleted customer 1 (Ahmad Khan).
+2026-08-08 02:21:16,562 - pms - WARNING - AUDIT: User admin attempted to delete supplier 1 (ali) but was blocked. Reason: 3 purchase orders exist.
+2026-08-08 02:23:58,478 - pms - INFO - AUDIT: User admin exported 5 customers to CSV.
