@@ -4,6 +4,7 @@ import "./globals.css";
 import { StartupProvider } from "@/components/providers/startup-provider";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { ProfileProvider } from "@/contexts/ProfileContext";
+import { SystemPreferencesProvider } from "@/contexts/SystemPreferencesContext";
 import { Toaster } from "@/components/ui/sonner";
 
 const inter = Inter({
@@ -34,11 +35,13 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <StartupProvider>
-            <ProfileProvider>
-              {children}
-            </ProfileProvider>
-          </StartupProvider>
+          <SystemPreferencesProvider>
+            <StartupProvider>
+              <ProfileProvider>
+                {children}
+              </ProfileProvider>
+            </StartupProvider>
+          </SystemPreferencesProvider>
           <Toaster />
         </ThemeProvider>
       </body>

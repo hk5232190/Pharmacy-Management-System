@@ -90,3 +90,22 @@ class PrinterSettingsResponse(PrinterSettingsBase):
 
     class Config:
         from_attributes = True
+
+class SystemPreferencesBase(BaseModel):
+    Theme: str
+    DateFormat: str
+    TimeFormat: str
+    NumberFormat: str
+    StartupModule: str
+    EnableAudioAlerts: bool
+    EnableToastNotifications: bool
+    Language: str
+
+class SystemPreferencesUpdate(SystemPreferencesBase):
+    pass
+
+class SystemPreferencesResponse(SystemPreferencesBase):
+    SettingsId: int
+
+    class Config:
+        from_attributes = True

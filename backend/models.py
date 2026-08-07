@@ -366,3 +366,16 @@ class PrinterSettings(Base):
     ShowAddress = Column(Boolean, default=True, nullable=False)
     ReceiptFooterMessage = Column(Text, nullable=True, default="Thank you for your visit! Wishing you good health.")
 
+class SystemPreferences(Base):
+    __tablename__ = "system_preferences"
+
+    SettingsId = Column(Integer, primary_key=True, autoincrement=True)
+    Theme = Column(String(50), nullable=False, default="System Default")
+    DateFormat = Column(String(50), nullable=False, default="DD/MM/YYYY")
+    TimeFormat = Column(String(50), nullable=False, default="12h")
+    NumberFormat = Column(String(50), nullable=False, default="1,234.56")
+    StartupModule = Column(String(50), nullable=False, default="Dashboard")
+    EnableAudioAlerts = Column(Boolean, default=True, nullable=False)
+    EnableToastNotifications = Column(Boolean, default=True, nullable=False)
+    Language = Column(String(50), nullable=False, default="English")
+

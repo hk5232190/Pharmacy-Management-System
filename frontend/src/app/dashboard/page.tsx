@@ -8,6 +8,7 @@ import ChartsSection from "./charts-section";
 import WidgetsSection from "./widgets-section";
 import DashboardFilter from "./dashboard-filter";
 import { toast } from "sonner";
+import { useSystemPreferences } from "@/contexts/SystemPreferencesContext";
 import {
   DollarSign,
   PackageSearch,
@@ -28,6 +29,7 @@ import {
 } from "lucide-react";
 
 export default function DashboardPage() {
+  const { formatNumber } = useSystemPreferences();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<any>(null);
   
@@ -121,7 +123,7 @@ export default function DashboardPage() {
                 <DollarSign className="h-4 w-4 text-blue-600 dark:text-blue-400" />
               </div>
             </div>
-            <div className="text-2xl font-bold text-foreground">₹{data.today_sales.toFixed(2)}</div>
+            <div className="text-2xl font-bold text-foreground">₹{formatNumber(data.today_sales)}</div>
           </Card>
 
           <Card className="p-5 border border-border shadow-sm bg-white dark:bg-card rounded-2xl hover:shadow-md transition-shadow">
@@ -131,7 +133,7 @@ export default function DashboardPage() {
                 <PackageSearch className="h-4 w-4 text-purple-600 dark:text-purple-400" />
               </div>
             </div>
-            <div className="text-2xl font-bold text-foreground">₹{data.today_purchases.toFixed(2)}</div>
+            <div className="text-2xl font-bold text-foreground">₹{formatNumber(data.today_purchases)}</div>
           </Card>
 
           <Card className="p-5 border border-border shadow-sm bg-white dark:bg-card rounded-2xl hover:shadow-md transition-shadow">
@@ -141,7 +143,7 @@ export default function DashboardPage() {
                 <TrendingUp className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
               </div>
             </div>
-            <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">₹{data.today_profit.toFixed(2)}</div>
+            <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">₹{formatNumber(data.today_profit)}</div>
           </Card>
 
           <Card className="p-5 border border-border shadow-sm bg-white dark:bg-card rounded-2xl hover:shadow-md transition-shadow">
@@ -167,7 +169,7 @@ export default function DashboardPage() {
               <h3 className="text-sm font-semibold text-cyan-800 dark:text-cyan-300">Current Stock Value</h3>
               <Wallet className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
             </div>
-            <div className="text-3xl font-black text-cyan-700 dark:text-cyan-400 mt-2">₹{data.current_stock_value.toFixed(2)}</div>
+            <div className="text-3xl font-black text-cyan-700 dark:text-cyan-400 mt-2">₹{formatNumber(data.current_stock_value)}</div>
           </Card>
 
           <Card className="p-5 border-0 shadow-sm bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-950/40 dark:to-amber-950/40 rounded-2xl border border-orange-100 dark:border-orange-900/50">
@@ -249,7 +251,7 @@ export default function DashboardPage() {
                 <DollarSign className="h-5 w-5 text-blue-600 dark:text-blue-400" />
               </div>
             </div>
-            <div className="text-3xl font-black text-foreground mt-2">₹{data.total_sales.toFixed(2)}</div>
+            <div className="text-3xl font-black text-foreground mt-2">₹{formatNumber(data.total_sales)}</div>
           </Card>
 
           <Card className="p-6 border border-border shadow-sm bg-white dark:bg-card rounded-2xl">
@@ -259,7 +261,7 @@ export default function DashboardPage() {
                 <Download className="h-5 w-5 text-purple-600 dark:text-purple-400" />
               </div>
             </div>
-            <div className="text-3xl font-black text-foreground mt-2">₹{data.total_purchases.toFixed(2)}</div>
+            <div className="text-3xl font-black text-foreground mt-2">₹{formatNumber(data.total_purchases)}</div>
           </Card>
 
           <Card className="p-6 border-0 shadow-sm bg-gradient-to-br from-emerald-500 to-teal-600 text-white rounded-2xl">
@@ -269,7 +271,7 @@ export default function DashboardPage() {
                 <TrendingUp className="h-5 w-5 text-white" />
               </div>
             </div>
-            <div className="text-4xl font-black text-white mt-2">₹{data.net_profit.toFixed(2)}</div>
+            <div className="text-4xl font-black text-white mt-2">₹{formatNumber(data.net_profit)}</div>
             <p className="text-xs text-emerald-100 mt-2 font-medium opacity-80">Based on Cost of Goods Sold (COGS)</p>
           </Card>
         </div>

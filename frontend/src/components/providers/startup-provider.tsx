@@ -50,7 +50,24 @@ export function StartupProvider({ children }: { children: React.ReactNode }) {
         if (authRes.ok) {
           // Valid token! Go to dashboard if we are on login screen
           if (pathname === "/" || pathname === "/activate") {
-            router.push("/dashboard");
+            try {
+              // Fetch SystemPreferences for StartupModule redirection
+              const prefRes = await fetch("http://127.0.0.1:8000/api/v1/settings/appearance");
+              if (prefRes.ok) {
+                const pref = await prefRes.json();
+                if (pref.StartupModule === "POS Terminal") {
+                  router.push("/dashboard/sales");
+                } else if (pref.StartupModule === "Inventory") {
+                  router.push("/dashboard/inventory");
+                } else {
+                  router.push("/dashboard");
+                }
+              } else {
+                router.push("/dashboard");
+              }
+            } catch {
+              router.push("/dashboard");
+            }
           }
         } else {
           // Invalid token, remove it

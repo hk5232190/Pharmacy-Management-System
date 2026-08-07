@@ -6,8 +6,8 @@ import os
 import shutil
 
 from api.deps import get_db
-from models import PharmacyProfile, BillingSettings, InventorySettings, PrinterSettings
-from schemas.settings import PharmacyProfileResponse, PharmacyProfileUpdate, BillingSettingsResponse, BillingSettingsUpdate, InventorySettingsResponse, InventorySettingsUpdate, PrinterSettingsResponse, PrinterSettingsUpdate
+from models import PharmacyProfile, BillingSettings, InventorySettings, PrinterSettings, SystemPreferences
+from schemas.settings import PharmacyProfileResponse, PharmacyProfileUpdate, BillingSettingsResponse, BillingSettingsUpdate, InventorySettingsResponse, InventorySettingsUpdate, PrinterSettingsResponse, PrinterSettingsUpdate, SystemPreferencesResponse, SystemPreferencesUpdate
 
 router = APIRouter()
 
@@ -197,3 +197,37 @@ def test_printer_connection(db: Session = Depends(get_db)) -> Any:
         "status": "success",
         "message": f"Successfully sent test payload to {settings.SelectedPrinterName or 'Default Printer'} on {settings.ConnectionPort}"
     }
+
+@router.get("/appearance", response_model=SystemPreferencesResponse)
+def get_system_preferences(db: Session = Depends(get_db)) -> Any:
+    """
+    Get the current system appearance and preferences. If none exists, return defaults.
+    """
+    settings = db.query(SystemPreferences).first()
+    if not settings:
+        settings = SystemPreferences()
+        db.add(settings)
+        db.commit()
+        db.refresh(settings)
+    return settings
+
+@router.put("/appearance", response_model=SystemPreferencesResponse)
+def update_system_preferences(
+    settings_in: SystemPreferencesUpdate,
+    db: Session = Depends(get_db)
+) -> Any:
+    """
+    Update the system appearance and preferences.
+    """
+    settings = db.query(SystemPreferences).first()
+    if not settings:
+        settings = SystemPreferences(**settings_in.model_dump())
+        db.add(settings)
+    else:
+        update_data = settings_in.model_dump(exclude_unset=True)
+        for field, value in update_data.items():
+            setattr(settings, field, value)
+            
+    db.commit()
+    db.refresh(settings)
+    return settings

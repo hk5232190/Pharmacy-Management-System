@@ -12,6 +12,7 @@ import {
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useProfile } from "@/contexts/ProfileContext";
+import { useSystemPreferences } from "@/contexts/SystemPreferencesContext";
 
 const SEARCH_ITEMS = [
   { title: "Dashboard", desc: "Overview & analytics", icon: LayoutDashboard, href: "/dashboard", category: "Pages" },
@@ -39,7 +40,9 @@ function getGreeting(): string {
 export function Header() {
   const router = useRouter();
   const { profile } = useProfile();
+  const { formatDate } = useSystemPreferences();
   const [currentDate, setCurrentDate] = useState("");
+  const [currentDayName, setCurrentDayName] = useState("");
   const [greeting, setGreeting] = useState("");
   const [query, setQuery] = useState("");
   const [focused, setFocused] = useState(false);
@@ -48,12 +51,17 @@ export function Header() {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const now = new Date();
-    setGreeting(getGreeting());
-    setCurrentDate(now.toLocaleDateString("en-GB", {
-      weekday: "long", day: "numeric", month: "long", year: "numeric",
-    }));
-  }, []);
+    const updateTime = () => {
+      const now = new Date();
+      setGreeting(getGreeting());
+      setCurrentDate(formatDate(now));
+      setCurrentDayName(now.toLocaleDateString('en-US', { weekday: 'long' }));
+    };
+    
+    updateTime(); // Initial call
+    const timer = setInterval(updateTime, 1000);
+    return () => clearInterval(timer);
+  }, [formatDate]);
 
   const filtered = query.trim().length > 0
     ? SEARCH_ITEMS.filter(item =>
@@ -179,9 +187,12 @@ export function Header() {
 
       <div className="flex items-center gap-3 shrink-0">
         {currentDate && (
-          <div className="hidden lg:flex items-center gap-2 text-sm text-muted-foreground font-medium bg-secondary/50 px-4 py-2 rounded-lg border border-border">
-            <Calendar className="w-4 h-4 text-slate-400" />
-            <span>{currentDate}</span>
+          <div className="hidden lg:flex items-center gap-3 text-sm text-muted-foreground bg-secondary/50 px-4 py-1.5 rounded-lg border border-border">
+            <Calendar className="w-5 h-5 text-primary/70" />
+            <div className="flex flex-col leading-tight">
+              <span className="font-bold text-foreground text-[13px]">{currentDate}</span>
+              <span className="text-[11px] font-medium">{currentDayName}</span>
+            </div>
           </div>
         )}
         <ThemeToggle />

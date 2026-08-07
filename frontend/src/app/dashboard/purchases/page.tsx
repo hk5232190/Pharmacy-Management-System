@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { apiClient } from "@/lib/api-client";
+import { useSystemPreferences } from "@/contexts/SystemPreferencesContext";
 
 // --- Types ---
 interface Supplier {
@@ -69,6 +70,7 @@ interface PurchaseHistory {
 }
 
 export default function PurchasesPage() {
+  const { formatNumber } = useSystemPreferences();
   // --- Tabs ---
   const [activeTab, setActiveTab] = useState<"invoice" | "history" | "returns">("invoice");
 
@@ -739,7 +741,7 @@ export default function PurchasesPage() {
                               />
                             </td>
                             <td className="px-3 py-2 font-semibold text-slate-700 dark:text-slate-300">
-                              ₨ {Number(item.LineTotal || 0).toFixed(2)}
+                              ₨ {formatNumber(Number(item.LineTotal || 0))}
                             </td>
                             <td className="px-3 py-2 text-center">
                               <button onClick={() => removeItem(item.id)} className="text-rose-500 hover:text-rose-700 transition-colors p-1 rounded-md hover:bg-rose-100 dark:hover:bg-rose-900/30">
@@ -775,27 +777,27 @@ export default function PurchasesPage() {
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
                     <span>Subtotal</span>
-                    <span className="font-medium">₨ {Number(subTotal || 0).toFixed(2)}</span>
+                    <span className="font-medium">₨ {formatNumber(Number(subTotal || 0))}</span>
                   </div>
                   <div className="flex justify-between items-center text-rose-500">
                     <span>Total Discount</span>
-                    <span className="font-medium">- ₨ {Number(totalDiscount || 0).toFixed(2)}</span>
+                    <span className="font-medium">- ₨ {formatNumber(Number(totalDiscount || 0))}</span>
                   </div>
                   <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
                     <span>Total Tax</span>
-                    <span className="font-medium">₨ {Number(totalTax || 0).toFixed(2)}</span>
+                    <span className="font-medium">₨ {formatNumber(Number(totalTax || 0))}</span>
                   </div>
                   
                   <div className="border-t border-border pt-3 mt-1 flex justify-between items-center">
                     <span className="font-bold text-base text-primary">Grand Total</span>
-                    <span className="font-bold text-lg text-primary">₨ {Number(grandTotal || 0).toFixed(2)}</span>
+                    <span className="font-bold text-lg text-primary">₨ {formatNumber(Number(grandTotal || 0))}</span>
                   </div>
                   
                   <div className="flex justify-between items-center text-emerald-600 dark:text-emerald-500 pt-2">
                     <span>Paid Amount</span>
                     <div className="w-24">
                       {paymentStatus === "Paid" ? (
-                        <span className="font-medium">₨ {Number(grandTotal || 0).toFixed(2)}</span>
+                        <span className="font-medium">₨ {formatNumber(Number(grandTotal || 0))}</span>
                       ) : (
                         <Input 
                           type="number" min="0" step="0.01"
@@ -809,7 +811,7 @@ export default function PurchasesPage() {
                   
                   <div className="flex justify-between items-center text-rose-500">
                     <span>Remaining Balance</span>
-                    <span className="font-medium">₨ {Number(Math.max(0, grandTotal - paidAmount) || 0).toFixed(2)}</span>
+                    <span className="font-medium">₨ {formatNumber(Number(Math.max(0, grandTotal - paidAmount) || 0))}</span>
                   </div>
                 </div>
               </div>
@@ -875,8 +877,8 @@ export default function PurchasesPage() {
                         <td className="px-6 py-3 text-muted-foreground">{new Date(inv.PurchaseDate).toLocaleDateString()}</td>
                         <td className="px-6 py-3 font-medium">{inv.InvoiceNumber}</td>
                         <td className="px-6 py-3">{inv.SupplierName || 'Unknown Supplier'}</td>
-                        <td className="px-6 py-3 text-right font-semibold">₨ {Number(inv.GrandTotal || 0).toFixed(2)}</td>
-                        <td className="px-6 py-3 text-right text-emerald-600">₨ {Number(inv.PaidAmount || 0).toFixed(2)}</td>
+                        <td className="px-6 py-3 text-right font-semibold">₨ {formatNumber(Number(inv.GrandTotal || 0))}</td>
+                        <td className="px-6 py-3 text-right text-emerald-600">₨ {formatNumber(Number(inv.PaidAmount || 0))}</td>
                         <td className="px-6 py-3 text-center">
                           <span className={cn(
                             "px-2 py-1 rounded-full text-xs font-medium",
@@ -959,7 +961,7 @@ export default function PurchasesPage() {
                             <td className="px-4 py-2 font-medium">{item.MedicineName}</td>
                             <td className="px-4 py-2 font-mono text-xs">{item.BatchCode}</td>
                             <td className="px-4 py-2 text-center text-muted-foreground">{item.OriginalQty}</td>
-                            <td className="px-4 py-2 text-right">₨ {Number(item.CostPrice || 0).toFixed(2)}</td>
+                            <td className="px-4 py-2 text-right">₨ {formatNumber(Number(item.CostPrice || 0))}</td>
                             <td className="px-4 py-2">
                               <div className="flex justify-center">
                                 <Input 
@@ -971,7 +973,7 @@ export default function PurchasesPage() {
                               </div>
                             </td>
                             <td className="px-4 py-2 text-right font-semibold text-rose-500">
-                              ₨ {Number(item.RefundAmount || 0).toFixed(2)}
+                              ₨ {formatNumber(Number(item.RefundAmount || 0))}
                             </td>
                           </tr>
                         ))}
@@ -1005,7 +1007,7 @@ export default function PurchasesPage() {
                             <td className="px-4 py-2 text-muted-foreground">{new Date(r.ReturnDate).toLocaleDateString()}</td>
                             <td className="px-4 py-2 font-medium">{r.ReturnInvoiceNumber}</td>
                             <td className="px-4 py-2">{r.SupplierName}</td>
-                            <td className="px-4 py-2 text-right font-bold text-rose-500">₨ {Number(r.TotalRefundAmount || 0).toFixed(2)}</td>
+                            <td className="px-4 py-2 text-right font-bold text-rose-500">₨ {formatNumber(Number(r.TotalRefundAmount || 0))}</td>
                           </tr>
                         ))
                       )}
@@ -1037,7 +1039,7 @@ export default function PurchasesPage() {
                     <div className="border-t border-border pt-4 mt-2">
                       <div className="flex justify-between items-center">
                         <span className="font-bold text-base text-foreground">Total Refund Due</span>
-                        <span className="font-bold text-xl text-rose-500">₨ {Number(totalRefundDue || 0).toFixed(2)}</span>
+                        <span className="font-bold text-xl text-rose-500">₨ {formatNumber(Number(totalRefundDue || 0))}</span>
                       </div>
                     </div>
                   </div>
@@ -1103,8 +1105,8 @@ export default function PurchasesPage() {
                       <td className="px-4 py-3 text-muted-foreground">{item.ExpiryDate || "-"}</td>
                       <td className="px-4 py-3 text-center">{item.Quantity}</td>
                       <td className="px-4 py-3 text-center text-muted-foreground">{item.FreeQty || 0}</td>
-                      <td className="px-4 py-3 text-right">₨ {Number(item.CostPrice || 0).toFixed(2)}</td>
-                      <td className="px-4 py-3 text-right font-semibold">₨ {Number(item.LineTotal || 0).toFixed(2)}</td>
+                      <td className="px-4 py-3 text-right">₨ {formatNumber(Number(item.CostPrice || 0))}</td>
+                      <td className="px-4 py-3 text-right font-semibold">₨ {formatNumber(Number(item.LineTotal || 0))}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -1114,15 +1116,15 @@ export default function PurchasesPage() {
                 <div className="w-64 space-y-2 text-sm bg-slate-50 dark:bg-secondary/20 p-4 rounded-xl border border-border">
                   <div className="flex justify-between font-bold text-base border-b border-border pb-2 mb-2">
                     <span>Grand Total:</span>
-                    <span>₨ {Number(printData.GrandTotal || 0).toFixed(2)}</span>
+                    <span>₨ {formatNumber(Number(printData.GrandTotal || 0))}</span>
                   </div>
                   <div className="flex justify-between text-emerald-600 font-medium">
                     <span>Paid:</span>
-                    <span>₨ {Number(printData.PaidAmount || 0).toFixed(2)}</span>
+                    <span>₨ {formatNumber(Number(printData.PaidAmount || 0))}</span>
                   </div>
                   <div className="flex justify-between text-rose-500 font-medium">
                     <span>Balance:</span>
-                    <span>₨ {Number((printData.GrandTotal || 0) - (printData.PaidAmount || 0)).toFixed(2)}</span>
+                    <span>₨ {formatNumber(Number((printData.GrandTotal || 0) - (printData.PaidAmount || 0)))}</span>
                   </div>
                 </div>
               </div>
@@ -1174,8 +1176,8 @@ export default function PurchasesPage() {
                    <td className="py-4 text-slate-800 font-medium">{item.MedicineName}</td>
                    <td className="py-4 text-slate-600 font-mono text-sm">{item.BatchCode || "-"}</td>
                    <td className="py-4 text-center text-slate-800">{item.Quantity}</td>
-                   <td className="py-4 text-right text-slate-600">₨ {Number(item.CostPrice || 0).toFixed(2)}</td>
-                   <td className="py-4 text-right font-bold text-slate-800">₨ {Number(item.LineTotal || 0).toFixed(2)}</td>
+                   <td className="py-4 text-right text-slate-600">₨ {formatNumber(Number(item.CostPrice || 0))}</td>
+                   <td className="py-4 text-right font-bold text-slate-800">₨ {formatNumber(Number(item.LineTotal || 0))}</td>
                  </tr>
                ))}
              </tbody>
@@ -1186,15 +1188,15 @@ export default function PurchasesPage() {
              <div className="w-80 space-y-3">
                 <div className="flex justify-between font-black text-xl border-b-2 border-slate-800 pb-3 text-slate-900">
                    <span>Grand Total:</span>
-                   <span>₨ {Number(printData.GrandTotal || 0).toFixed(2)}</span>
+                   <span>₨ {formatNumber(Number(printData.GrandTotal || 0))}</span>
                 </div>
                 <div className="flex justify-between text-slate-700 font-medium text-lg pt-2">
                    <span>Paid Amount:</span>
-                   <span>₨ {Number(printData.PaidAmount || 0).toFixed(2)}</span>
+                   <span>₨ {formatNumber(Number(printData.PaidAmount || 0))}</span>
                 </div>
                 <div className="flex justify-between text-slate-500 font-medium text-lg pt-1">
                    <span>Balance Due:</span>
-                   <span>₨ {Number((printData.GrandTotal || 0) - (printData.PaidAmount || 0)).toFixed(2)}</span>
+                   <span>₨ {formatNumber(Number((printData.GrandTotal || 0) - (printData.PaidAmount || 0)))}</span>
                 </div>
              </div>
           </div>

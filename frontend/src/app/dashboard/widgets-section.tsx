@@ -6,6 +6,7 @@ import { apiClient } from "@/lib/api-client";
 import { toast } from "sonner";
 import { ShoppingCart, AlertTriangle, Clock, ArrowRight, Printer, PackageSearch } from "lucide-react";
 import Link from "next/link";
+import { useSystemPreferences } from "@/contexts/SystemPreferencesContext";
 
 interface WidgetsSectionProps {
   timeframe?: string;
@@ -14,6 +15,7 @@ interface WidgetsSectionProps {
 }
 
 export default function WidgetsSection({ timeframe = 'today', dateRange = null, refreshTrigger = 0 }: WidgetsSectionProps) {
+  const { formatNumber } = useSystemPreferences();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<any>(null);
 
@@ -78,7 +80,7 @@ export default function WidgetsSection({ timeframe = 'today', dateRange = null, 
                 <li key={sale.sales_id} className="p-4 hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors group">
                   <div className="flex justify-between items-start mb-1">
                     <span className="font-medium text-sm text-foreground">{sale.invoice_no}</span>
-                    <span className="font-bold text-sm text-green-600 dark:text-green-500">₹{sale.amount.toFixed(2)}</span>
+                    <span className="font-bold text-sm text-green-600 dark:text-green-500">₹{formatNumber(sale.amount)}</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-xs text-muted-foreground">{sale.date} • {sale.customer}</span>
