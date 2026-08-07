@@ -1,0 +1,42 @@
+2026-08-08 00:33:00,362 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-08 00:33:00,426 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-08 00:36:05,601 - pms - INFO - AUDIT: User admin exported 7 categories to CSV.
+2026-08-08 00:36:11,743 - pms - INFO - AUDIT: User admin exported 7 categories to CSV.
+2026-08-08 00:37:19,440 - pms - INFO - AUDIT: User admin exported 7 categories to CSV.
+2026-08-08 00:37:33,720 - pms - INFO - AUDIT: User admin exported 7 categories to CSV.
+2026-08-08 00:38:09,493 - pms - INFO - AUDIT: User admin exported 7 categories to CSV.
+2026-08-08 00:41:10,388 - pms - INFO - AUDIT: User admin exported 7 categories to CSV.
+2026-08-08 00:41:32,331 - pms - INFO - AUDIT: User admin exported 7 categories to CSV.
+2026-08-08 00:42:28,115 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-08 00:42:28,168 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-08 00:42:39,952 - pms - INFO - AUDIT: User admin exported 7 categories to CSV.
+2026-08-08 00:46:18,583 - pms - INFO - AUDIT: User admin exported 7 categories to CSV.
+2026-08-08 00:48:15,251 - pms - INFO - AUDIT: User admin exported 7 categories to CSV.
+2026-08-08 00:48:20,072 - pms - INFO - AUDIT: User admin exported 7 categories to CSV.
+2026-08-08 00:48:31,249 - pms - INFO - AUDIT: User admin exported 7 categories to CSV.
+2026-08-08 00:49:48,520 - pms - INFO - AUDIT: User admin exported 7 categories to CSV.
+2026-08-08 00:50:03,238 - pms - INFO - AUDIT: User admin exported 7 categories to CSV.
+2026-08-08 00:51:12,044 - pms - INFO - AUDIT: User admin exported 7 categories to CSV.
+2026-08-08 00:51:25,522 - pms - INFO - AUDIT: User admin exported 7 categories to CSV.
+2026-08-08 00:51:41,204 - pms - INFO - AUDIT: User admin exported 7 categories to CSV.
+2026-08-08 01:08:04,872 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-08 01:08:04,912 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-08 01:08:48,168 - pms - INFO - AUDIT: User admin successfully deleted category 2 (BRO).
+2026-08-08 01:09:28,379 - pms - INFO - AUDIT: User admin successfully deleted category 4 (Capsules).
+2026-08-08 01:10:58,552 - pms - INFO - AUDIT: User admin successfully deleted category 7 (Creams).
+2026-08-08 01:12:28,190 - pms - ERROR - PMSException caught: Session expired. Please log in again. (status: 401) | Path: /api/v1/categories/6
+2026-08-08 01:12:36,007 - pms - ERROR - PMSException caught: Session expired. Please log in again. (status: 401) | Path: /api/v1/auth/me
+2026-08-08 01:13:03,988 - pms - INFO - AUDIT: User admin successfully deleted category 6 (Injections).
+2026-08-08 01:13:29,352 - pms - INFO - AUDIT: User admin successfully deleted category 5 (Syrups).
+2026-08-08 01:15:43,337 - pms - INFO - AUDIT: User admin successfully deleted category 3 (Tablets).
+2026-08-08 01:17:56,348 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-08 01:17:56,408 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-08 01:18:16,095 - pms - WARNING - AUDIT: User admin attempted to delete category 1 (analgesics) but was blocked. Reason: 1 medicines assigned.
+2026-08-08 01:18:35,765 - pms - WARNING - AUDIT: User admin attempted to delete category 1 (analgesics) but was blocked. Reason: 1 medicines assigned.
+2026-08-08 01:18:43,712 - pms - INFO - AUDIT: User admin successfully deleted category 2 (fuhdsf).
+2026-08-08 01:32:54,481 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-08 01:32:54,537 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-08 01:33:24,656 - pms - INFO - AUDIT: User admin exported 6 companies to CSV.
+2026-08-08 01:33:30,294 - pms - INFO - AUDIT: User admin exported 6 companies to CSV.
+2026-08-08 01:33:33,627 - pms - INFO - AUDIT: User admin exported 6 companies to CSV.
+2026-08-08 01:33:41,286 - pms - INFO - AUDIT: User admin exported 6 companies to CSV.

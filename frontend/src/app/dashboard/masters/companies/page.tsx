@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Search, Plus, Download, Upload, RefreshCcw, Eye, Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,10 +28,20 @@ export default function CompaniesPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isImporting, setIsImporting] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  
   // Dialog State
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [currentCompany, setCurrentCompany] = useState<Partial<Company>>({ CompanyName: "", IsActive: true });
   const [isSaving, setIsSaving] = useState(false);
+
+  // Delete State
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [companyToDelete, setCompanyToDelete] = useState<Company | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const fetchCompanies = async () => {
     setLoading(true);
@@ -112,6 +122,109 @@ export default function CompaniesPage() {
     setIsDialogOpen(true);
   };
 
+  const openViewDialog = (company: Company) => {
+    setCurrentCompany(company);
+    setIsViewDialogOpen(true);
+  };
+
+  const openDeleteDialog = (company: Company) => {
+    setCompanyToDelete(company);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleDelete = async () => {
+    if (!companyToDelete) return;
+    setIsDeleting(true);
+    try {
+      const data = await apiClient.delete(`/companies/${companyToDelete.CompanyId}`);
+      if (data.success) {
+        toast.success(data.message || "Company deleted successfully");
+        setIsDeleteDialogOpen(false);
+        fetchCompanies(); // Reload list
+      } else {
+        toast.error(data.error || "Failed to delete company");
+      }
+    } catch (error) {
+      toast.error("Network error while deleting");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleExport = async () => {
+    setIsExporting(true);
+    const toastId = toast.loading("Generating CSV from server...");
+    
+    try {
+      const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
+      const res = await fetch("http://127.0.0.1:8000/api/v1/companies/export", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (!res.ok) throw new Error("Export failed");
+      
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "companies_export.csv";
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      toast.dismiss(toastId);
+      setTimeout(() => {
+        toast.success("Companies exported successfully!");
+      }, 1000);
+    } catch (err) {
+      toast.dismiss(toastId);
+      toast.error("Failed to export companies");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    setIsImporting(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      
+      const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
+      const res = await fetch("http://127.0.0.1:8000/api/v1/companies/import", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+      
+      const data = await res.json();
+      if (res.ok && data.data) {
+        toast.success(`Imported: ${data.data.imported_count}, Skipped: ${data.data.skipped_count}`);
+        if (data.data.errors?.length > 0) {
+          console.warn("Import errors:", data.data.errors);
+          toast.error(`There were ${data.data.errors.length} errors. Check console.`);
+        }
+        fetchCompanies(); // Reload
+      } else {
+        toast.error(data.detail || data.message || "Failed to import");
+      }
+    } catch (err) {
+      toast.error("Network error during import");
+    } finally {
+      setIsImporting(false);
+      // Reset input
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
   return (
     <div className="flex flex-col h-full bg-card">
       {/* Toolbar */}
@@ -129,14 +242,17 @@ export default function CompaniesPage() {
           <Button onClick={openNewDialog} className="h-10 bg-primary text-primary-foreground hover:bg-primary/90 px-4 font-semibold">
             <Plus className="mr-2 h-4 w-4" /> Add New
           </Button>
-          <Button variant="outline" className="h-10 bg-background text-foreground hidden sm:flex">
-            <Download className="mr-2 h-4 w-4" /> Import
+          
+          <input type="file" accept=".csv" className="hidden" ref={fileInputRef} onChange={handleFileChange} />
+          
+          <Button variant="outline" className="h-10 bg-background text-foreground hidden sm:flex" onClick={handleImportClick} disabled={isImporting}>
+            <Download className="mr-2 h-4 w-4" /> {isImporting ? "Importing..." : "Import"}
           </Button>
-          <Button variant="outline" className="h-10 bg-background text-foreground hidden sm:flex">
-            <Upload className="mr-2 h-4 w-4" /> Export
+          <Button variant="outline" className="h-10 bg-background text-foreground hidden sm:flex" onClick={handleExport} disabled={isExporting}>
+            <Upload className="mr-2 h-4 w-4" /> {isExporting ? "Exporting..." : "Export"}
           </Button>
-          <Button variant="outline" size="icon" className="h-10 w-10 bg-background text-foreground" onClick={fetchCompanies}>
-            <RefreshCcw className="h-4 w-4" />
+          <Button variant="outline" size="icon" className="h-10 w-10 bg-background text-foreground" onClick={fetchCompanies} disabled={loading}>
+            <RefreshCcw className={cn("h-4 w-4", loading && "animate-spin")} />
           </Button>
         </div>
       </div>
@@ -188,9 +304,9 @@ export default function CompaniesPage() {
                     </TableCell>
                     <TableCell className="text-right pr-6">
                       <div className="flex items-center justify-end gap-3 text-muted-foreground">
-                        <button className="hover:text-primary transition-colors"><Eye className="h-4 w-4" /></button>
+                        <button onClick={() => openViewDialog(company)} className="hover:text-primary transition-colors"><Eye className="h-4 w-4" /></button>
                         <button onClick={() => openEditDialog(company)} className="hover:text-blue-500 transition-colors"><Edit className="h-4 w-4" /></button>
-                        <button className="hover:text-rose-500 transition-colors"><Trash2 className="h-4 w-4" /></button>
+                        <button onClick={() => openDeleteDialog(company)} className="hover:text-rose-500 transition-colors"><Trash2 className="h-4 w-4" /></button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -234,6 +350,65 @@ export default function CompaniesPage() {
             <Button variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isSaving}>Cancel</Button>
             <Button onClick={handleSave} disabled={isSaving}>
               {isSaving ? "Saving..." : "Save Company"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* View Dialog */}
+      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Company Details</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6 py-4">
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-muted-foreground">Company Code</p>
+              <p className="font-mono text-lg font-semibold">
+                COMP-{currentCompany.CompanyId?.toString().padStart(5, '0')}
+              </p>
+            </div>
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-muted-foreground">Company Name</p>
+              <p className="text-lg font-medium">{currentCompany.CompanyName}</p>
+            </div>
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-muted-foreground">Status</p>
+              <div className="flex items-center">
+                <span className={cn(
+                  "px-3 py-1 text-[13px] font-bold rounded-full",
+                  currentCompany.IsActive 
+                    ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" 
+                    : "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400"
+                )}>
+                  {currentCompany.IsActive ? "Active" : "Inactive"}
+                </span>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setIsViewDialogOpen(false)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-[425px] border-rose-500/20">
+          <DialogHeader>
+            <DialogTitle className="text-rose-600 flex items-center gap-2">
+              <Trash2 className="h-5 w-5" />
+              Confirm Deletion
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4 text-foreground/80">
+            <p>Are you absolutely sure you want to delete the company <strong>{companyToDelete?.CompanyName}</strong>?</p>
+            <p className="text-sm text-muted-foreground mt-2">This action is irreversible. It will be permanently removed from the database.</p>
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)} disabled={isDeleting}>Cancel</Button>
+            <Button variant="destructive" onClick={handleDelete} disabled={isDeleting} className="bg-rose-600 hover:bg-rose-700 text-white">
+              {isDeleting ? "Deleting..." : "Confirm Delete"}
             </Button>
           </DialogFooter>
         </DialogContent>
