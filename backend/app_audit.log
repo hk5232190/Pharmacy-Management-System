@@ -40,3 +40,29 @@
 2026-08-08 01:33:30,294 - pms - INFO - AUDIT: User admin exported 6 companies to CSV.
 2026-08-08 01:33:33,627 - pms - INFO - AUDIT: User admin exported 6 companies to CSV.
 2026-08-08 01:33:41,286 - pms - INFO - AUDIT: User admin exported 6 companies to CSV.
+2026-08-08 01:39:00,337 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-08 01:39:00,390 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-08 01:39:22,745 - pms - INFO - AUDIT: User admin exported 6 companies to CSV.
+2026-08-08 01:39:37,174 - pms - INFO - AUDIT: User admin successfully deleted company 4 (Abbott).
+2026-08-08 01:39:46,114 - pms - INFO - AUDIT: User admin successfully deleted company 2 (GSK Pakistan).
+2026-08-08 01:39:48,711 - pms - INFO - AUDIT: User admin successfully deleted company 3 (Getz Pharma).
+2026-08-08 01:39:51,449 - pms - INFO - AUDIT: User admin successfully deleted company 6 (Hilton Pharma).
+2026-08-08 01:39:56,431 - pms - INFO - AUDIT: User admin successfully deleted company 5 (Sami Pharmaceuticals).
+2026-08-08 01:39:58,865 - pms - WARNING - AUDIT: User admin attempted to delete company 1 (medzone) but was blocked. Reason: 1 medicines assigned.
+2026-08-08 01:41:45,177 - pms - INFO - AUDIT: User admin successfully deleted category 3 (Capsules).
+2026-08-08 01:45:32,716 - pms - ERROR - Unhandled Exception caught: 'TaxNumber' is an invalid keyword argument for Supplier | Path: /api/v1/suppliers
+NoneType: None
+2026-08-08 01:45:39,673 - pms - ERROR - Unhandled Exception caught: 'TaxNumber' is an invalid keyword argument for Supplier | Path: /api/v1/suppliers
+NoneType: None
+2026-08-08 01:46:01,854 - pms - ERROR - Unhandled Exception caught: 'TaxNumber' is an invalid keyword argument for Supplier | Path: /api/v1/suppliers
+NoneType: None
+2026-08-08 01:47:48,692 - pms - ERROR - Unhandled Exception caught: 'TaxNumber' is an invalid keyword argument for Supplier | Path: /api/v1/suppliers
+NoneType: None
+2026-08-08 01:48:09,187 - pms - ERROR - Unhandled Exception caught: 'TaxNumber' is an invalid keyword argument for Supplier | Path: /api/v1/suppliers
+NoneType: None
+2026-08-08 01:52:33,809 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-08 01:52:33,863 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-08 02:06:19,272 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-08 02:06:19,311 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-08 02:07:22,686 - pms - INFO - AUDIT: User admin exported 6 suppliers to CSV.
+2026-08-08 02:07:52,599 - pms - WARNING - AUDIT: User admin attempted to delete supplier 1 (ali) but was blocked. Reason: 3 purchase orders exist.

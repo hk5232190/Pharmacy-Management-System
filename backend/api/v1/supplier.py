@@ -1,12 +1,16 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File, Response
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy import or_
 from typing import List
+import csv
+import io
 
-from models import Supplier
+from models import Supplier, Purchase
 from schemas.supplier import SupplierCreate, SupplierUpdate, SupplierResponse
 from schemas.base import BaseResponse
 from api.deps import get_current_user, get_db
+from core.logger import logger
 
 router = APIRouter()
 
@@ -99,3 +103,138 @@ def toggle_supplier_status(
     db.commit()
     db.refresh(supplier)
     return {"data": supplier, "message": f"Supplier status changed to {'Active' if supplier.IsActive else 'Inactive'}"}
+
+@router.get("/export", summary="Export all suppliers to CSV")
+def export_suppliers(db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+    try:
+        suppliers = db.query(Supplier).all()
+        
+        output = io.StringIO()
+        writer = csv.writer(output)
+        
+        # Write header
+        writer.writerow(["Name", "Phone", "TaxNumber", "Address", "IsActive"])
+        
+        # Write rows
+        for sup in suppliers:
+            writer.writerow([sup.Name, sup.Phone, sup.TaxNumber, sup.Address, sup.IsActive])
+            
+        logger.info(f"AUDIT: User {current_user.Username} exported {len(suppliers)} suppliers to CSV.")
+        
+        return Response(
+            content=output.getvalue(),
+            media_type="text/csv",
+            headers={"Content-Disposition": "attachment; filename=suppliers_export.csv"}
+        )
+    except Exception as e:
+        logger.error(f"Error exporting suppliers: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to export suppliers")
+
+@router.post("/import", summary="Import suppliers from CSV")
+def import_suppliers(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    if not file.filename.endswith('.csv'):
+        raise HTTPException(status_code=400, detail="Only CSV files are allowed")
+        
+    try:
+        contents = file.file.read().decode('utf-8')
+        csv_reader = csv.DictReader(io.StringIO(contents))
+        
+        imported_count = 0
+        skipped_count = 0
+        errors = []
+        
+        for row_idx, row in enumerate(csv_reader, start=2): # Row 1 is header
+            try:
+                name = row.get("Name", "").strip()
+                phone = row.get("Phone", "").strip()
+                tax = row.get("TaxNumber", "").strip()
+                address = row.get("Address", "").strip()
+                
+                if not name or not phone:
+                    skipped_count += 1
+                    errors.append(f"Row {row_idx}: Name and Phone are required")
+                    continue
+                    
+                is_active_str = row.get("IsActive", "True").strip().lower()
+                is_active = is_active_str in ('true', '1', 'yes')
+                
+                # Check uniqueness by name
+                existing = db.query(Supplier).filter(Supplier.Name.ilike(name)).first()
+                if existing:
+                    skipped_count += 1
+                    continue
+                    
+                new_supplier = Supplier(
+                    Name=name,
+                    Phone=phone,
+                    TaxNumber=tax if tax else None,
+                    Address=address if address else None,
+                    IsActive=is_active
+                )
+                db.add(new_supplier)
+                imported_count += 1
+                
+            except Exception as e:
+                skipped_count += 1
+                errors.append(f"Row {row_idx}: {str(e)}")
+        
+        if imported_count > 0:
+            db.commit()
+            
+        logger.info(f"AUDIT: User {current_user.Username} imported {imported_count} suppliers. Skipped: {skipped_count}. Errors: {len(errors)}")
+        
+        return {
+            "data": {
+                "imported_count": imported_count,
+                "skipped_count": skipped_count,
+                "errors": errors
+            },
+            "message": f"Successfully imported {imported_count} suppliers. Skipped: {skipped_count}."
+        }
+        
+    except Exception as e:
+        db.rollback()
+        logger.error(f"AUDIT: User {current_user.Username} failed to import suppliers. Error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to import suppliers: {str(e)}")
+
+
+@router.delete("/{supplier_id}", summary="Delete a supplier")
+def delete_supplier(
+    supplier_id: int,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    supplier = db.query(Supplier).filter(Supplier.SupplierId == supplier_id).first()
+    if not supplier:
+        raise HTTPException(status_code=404, detail="Supplier not found")
+        
+    # Foreign Key Verification Check
+    linked_purchases_count = db.query(Purchase).filter(Purchase.SupplierId == supplier_id).count()
+    if linked_purchases_count > 0:
+        logger.warning(f"AUDIT: User {current_user.Username} attempted to delete supplier {supplier_id} ({supplier.Name}) but was blocked. Reason: {linked_purchases_count} purchase orders exist.")
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Cannot delete supplier because {linked_purchases_count} purchase orders are linked to it."
+        )
+        
+    try:
+        supplier_name = supplier.Name
+        db.delete(supplier)
+        db.commit()
+        logger.info(f"AUDIT: User {current_user.Username} successfully deleted supplier {supplier_id} ({supplier_name}).")
+        return {"success": True, "message": "Supplier deleted successfully"}
+    except IntegrityError as e:
+        db.rollback()
+        logger.error(f"AUDIT: User {current_user.Username} encountered IntegrityError deleting supplier {supplier_id}. Error: {str(e)}")
+        raise HTTPException(
+            status_code=400,
+            detail="Cannot delete this supplier due to database constraints."
+        )
+    except Exception as e:
+        db.rollback()
+        logger.error(f"AUDIT: User {current_user.Username} failed to delete supplier {supplier_id}. Error: {str(e)}")
+        raise HTTPException(status_code=500, detail="An error occurred while deleting the supplier")

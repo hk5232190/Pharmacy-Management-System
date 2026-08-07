@@ -66,7 +66,7 @@ class Supplier(Base):
     SupplierId = Column(Integer, primary_key=True, autoincrement=True)
     Name = Column(String(100), nullable=False)
     Phone = Column(String(20), nullable=False)
-    Email = Column(String(100), nullable=True)
+    TaxNumber = Column(String(100), nullable=True)
     Address = Column(Text, nullable=True)
     IsActive = Column(Boolean, default=True)
 
