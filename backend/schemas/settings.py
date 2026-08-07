@@ -29,3 +29,27 @@ class PharmacyProfileResponse(PharmacyProfileBase):
 
     class Config:
         from_attributes = True
+
+class BillingSettingsBase(BaseModel):
+    Currency: str
+    CurrencySymbol: str
+    TaxEnabled: bool
+    DefaultTaxRate: float
+    DiscountEnabled: bool
+    MaxDiscountPercentage: float
+    AdminDiscountThreshold: float
+    RequireAdminPinForDiscount: bool
+    InvoicePrefix: str
+    NextInvoiceNumber: int
+    DefaultPaymentMethod: str
+    AutoPrintReceipt: bool
+    ShowKeyboardShortcuts: bool
+
+class BillingSettingsUpdate(BillingSettingsBase):
+    pass
+
+class BillingSettingsResponse(BillingSettingsBase):
+    SettingsId: int
+
+    class Config:
+        from_attributes = True

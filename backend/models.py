@@ -323,3 +323,21 @@ class PharmacyProfile(Base):
     LogoPath = Column(String(500), nullable=True)
     UpdatedAt = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
+class BillingSettings(Base):
+    __tablename__ = "billing_settings"
+
+    SettingsId = Column(Integer, primary_key=True, autoincrement=True)
+    Currency = Column(String(10), nullable=False, default="PKR")
+    CurrencySymbol = Column(String(5), nullable=False, default="Rs")
+    TaxEnabled = Column(Boolean, default=False, nullable=False)
+    DefaultTaxRate = Column(Numeric(5, 2), default=0.00, nullable=False)
+    DiscountEnabled = Column(Boolean, default=True, nullable=False)
+    MaxDiscountPercentage = Column(Numeric(5, 2), default=100.00, nullable=False)
+    AdminDiscountThreshold = Column(Numeric(5, 2), default=10.00, nullable=False)
+    RequireAdminPinForDiscount = Column(Boolean, default=True, nullable=False)
+    InvoicePrefix = Column(String(20), nullable=False, default="INV-")
+    NextInvoiceNumber = Column(Integer, nullable=False, default=1)
+    DefaultPaymentMethod = Column(String(50), nullable=False, default="Cash")
+    AutoPrintReceipt = Column(Boolean, default=True, nullable=False)
+    ShowKeyboardShortcuts = Column(Boolean, default=True, nullable=False)
+

@@ -6,8 +6,8 @@ import os
 import shutil
 
 from api.deps import get_db
-from models import PharmacyProfile
-from schemas.settings import PharmacyProfileResponse, PharmacyProfileUpdate
+from models import PharmacyProfile, BillingSettings
+from schemas.settings import PharmacyProfileResponse, PharmacyProfileUpdate, BillingSettingsResponse, BillingSettingsUpdate
 
 router = APIRouter()
 
@@ -76,3 +76,37 @@ def upload_pharmacy_logo(
     db.refresh(profile)
     
     return {"message": "Logo uploaded successfully", "logo_path": profile.LogoPath}
+
+@router.get("/billing", response_model=BillingSettingsResponse)
+def get_billing_settings(db: Session = Depends(get_db)) -> Any:
+    """
+    Get the current billing & POS settings. If none exists, return defaults.
+    """
+    settings = db.query(BillingSettings).first()
+    if not settings:
+        settings = BillingSettings()
+        db.add(settings)
+        db.commit()
+        db.refresh(settings)
+    return settings
+
+@router.put("/billing", response_model=BillingSettingsResponse)
+def update_billing_settings(
+    settings_in: BillingSettingsUpdate,
+    db: Session = Depends(get_db)
+) -> Any:
+    """
+    Update the billing & POS settings.
+    """
+    settings = db.query(BillingSettings).first()
+    if not settings:
+        settings = BillingSettings(**settings_in.model_dump())
+        db.add(settings)
+    else:
+        update_data = settings_in.model_dump(exclude_unset=True)
+        for field, value in update_data.items():
+            setattr(settings, field, value)
+            
+    db.commit()
+    db.refresh(settings)
+    return settings
