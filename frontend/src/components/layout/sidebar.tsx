@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useProfile } from "@/contexts/ProfileContext";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
@@ -21,7 +22,8 @@ import {
   Truck,
   Users,
   PlusSquare,
-  Database
+  Database,
+  LogOut
 } from "lucide-react";
 import { useState } from "react";
 
@@ -77,6 +79,15 @@ const NAV_ITEMS = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { profile } = useProfile();
+  
+  const handleLogout = () => {
+    localStorage.removeItem("access_token");
+    sessionStorage.removeItem("access_token");
+    router.push("/");
+  };
+
   // Manage open states for items with sub-menus. By default, open if the current path matches.
   const [openStates, setOpenStates] = useState<Record<string, boolean>>(() => {
     const initialState: Record<string, boolean> = {};
@@ -95,14 +106,22 @@ export function Sidebar() {
   return (
     <aside className="w-64 bg-slate-900 text-slate-300 flex flex-col h-full overflow-hidden shrink-0 border-r border-slate-800">
       {/* Brand Logo Header */}
-      <div className="h-16 flex items-center px-6 bg-white dark:bg-slate-950 border-b border-border shadow-sm shrink-0">
-        <div className="flex items-center gap-3">
-          <div className="bg-primary text-primary-foreground p-1.5 rounded-lg flex items-center justify-center">
-            <PlusSquare size={22} className="stroke-[2.5]" />
-          </div>
-          <div className="flex flex-col">
-            <span className="font-bold text-[17px] leading-tight text-foreground tracking-tight">Pharmacy</span>
-            <span className="text-[10px] text-muted-foreground leading-tight tracking-wide uppercase">Management System</span>
+      <div className="min-h-[64px] py-3 flex items-center px-6 bg-white dark:bg-slate-950 border-b border-border shadow-sm shrink-0">
+        <div className="flex items-center gap-3 w-full">
+          {profile.LogoPath ? (
+            <div className="h-8 w-8 flex items-center justify-center shrink-0">
+              <img src={`http://127.0.0.1:8000${profile.LogoPath}`} alt="Logo" className="max-h-full max-w-full object-contain drop-shadow-sm" />
+            </div>
+          ) : (
+            <div className="bg-primary text-primary-foreground p-1.5 rounded-lg flex items-center justify-center shrink-0">
+              <PlusSquare className="h-6 w-6" />
+            </div>
+          )}
+          <div className="flex-1">
+            <h1 className="font-bold text-[17px] leading-tight text-slate-900 dark:text-white break-words">
+              {profile.PharmacyName || "Pharmacy"}
+            </h1>
+            <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wider mt-0.5">Management System</p>
           </div>
         </div>
       </div>
@@ -178,14 +197,14 @@ export function Sidebar() {
       </div>
 
       {/* Footer */}
-      <div className="p-4 shrink-0 border-t border-slate-800">
-        <button className="flex items-center gap-2 text-sm text-slate-400 hover:text-white w-full py-2 px-3 hover:bg-slate-800/50 rounded-lg transition-colors mb-4">
-          <ChevronRight className="w-4 h-4 rotate-180" /> Collapse
+      <div className="p-4 shrink-0 border-t border-slate-800 mt-auto">
+        <button 
+          onClick={handleLogout}
+          className="flex items-center justify-start gap-3 w-full py-2.5 px-4 rounded-xl text-sm font-semibold transition-all duration-300 bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white border border-red-500/20 hover:shadow-[0_0_15px_rgba(239,68,68,0.3)] hover:-translate-y-0.5"
+        >
+          <LogOut className="w-4 h-4 shrink-0" /> 
+          Logout
         </button>
-        <div className="px-3 text-[11px] text-slate-500 leading-relaxed">
-          © 2025 PMS Software<br />
-          All rights reserved.
-        </div>
       </div>
     </aside>
   );

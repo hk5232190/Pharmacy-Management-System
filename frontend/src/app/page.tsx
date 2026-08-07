@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -9,6 +10,7 @@ import { User, Lock, Eye, EyeOff, Key, Shield, Zap, CheckCircle2, Info, Plus } f
 import Image from "next/image";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
@@ -48,8 +50,8 @@ export default function LoginPage() {
         sessionStorage.setItem("access_token", data.access_token);
       }
 
-      // Redirect to dashboard (mock for now since dashboard isn't built yet)
-      alert("Login successful! Redirecting to Dashboard...");
+      // Redirect to dashboard
+      router.push("/dashboard");
       
     } catch (err: any) {
       setError(err.message);

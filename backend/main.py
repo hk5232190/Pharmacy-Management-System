@@ -8,7 +8,7 @@ from core.exceptions import (
     general_exception_handler
 )
 
-from api.v1 import license, auth, category, company, supplier, customer, medicine, purchase, purchase_return, inventory, sales, dashboard, reports, backup, backup_settings
+from api.v1 import license, auth, category, company, supplier, customer, medicine, purchase, purchase_return, inventory, sales, dashboard, reports, backup, backup_settings, settings as pms_settings
 
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -19,6 +19,13 @@ app = FastAPI(
     docs_url=f"{settings.API_V1_STR}/docs",
     openapi_url=f"{settings.API_V1_STR}/openapi.json"
 )
+
+from fastapi.staticfiles import StaticFiles
+import os
+
+# Create uploads dir if not exists
+os.makedirs("uploads/logo", exist_ok=True)
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 # Add CORS middleware
 app.add_middleware(
@@ -48,6 +55,7 @@ api_router.include_router(dashboard.router, prefix="/dashboard", tags=["Dashboar
 api_router.include_router(reports.router, prefix="/reports", tags=["Reports"])
 api_router.include_router(backup.router, prefix="/backup", tags=["Backup & Restore"])
 api_router.include_router(backup_settings.router, prefix="/backup-settings", tags=["Backup Settings"])
+api_router.include_router(pms_settings.router, prefix="/settings", tags=["Settings"])
 
 app.include_router(api_router)
 

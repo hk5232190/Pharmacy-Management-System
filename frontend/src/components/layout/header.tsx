@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useRef, useCallback } from "react";
+import { useProfile } from "@/contexts/ProfileContext";
 
 const SEARCH_ITEMS = [
   { title: "Dashboard", desc: "Overview & analytics", icon: LayoutDashboard, href: "/dashboard", category: "Pages" },
@@ -37,6 +38,7 @@ function getGreeting(): string {
 
 export function Header() {
   const router = useRouter();
+  const { profile } = useProfile();
   const [currentDate, setCurrentDate] = useState("");
   const [greeting, setGreeting] = useState("");
   const [query, setQuery] = useState("");
@@ -87,14 +89,18 @@ export function Header() {
     if (e.key === "Escape")    { setFocused(false); setQuery(""); }
   };
 
-  const handleLogout = () => { router.push("/"); };
+  const handleLogout = () => {
+    localStorage.removeItem("access_token");
+    sessionStorage.removeItem("access_token");
+    router.push("/");
+  };
 
   return (
     <header className="h-16 flex items-center justify-between px-6 bg-card border-b border-border shadow-sm shrink-0 z-40">
       <div className="flex items-center gap-4 flex-1 min-w-0">
         <div className="flex flex-col shrink-0">
           <span className="font-bold text-[15px] text-foreground leading-tight">{greeting || "Welcome"}, Admin!</span>
-          <span className="text-[11px] text-muted-foreground font-medium">ABC Pharmacy</span>
+          <span className="text-[11px] text-muted-foreground font-medium">{profile.PharmacyName || "Pharmacy"}</span>
         </div>
         <div className="w-[1px] h-8 bg-border hidden sm:block shrink-0" />
         <div ref={dropdownRef} className="relative w-full max-w-sm hidden sm:block">
