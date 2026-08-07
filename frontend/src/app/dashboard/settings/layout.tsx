@@ -3,18 +3,19 @@
 import { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Building2, ReceiptText, Percent, Package, Settings as SettingsIcon, Paintbrush, ShieldCheck, Info } from "lucide-react";
+import { Building2, ReceiptText, Package, Settings as SettingsIcon, Paintbrush, ShieldCheck, Info, Printer, Database, Shield } from "lucide-react";
 
 export default function SettingsLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
 
   const navigation = [
     { name: "Pharmacy Information", href: "/dashboard/settings/profile", icon: Building2, description: "Basic information about your pharmacy" },
-    { name: "Invoice & Billing", href: "/dashboard/settings/billing", icon: ReceiptText, description: "Configure invoice, receipt and billing" },
-    { name: "Tax Settings", href: "/dashboard/settings/tax", icon: Percent, description: "Configure tax and VAT settings" },
-    { name: "Inventory Preferences", href: "/dashboard/settings/inventory", icon: Package, description: "Manage stock and inventory options" },
-    { name: "Application Preferences", href: "/dashboard/settings/application", icon: SettingsIcon, description: "General application behavior" },
-    { name: "Appearance", href: "/dashboard/settings/appearance", icon: Paintbrush, description: "Customize theme and appearance" },
+    { name: "Billing & POS Settings", href: "/dashboard/settings/billing", icon: ReceiptText, description: "Configure invoice, receipt and POS behavior" },
+    { name: "Inventory & Medicine Settings", href: "/dashboard/settings/inventory", icon: Package, description: "Manage stock, thresholds and alerts" },
+    { name: "Printer & Receipt Settings", href: "/dashboard/settings/printer", icon: Printer, description: "Configure hardware and printing" },
+    { name: "Appearance & System Preferences", href: "/dashboard/settings/appearance", icon: Paintbrush, description: "Customize theme and application behavior" },
+    { name: "Backup & Data Management", href: "/dashboard/settings/backup", icon: Database, description: "Manage backups and data integrity" },
+    { name: "Security & Maintenance", href: "/dashboard/settings/security", icon: Shield, description: "Security configurations and maintenance" },
     { name: "License Information", href: "/dashboard/settings/license", icon: ShieldCheck, description: "View and manage license details" },
     { name: "About Software", href: "/dashboard/settings/about", icon: Info, description: "Application and system information" },
   ];

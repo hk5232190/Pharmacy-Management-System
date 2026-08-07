@@ -53,3 +53,20 @@ class BillingSettingsResponse(BillingSettingsBase):
 
     class Config:
         from_attributes = True
+
+class InventorySettingsBase(BaseModel):
+    LowStockThreshold: int
+    ExpiryAlertDays: int
+    AllowNegativeStock: bool
+    DefaultUnit: str
+    AutoGenerateBarcode: bool
+    PreventSaleOfExpired: bool = True
+
+class InventorySettingsUpdate(InventorySettingsBase):
+    pass
+
+class InventorySettingsResponse(InventorySettingsBase):
+    SettingsId: int
+
+    class Config:
+        from_attributes = True

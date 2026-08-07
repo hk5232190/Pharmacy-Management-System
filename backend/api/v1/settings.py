@@ -6,8 +6,8 @@ import os
 import shutil
 
 from api.deps import get_db
-from models import PharmacyProfile, BillingSettings
-from schemas.settings import PharmacyProfileResponse, PharmacyProfileUpdate, BillingSettingsResponse, BillingSettingsUpdate
+from models import PharmacyProfile, BillingSettings, InventorySettings
+from schemas.settings import PharmacyProfileResponse, PharmacyProfileUpdate, BillingSettingsResponse, BillingSettingsUpdate, InventorySettingsResponse, InventorySettingsUpdate
 
 router = APIRouter()
 
@@ -104,6 +104,45 @@ def update_billing_settings(
         db.add(settings)
     else:
         update_data = settings_in.model_dump(exclude_unset=True)
+        for field, value in update_data.items():
+            setattr(settings, field, value)
+            
+    db.commit()
+    db.refresh(settings)
+    return settings
+
+@router.get("/inventory", response_model=InventorySettingsResponse)
+def get_inventory_settings(db: Session = Depends(get_db)) -> Any:
+    """
+    Get the current inventory & medicine settings. If none exists, return defaults.
+    """
+    settings = db.query(InventorySettings).first()
+    if not settings:
+        settings = InventorySettings()
+        db.add(settings)
+        db.commit()
+        db.refresh(settings)
+    return settings
+
+@router.put("/inventory", response_model=InventorySettingsResponse)
+def update_inventory_settings(
+    settings_in: InventorySettingsUpdate,
+    db: Session = Depends(get_db)
+) -> Any:
+    """
+    Update the inventory & medicine settings.
+    """
+    settings = db.query(InventorySettings).first()
+    if not settings:
+        settings = InventorySettings(**settings_in.model_dump())
+        # Enforce SRS Module 5 constraint strictly
+        settings.PreventSaleOfExpired = True
+        db.add(settings)
+    else:
+        update_data = settings_in.model_dump(exclude_unset=True)
+        # Enforce SRS Module 5 constraint strictly overriding any API manipulation
+        update_data['PreventSaleOfExpired'] = True
+        
         for field, value in update_data.items():
             setattr(settings, field, value)
             

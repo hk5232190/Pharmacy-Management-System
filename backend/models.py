@@ -341,3 +341,14 @@ class BillingSettings(Base):
     AutoPrintReceipt = Column(Boolean, default=True, nullable=False)
     ShowKeyboardShortcuts = Column(Boolean, default=True, nullable=False)
 
+class InventorySettings(Base):
+    __tablename__ = "inventory_settings"
+
+    SettingsId = Column(Integer, primary_key=True, autoincrement=True)
+    LowStockThreshold = Column(Integer, nullable=False, default=10)
+    ExpiryAlertDays = Column(Integer, nullable=False, default=90)
+    AllowNegativeStock = Column(Boolean, default=False, nullable=False)
+    DefaultUnit = Column(String(50), nullable=False, default="Box")
+    AutoGenerateBarcode = Column(Boolean, default=True, nullable=False)
+    PreventSaleOfExpired = Column(Boolean, default=True, nullable=False)
+
