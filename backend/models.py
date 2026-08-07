@@ -352,3 +352,17 @@ class InventorySettings(Base):
     AutoGenerateBarcode = Column(Boolean, default=True, nullable=False)
     PreventSaleOfExpired = Column(Boolean, default=True, nullable=False)
 
+class PrinterSettings(Base):
+    __tablename__ = "printer_settings"
+
+    SettingsId = Column(Integer, primary_key=True, autoincrement=True)
+    PrinterType = Column(String(50), nullable=False, default="ESC/POS Thermal")
+    PaperSize = Column(String(50), nullable=False, default="80mm")
+    SelectedPrinterName = Column(String(255), nullable=True, default="")
+    ConnectionPort = Column(String(50), nullable=False, default="USB")
+    CustomRawByteSequence = Column(Text, nullable=True, default="\\x1B\\x70\\x00\\x19\\xFA") # Standard cash drawer kick
+    ShowLogo = Column(Boolean, default=True, nullable=False)
+    ShowPharmacyName = Column(Boolean, default=True, nullable=False)
+    ShowAddress = Column(Boolean, default=True, nullable=False)
+    ReceiptFooterMessage = Column(Text, nullable=True, default="Thank you for your visit! Wishing you good health.")
+

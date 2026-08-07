@@ -70,3 +70,23 @@ class InventorySettingsResponse(InventorySettingsBase):
 
     class Config:
         from_attributes = True
+
+class PrinterSettingsBase(BaseModel):
+    PrinterType: str
+    PaperSize: str
+    SelectedPrinterName: Optional[str] = None
+    ConnectionPort: str
+    CustomRawByteSequence: Optional[str] = None
+    ShowLogo: bool
+    ShowPharmacyName: bool
+    ShowAddress: bool
+    ReceiptFooterMessage: Optional[str] = None
+
+class PrinterSettingsUpdate(PrinterSettingsBase):
+    pass
+
+class PrinterSettingsResponse(PrinterSettingsBase):
+    SettingsId: int
+
+    class Config:
+        from_attributes = True

@@ -6,8 +6,8 @@ import os
 import shutil
 
 from api.deps import get_db
-from models import PharmacyProfile, BillingSettings, InventorySettings
-from schemas.settings import PharmacyProfileResponse, PharmacyProfileUpdate, BillingSettingsResponse, BillingSettingsUpdate, InventorySettingsResponse, InventorySettingsUpdate
+from models import PharmacyProfile, BillingSettings, InventorySettings, PrinterSettings
+from schemas.settings import PharmacyProfileResponse, PharmacyProfileUpdate, BillingSettingsResponse, BillingSettingsUpdate, InventorySettingsResponse, InventorySettingsUpdate, PrinterSettingsResponse, PrinterSettingsUpdate
 
 router = APIRouter()
 
@@ -149,3 +149,51 @@ def update_inventory_settings(
     db.commit()
     db.refresh(settings)
     return settings
+
+@router.get("/printer", response_model=PrinterSettingsResponse)
+def get_printer_settings(db: Session = Depends(get_db)) -> Any:
+    """
+    Get the current printer settings. If none exists, return defaults.
+    """
+    settings = db.query(PrinterSettings).first()
+    if not settings:
+        settings = PrinterSettings()
+        db.add(settings)
+        db.commit()
+        db.refresh(settings)
+    return settings
+
+@router.put("/printer", response_model=PrinterSettingsResponse)
+def update_printer_settings(
+    settings_in: PrinterSettingsUpdate,
+    db: Session = Depends(get_db)
+) -> Any:
+    """
+    Update the printer settings.
+    """
+    settings = db.query(PrinterSettings).first()
+    if not settings:
+        settings = PrinterSettings(**settings_in.model_dump())
+        db.add(settings)
+    else:
+        update_data = settings_in.model_dump(exclude_unset=True)
+        for field, value in update_data.items():
+            setattr(settings, field, value)
+            
+    db.commit()
+    db.refresh(settings)
+    return settings
+
+@router.post("/printer/test")
+def test_printer_connection(db: Session = Depends(get_db)) -> Any:
+    """
+    Endpoint to test ESC/POS printing (simulated for now, would connect to hardware in prod).
+    """
+    settings = db.query(PrinterSettings).first()
+    if not settings:
+        raise HTTPException(status_code=404, detail="Printer settings not configured.")
+        
+    return {
+        "status": "success",
+        "message": f"Successfully sent test payload to {settings.SelectedPrinterName or 'Default Printer'} on {settings.ConnectionPort}"
+    }
