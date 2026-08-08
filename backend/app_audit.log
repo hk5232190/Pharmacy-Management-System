@@ -72,3 +72,49 @@ NoneType: None
 2026-08-08 02:18:31,686 - pms - INFO - AUDIT: User admin successfully deleted customer 1 (Ahmad Khan).
 2026-08-08 02:21:16,562 - pms - WARNING - AUDIT: User admin attempted to delete supplier 1 (ali) but was blocked. Reason: 3 purchase orders exist.
 2026-08-08 02:23:58,478 - pms - INFO - AUDIT: User admin exported 5 customers to CSV.
+2026-08-08 02:35:56,197 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-08 02:35:56,240 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-08 02:39:10,216 - pms - WARNING - AUDIT: User admin attempted to delete medicine 1 (panadol) but was blocked. Reason: Dependency records exist (Batches: True, Sales: True, Purchases: True).
+2026-08-08 02:46:10,779 - pms - WARNING - AUDIT: User admin attempted to delete medicine 1 (panadol) but was blocked. Reason: Dependency records exist (Batches: True, Sales: True, Purchases: True).
+2026-08-08 02:50:10,431 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-08 02:50:10,497 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-08 11:24:23,926 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-08 11:24:23,981 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-08 11:33:42,475 - pms - WARNING - AUDIT: User admin attempted to delete medicine 1 (panadol) but was blocked. Reason: Dependency records exist (Batches: True, Sales: True, Purchases: True).
+2026-08-08 11:50:26,229 - pms - WARNING - AUDIT: User admin attempted to delete medicine 1 (panadol) but was blocked. Reason: Dependency records exist (Batches: True, Sales: True, Purchases: True).
+2026-08-08 12:40:19,567 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-08 12:40:19,635 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-08 13:46:30,826 - pms - ERROR - PMSException caught: Session expired. Please log in again. (status: 401) | Path: /api/v1/auth/me
+2026-08-08 14:08:23,749 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-08 14:08:23,806 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-08 14:24:35,947 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-08 14:24:36,010 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-08 14:32:56,455 - pms - ERROR - PMSException caught: Invalid authentication credentials (status: 401) | Path: /api/v1/backup/manual
+2026-08-08 14:34:44,411 - pms - ERROR - PMSException caught: Incorrect username or password (status: 401) | Path: /api/v1/auth/login
+2026-08-08 14:38:36,754 - pms - ERROR - Unhandled Exception caught: invalid literal for int() with base 10: 'admin' | Path: /api/v1/backup/db-info
+NoneType: None
+2026-08-08 14:44:52,559 - pms - INFO - AUDIT: Backup 'Test1234.sqlite' created successfully (Type: Manual).
+2026-08-08 14:51:36,205 - pms - INFO - AUDIT: Backup 'Manual_Backup_2026_08_08_145136.sqlite' created successfully (Type: Manual).
+2026-08-08 15:29:55,671 - pms - INFO - AUDIT: Backup 'Manual_Backup_2026_08_08_152955.sqlite' created successfully (Type: Manual).
+2026-08-08 21:14:53,103 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-08 21:14:53,194 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-08 21:15:11,332 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-08 21:15:11,367 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-08 21:16:54,435 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-08 21:16:54,502 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-09 00:03:20,338 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-09 00:03:20,378 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-09 00:03:29,195 - pms - ERROR - PMSException caught: Session expired. Please log in again. (status: 401) | Path: /api/v1/auth/me
+2026-08-09 00:36:34,928 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-09 00:36:34,976 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-09 00:47:51,531 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-09 00:47:51,588 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-09 00:50:54,047 - pms - INFO - Change Password | Success | User: admin
+2026-08-09 00:52:47,218 - pms - INFO - Security Settings Updated | User: admin | AutoLock: True (1m) | SessionTimeout: True (60m)
+2026-08-09 00:52:54,496 - pms - INFO - Database Optimization | User: admin | Reclaimed: -4096 bytes
+2026-08-09 00:54:21,156 - pms - INFO - Clear Temp Data | User: admin | Deleted 1 files
+2026-08-09 00:54:55,636 - pms - INFO - Safe Data Reset | SUCCESS | User: admin | Snapshot: pre_reset_snapshot_20260809_005455.sqlite
+2026-08-09 01:08:48,872 - pms - INFO - Safe Data Reset | SUCCESS | User: admin | Snapshot: pre_reset_snapshot_20260809_010848.sqlite
+2026-08-09 01:16:53,978 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-09 01:16:54,013 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-09 01:21:28,680 - pms - INFO - Clear Temp Data | User: admin | Deleted 0 files

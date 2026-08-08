@@ -4,6 +4,8 @@ from api.deps import get_db, get_current_user
 from models import BackupSettings, User
 from schemas.backup_settings import BackupSettingsResponse, BackupSettingsUpdate
 
+from core.logger import logger
+
 router = APIRouter()
 
 def get_or_create_settings(db: Session) -> BackupSettings:
@@ -32,6 +34,8 @@ def update_backup_settings(
     
     db.commit()
     db.refresh(settings)
+    
+    logger.info(f"Backup Settings Updated | User: {current_user.Username} | AutoBackup: {settings.IsAutoBackupEnabled}")
     
     # Trigger APScheduler update
     if hasattr(request.app.state, "reschedule_backup_job"):

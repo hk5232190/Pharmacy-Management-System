@@ -379,3 +379,12 @@ class SystemPreferences(Base):
     EnableToastNotifications = Column(Boolean, default=True, nullable=False)
     Language = Column(String(50), nullable=False, default="English")
 
+class SecuritySettings(Base):
+    __tablename__ = "security_settings"
+
+    SettingsId = Column(Integer, primary_key=True, autoincrement=True)
+    AutoLockEnabled = Column(Boolean, default=False, nullable=False)
+    AutoLockMinutes = Column(Integer, default=15, nullable=False)
+    SessionTimeoutEnabled = Column(Boolean, default=True, nullable=False)
+    SessionTimeoutMinutes = Column(Integer, default=120, nullable=False)
+    UpdatedAt = Column(DateTime, server_default=func.now(), onupdate=func.now())

@@ -11,9 +11,10 @@ import plyer
 
 from database import SQLALCHEMY_DATABASE_URL, engine
 from models import BackupHistory, User, BackupSettings
-from schemas.backup import BackupRequest, BackupResponse, RestoreRequest, RestoreResponse
+from schemas.backup import BackupRequest, BackupResponse, RestoreRequest, RestoreResponse, DatabaseInfoResponse, DatabaseHealthResponse
 from api.deps import get_db, get_current_user
-
+from core.logger import logger
+from core.security import verify_password
 from utils.hwid import generate_hwid
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.backends import default_backend
@@ -144,6 +145,8 @@ def execute_backup(db: Session, backup_name: str, backup_location: str, compress
         db.commit()
         db.refresh(history_record)
 
+        logger.info(f"Database Backup Executed | Type: {backup_type} | File: {final_file_path.name} | Size: {file_size} bytes | Status: Success")
+
         if backup_type == "Automatic":
             try:
                 plyer.notification.notify(
@@ -170,6 +173,8 @@ def execute_backup(db: Session, backup_name: str, backup_location: str, compress
         db.add(history_record)
         db.commit()
         
+        logger.error(f"Database Backup Failed | Type: {backup_type} | Name: {backup_name} | Error: {str(e)}")
+        
         if backup_type == "Automatic":
             try:
                 plyer.notification.notify(
@@ -182,6 +187,45 @@ def execute_backup(db: Session, backup_name: str, backup_location: str, compress
                 pass
                 
         raise e
+
+@router.get("/db-info", response_model=DatabaseInfoResponse)
+def get_database_info(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    src_db_path = get_db_path()
+    size_bytes = os.path.getsize(src_db_path) if os.path.exists(src_db_path) else 0
+    
+    conn = sqlite3.connect(src_db_path)
+    cursor = conn.cursor()
+    cursor.execute("select sqlite_version();")
+    version = cursor.fetchone()[0]
+    conn.close()
+
+    last_backup = db.query(BackupHistory).filter(BackupHistory.Status == "Success").order_by(BackupHistory.CreatedAt.desc()).first()
+    total_backups = db.query(BackupHistory).count()
+
+    return DatabaseInfoResponse(
+        engine="SQLite",
+        version=version,
+        size_bytes=size_bytes,
+        last_backup_date=last_backup.CreatedAt if last_backup else None,
+        total_backups=total_backups
+    )
+
+@router.get("/db-health", response_model=DatabaseHealthResponse)
+def get_database_health(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    src_db_path = get_db_path()
+    try:
+        conn = sqlite3.connect(src_db_path)
+        cursor = conn.cursor()
+        cursor.execute("PRAGMA integrity_check;")
+        result = cursor.fetchone()
+        conn.close()
+        
+        if result and result[0] == "ok":
+            return DatabaseHealthResponse(status="Healthy", message="Database integrity check passed.")
+        else:
+            return DatabaseHealthResponse(status="Corrupted", message=f"Database integrity check failed: {result}")
+    except Exception as e:
+        return DatabaseHealthResponse(status="Error", message=f"Failed to run integrity check: {str(e)}")
 
 @router.post("/manual", response_model=BackupResponse)
 def create_manual_backup(
@@ -214,6 +258,10 @@ def restore_backup(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
+    if not verify_password(req.password, current_user.PasswordHash, current_user.Salt):
+        logger.warning(f"Failed password verification during restore by user {current_user.Username}")
+        raise HTTPException(status_code=401, detail="Invalid password.")
+
     backup_file = Path(req.backup_file_path)
     if not backup_file.exists():
         raise HTTPException(status_code=404, detail="Backup file not found.")
@@ -262,10 +310,11 @@ def restore_backup(
         src_db_path = Path(get_db_path())
         
         # 2. Safety Backup
-        safety_backup_name = f"Safety_Backup_{datetime.now().strftime('%Y_%m_%d_%H%M%S')}"
         safety_backup_dir = src_db_path.parent / "backups" / "safety"
         safety_backup_dir.mkdir(parents=True, exist_ok=True)
-        safety_db_path = safety_backup_dir / f"{safety_backup_name}.sqlite"
+        safety_db_path = safety_backup_dir / "pre_restore_safety_snapshot.sqlite"
+        
+        logger.info(f"Database Restore Initiated | Creating safety snapshot: {safety_db_path}")
         
         src = sqlite3.connect(src_db_path)
         dst = sqlite3.connect(safety_db_path)
@@ -292,8 +341,10 @@ def restore_backup(
                 os.replace(safety_db_path, src_db_path)
             except:
                 pass
+            logger.error(f"Database Restore Failed | Error: {str(e)} | Rolled back to safety snapshot")
             raise HTTPException(status_code=500, detail=f"Restore failed during file swap. Rolled back to safety backup. Error: {str(e)}")
 
+        logger.info(f"Database Restore Successful | Restored from: {req.backup_file_path} by user {current_user.Username}")
         return RestoreResponse(success=True, message="Restore completed successfully. Please reload.")
         
     finally:

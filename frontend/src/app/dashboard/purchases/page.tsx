@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   ShoppingCart, DollarSign, Undo2, Users, FileText, 
   Search, Plus, Save, Printer, Eye, X, Trash2, Calendar,
@@ -110,6 +110,20 @@ export default function PurchasesPage() {
   const [returnItems, setReturnItems] = useState<{ PurchaseItemId: number; MedicineId: number; MedicineName: string; BatchCode: string; OriginalQty: number; ReturnQty: number; CostPrice: number; RefundAmount: number }[]>([]);
   const [returnReason, setReturnReason] = useState("");
   const [returnInvNo, setReturnInvNo] = useState(`DN-${new Date().getFullYear().toString().slice(-2)}${Math.floor(1000 + Math.random() * 9000)}`);
+
+  // --- Derived Stats (computed from live purchaseHistory — no hardcoding) ---
+  const todayPurchaseTotal = useMemo(() => {
+    const todayStr = new Date().toISOString().split('T')[0];
+    return purchaseHistory
+      .filter(p => p.PurchaseDate && p.PurchaseDate.startsWith(todayStr))
+      .reduce((sum, p) => sum + (Number(p.GrandTotal) || 0), 0);
+  }, [purchaseHistory]);
+
+  const allTimePurchaseTotal = useMemo(() => {
+    return purchaseHistory.reduce((sum, p) => sum + (Number(p.GrandTotal) || 0), 0);
+  }, [purchaseHistory]);
+
+  const fmt = (n: number) => formatNumber ? formatNumber(n) : n.toLocaleString('en-PK', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   // --- Effects ---
   useEffect(() => {
@@ -452,7 +466,7 @@ export default function PurchasesPage() {
             </div>
             <div>
               <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Today's Purchases</p>
-              <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">₨ 28,450.00</h3>
+              <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">₨ {fmt(todayPurchaseTotal)}</h3>
             </div>
           </div>
           <div className="bg-white dark:bg-card p-4 rounded-xl shadow-sm border border-border flex items-center gap-4">
@@ -461,7 +475,7 @@ export default function PurchasesPage() {
             </div>
             <div>
               <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Total Purchase Amount</p>
-              <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">₨ 8,45,320.50</h3>
+              <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">₨ {fmt(allTimePurchaseTotal)}</h3>
             </div>
           </div>
           <div className="bg-white dark:bg-card p-4 rounded-xl shadow-sm border border-border flex items-center gap-4">

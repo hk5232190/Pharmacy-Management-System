@@ -20,7 +20,19 @@ class BackupResponse(BaseModel):
 
 class RestoreRequest(BaseModel):
     backup_file_path: str
+    password: str
 
 class RestoreResponse(BaseModel):
     success: bool
+    message: str
+
+class DatabaseInfoResponse(BaseModel):
+    engine: str
+    version: str
+    size_bytes: int
+    last_backup_date: Optional[datetime] = None
+    total_backups: int
+
+class DatabaseHealthResponse(BaseModel):
+    status: str
     message: str

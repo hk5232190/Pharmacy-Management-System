@@ -47,11 +47,17 @@ export default function BackupRestorePage() {
   });
   const [isSavingSettings, setIsSavingSettings] = useState(false);
 
+  const [dbInfo, setDbInfo] = useState<any>(null);
+  const [dbHealth, setDbHealth] = useState<any>(null);
+  const [isCheckingHealth, setIsCheckingHealth] = useState(false);
+  const [adminPassword, setAdminPassword] = useState("");
+
   // Initialize backup name
   useEffect(() => {
     generateBackupName();
     fetchHistory();
     fetchSettings();
+    fetchDbInfo();
   }, []);
 
   const generateBackupName = () => {
@@ -89,6 +95,41 @@ export default function BackupRestorePage() {
       }
     } catch (error) {
       console.error("Failed to fetch settings", error);
+    }
+  };
+
+  const fetchDbInfo = async () => {
+    try {
+      const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
+      const res = await fetch("http://127.0.0.1:8000/api/v1/backup/db-info", {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setDbInfo(data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch DB info", error);
+    }
+  };
+
+  const handleCheckHealth = async () => {
+    setIsCheckingHealth(true);
+    try {
+      const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
+      const res = await fetch("http://127.0.0.1:8000/api/v1/backup/db-health", {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setDbHealth(data);
+        if (data.status === "Healthy") toast.success(data.message);
+        else toast.error(data.message);
+      }
+    } catch (error) {
+      toast.error("Failed to check database health.");
+    } finally {
+      setIsCheckingHealth(false);
     }
   };
 
@@ -159,6 +200,10 @@ export default function BackupRestorePage() {
       toast.error("Please provide a backup file path");
       return;
     }
+    if (!adminPassword) {
+      toast.error("Please provide your admin password to authorize the restore");
+      return;
+    }
 
     setIsRestoring(true);
     setRestoreStatus("Validating backup integrity and schema... (Creating Safety Backup)");
@@ -173,7 +218,8 @@ export default function BackupRestorePage() {
           "Authorization": `Bearer ${token}`
         },
         body: JSON.stringify({
-          backup_file_path: restoreFilePath
+          backup_file_path: restoreFilePath,
+          password: adminPassword
         })
       });
 
@@ -333,7 +379,9 @@ export default function BackupRestorePage() {
             <Calendar className="h-8 w-8 text-blue-500 bg-blue-50 dark:bg-blue-900/20 p-1.5 rounded-lg" />
           </CardHeader>
           <CardContent>
-            <div className="text-xl font-bold">Today</div>
+            <div className="text-xl font-bold">
+              {dbInfo?.last_backup_date ? format(new Date(dbInfo.last_backup_date + "Z"), "MMM dd, yyyy") : "Never"}
+            </div>
             <p className="text-xs text-green-500 flex items-center mt-1">
               <CheckCircle2 className="h-3 w-3 mr-1" /> Successful
             </p>
@@ -345,25 +393,25 @@ export default function BackupRestorePage() {
             <Database className="h-8 w-8 text-purple-500 bg-purple-50 dark:bg-purple-900/20 p-1.5 rounded-lg" />
           </CardHeader>
           <CardContent>
-            <div className="text-xl font-bold">{backupHistory.length}</div>
-            <p className="text-xs text-green-500 mt-1 flex items-center">
-              ↑ 2 this month
+            <div className="text-xl font-bold">{dbInfo?.total_backups || 0}</div>
+            <p className="text-xs text-muted-foreground mt-1 flex items-center">
+              Available in history
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Backup Storage</CardTitle>
+            <CardTitle className="text-sm font-medium">Database Storage</CardTitle>
             <HardDrive className="h-8 w-8 text-blue-500 bg-blue-50 dark:bg-blue-900/20 p-1.5 rounded-lg" />
           </CardHeader>
           <CardContent>
             <div className="text-xl font-bold">
-              {formatBytes(backupHistory.reduce((acc, curr) => acc + (curr.SizeBytes || 0), 0))} Used
+              {formatBytes(dbInfo?.size_bytes || 0)}
             </div>
             <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full mt-2">
-              <div className="bg-blue-500 h-1.5 rounded-full w-[15%]"></div>
+              <div className="bg-blue-500 h-1.5 rounded-full w-[5%]"></div>
             </div>
-            <p className="text-xs text-muted-foreground mt-1">15% Used of 10 GB</p>
+            <p className="text-xs text-muted-foreground mt-1">Current Active Database</p>
           </CardContent>
         </Card>
         <Card>
@@ -372,19 +420,25 @@ export default function BackupRestorePage() {
             <HeartPulse className="h-8 w-8 text-green-500 bg-green-50 dark:bg-green-900/20 p-1.5 rounded-lg" />
           </CardHeader>
           <CardContent>
-            <div className="text-xl font-bold text-green-500">Enabled</div>
-            <p className="text-xs text-muted-foreground mt-1">Daily at 11:00 PM</p>
+            <div className={`text-xl font-bold ${settings.IsAutoBackupEnabled ? "text-green-500" : "text-slate-500"}`}>
+              {settings.IsAutoBackupEnabled ? "Enabled" : "Disabled"}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {settings.IsAutoBackupEnabled ? `${settings.BackupFrequency} at ${settings.BackupTime}` : "Turn on in settings"}
+            </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Database Status</CardTitle>
-            <ShieldCheck className="h-8 w-8 text-orange-500 bg-orange-50 dark:bg-orange-900/20 p-1.5 rounded-lg" />
+            <ShieldCheck className={`h-8 w-8 p-1.5 rounded-lg ${dbHealth?.status === 'Healthy' ? 'text-green-500 bg-green-50 dark:bg-green-900/20' : dbHealth?.status === 'Corrupted' ? 'text-red-500 bg-red-50 dark:bg-red-900/20' : 'text-orange-500 bg-orange-50 dark:bg-orange-900/20'}`} />
           </CardHeader>
           <CardContent>
-            <div className="text-xl font-bold text-green-500">Healthy</div>
-            <p className="text-xs text-green-500 flex items-center mt-1">
-              <CheckCircle2 className="h-3 w-3 mr-1" /> Protected
+            <div className={`text-xl font-bold ${dbHealth?.status === 'Healthy' ? 'text-green-500' : dbHealth?.status === 'Corrupted' ? 'text-red-500' : 'text-orange-500'}`}>
+              {dbHealth?.status || "Unknown"}
+            </div>
+            <p className={`text-xs flex items-center mt-1 ${dbHealth?.status === 'Healthy' ? 'text-green-500' : 'text-muted-foreground'}`}>
+              {dbHealth?.status === 'Healthy' ? <><CheckCircle2 className="h-3 w-3 mr-1" /> Protected</> : <Button variant="link" className="p-0 h-auto text-xs" onClick={handleCheckHealth}>{isCheckingHealth ? "Checking..." : "Check Now"}</Button>}
             </p>
           </CardContent>
         </Card>
@@ -469,6 +523,10 @@ export default function BackupRestorePage() {
                           <span className="text-muted-foreground">App Version</span>
                           <span className="font-medium">1.0.0.0</span>
                         </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">SQLite Version</span>
+                          <span className="font-medium">{dbInfo?.version || "Unknown"}</span>
+                        </div>
                       </div>
                     </div>
 
@@ -537,6 +595,20 @@ export default function BackupRestorePage() {
                     </div>
                     <p className="text-xs text-muted-foreground mt-1">
                       You can also select a backup from the "Available Backups" list on the right.
+                    </p>
+                  </div>
+                  
+                  <div className="space-y-2 border-t pt-4">
+                    <Label htmlFor="adminPassword">Admin Password Verification</Label>
+                    <Input 
+                      id="adminPassword" 
+                      type="password"
+                      placeholder="Enter your admin password" 
+                      value={adminPassword} 
+                      onChange={(e) => setAdminPassword(e.target.value)} 
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Restoring a backup is a sensitive operation and requires re-authentication.
                     </p>
                   </div>
                 </div>
