@@ -254,7 +254,7 @@ export default function AboutPage() {
             <div className="flex items-center gap-4 mt-3 flex-wrap">
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <Tag size={13} />
-                <span className="font-semibold text-foreground">v{app.version}</span>
+                <span className="font-semibold text-foreground">V {app.version}</span>
               </div>
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <Code2 size={13} />
@@ -279,7 +279,7 @@ export default function AboutPage() {
         <SectionCard icon={Info} title="Application Information">
           <InfoRow label="Software Name"   value={app.software_name} />
           <InfoRow label="Short Name"      value={app.software_short} />
-          <InfoRow label="Version"         value={`v${app.version}`} />
+          <InfoRow label="Version"         value={`V ${app.version}`} />
           <InfoRow label="Build Number"    value={app.build_number} mono />
           <InfoRow label="Release Date"    value={app.release_date} />
           <InfoRow label="Edition"         value={app.edition} />
@@ -292,7 +292,7 @@ export default function AboutPage() {
           <InfoRow label="Company"    value={developer.company_name} />
           <InfoRow label="Developer"  value={developer.developer} />
           <InfoRow label="Country"    value={developer.country} />
-          <InfoRow label="Website"    value="GitHub Repository" href={developer.website} />
+          <InfoRow label="Website"    value={developer.website.replace(/^https?:\/\//, '')} href={developer.website} />
           <InfoRow label="Email"      value={developer.email} href={`mailto:${developer.email}`} />
           <div className="mt-3 pt-3 border-t border-border">
             <div className="flex items-start gap-2 text-xs text-muted-foreground">
@@ -412,7 +412,7 @@ export default function AboutPage() {
         <div className="flex items-center justify-center gap-2 mt-2">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
           <span className="text-xs text-muted-foreground font-medium">
-            PMS v{app.version} · Build {app.build_number} · Running on port {system.backend_port}
+            PMS V {app.version} · Build {app.build_number} · Running on port {system.backend_port}
           </span>
         </div>
       </div>
