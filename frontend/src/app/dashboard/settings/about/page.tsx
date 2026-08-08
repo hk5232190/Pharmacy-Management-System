@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import {
   Code2, Monitor, HardDrive, Cpu, MemoryStick, Database,
-  Globe, Mail, Github, Phone, Shield, ShieldCheck,
+  Globe, Mail, Phone, Shield, ShieldCheck,
   Calendar, Tag, Building2, Copyright, RefreshCw,
   Loader2, ExternalLink, Server, Clock, Layers,
   Info, HeartHandshake, Infinity, Package
@@ -37,9 +37,8 @@ interface AboutData {
   };
   support: {
     support_email: string;
-    github_issues: string;
-    documentation: string;
     phone: string;
+    whatsapp: string;
   };
   system: {
     os_name: string;
@@ -377,7 +376,7 @@ export default function AboutPage() {
 
       {/* ── Support / Contact ── */}
       <SectionCard icon={HeartHandshake} title="Support & Contact Information">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <a
             href={`mailto:${support.support_email}`}
             className="group flex items-center gap-3 p-4 rounded-xl border border-border hover:border-primary/50 hover:bg-primary/5 transition-all"
@@ -392,32 +391,15 @@ export default function AboutPage() {
           </a>
 
           <a
-            href={support.github_issues}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group flex items-center gap-3 p-4 rounded-xl border border-border hover:border-primary/50 hover:bg-primary/5 transition-all"
-          >
-            <div className="w-9 h-9 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0 group-hover:bg-primary/10 transition-colors">
-              <Github size={17} className="text-slate-700 dark:text-slate-300 group-hover:text-primary" />
-            </div>
-            <div>
-              <p className="text-xs font-bold text-foreground">GitHub Issues</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Report bugs & requests</p>
-            </div>
-          </a>
-
-          <a
-            href={support.documentation}
-            target="_blank"
-            rel="noopener noreferrer"
+            href={`tel:${support.phone}`}
             className="group flex items-center gap-3 p-4 rounded-xl border border-border hover:border-primary/50 hover:bg-primary/5 transition-all"
           >
             <div className="w-9 h-9 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center shrink-0 group-hover:bg-primary/10 transition-colors">
-              <Globe size={17} className="text-emerald-600 dark:text-emerald-400 group-hover:text-primary" />
+              <Phone size={17} className="text-emerald-600 dark:text-emerald-400 group-hover:text-primary" />
             </div>
             <div>
-              <p className="text-xs font-bold text-foreground">Documentation</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Wiki & user guide</p>
+              <p className="text-xs font-bold text-foreground">Phone / WhatsApp</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{support.phone}</p>
             </div>
           </a>
         </div>

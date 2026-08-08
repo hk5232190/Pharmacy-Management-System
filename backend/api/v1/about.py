@@ -24,21 +24,20 @@ APP_INFO = {
 }
 
 DEVELOPER_INFO = {
-    "company_name":    "PMS Software Solutions",
+    "company_name":    "EagleNest Creations",
     "developer":       "Muhammad Saqib",
-    "website":         "https://github.com/hk5232190/Pharmacy-Management-System",
-    "email":           "hk5232190@gmail.com",
+    "website":         "https://eaglenestcreations.com",
+    "email":           "msaqib1656@gmail.com",
     "country":         "Pakistan",
     "copyright_year":  "2026",
-    "copyright":       "© 2026 PMS Software Solutions. All rights reserved.",
+    "copyright":       "© 2026 EagleNest Creations. All rights reserved.",
     "license_type_text": "Commercial License – Authorized Use Only",
 }
 
 SUPPORT_INFO = {
-    "support_email":   "hk5232190@gmail.com",
-    "github_issues":   "https://github.com/hk5232190/Pharmacy-Management-System/issues",
-    "documentation":   "https://github.com/hk5232190/Pharmacy-Management-System/wiki",
-    "phone":           "N/A",
+    "support_email":   "msaqib1656@gmail.com",
+    "phone":           "+92 300 1234567",
+    "whatsapp":        "+92 300 1234567",
 }
 
 
