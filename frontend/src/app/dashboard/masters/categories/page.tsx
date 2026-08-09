@@ -43,12 +43,25 @@ export default function CategoriesPage() {
   const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // ── Selection state ──────────────────────────────────────────────────────
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const allSelected = categories.length > 0 && selectedIds.size === categories.length;
+  const someSelected = selectedIds.size > 0 && selectedIds.size < categories.length;
+  const toggleSelectAll = () => {
+    if (allSelected) { setSelectedIds(new Set()); }
+    else { setSelectedIds(new Set(categories.map(c => c.CategoryId))); }
+  };
+  const toggleSelect = (id: number) => setSelectedIds(prev => {
+    const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next;
+  });
+
   const fetchCategories = async () => {
     setLoading(true);
     try {
       const data = await apiClient.get("/categories", { params: search ? { search } : undefined });
       if (data.success) {
         setCategories(data.data);
+        setSelectedIds(new Set());
       } else {
         toast.error("Failed to load categories");
       }
@@ -267,7 +280,13 @@ export default function CategoriesPage() {
           <Table>
             <TableHeader className="bg-secondary/50">
               <TableRow className="hover:bg-transparent">
-                <TableHead className="w-12 text-center"><Checkbox /></TableHead>
+                <TableHead className="w-12 text-center">
+                  <Checkbox
+                    checked={allSelected ? true : someSelected ? "indeterminate" : false}
+                    onCheckedChange={toggleSelectAll}
+                  />
+                </TableHead>
+                <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-10 text-center">#</TableHead>
                 <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-32">Code</TableHead>
                 <TableHead className="font-semibold text-slate-700 dark:text-slate-300">Category Name</TableHead>
                 <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-32 text-center">Status</TableHead>
@@ -277,16 +296,22 @@ export default function CategoriesPage() {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="h-32 text-center text-muted-foreground">Loading categories...</TableCell>
+                  <TableCell colSpan={6} className="h-32 text-center text-muted-foreground">Loading categories...</TableCell>
                 </TableRow>
               ) : categories.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="h-32 text-center text-muted-foreground">No categories found.</TableCell>
+                  <TableCell colSpan={6} className="h-32 text-center text-muted-foreground">No categories found.</TableCell>
                 </TableRow>
               ) : (
-                categories.map((category) => (
+                categories.map((category, idx) => (
                   <TableRow key={category.CategoryId} className="hover:bg-secondary/30 transition-colors">
-                    <TableCell className="text-center"><Checkbox /></TableCell>
+                    <TableCell className="text-center">
+                      <Checkbox
+                        checked={selectedIds.has(category.CategoryId)}
+                        onCheckedChange={() => toggleSelect(category.CategoryId)}
+                      />
+                    </TableCell>
+                    <TableCell className="text-center text-[13px] text-muted-foreground font-medium">{idx + 1}</TableCell>
                     <TableCell className="font-mono text-[13px] text-muted-foreground">
                       CAT-{category.CategoryId.toString().padStart(5, '0')}
                     </TableCell>

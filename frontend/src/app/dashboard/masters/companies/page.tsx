@@ -43,12 +43,25 @@ export default function CompaniesPage() {
   const [companyToDelete, setCompanyToDelete] = useState<Company | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // ── Selection state ──────────────────────────────────────────────────────
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const allSelected = companies.length > 0 && selectedIds.size === companies.length;
+  const someSelected = selectedIds.size > 0 && selectedIds.size < companies.length;
+  const toggleSelectAll = () => {
+    if (allSelected) { setSelectedIds(new Set()); }
+    else { setSelectedIds(new Set(companies.map(c => c.CompanyId))); }
+  };
+  const toggleSelect = (id: number) => setSelectedIds(prev => {
+    const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next;
+  });
+
   const fetchCompanies = async () => {
     setLoading(true);
     try {
       const data = await apiClient.get("/companies", { params: search ? { search } : undefined });
       if (data.success) {
         setCompanies(data.data);
+        setSelectedIds(new Set());
       } else {
         toast.error("Failed to load companies");
       }
@@ -263,7 +276,13 @@ export default function CompaniesPage() {
           <Table>
             <TableHeader className="bg-secondary/50">
               <TableRow className="hover:bg-transparent">
-                <TableHead className="w-12 text-center"><Checkbox /></TableHead>
+                <TableHead className="w-12 text-center">
+                  <Checkbox
+                    checked={allSelected ? true : someSelected ? "indeterminate" : false}
+                    onCheckedChange={toggleSelectAll}
+                  />
+                </TableHead>
+                <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-10 text-center">#</TableHead>
                 <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-32">Code</TableHead>
                 <TableHead className="font-semibold text-slate-700 dark:text-slate-300">Company Name</TableHead>
                 <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-32 text-center">Status</TableHead>
@@ -273,16 +292,22 @@ export default function CompaniesPage() {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="h-32 text-center text-muted-foreground">Loading companies...</TableCell>
+                  <TableCell colSpan={6} className="h-32 text-center text-muted-foreground">Loading companies...</TableCell>
                 </TableRow>
               ) : companies.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="h-32 text-center text-muted-foreground">No companies found.</TableCell>
+                  <TableCell colSpan={6} className="h-32 text-center text-muted-foreground">No companies found.</TableCell>
                 </TableRow>
               ) : (
-                companies.map((company) => (
+                companies.map((company, idx) => (
                   <TableRow key={company.CompanyId} className="hover:bg-secondary/30 transition-colors">
-                    <TableCell className="text-center"><Checkbox /></TableCell>
+                    <TableCell className="text-center">
+                      <Checkbox
+                        checked={selectedIds.has(company.CompanyId)}
+                        onCheckedChange={() => toggleSelect(company.CompanyId)}
+                      />
+                    </TableCell>
+                    <TableCell className="text-center text-[13px] text-muted-foreground font-medium">{idx + 1}</TableCell>
                     <TableCell className="font-mono text-[13px] text-muted-foreground">
                       COMP-{company.CompanyId.toString().padStart(5, '0')}
                     </TableCell>
@@ -323,9 +348,10 @@ export default function CompaniesPage() {
           <DialogHeader>
             <DialogTitle>{currentCompany.CompanyId ? "Edit Company" : "Add New Company"}</DialogTitle>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
+          <div className="grid gap-5 py-4">
+            {/* Company Name */}
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-foreground">Company Name</label>
+              <label className="text-sm font-semibold text-foreground">Company Name <span className="text-rose-500">*</span></label>
               <Input 
                 value={currentCompany.CompanyName || ""}
                 onChange={e => setCurrentCompany({...currentCompany, CompanyName: e.target.value})}
@@ -333,18 +359,46 @@ export default function CompaniesPage() {
                 className="h-11"
               />
             </div>
-            {!currentCompany.CompanyId && (
-              <div className="flex items-center space-x-2 mt-2">
-                <Checkbox 
-                  id="isActive" 
-                  checked={currentCompany.IsActive} 
-                  onCheckedChange={(c) => setCurrentCompany({...currentCompany, IsActive: c as boolean})}
-                />
-                <label htmlFor="isActive" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                  Set as Active
-                </label>
+
+            {/* Status Toggle — shown for both Add and Edit */}
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-foreground">Status</label>
+              <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-secondary/30">
+                <div className="flex items-center gap-3">
+                  <span className={cn(
+                    "w-2.5 h-2.5 rounded-full",
+                    currentCompany.IsActive ? "bg-emerald-500" : "bg-rose-500"
+                  )} />
+                  <span className={cn(
+                    "text-sm font-semibold",
+                    currentCompany.IsActive ? "text-emerald-700 dark:text-emerald-400" : "text-rose-700 dark:text-rose-400"
+                  )}>
+                    {currentCompany.IsActive ? "Active" : "Inactive"}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {currentCompany.IsActive ? "Company is visible and usable" : "Company is hidden from use"}
+                  </span>
+                </div>
+                {/* Toggle Switch */}
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={currentCompany.IsActive}
+                  onClick={() => setCurrentCompany({...currentCompany, IsActive: !currentCompany.IsActive})}
+                  className={cn(
+                    "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary/30",
+                    currentCompany.IsActive ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-lg ring-0 transition-transform duration-200 ease-in-out",
+                      currentCompany.IsActive ? "translate-x-5" : "translate-x-0"
+                    )}
+                  />
+                </button>
               </div>
-            )}
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isSaving}>Cancel</Button>
@@ -354,6 +408,7 @@ export default function CompaniesPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
 
       {/* View Dialog */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>

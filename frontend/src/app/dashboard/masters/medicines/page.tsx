@@ -49,6 +49,18 @@ export default function MedicinesPage() {
   const [medicineToDelete, setMedicineToDelete] = useState<Medicine | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // ── Selection state ──────────────────────────────────────────────────────
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const allSelected = medicines.length > 0 && selectedIds.size === medicines.length;
+  const someSelected = selectedIds.size > 0 && selectedIds.size < medicines.length;
+  const toggleSelectAll = () => {
+    if (allSelected) { setSelectedIds(new Set()); }
+    else { setSelectedIds(new Set(medicines.map(m => m.MedicineId))); }
+  };
+  const toggleSelect = (id: number) => setSelectedIds(prev => {
+    const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next;
+  });
+
   // Import/Export State
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isImporting, setIsImporting] = useState(false);
@@ -75,6 +87,7 @@ export default function MedicinesPage() {
       const data = await apiClient.get("/medicines", { params });
       if (data.success) {
         setMedicines(data.data);
+        setSelectedIds(new Set());
       }
       
       if (categories.length === 0) {
@@ -323,7 +336,13 @@ export default function MedicinesPage() {
           <Table>
             <TableHeader className="bg-secondary/50">
               <TableRow className="hover:bg-transparent">
-                <TableHead className="w-12 text-center"><Checkbox /></TableHead>
+                <TableHead className="w-12 text-center">
+                  <Checkbox
+                    checked={allSelected ? true : someSelected ? "indeterminate" : false}
+                    onCheckedChange={toggleSelectAll}
+                  />
+                </TableHead>
+                <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-10 text-center">#</TableHead>
                 <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-24">Code</TableHead>
                 <TableHead className="font-semibold text-slate-700 dark:text-slate-300">Medicine Name</TableHead>
                 <TableHead className="font-semibold text-slate-700 dark:text-slate-300">Generic Name</TableHead>
@@ -337,16 +356,22 @@ export default function MedicinesPage() {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={9} className="h-32 text-center text-muted-foreground">Loading medicines...</TableCell>
+                  <TableCell colSpan={10} className="h-32 text-center text-muted-foreground">Loading medicines...</TableCell>
                 </TableRow>
               ) : medicines.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={9} className="h-32 text-center text-muted-foreground">No medicines found.</TableCell>
+                  <TableCell colSpan={10} className="h-32 text-center text-muted-foreground">No medicines found.</TableCell>
                 </TableRow>
               ) : (
-                medicines.map((med) => (
+                medicines.map((med, idx) => (
                   <TableRow key={med.MedicineId} className="hover:bg-secondary/30 transition-colors">
-                    <TableCell className="text-center"><Checkbox /></TableCell>
+                    <TableCell className="text-center">
+                      <Checkbox
+                        checked={selectedIds.has(med.MedicineId)}
+                        onCheckedChange={() => toggleSelect(med.MedicineId)}
+                      />
+                    </TableCell>
+                    <TableCell className="text-center text-[13px] text-muted-foreground font-medium">{idx + 1}</TableCell>
                     <TableCell className="font-mono text-[13px] text-muted-foreground">
                       MED-{med.MedicineId.toString().padStart(4, '0')}
                     </TableCell>

@@ -46,12 +46,25 @@ export default function SuppliersPage() {
   const [supplierToDelete, setSupplierToDelete] = useState<Supplier | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // ── Selection state ──────────────────────────────────────────────────────
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const allSelected = suppliers.length > 0 && selectedIds.size === suppliers.length;
+  const someSelected = selectedIds.size > 0 && selectedIds.size < suppliers.length;
+  const toggleSelectAll = () => {
+    if (allSelected) { setSelectedIds(new Set()); }
+    else { setSelectedIds(new Set(suppliers.map(s => s.SupplierId))); }
+  };
+  const toggleSelect = (id: number) => setSelectedIds(prev => {
+    const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next;
+  });
+
   const fetchSuppliers = async () => {
     setLoading(true);
     try {
       const data = await apiClient.get("/suppliers", { params: search ? { search } : undefined });
       if (data.success) {
         setSuppliers(data.data);
+        setSelectedIds(new Set());
       } else {
         toast.error("Failed to load suppliers");
       }
@@ -270,7 +283,13 @@ export default function SuppliersPage() {
           <Table>
             <TableHeader className="bg-secondary/50">
               <TableRow className="hover:bg-transparent">
-                <TableHead className="w-12 text-center"><Checkbox /></TableHead>
+                <TableHead className="w-12 text-center">
+                  <Checkbox
+                    checked={allSelected ? true : someSelected ? "indeterminate" : false}
+                    onCheckedChange={toggleSelectAll}
+                  />
+                </TableHead>
+                <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-10 text-center">#</TableHead>
                 <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-28">Code</TableHead>
                 <TableHead className="font-semibold text-slate-700 dark:text-slate-300">Supplier Name</TableHead>
                 <TableHead className="font-semibold text-slate-700 dark:text-slate-300">Phone</TableHead>
@@ -282,16 +301,22 @@ export default function SuppliersPage() {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">Loading suppliers...</TableCell>
+                  <TableCell colSpan={8} className="h-32 text-center text-muted-foreground">Loading suppliers...</TableCell>
                 </TableRow>
               ) : suppliers.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">No suppliers found.</TableCell>
+                  <TableCell colSpan={8} className="h-32 text-center text-muted-foreground">No suppliers found.</TableCell>
                 </TableRow>
               ) : (
-                suppliers.map((supplier) => (
+                suppliers.map((supplier, idx) => (
                   <TableRow key={supplier.SupplierId} className="hover:bg-secondary/30 transition-colors">
-                    <TableCell className="text-center"><Checkbox /></TableCell>
+                    <TableCell className="text-center">
+                      <Checkbox
+                        checked={selectedIds.has(supplier.SupplierId)}
+                        onCheckedChange={() => toggleSelect(supplier.SupplierId)}
+                      />
+                    </TableCell>
+                    <TableCell className="text-center text-[13px] text-muted-foreground font-medium">{idx + 1}</TableCell>
                     <TableCell className="font-mono text-[13px] text-muted-foreground">
                       SUP-{supplier.SupplierId.toString().padStart(5, '0')}
                     </TableCell>
