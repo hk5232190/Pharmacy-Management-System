@@ -92,3 +92,13 @@ class PurchaseResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+class PurchaseSummaryResponse(BaseModel):
+    today_purchase_amount: float
+    total_purchase_amount: float
+    total_invoices_count: int
+    total_returns_count: int
+    total_suppliers_count: int
+
+    class Config:
+        from_attributes = True

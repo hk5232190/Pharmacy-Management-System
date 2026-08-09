@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from sqlalchemy import desc
+from sqlalchemy import desc, func
 from typing import List
-from datetime import datetime
+from datetime import datetime, date
 
-from models import Purchase, PurchaseItem, StockBatch, Supplier, Medicine
-from schemas.purchase import PurchaseCreate, PurchaseResponse
+from models import Purchase, PurchaseItem, StockBatch, Supplier, Medicine, PurchaseReturn
+from schemas.purchase import PurchaseCreate, PurchaseResponse, PurchaseSummaryResponse
 from schemas.base import BaseResponse
 from api.deps import get_current_user, get_db
 
@@ -109,6 +109,47 @@ def create_purchase(
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Transaction failed: {str(e)}")
+
+@router.get("/summary", response_model=BaseResponse[PurchaseSummaryResponse], summary="Get purchase summary metrics")
+def get_purchase_summary(
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    today = date.today()
+
+    # Today's gross purchases
+    today_purchases_gross = db.query(func.sum(Purchase.GrandTotal)).filter(
+        func.date(Purchase.PurchaseDate) == today
+    ).scalar() or 0.0
+
+    # Today's returns
+    today_returns_amount = db.query(func.sum(PurchaseReturn.TotalRefundAmount)).filter(
+        func.date(PurchaseReturn.ReturnDate) == today
+    ).scalar() or 0.0
+
+    today_purchase_amount = float(today_purchases_gross) - float(today_returns_amount)
+
+    # All-time gross purchases
+    total_purchases_gross = db.query(func.sum(Purchase.GrandTotal)).scalar() or 0.0
+
+    # All-time returns
+    total_returns_amount = db.query(func.sum(PurchaseReturn.TotalRefundAmount)).scalar() or 0.0
+
+    total_purchase_amount = float(total_purchases_gross) - float(total_returns_amount)
+
+    # Gross counts (do not subtract returns from invoice counts)
+    total_invoices_count = db.query(Purchase).count()
+    total_returns_count = db.query(PurchaseReturn).count()
+    total_suppliers_count = db.query(Supplier).filter(Supplier.IsActive == True).count()
+
+    summary_data = PurchaseSummaryResponse(
+        today_purchase_amount=today_purchase_amount,
+        total_purchase_amount=total_purchase_amount,
+        total_invoices_count=total_invoices_count,
+        total_returns_count=total_returns_count,
+        total_suppliers_count=total_suppliers_count
+    )
+    return {"data": summary_data}
 
 @router.get("", response_model=BaseResponse[List[PurchaseResponse]], summary="Get all purchases")
 def get_purchases(

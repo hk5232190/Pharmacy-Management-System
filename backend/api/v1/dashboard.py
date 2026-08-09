@@ -28,10 +28,17 @@ def get_dashboard_summary(
     ).scalar() or 0.0
 
     # Filtered Purchases
-    today_purchases = db.query(func.sum(models.Purchase.GrandTotal)).filter(
+    today_purchases_gross = db.query(func.sum(models.Purchase.GrandTotal)).filter(
         func.date(models.Purchase.PurchaseDate) >= filter_start,
         func.date(models.Purchase.PurchaseDate) <= filter_end
     ).scalar() or 0.0
+
+    today_returns = db.query(func.sum(models.PurchaseReturn.TotalRefundAmount)).filter(
+        func.date(models.PurchaseReturn.ReturnDate) >= filter_start,
+        func.date(models.PurchaseReturn.ReturnDate) <= filter_end
+    ).scalar() or 0.0
+
+    today_purchases = float(today_purchases_gross) - float(today_returns)
 
     # Filtered COGS
     today_cogs = db.query(
@@ -115,7 +122,9 @@ def get_dashboard_summary(
         models.Sale.Status == "Completed"
     ).scalar() or 0.0
 
-    total_purchases = db.query(func.sum(models.Purchase.GrandTotal)).scalar() or 0.0
+    total_purchases_gross = db.query(func.sum(models.Purchase.GrandTotal)).scalar() or 0.0
+    total_returns = db.query(func.sum(models.PurchaseReturn.TotalRefundAmount)).scalar() or 0.0
+    total_purchases = float(total_purchases_gross) - float(total_returns)
 
     total_cogs = db.query(
         func.sum(models.SaleItem.Quantity * models.StockBatch.CostPrice)
@@ -240,7 +249,18 @@ def get_dashboard_charts(
     ).group_by('period').all()
     for row in purchase_results:
         if row.period in purchase_dict:
-            purchase_dict[row.period] = float(row.total or 0.0)
+            purchase_dict[row.period] += float(row.total or 0.0)
+
+    purchase_return_results = db.query(
+        func.strftime(fmt, models.PurchaseReturn.ReturnDate).label('period'),
+        func.sum(models.PurchaseReturn.TotalRefundAmount).label('total')
+    ).filter(
+        func.date(models.PurchaseReturn.ReturnDate) >= start_date,
+        func.date(models.PurchaseReturn.ReturnDate) <= end_date
+    ).group_by('period').all()
+    for row in purchase_return_results:
+        if row.period in purchase_dict:
+            purchase_dict[row.period] -= float(row.total or 0.0)
 
     # 3. Profit Trend (COGS based)
     cogs_results = db.query(

@@ -110,23 +110,13 @@ export default function PurchasesPage() {
   const [returnItems, setReturnItems] = useState<{ PurchaseItemId: number; MedicineId: number; MedicineName: string; BatchCode: string; OriginalQty: number; ReturnQty: number; CostPrice: number; RefundAmount: number }[]>([]);
   const [returnReason, setReturnReason] = useState("");
   const [returnInvNo, setReturnInvNo] = useState(`DN-${new Date().getFullYear().toString().slice(-2)}${Math.floor(1000 + Math.random() * 9000)}`);
-
-  // --- Derived Stats (computed from live purchaseHistory — no hardcoding) ---
-  const todayPurchaseTotal = useMemo(() => {
-    const todayStr = new Date().toISOString().split('T')[0];
-    return purchaseHistory
-      .filter(p => p.PurchaseDate && p.PurchaseDate.startsWith(todayStr))
-      .reduce((sum, p) => sum + (Number(p.GrandTotal) || 0), 0);
-  }, [purchaseHistory]);
-
-  const allTimePurchaseTotal = useMemo(() => {
-    return purchaseHistory.reduce((sum, p) => sum + (Number(p.GrandTotal) || 0), 0);
-  }, [purchaseHistory]);
+  const [summaryData, setSummaryData] = useState<any>(null);
 
   const fmt = (n: number) => formatNumber ? formatNumber(n) : n.toLocaleString('en-PK', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   // --- Effects ---
   useEffect(() => {
+    fetchSummary();
     fetchSuppliers();
     fetchHistory();
     fetchReturns();
@@ -146,6 +136,16 @@ export default function PurchasesPage() {
   }, [items, paymentStatus]);
 
   // --- API Calls ---
+  const fetchSummary = async () => {
+    try {
+      const data = await apiClient.get("/purchases/summary");
+      if (data.success) {
+        setSummaryData(data.data);
+      }
+    } catch (e) {
+      console.error("Failed to fetch purchase summary");
+    }
+  };
   const fetchSuppliers = async () => {
     try {
       const data = await apiClient.get("/suppliers");
@@ -210,6 +210,24 @@ export default function PurchasesPage() {
     setItems([...items, newItem]);
     setSearchQuery("");
     setMedicines([]);
+  };
+
+  const handleAddByBarcode = async () => {
+    if (!barcodeQuery.trim()) return toast.error("Please enter a barcode");
+    try {
+      const data = await apiClient.get(`/medicines`, { params: { search: barcodeQuery } });
+      if (data.success && data.data && data.data.length > 0) {
+        const exactMatch = data.data.find((m: Medicine) => m.Barcode === barcodeQuery);
+        const medToAdd = exactMatch || data.data[0];
+        addMedicineToGrid(medToAdd);
+        setBarcodeQuery("");
+        toast.success(`Added ${medToAdd.BrandName}`);
+      } else {
+        toast.error("No medicine found with this barcode");
+      }
+    } catch (e) {
+      toast.error("Failed to search by barcode");
+    }
   };
 
   const updateItem = (id: string, field: keyof PurchaseItem, value: any) => {
@@ -466,7 +484,7 @@ export default function PurchasesPage() {
             </div>
             <div>
               <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Today's Purchases</p>
-              <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">₨ {fmt(todayPurchaseTotal)}</h3>
+              <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">₨ {fmt(summaryData?.today_purchase_amount || 0)}</h3>
             </div>
           </div>
           <div className="bg-white dark:bg-card p-4 rounded-xl shadow-sm border border-border flex items-center gap-4">
@@ -475,7 +493,7 @@ export default function PurchasesPage() {
             </div>
             <div>
               <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Total Purchase Amount</p>
-              <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">₨ {fmt(allTimePurchaseTotal)}</h3>
+              <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">₨ {fmt(summaryData?.total_purchase_amount || 0)}</h3>
             </div>
           </div>
           <div className="bg-white dark:bg-card p-4 rounded-xl shadow-sm border border-border flex items-center gap-4">
@@ -484,7 +502,7 @@ export default function PurchasesPage() {
             </div>
             <div>
               <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Processed Returns</p>
-              <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">{returnsHistory.length}</h3>
+              <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">{summaryData?.total_returns_count || returnsHistory.length}</h3>
             </div>
           </div>
           <div className="bg-white dark:bg-card p-4 rounded-xl shadow-sm border border-border flex items-center gap-4">
@@ -493,7 +511,7 @@ export default function PurchasesPage() {
             </div>
             <div>
               <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Total Suppliers</p>
-              <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">{suppliers.length}</h3>
+              <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">{summaryData?.total_suppliers_count || suppliers.length}</h3>
             </div>
           </div>
           <div className="bg-white dark:bg-card p-4 rounded-xl shadow-sm border border-border flex items-center gap-4">
@@ -502,7 +520,7 @@ export default function PurchasesPage() {
             </div>
             <div>
               <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Total Invoices</p>
-              <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">{purchaseHistory.length}</h3>
+              <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">{summaryData?.total_invoices_count || purchaseHistory.length}</h3>
             </div>
           </div>
         </div>
@@ -638,10 +656,16 @@ export default function PurchasesPage() {
                         className="h-9 text-sm text-center font-mono"
                         value={barcodeQuery}
                         onChange={e=>setBarcodeQuery(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleAddByBarcode();
+                          }
+                        }}
                       />
                     </div>
                     
-                    <Button size="sm" className="h-9 px-3 bg-blue-600 hover:bg-blue-700 text-white shrink-0">
+                    <Button size="sm" onClick={handleAddByBarcode} className="h-9 px-3 bg-blue-600 hover:bg-blue-700 text-white shrink-0">
                       <Plus className="h-4 w-4 mr-1" /> Add
                     </Button>
                   </div>
