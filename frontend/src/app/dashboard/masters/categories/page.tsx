@@ -327,9 +327,10 @@ export default function CategoriesPage() {
           <DialogHeader>
             <DialogTitle>{currentCategory.CategoryId ? "Edit Category" : "Add New Category"}</DialogTitle>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
+          <div className="grid gap-5 py-4">
+            {/* Category Name */}
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-foreground">Category Name</label>
+              <label className="text-sm font-semibold text-foreground">Category Name <span className="text-rose-500">*</span></label>
               <Input 
                 value={currentCategory.CategoryName || ""}
                 onChange={e => setCurrentCategory({...currentCategory, CategoryName: e.target.value})}
@@ -337,18 +338,46 @@ export default function CategoriesPage() {
                 className="h-11"
               />
             </div>
-            {!currentCategory.CategoryId && (
-              <div className="flex items-center space-x-2 mt-2">
-                <Checkbox 
-                  id="isActive" 
-                  checked={currentCategory.IsActive} 
-                  onCheckedChange={(c) => setCurrentCategory({...currentCategory, IsActive: c as boolean})}
-                />
-                <label htmlFor="isActive" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                  Set as Active
-                </label>
+
+            {/* Status Toggle — shown for both Add and Edit */}
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-foreground">Status</label>
+              <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-secondary/30">
+                <div className="flex items-center gap-3">
+                  <span className={cn(
+                    "w-2.5 h-2.5 rounded-full",
+                    currentCategory.IsActive ? "bg-emerald-500" : "bg-rose-500"
+                  )} />
+                  <span className={cn(
+                    "text-sm font-semibold",
+                    currentCategory.IsActive ? "text-emerald-700 dark:text-emerald-400" : "text-rose-700 dark:text-rose-400"
+                  )}>
+                    {currentCategory.IsActive ? "Active" : "Inactive"}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {currentCategory.IsActive ? "Category is visible and usable" : "Category is hidden from use"}
+                  </span>
+                </div>
+                {/* Toggle Switch */}
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={currentCategory.IsActive}
+                  onClick={() => setCurrentCategory({...currentCategory, IsActive: !currentCategory.IsActive})}
+                  className={cn(
+                    "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary/30",
+                    currentCategory.IsActive ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-lg ring-0 transition-transform duration-200 ease-in-out",
+                      currentCategory.IsActive ? "translate-x-5" : "translate-x-0"
+                    )}
+                  />
+                </button>
               </div>
-            )}
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isSaving}>Cancel</Button>
@@ -358,6 +387,7 @@ export default function CategoriesPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
 
       {/* View Dialog */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
