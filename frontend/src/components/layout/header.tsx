@@ -212,13 +212,13 @@ export function Header() {
             </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56 mt-2">
-            <DropdownMenuItem className="text-sm cursor-pointer py-2">
+            <DropdownMenuItem onClick={() => router.push("/dashboard/settings/profile")} className="text-sm cursor-pointer py-2">
               <User className="mr-2 w-4 h-4 text-slate-500" /> My Profile
             </DropdownMenuItem>
-            <DropdownMenuItem className="text-sm cursor-pointer py-2">
+            <DropdownMenuItem onClick={() => router.push("/dashboard/settings/security")} className="text-sm cursor-pointer py-2">
               <LockIcon className="mr-2 w-4 h-4 text-slate-500" /> Change Password
             </DropdownMenuItem>
-            <DropdownMenuItem className="text-sm cursor-pointer py-2">
+            <DropdownMenuItem onClick={() => router.push("/dashboard/settings/about")} className="text-sm cursor-pointer py-2">
               <InfoIcon className="mr-2 w-4 h-4 text-slate-500" /> About Software
             </DropdownMenuItem>
             <DropdownMenuSeparator />
