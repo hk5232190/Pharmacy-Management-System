@@ -141,3 +141,77 @@ NoneType: None
 2026-08-09 03:01:24,649 - apscheduler.scheduler - INFO - Scheduler started
 2026-08-09 11:17:27,494 - pms - INFO - Starting Pharmacy Management System backend...
 2026-08-09 11:17:27,693 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-09 12:05:52,957 - pms - INFO - AUDIT: User admin exported 5 categories to CSV.
+2026-08-09 12:06:48,369 - pms - INFO - AUDIT: User admin successfully deleted category 4 (Antiallergics).
+2026-08-09 12:06:52,191 - pms - INFO - AUDIT: User admin successfully deleted category 3 (Antipyretics).
+2026-08-09 12:06:54,765 - pms - INFO - AUDIT: User admin successfully deleted category 2 (Painkillers).
+2026-08-09 12:06:57,053 - pms - INFO - AUDIT: User admin successfully deleted category 5 (Gastrointestinal).
+2026-08-09 12:07:06,117 - pms - INFO - AUDIT: User admin successfully deleted category 1 (Antibiotics).
+2026-08-09 12:07:17,475 - pms - INFO - AUDIT: User admin imported 5 categories. Skipped: 0. Errors: 0
+2026-08-09 12:07:32,987 - pms - INFO - AUDIT: User admin imported 0 companies. Skipped: 5. Errors: 5
+2026-08-09 12:07:41,178 - pms - INFO - AUDIT: User admin exported 5 companies to CSV.
+2026-08-09 12:07:47,085 - pms - INFO - AUDIT: User admin successfully deleted company 5 (GSK Pakistan).
+2026-08-09 12:07:49,139 - pms - INFO - AUDIT: User admin successfully deleted company 4 (Hilton Pharma).
+2026-08-09 12:07:51,633 - pms - INFO - AUDIT: User admin successfully deleted company 1 (Getz Pharma).
+2026-08-09 12:07:53,435 - pms - INFO - AUDIT: User admin successfully deleted company 2 (Searle Pakistan).
+2026-08-09 12:07:55,221 - pms - INFO - AUDIT: User admin successfully deleted company 3 (Sami Pharmaceuticals).
+2026-08-09 12:08:03,412 - pms - INFO - AUDIT: User admin imported 5 companies. Skipped: 0. Errors: 0
+2026-08-09 12:08:11,476 - pms - INFO - AUDIT: User admin exported 5 suppliers to CSV.
+2026-08-09 12:08:21,593 - pms - INFO - AUDIT: User admin successfully deleted supplier 5 (City Pharma Distributors).
+2026-08-09 12:08:25,443 - pms - INFO - AUDIT: User admin successfully deleted supplier 3 (PharmaLink Traders).
+2026-08-09 12:08:27,240 - pms - INFO - AUDIT: User admin successfully deleted supplier 4 (National Medical Suppliers).
+2026-08-09 12:08:31,262 - pms - INFO - AUDIT: User admin successfully deleted supplier 1 (MediCare Distributors).
+2026-08-09 12:08:35,102 - pms - INFO - AUDIT: User admin successfully deleted supplier 2 (HealthPlus Distributors).
+2026-08-09 12:08:42,855 - pms - INFO - AUDIT: User admin imported 5 suppliers. Skipped: 0. Errors: 0
+2026-08-09 12:22:26,308 - pms - INFO - AUDIT: User admin exported 5 categories to CSV.
+2026-08-09 12:22:31,819 - pms - INFO - AUDIT: User admin successfully deleted category 4 (Antiallergics).
+2026-08-09 12:22:33,694 - pms - INFO - AUDIT: User admin successfully deleted category 1 (Antibiotics).
+2026-08-09 12:22:35,603 - pms - INFO - AUDIT: User admin successfully deleted category 5 (Gastrointestinal).
+2026-08-09 12:22:37,876 - pms - INFO - AUDIT: User admin successfully deleted category 2 (Painkillers).
+2026-08-09 12:22:39,966 - pms - INFO - AUDIT: User admin successfully deleted category 3 (Antipyretics).
+2026-08-09 12:22:44,521 - pms - INFO - AUDIT: User admin imported 5 categories. Skipped: 0. Errors: 0
+2026-08-09 12:23:28,805 - pms - INFO - AUDIT: User admin exported 5 companies to CSV.
+2026-08-09 12:23:38,175 - pms - INFO - AUDIT: User admin successfully deleted company 5 (GSK Pakistan).
+2026-08-09 12:23:40,335 - pms - INFO - AUDIT: User admin successfully deleted company 1 (Getz Pharma).
+2026-08-09 12:23:43,288 - pms - INFO - AUDIT: User admin successfully deleted company 2 (Searle Pakistan).
+2026-08-09 12:23:45,186 - pms - INFO - AUDIT: User admin successfully deleted company 3 (Sami Pharmaceuticals).
+2026-08-09 12:23:47,760 - pms - INFO - AUDIT: User admin successfully deleted company 4 (Hilton Pharma).
+2026-08-09 12:23:56,264 - pms - INFO - AUDIT: User admin imported 5 companies. Skipped: 0. Errors: 0
+2026-08-09 12:24:30,486 - pms - INFO - AUDIT: User admin exported 5 suppliers to CSV.
+2026-08-09 12:24:36,594 - pms - INFO - AUDIT: User admin successfully deleted supplier 5 (City Pharma Distributors).
+2026-08-09 12:24:38,158 - pms - INFO - AUDIT: User admin successfully deleted supplier 1 (MediCare Distributors).
+2026-08-09 12:24:40,230 - pms - INFO - AUDIT: User admin successfully deleted supplier 3 (PharmaLink Traders).
+2026-08-09 12:24:42,347 - pms - INFO - AUDIT: User admin successfully deleted supplier 4 (National Medical Suppliers).
+2026-08-09 12:24:44,744 - pms - INFO - AUDIT: User admin successfully deleted supplier 2 (HealthPlus Distributors).
+2026-08-09 12:24:55,801 - pms - INFO - AUDIT: User admin imported 5 suppliers. Skipped: 0. Errors: 0
+2026-08-09 12:25:30,143 - pms - INFO - AUDIT: User admin exported 5 customers to CSV.
+2026-08-09 12:25:43,673 - pms - INFO - AUDIT: User admin successfully deleted customer 1 (Ahmed Raza).
+2026-08-09 12:25:46,352 - pms - INFO - AUDIT: User admin successfully deleted customer 4 (Sara Ahmed).
+2026-08-09 12:25:48,187 - pms - INFO - AUDIT: User admin successfully deleted customer 3 (Muhammad Usman).
+2026-08-09 12:25:50,159 - pms - INFO - AUDIT: User admin successfully deleted customer 5 (Hamza Khan).
+2026-08-09 12:25:51,882 - pms - INFO - AUDIT: User admin successfully deleted customer 2 (Ali Hassan).
+2026-08-09 12:26:00,765 - pms - INFO - AUDIT: User admin imported 5 customers. Skipped: 0. Errors: 0
+2026-08-09 12:26:21,918 - pms - INFO - AUDIT: User admin successfully deleted customer 5 (City Pharma Distributors).
+2026-08-09 12:26:23,975 - pms - INFO - AUDIT: User admin successfully deleted customer 1 (MediCare Distributors).
+2026-08-09 12:26:25,655 - pms - INFO - AUDIT: User admin successfully deleted customer 3 (PharmaLink Traders).
+2026-08-09 12:26:28,259 - pms - INFO - AUDIT: User admin successfully deleted customer 2 (HealthPlus Distributors).
+2026-08-09 12:27:23,164 - pms - INFO - AUDIT: User admin successfully deleted customer 4 (National Medical Suppliers).
+2026-08-09 12:27:27,599 - pms - INFO - AUDIT: User admin imported 5 customers. Skipped: 0. Errors: 0
+2026-08-09 12:40:19,475 - pms - INFO - AUDIT: User admin successfully deleted medicine 2 (Amoxil 500mg).
+2026-08-09 12:40:21,614 - pms - INFO - AUDIT: User admin successfully deleted medicine 4 (Calpol).
+2026-08-09 12:40:23,388 - pms - INFO - AUDIT: User admin successfully deleted medicine 1 (Panadol).
+2026-08-09 12:40:25,585 - pms - INFO - AUDIT: User admin successfully deleted medicine 5 (Betnovate).
+2026-08-09 12:40:31,472 - pms - INFO - AUDIT: User admin successfully deleted medicine 3 (Gaviscon).
+2026-08-09 14:13:10,729 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-09 14:13:10,778 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-09 15:16:40,052 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-09 15:16:40,107 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-09 15:37:50,139 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-09 15:37:50,162 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-09 15:44:56,548 - pms - INFO - AUDIT: User admin successfully deleted medicine 6 (Disprin).
+2026-08-09 16:14:28,428 - pms - ERROR - PMSException caught: Session expired. Please log in again. (status: 401) | Path: /api/v1/medicines
+2026-08-09 16:14:29,006 - pms - ERROR - PMSException caught: Session expired. Please log in again. (status: 401) | Path: /api/v1/medicines
+2026-08-09 16:14:30,257 - pms - ERROR - PMSException caught: Session expired. Please log in again. (status: 401) | Path: /api/v1/medicines
+2026-08-09 16:14:33,752 - pms - ERROR - PMSException caught: Session expired. Please log in again. (status: 401) | Path: /api/v1/medicines
+2026-08-09 16:14:36,305 - pms - ERROR - PMSException caught: Session expired. Please log in again. (status: 401) | Path: /api/v1/medicines
+2026-08-09 16:14:39,955 - pms - ERROR - PMSException caught: Session expired. Please log in again. (status: 401) | Path: /api/v1/auth/me

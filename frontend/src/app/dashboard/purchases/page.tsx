@@ -549,16 +549,20 @@ export default function PurchasesPage() {
 
         {/* --- INVOICE TAB --- */}
         {activeTab === "invoice" && (
-          <div className="flex flex-col xl:flex-row gap-6 items-start animate-in fade-in slide-in-from-bottom-2 duration-300">
-            {/* Left Side: Invoice Details & Grid */}
-            <div className="flex-1 w-full space-y-6">
-              
-              {/* 1. Purchase Information */}
-              <div className="bg-white dark:bg-card rounded-xl border border-border shadow-sm overflow-hidden">
+          <div className="flex flex-col gap-5 animate-in fade-in slide-in-from-bottom-2 duration-300">
+
+            {/* === ROW 1: Purchase Information + Invoice Summary === */}
+            <div className="flex flex-col xl:flex-row gap-5 items-stretch">
+
+              {/* Purchase Information */}
+              <div className="flex-1 bg-white dark:bg-card rounded-xl border border-border shadow-sm overflow-hidden">
                 <div className="px-4 py-3 border-b border-border bg-slate-50/50 dark:bg-secondary/20">
-                  <h3 className="font-semibold text-sm text-foreground">1. Purchase Information</h3>
+                  <h3 className="font-semibold text-sm text-foreground flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-primary"></span>
+                    Purchase Information
+                  </h3>
                 </div>
-                <div className="p-4 grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="p-4 grid grid-cols-2 gap-x-5 gap-y-3">
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-muted-foreground">Invoice No.</label>
                     <Input value={invoiceNo} disabled className="h-9 bg-slate-50 dark:bg-secondary/50 font-medium" />
@@ -572,7 +576,7 @@ export default function PurchasesPage() {
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-muted-foreground">Supplier <span className="text-rose-500">*</span></label>
-                    <select 
+                    <select
                       className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                       value={supplierId}
                       onChange={e=>setSupplierId(Number(e.target.value))}
@@ -585,10 +589,9 @@ export default function PurchasesPage() {
                     <label className="text-xs font-semibold text-muted-foreground">Supplier Inv. No.</label>
                     <Input value={supplierInvNo} onChange={e=>setSupplierInvNo(e.target.value)} placeholder="e.g. INV-78956" className="h-9" />
                   </div>
-                  
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-muted-foreground">Payment Status</label>
-                    <select 
+                    <select
                       className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                       value={paymentStatus}
                       onChange={e=>{
@@ -602,7 +605,7 @@ export default function PurchasesPage() {
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-muted-foreground">Payment Method</label>
-                    <select 
+                    <select
                       className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                       value={paymentMethod}
                       onChange={e=>setPaymentMethod(e.target.value)}
@@ -613,269 +616,260 @@ export default function PurchasesPage() {
                       <option value="Cheque">Cheque</option>
                     </select>
                   </div>
-                  <div className="space-y-1.5 md:col-span-2">
-                    <label className="text-xs font-semibold text-muted-foreground">Notes</label>
-                    <Input value={notes} onChange={e=>setNotes(e.target.value)} placeholder="Enter notes (optional)" className="h-9" />
+                  <div className="space-y-1.5 col-span-2">
+                    <label className="text-xs font-semibold text-muted-foreground">Notes (Optional)</label>
+                    <Input value={notes} onChange={e=>setNotes(e.target.value)} placeholder="Enter any notes for this purchase..." className="h-9" />
                   </div>
                 </div>
               </div>
 
-              {/* 2. Add Medicines Grid */}
-              <div className="bg-white dark:bg-card rounded-xl border border-border shadow-sm overflow-hidden flex flex-col min-h-[400px]">
-                <div className="px-4 py-3 border-b border-border bg-slate-50/50 dark:bg-secondary/20 flex flex-col sm:flex-row justify-between items-center gap-3">
-                  <h3 className="font-semibold text-sm text-foreground whitespace-nowrap">2. Add Medicines</h3>
-                  
-                  <div className="flex w-full sm:w-auto items-center gap-2">
-                    <div className="relative w-full sm:w-64">
-                      <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input 
-                        placeholder="Search medicine by name..." 
-                        className="h-9 pl-9 text-sm"
-                        value={searchQuery}
-                        onChange={e=>setSearchQuery(e.target.value)}
-                      />
-                      {medicines.length > 0 && (
-                        <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-zinc-900 border border-border rounded-md shadow-lg z-50 max-h-60 overflow-y-auto custom-scrollbar">
-                          {medicines.map(med => (
-                            <div 
-                              key={med.MedicineId} 
-                              className="px-3 py-2 hover:bg-secondary cursor-pointer border-b border-border last:border-0 text-sm flex justify-between"
-                              onClick={() => addMedicineToGrid(med)}
-                            >
-                              <span className="font-medium text-foreground">{med.BrandName}</span>
-                              <span className="text-muted-foreground text-xs">{med.Barcode || "No Barcode"}</span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                    
-                    <div className="relative w-full sm:w-48 hidden md:block">
-                      <Input 
-                        placeholder="Scan / Enter Barcode" 
-                        className="h-9 text-sm text-center font-mono"
-                        value={barcodeQuery}
-                        onChange={e=>setBarcodeQuery(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault();
-                            handleAddByBarcode();
-                          }
-                        }}
-                      />
-                    </div>
-                    
-                    <Button size="sm" onClick={handleAddByBarcode} className="h-9 px-3 bg-blue-600 hover:bg-blue-700 text-white shrink-0">
-                      <Plus className="h-4 w-4 mr-1" /> Add
-                    </Button>
-                  </div>
+              {/* Invoice Summary Card */}
+              <div className="w-full xl:w-[380px] shrink-0 bg-slate-900 dark:bg-slate-950 rounded-xl border border-slate-700 shadow-sm text-white flex flex-col">
+                <div className="px-5 py-3.5 border-b border-slate-700 flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-primary" />
+                  <h3 className="font-bold text-sm text-white">Invoice Summary</h3>
                 </div>
-                
-                <div className="flex-1 overflow-x-auto custom-scrollbar">
-                  <table className="w-full min-w-[1200px] text-left text-sm border-collapse">
-                    <thead>
-                      <tr className="bg-secondary/40 text-muted-foreground text-xs uppercase tracking-wider border-b border-border">
-                        <th className="px-3 py-2.5 font-semibold w-10 text-center">#</th>
-                        <th className="px-3 py-2.5 font-semibold w-56">Medicine Name</th>
-                        <th className="px-3 py-2.5 font-semibold w-32">Batch No. <span className="text-rose-500">*</span></th>
-                        <th className="px-3 py-2.5 font-semibold w-36">Mfg Date</th>
-                        <th className="px-3 py-2.5 font-semibold w-36">Expiry Date <span className="text-rose-500">*</span></th>
-                        <th className="px-3 py-2.5 font-semibold w-28">Pur. Price</th>
-                        <th className="px-3 py-2.5 font-semibold w-28">Sale Price</th>
-                        <th className="px-3 py-2.5 font-semibold w-20">Qty</th>
-                        <th className="px-3 py-2.5 font-semibold w-20">Free</th>
-                        <th className="px-3 py-2.5 font-semibold w-24">Disc (₨)</th>
-                        <th className="px-3 py-2.5 font-semibold w-20">Tax %</th>
-                        <th className="px-3 py-2.5 font-semibold w-28">Line Total</th>
-                        <th className="px-3 py-2.5 font-semibold w-16 text-center">Act</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border">
-                      {items.length === 0 ? (
-                        <tr>
-                          <td colSpan={13} className="px-4 py-16 text-center text-muted-foreground">
-                            <div className="flex flex-col items-center justify-center">
-                              <ShoppingCart className="h-10 w-10 text-slate-300 dark:text-slate-600 mb-3" />
-                              <p>No medicines added yet.</p>
-                              <p className="text-xs mt-1">Search or scan a medicine to add it to the invoice.</p>
-                            </div>
-                          </td>
-                        </tr>
-                      ) : (
-                        items.map((item, idx) => (
-                          <tr key={item.id} className="hover:bg-secondary/10 transition-colors">
-                            <td className="px-3 py-2 text-center text-muted-foreground">{idx + 1}</td>
-                            <td className="px-3 py-2 font-medium text-slate-700 dark:text-slate-300">{item.MedicineName}</td>
-                            <td className="px-3 py-2">
-                              <Input 
-                                value={item.BatchCode} 
-                                onChange={e => updateItem(item.id, 'BatchCode', e.target.value.toUpperCase())}
-                                className="h-8 text-xs font-mono px-2"
-                                placeholder="Required"
-                              />
-                            </td>
-                            <td className="px-3 py-2">
-                              <Input 
-                                type="date"
-                                value={item.ManufacturingDate} 
-                                onChange={e => updateItem(item.id, 'ManufacturingDate', e.target.value)}
-                                className="h-8 text-xs px-2"
-                              />
-                            </td>
-                            <td className="px-3 py-2">
-                              <Input 
-                                type="date"
-                                value={item.ExpiryDate} 
-                                onChange={e => updateItem(item.id, 'ExpiryDate', e.target.value)}
-                                className="h-8 text-xs px-2"
-                              />
-                            </td>
-                            <td className="px-3 py-2">
-                              <Input 
-                                type="number" min="0" step="0.01"
-                                value={item.CostPrice} 
-                                onChange={e => updateItem(item.id, 'CostPrice', e.target.value)}
-                                className="h-8 text-xs px-2"
-                              />
-                            </td>
-                            <td className="px-3 py-2">
-                              <Input 
-                                type="number" min="0" step="0.01"
-                                value={item.SellingPrice} 
-                                onChange={e => updateItem(item.id, 'SellingPrice', e.target.value)}
-                                className="h-8 text-xs px-2"
-                              />
-                            </td>
-                            <td className="px-3 py-2">
-                              <Input 
-                                type="number" min="1"
-                                value={item.Quantity} 
-                                onChange={e => updateItem(item.id, 'Quantity', e.target.value)}
-                                className="h-8 text-xs px-2 text-center"
-                              />
-                            </td>
-                            <td className="px-3 py-2">
-                              <Input 
-                                type="number" min="0"
-                                value={item.FreeQty} 
-                                onChange={e => updateItem(item.id, 'FreeQty', e.target.value)}
-                                className="h-8 text-xs px-2 text-center"
-                              />
-                            </td>
-                            <td className="px-3 py-2">
-                              <Input 
-                                type="number" min="0" step="0.01"
-                                value={item.Discount} 
-                                onChange={e => updateItem(item.id, 'Discount', e.target.value)}
-                                className="h-8 text-xs px-2"
-                              />
-                            </td>
-                            <td className="px-3 py-2">
-                              <Input 
-                                type="number" min="0" max="100"
-                                value={item.TaxPercentage} 
-                                onChange={e => updateItem(item.id, 'TaxPercentage', e.target.value)}
-                                className="h-8 text-xs px-2 text-center"
-                              />
-                            </td>
-                            <td className="px-3 py-2 font-semibold text-slate-700 dark:text-slate-300">
-                              ₨ {formatNumber(Number(item.LineTotal || 0))}
-                            </td>
-                            <td className="px-3 py-2 text-center">
-                              <button onClick={() => removeItem(item.id)} className="text-rose-500 hover:text-rose-700 transition-colors p-1 rounded-md hover:bg-rose-100 dark:hover:bg-rose-900/30">
-                                <Trash2 className="h-4 w-4" />
-                              </button>
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-                
-                <div className="px-4 py-3 bg-slate-50 dark:bg-secondary/20 border-t border-border flex justify-between items-center text-sm">
-                  <span className="font-medium text-muted-foreground">Total Items: {items.length}</span>
-                  <div className="flex gap-6 font-semibold text-slate-700 dark:text-slate-300">
-                    <span>Total Quantity: {items.reduce((acc, curr) => acc + Number(curr.Quantity), 0)}</span>
-                    <span>Total Free Qty: {items.reduce((acc, curr) => acc + Number(curr.FreeQty), 0)}</span>
-                  </div>
-                </div>
-              </div>
-              
-            </div>
-            
-            {/* Right Side: Sidebar Summary */}
-            <div className="w-full xl:w-[320px] shrink-0 space-y-4">
-              
-              <div className="bg-white dark:bg-card rounded-xl border border-border shadow-sm p-5">
-                <h3 className="font-bold text-base flex items-center gap-2 border-b border-border pb-3 mb-4">
-                  <FileText className="h-5 w-5 text-primary" /> Invoice Summary
-                </h3>
-                
-                <div className="space-y-3 text-sm">
-                  <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
+                <div className="p-5 flex flex-col gap-3 flex-1">
+                  <div className="flex justify-between items-center text-sm text-slate-300">
                     <span>Subtotal</span>
-                    <span className="font-medium">₨ {formatNumber(Number(subTotal || 0))}</span>
+                    <span className="font-medium text-white">Rs. {formatNumber(Number(subTotal || 0))}</span>
                   </div>
-                  <div className="flex justify-between items-center text-rose-500">
-                    <span>Total Discount</span>
-                    <span className="font-medium">- ₨ {formatNumber(Number(totalDiscount || 0))}</span>
+                  <div className="flex justify-between items-center text-sm text-rose-400">
+                    <span>Discount</span>
+                    <span className="font-medium">- Rs. {formatNumber(Number(totalDiscount || 0))}</span>
                   </div>
-                  <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-                    <span>Total Tax</span>
-                    <span className="font-medium">₨ {formatNumber(Number(totalTax || 0))}</span>
+                  <div className="flex justify-between items-center text-sm text-emerald-400">
+                    <span>Tax</span>
+                    <span className="font-medium">+ Rs. {formatNumber(Number(totalTax || 0))}</span>
                   </div>
-                  
-                  <div className="border-t border-border pt-3 mt-1 flex justify-between items-center">
-                    <span className="font-bold text-base text-primary">Grand Total</span>
-                    <span className="font-bold text-lg text-primary">₨ {formatNumber(Number(grandTotal || 0))}</span>
+                  <div className="border-t border-slate-700 pt-3 flex justify-between items-center">
+                    <span className="font-bold text-sm text-white">Grand Total</span>
+                    <span className="font-bold text-xl text-white">Rs. {formatNumber(Number(grandTotal || 0))}</span>
                   </div>
-                  
-                  <div className="flex justify-between items-center text-emerald-600 dark:text-emerald-500 pt-2">
-                    <span>Paid Amount</span>
-                    <div className="w-24">
+                  <div className="flex justify-between items-center text-sm text-emerald-400">
+                    <span>Paid</span>
+                    <div className="w-24 text-right">
                       {paymentStatus === "Paid" ? (
-                        <span className="font-medium">₨ {formatNumber(Number(grandTotal || 0))}</span>
+                        <span className="font-medium text-emerald-400">Rs. {formatNumber(Number(grandTotal || 0))}</span>
                       ) : (
-                        <Input 
+                        <Input
                           type="number" min="0" step="0.01"
-                          value={paidAmount} 
+                          value={paidAmount}
                           onChange={e => setPaidAmount(Number(e.target.value))}
-                          className="h-7 text-xs px-2 text-right text-emerald-600 font-semibold"
+                          className="h-7 text-xs px-2 text-right text-emerald-400 font-semibold bg-slate-800 border-slate-600"
                         />
                       )}
                     </div>
                   </div>
-                  
-                  <div className="flex justify-between items-center text-rose-500">
-                    <span>Remaining Balance</span>
-                    <span className="font-medium">₨ {formatNumber(Number(Math.max(0, grandTotal - paidAmount) || 0))}</span>
+                  <div className="flex justify-between items-center text-sm text-rose-400">
+                    <span>Balance Due</span>
+                    <span className="font-medium">Rs. {formatNumber(Number(Math.max(0, grandTotal - paidAmount) || 0))}</span>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="mt-auto pt-3 border-t border-slate-700 grid grid-cols-2 gap-2">
+                    <Button onClick={() => handleSave(false)} className="bg-blue-600 hover:bg-blue-700 text-white font-semibold h-9 text-xs col-span-1">
+                      <Save className="h-3.5 w-3.5 mr-1.5" /> Save
+                    </Button>
+                    <Button onClick={() => handleSave(true)} className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold h-9 text-xs col-span-1">
+                      <Printer className="h-3.5 w-3.5 mr-1.5" /> Save & Print
+                    </Button>
+                    <Button onClick={() => setShowDraftPreview(true)} variant="outline" className="h-9 text-xs border-slate-600 text-slate-300 hover:bg-slate-800 hover:text-white bg-transparent col-span-1">
+                      <Eye className="h-3.5 w-3.5 mr-1.5" /> Preview
+                    </Button>
+                    <Button variant="outline" className="h-9 text-xs border-slate-600 text-slate-300 hover:bg-slate-800 hover:text-white bg-transparent col-span-1" onClick={() => setItems([])}>
+                      <Undo2 className="h-3.5 w-3.5 mr-1.5" /> Clear
+                    </Button>
                   </div>
                 </div>
               </div>
-              
-              {/* Actions */}
-              <div className="grid grid-cols-2 gap-3">
-                <Button onClick={() => handleSave(false)} className="bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-sm w-full h-11">
-                  <Save className="h-4 w-4 mr-2" /> Save Purchase
-                </Button>
-                <Button onClick={() => handleSave(true)} className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold shadow-sm w-full h-11">
-                  <Printer className="h-4 w-4 mr-2" /> Save & Print
-                </Button>
-                <Button onClick={() => setShowDraftPreview(true)} variant="outline" className="w-full bg-white dark:bg-card border-border h-11">
-                  <Eye className="h-4 w-4 mr-2 text-blue-500" /> Preview
-                </Button>
-                <Button variant="outline" className="w-full bg-white dark:bg-card border-border h-11" onClick={() => setItems([])}>
-                  <Undo2 className="h-4 w-4 mr-2 text-orange-500" /> Clear
-                </Button>
-                <Button variant="outline" className="col-span-2 w-full bg-rose-50 dark:bg-rose-950/20 text-rose-600 border-rose-200 dark:border-rose-900/50 hover:bg-rose-100 dark:hover:bg-rose-900/50 h-11">
-                  <X className="h-4 w-4 mr-2" /> Cancel
-                </Button>
+            </div>
+
+            {/* === ROW 2: Add Medicines Grid (Full Width) === */}
+            <div className="bg-white dark:bg-card rounded-xl border border-border shadow-sm overflow-hidden flex flex-col min-h-[450px]">
+              <div className="px-4 py-3 border-b border-border bg-slate-50/50 dark:bg-secondary/20 flex flex-col sm:flex-row justify-between items-center gap-3">
+                <h3 className="font-semibold text-sm text-foreground whitespace-nowrap">2. Add Medicines</h3>
+                
+                <div className="flex w-full sm:w-auto items-center gap-2">
+                  <div className="relative w-full sm:w-64">
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input 
+                      placeholder="Search medicine by name..." 
+                      className="h-9 pl-9 text-sm"
+                      value={searchQuery}
+                      onChange={e=>setSearchQuery(e.target.value)}
+                    />
+                    {medicines.length > 0 && (
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-zinc-900 border border-border rounded-md shadow-lg z-50 max-h-60 overflow-y-auto custom-scrollbar">
+                        {medicines.map(med => (
+                          <div 
+                            key={med.MedicineId} 
+                            className="px-3 py-2 hover:bg-secondary cursor-pointer border-b border-border last:border-0 text-sm flex justify-between"
+                            onClick={() => addMedicineToGrid(med)}
+                          >
+                            <span className="font-medium text-foreground">{med.BrandName}</span>
+                            <span className="text-muted-foreground text-xs">{med.Barcode || "No Barcode"}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="relative w-full sm:w-48 hidden md:block">
+                    <Input 
+                      placeholder="Scan / Enter Barcode" 
+                      className="h-9 text-sm text-center font-mono"
+                      value={barcodeQuery}
+                      onChange={e=>setBarcodeQuery(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleAddByBarcode();
+                        }
+                      }}
+                    />
+                  </div>
+                  
+                  <Button size="sm" onClick={handleAddByBarcode} className="h-9 px-3 bg-blue-600 hover:bg-blue-700 text-white shrink-0">
+                    <Plus className="h-4 w-4 mr-1" /> Add
+                  </Button>
+                </div>
               </div>
               
+              <div className="flex-1 overflow-x-auto custom-scrollbar">
+                <table className="w-full min-w-[1200px] text-left text-sm border-collapse">
+                  <thead>
+                    <tr className="bg-secondary/40 text-muted-foreground text-xs uppercase tracking-wider border-b border-border">
+                      <th className="px-3 py-2.5 font-semibold w-10 text-center">#</th>
+                      <th className="px-3 py-2.5 font-semibold w-56">Medicine Name</th>
+                      <th className="px-3 py-2.5 font-semibold w-32">Batch No. <span className="text-rose-500">*</span></th>
+                      <th className="px-3 py-2.5 font-semibold w-36">Mfg Date</th>
+                      <th className="px-3 py-2.5 font-semibold w-36">Expiry Date <span className="text-rose-500">*</span></th>
+                      <th className="px-3 py-2.5 font-semibold w-28">Pur. Price</th>
+                      <th className="px-3 py-2.5 font-semibold w-28">Sale Price</th>
+                      <th className="px-3 py-2.5 font-semibold w-20">Qty</th>
+                      <th className="px-3 py-2.5 font-semibold w-20">Free</th>
+                      <th className="px-3 py-2.5 font-semibold w-24">Disc (₨)</th>
+                      <th className="px-3 py-2.5 font-semibold w-20">Tax %</th>
+                      <th className="px-3 py-2.5 font-semibold w-28">Line Total</th>
+                      <th className="px-3 py-2.5 font-semibold w-16 text-center">Act</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {items.length === 0 ? (
+                      <tr>
+                        <td colSpan={13} className="px-4 py-16 text-center text-muted-foreground">
+                          <div className="flex flex-col items-center justify-center">
+                            <ShoppingCart className="h-10 w-10 text-slate-300 dark:text-slate-600 mb-3" />
+                            <p>No medicines added yet.</p>
+                            <p className="text-xs mt-1">Search or scan a medicine to add it to the invoice.</p>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : (
+                      items.map((item, idx) => (
+                        <tr key={item.id} className="hover:bg-secondary/10 transition-colors">
+                          <td className="px-3 py-2 text-center text-muted-foreground">{idx + 1}</td>
+                          <td className="px-3 py-2 font-medium text-slate-700 dark:text-slate-300">{item.MedicineName}</td>
+                          <td className="px-3 py-2">
+                            <Input 
+                              value={item.BatchCode} 
+                              onChange={e => updateItem(item.id, 'BatchCode', e.target.value.toUpperCase())}
+                              className="h-8 text-xs font-mono px-2"
+                              placeholder="Required"
+                            />
+                          </td>
+                          <td className="px-3 py-2">
+                            <Input 
+                              type="date"
+                              value={item.ManufacturingDate} 
+                              onChange={e => updateItem(item.id, 'ManufacturingDate', e.target.value)}
+                              className="h-8 text-xs px-2"
+                            />
+                          </td>
+                          <td className="px-3 py-2">
+                            <Input 
+                              type="date"
+                              value={item.ExpiryDate} 
+                              onChange={e => updateItem(item.id, 'ExpiryDate', e.target.value)}
+                              className="h-8 text-xs px-2"
+                            />
+                          </td>
+                          <td className="px-3 py-2">
+                            <Input 
+                              type="number" min="0" step="0.01"
+                              value={item.CostPrice} 
+                              onChange={e => updateItem(item.id, 'CostPrice', e.target.value)}
+                              className="h-8 text-xs px-2"
+                            />
+                          </td>
+                          <td className="px-3 py-2">
+                            <Input 
+                              type="number" min="0" step="0.01"
+                              value={item.SellingPrice} 
+                              onChange={e => updateItem(item.id, 'SellingPrice', e.target.value)}
+                              className="h-8 text-xs px-2"
+                            />
+                          </td>
+                          <td className="px-3 py-2">
+                            <Input 
+                              type="number" min="1"
+                              value={item.Quantity} 
+                              onChange={e => updateItem(item.id, 'Quantity', e.target.value)}
+                              className="h-8 text-xs px-2 text-center"
+                            />
+                          </td>
+                          <td className="px-3 py-2">
+                            <Input 
+                              type="number" min="0"
+                              value={item.FreeQty} 
+                              onChange={e => updateItem(item.id, 'FreeQty', e.target.value)}
+                              className="h-8 text-xs px-2 text-center"
+                            />
+                          </td>
+                          <td className="px-3 py-2">
+                            <Input 
+                              type="number" min="0" step="0.01"
+                              value={item.Discount} 
+                              onChange={e => updateItem(item.id, 'Discount', e.target.value)}
+                              className="h-8 text-xs px-2"
+                            />
+                          </td>
+                          <td className="px-3 py-2">
+                            <Input 
+                              type="number" min="0" max="100"
+                              value={item.TaxPercentage} 
+                              onChange={e => updateItem(item.id, 'TaxPercentage', e.target.value)}
+                              className="h-8 text-xs px-2 text-center"
+                            />
+                          </td>
+                          <td className="px-3 py-2 font-semibold text-slate-700 dark:text-slate-300">
+                            ₨ {formatNumber(Number(item.LineTotal || 0))}
+                          </td>
+                          <td className="px-3 py-2 text-center">
+                            <button onClick={() => removeItem(item.id)} className="text-rose-500 hover:text-rose-700 transition-colors p-1 rounded-md hover:bg-rose-100 dark:hover:bg-rose-900/30">
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+              
+              <div className="px-4 py-3 bg-slate-50 dark:bg-secondary/20 border-t border-border flex justify-between items-center text-sm">
+                <span className="font-medium text-muted-foreground">Total Items: {items.length}</span>
+                <div className="flex gap-6 font-semibold text-slate-700 dark:text-slate-300">
+                  <span>Total Quantity: {items.reduce((acc, curr) => acc + Number(curr.Quantity), 0)}</span>
+                  <span>Total Free Qty: {items.reduce((acc, curr) => acc + Number(curr.FreeQty), 0)}</span>
+                </div>
+              </div>
             </div>
+
           </div>
         )}
+
 
         {/* --- HISTORY TAB --- */}
         {activeTab === "history" && (
