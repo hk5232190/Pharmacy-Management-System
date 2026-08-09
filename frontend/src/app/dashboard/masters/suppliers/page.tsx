@@ -401,18 +401,42 @@ export default function SuppliersPage() {
               />
             </div>
 
-            {!currentSupplier.SupplierId && (
-              <div className="flex items-center space-x-2 mt-2">
-                <Checkbox 
-                  id="isActive" 
-                  checked={currentSupplier.IsActive} 
-                  onCheckedChange={(c) => setCurrentSupplier({...currentSupplier, IsActive: c as boolean})}
-                />
-                <label htmlFor="isActive" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                  Set as Active
-                </label>
+            {/* Status Toggle — shown for both Add and Edit */}
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-foreground">Status</label>
+              <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-secondary/30">
+                <div className="flex items-center gap-3">
+                  <span className={cn(
+                    "w-2.5 h-2.5 rounded-full",
+                    currentSupplier.IsActive ? "bg-emerald-500" : "bg-rose-500"
+                  )} />
+                  <span className={cn(
+                    "text-sm font-semibold",
+                    currentSupplier.IsActive ? "text-emerald-700 dark:text-emerald-400" : "text-rose-700 dark:text-rose-400"
+                  )}>
+                    {currentSupplier.IsActive ? "Active" : "Inactive"}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {currentSupplier.IsActive ? "Supplier is visible and usable" : "Supplier is hidden from use"}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={currentSupplier.IsActive}
+                  onClick={() => setCurrentSupplier({...currentSupplier, IsActive: !currentSupplier.IsActive})}
+                  className={cn(
+                    "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary/30",
+                    currentSupplier.IsActive ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"
+                  )}
+                >
+                  <span className={cn(
+                    "pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-lg ring-0 transition-transform duration-200 ease-in-out",
+                    currentSupplier.IsActive ? "translate-x-5" : "translate-x-0"
+                  )} />
+                </button>
               </div>
-            )}
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isSaving}>Cancel</Button>
@@ -422,6 +446,7 @@ export default function SuppliersPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
 
       {/* View Dialog */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
