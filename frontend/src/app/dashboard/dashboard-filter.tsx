@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Calendar, Check } from "lucide-react";
+import { Check } from "lucide-react";
 
 interface DashboardFilterProps {
   timeframe: string;
@@ -44,12 +44,7 @@ export default function DashboardFilter({ timeframe, setTimeframe, dateRange, se
   ];
 
   return (
-    <div className="flex flex-col sm:flex-row items-center gap-4 bg-card p-4 rounded-xl shadow-sm border border-border w-full justify-between">
-      <div className="flex items-center gap-2 text-foreground font-semibold">
-        <Calendar className="w-5 h-5 text-primary" />
-        Global Date Filter
-      </div>
-      
+    <div className="flex flex-col sm:flex-row items-center gap-4 bg-card p-2 rounded-xl shadow-sm border border-border w-fit">
       <div className="flex flex-wrap gap-2 items-center">
         {filters.map((f) => (
           <Button

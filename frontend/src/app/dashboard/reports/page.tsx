@@ -388,23 +388,23 @@ export default function ReportsPage() {
           <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
             <Card className="p-4 border border-blue-100 dark:border-blue-900/50 bg-blue-50/50 dark:bg-blue-950/20 rounded-xl">
               <div className="text-sm font-medium text-blue-600 dark:text-blue-400 mb-1">Gross Sales</div>
-              <div className="text-2xl font-bold text-foreground">₹{data?.summary?.TotalGrossSales?.toLocaleString() || '0'}</div>
+              <div className="text-2xl font-bold text-foreground">Rs {data?.summary?.TotalGrossSales?.toLocaleString() || '0'}</div>
             </Card>
             <Card className="p-4 border border-rose-100 dark:border-rose-900/50 bg-rose-50/50 dark:bg-rose-950/20 rounded-xl">
               <div className="text-sm font-medium text-rose-600 dark:text-rose-400 mb-1">Returns</div>
-              <div className="text-2xl font-bold text-foreground">₹{data?.summary?.TotalReturns?.toLocaleString() || '0'}</div>
+              <div className="text-2xl font-bold text-foreground">Rs {data?.summary?.TotalReturns?.toLocaleString() || '0'}</div>
             </Card>
             <Card className="p-4 border border-emerald-100 dark:border-emerald-900/50 bg-emerald-50/50 dark:bg-emerald-950/20 rounded-xl">
               <div className="text-sm font-medium text-emerald-600 dark:text-emerald-400 mb-1">Net Sales</div>
-              <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-500">₹{data?.summary?.NetSales?.toLocaleString() || '0'}</div>
+              <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-500">Rs {data?.summary?.NetSales?.toLocaleString() || '0'}</div>
             </Card>
             <Card className="p-4 border border-purple-100 dark:border-purple-900/50 bg-purple-50/50 dark:bg-purple-950/20 rounded-xl">
               <div className="text-sm font-medium text-purple-600 dark:text-purple-400 mb-1">COGS</div>
-              <div className="text-2xl font-bold text-foreground">₹{data?.summary?.TotalCOGS?.toLocaleString() || '0'}</div>
+              <div className="text-2xl font-bold text-foreground">Rs {data?.summary?.TotalCOGS?.toLocaleString() || '0'}</div>
             </Card>
             <Card className="p-4 border border-emerald-200 dark:border-emerald-800/50 bg-emerald-100/50 dark:bg-emerald-900/30 rounded-xl">
               <div className="text-sm font-medium text-emerald-700 dark:text-emerald-300 mb-1">Net Profit</div>
-              <div className="text-2xl font-bold text-emerald-700 dark:text-emerald-400">₹{data?.summary?.NetProfit?.toLocaleString() || '0'}</div>
+              <div className="text-2xl font-bold text-emerald-700 dark:text-emerald-400">Rs {data?.summary?.NetProfit?.toLocaleString() || '0'}</div>
             </Card>
             <Card className="p-4 border border-amber-100 dark:border-amber-900/50 bg-amber-50/50 dark:bg-amber-950/20 rounded-xl">
               <div className="text-sm font-medium text-amber-600 dark:text-amber-400 mb-1">Profit Margin</div>
@@ -430,7 +430,7 @@ export default function ReportsPage() {
                  <Card className="flex-1 p-4 flex items-center justify-between border border-border shadow-sm rounded-xl">
                     <div>
                       <p className="text-sm text-muted-foreground font-medium">Average Sale</p>
-                      <h4 className="text-2xl font-bold">₹{data?.summary?.AverageSale?.toLocaleString(undefined, {maximumFractionDigits: 2}) || '0'}</h4>
+                      <h4 className="text-2xl font-bold">Rs {data?.summary?.AverageSale?.toLocaleString(undefined, {maximumFractionDigits: 2}) || '0'}</h4>
                     </div>
                     <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-full">
                       <ShoppingCart className="w-5 h-5 text-purple-600 dark:text-purple-400" />
@@ -439,7 +439,7 @@ export default function ReportsPage() {
                  <Card className="flex-1 p-4 flex items-center justify-between border border-border shadow-sm rounded-xl">
                     <div>
                       <p className="text-sm text-muted-foreground font-medium">Highest Sale</p>
-                      <h4 className="text-2xl font-bold">₹{data?.summary?.HighestSale?.toLocaleString() || '0'}</h4>
+                      <h4 className="text-2xl font-bold">Rs {data?.summary?.HighestSale?.toLocaleString() || '0'}</h4>
                     </div>
                     <div className="p-3 bg-amber-100 dark:bg-amber-900/30 rounded-full">
                       <TrendingUp className="w-5 h-5 text-amber-600 dark:text-amber-400" />
@@ -480,7 +480,7 @@ export default function ReportsPage() {
                             <td className="px-4 py-3">{t.CustomerName}</td>
                             <td className="px-4 py-3 text-right">{t.MedicinesSold}</td>
                             <td className="px-4 py-3 text-right">{t.TotalQty}</td>
-                            <td className="px-4 py-3 text-right font-medium">₹{t.GrandTotal.toLocaleString()}</td>
+                            <td className="px-4 py-3 text-right font-medium">Rs {t.GrandTotal.toLocaleString()}</td>
                             <td className="px-4 py-3">{t.PaymentMethod}</td>
                             <td className="px-4 py-3">
                               <span className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -515,7 +515,7 @@ export default function ReportsPage() {
                     <LineChart data={data?.trend_data || []} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                       <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} />
-                      <YAxis yAxisId="left" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} tickFormatter={(val) => `₹${val/1000}k`} />
+                      <YAxis yAxisId="left" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} tickFormatter={(val) => `Rs ${val/1000}k`} />
                       <Tooltip content={<CustomTooltip />} />
                       <Legend />
                       <Line yAxisId="left" type="monotone" name="Sales" dataKey="sales" stroke="#3b82f6" strokeWidth={3} dot={{ r: 4, fill: "#3b82f6", strokeWidth: 2, stroke: "#fff" }} activeDot={{ r: 6 }} />
@@ -581,15 +581,15 @@ export default function ReportsPage() {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
             <Card className="p-4 border border-blue-100 dark:border-blue-900/50 bg-blue-50/50 dark:bg-blue-950/20 rounded-xl">
               <div className="text-sm font-medium text-blue-600 dark:text-blue-400 mb-1">Total Cost Value</div>
-              <div className="text-2xl font-bold text-foreground">₹{data?.summary?.TotalCostValue?.toLocaleString(undefined, {maximumFractionDigits: 2}) || '0'}</div>
+              <div className="text-2xl font-bold text-foreground">Rs {data?.summary?.TotalCostValue?.toLocaleString(undefined, {maximumFractionDigits: 2}) || '0'}</div>
             </Card>
             <Card className="p-4 border border-emerald-100 dark:border-emerald-900/50 bg-emerald-50/50 dark:bg-emerald-950/20 rounded-xl">
               <div className="text-sm font-medium text-emerald-600 dark:text-emerald-400 mb-1">Potential Retail Value</div>
-              <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-500">₹{data?.summary?.TotalRetailValue?.toLocaleString(undefined, {maximumFractionDigits: 2}) || '0'}</div>
+              <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-500">Rs {data?.summary?.TotalRetailValue?.toLocaleString(undefined, {maximumFractionDigits: 2}) || '0'}</div>
             </Card>
             <Card className="p-4 border border-rose-100 dark:border-rose-900/50 bg-rose-50/50 dark:bg-rose-950/20 rounded-xl">
               <div className="text-sm font-medium text-rose-600 dark:text-rose-400 mb-1">Expired/Written-Off</div>
-              <div className="text-2xl font-bold text-foreground">₹{data?.summary?.ExpiredWrittenOffValuation?.toLocaleString(undefined, {maximumFractionDigits: 2}) || '0'}</div>
+              <div className="text-2xl font-bold text-foreground">Rs {data?.summary?.ExpiredWrittenOffValuation?.toLocaleString(undefined, {maximumFractionDigits: 2}) || '0'}</div>
             </Card>
             <Card className="p-4 border border-purple-100 dark:border-purple-900/50 bg-purple-50/50 dark:bg-purple-950/20 rounded-xl">
               <div className="text-sm font-medium text-purple-600 dark:text-purple-400 mb-1">Total Items in Stock</div>
@@ -637,10 +637,10 @@ export default function ReportsPage() {
                             <td className="px-4 py-3 font-medium text-foreground">{t.MedicineName}</td>
                             <td className="px-4 py-3">{t.BatchCode}</td>
                             <td className="px-4 py-3 text-right">{t.Quantity}</td>
-                            <td className="px-4 py-3 text-right">₹{t.CostPrice}</td>
-                            <td className="px-4 py-3 text-right">₹{t.SellingPrice}</td>
-                            <td className="px-4 py-3 text-right font-medium">₹{t.TotalCostValue.toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
-                            <td className="px-4 py-3 text-right font-medium text-emerald-600">₹{t.TotalRetailValue.toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
+                            <td className="px-4 py-3 text-right">Rs {t.CostPrice}</td>
+                            <td className="px-4 py-3 text-right">Rs {t.SellingPrice}</td>
+                            <td className="px-4 py-3 text-right font-medium">Rs {t.TotalCostValue.toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
+                            <td className="px-4 py-3 text-right font-medium text-emerald-600">Rs {t.TotalRetailValue.toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
                             <td className="px-4 py-3">
                               <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                                 t.Status === 'Active' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'
@@ -790,15 +790,15 @@ export default function ReportsPage() {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <Card className="p-4 border border-blue-100 dark:border-blue-900/50 bg-blue-50/50 dark:bg-blue-950/20 rounded-xl">
               <div className="text-sm font-medium text-blue-600 dark:text-blue-400 mb-1">Gross Purchases</div>
-              <div className="text-2xl font-bold text-foreground">₹{data?.summary?.TotalGrossPurchases?.toLocaleString() || '0'}</div>
+              <div className="text-2xl font-bold text-foreground">Rs {data?.summary?.TotalGrossPurchases?.toLocaleString() || '0'}</div>
             </Card>
             <Card className="p-4 border border-rose-100 dark:border-rose-900/50 bg-rose-50/50 dark:bg-rose-950/20 rounded-xl">
               <div className="text-sm font-medium text-rose-600 dark:text-rose-400 mb-1">Returns</div>
-              <div className="text-2xl font-bold text-foreground">₹{data?.summary?.TotalReturns?.toLocaleString() || '0'}</div>
+              <div className="text-2xl font-bold text-foreground">Rs {data?.summary?.TotalReturns?.toLocaleString() || '0'}</div>
             </Card>
             <Card className="p-4 border border-emerald-100 dark:border-emerald-900/50 bg-emerald-50/50 dark:bg-emerald-950/20 rounded-xl">
               <div className="text-sm font-medium text-emerald-600 dark:text-emerald-400 mb-1">Net Purchases</div>
-              <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-500">₹{data?.summary?.NetPurchases?.toLocaleString() || '0'}</div>
+              <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-500">Rs {data?.summary?.NetPurchases?.toLocaleString() || '0'}</div>
             </Card>
             <Card className="p-4 border border-purple-100 dark:border-purple-900/50 bg-purple-50/50 dark:bg-purple-950/20 rounded-xl">
               <div className="text-sm font-medium text-purple-600 dark:text-purple-400 mb-1">Total Invoices</div>
@@ -815,7 +815,7 @@ export default function ReportsPage() {
                  <Card className="flex-1 p-4 flex items-center justify-between border border-border shadow-sm rounded-xl">
                     <div>
                       <p className="text-sm text-muted-foreground font-medium">Average Purchase</p>
-                      <h4 className="text-2xl font-bold">₹{data?.summary?.AveragePurchase?.toLocaleString(undefined, {maximumFractionDigits: 2}) || '0'}</h4>
+                      <h4 className="text-2xl font-bold">Rs {data?.summary?.AveragePurchase?.toLocaleString(undefined, {maximumFractionDigits: 2}) || '0'}</h4>
                     </div>
                     <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-full">
                       <ShoppingCart className="w-5 h-5 text-purple-600 dark:text-purple-400" />
@@ -824,7 +824,7 @@ export default function ReportsPage() {
                  <Card className="flex-1 p-4 flex items-center justify-between border border-border shadow-sm rounded-xl">
                     <div>
                       <p className="text-sm text-muted-foreground font-medium">Highest Purchase</p>
-                      <h4 className="text-2xl font-bold">₹{data?.summary?.HighestPurchase?.toLocaleString() || '0'}</h4>
+                      <h4 className="text-2xl font-bold">Rs {data?.summary?.HighestPurchase?.toLocaleString() || '0'}</h4>
                     </div>
                     <div className="p-3 bg-amber-100 dark:bg-amber-900/30 rounded-full">
                       <TrendingUp className="w-5 h-5 text-amber-600 dark:text-amber-400" />
@@ -864,7 +864,7 @@ export default function ReportsPage() {
                             <td className="px-4 py-3">{t.SupplierName}</td>
                             <td className="px-4 py-3 text-right">{t.MedicinesPurchased}</td>
                             <td className="px-4 py-3 text-right">{t.TotalQty}</td>
-                            <td className="px-4 py-3 text-right font-medium">₹{t.GrandTotal.toLocaleString()}</td>
+                            <td className="px-4 py-3 text-right font-medium">Rs {t.GrandTotal.toLocaleString()}</td>
                             <td className="px-4 py-3">
                               <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                                 t.Status === 'Completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'
@@ -898,7 +898,7 @@ export default function ReportsPage() {
                     <LineChart data={data?.trend_data || []} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                       <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} />
-                      <YAxis yAxisId="left" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} tickFormatter={(val) => `₹${val/1000}k`} />
+                      <YAxis yAxisId="left" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} tickFormatter={(val) => `Rs ${val/1000}k`} />
                       <Tooltip content={<CustomTooltip />} />
                       <Legend />
                       <Line yAxisId="left" type="monotone" name="Purchases" dataKey="purchases" stroke="#8b5cf6" strokeWidth={3} dot={{ r: 4, fill: "#8b5cf6", strokeWidth: 2, stroke: "#fff" }} activeDot={{ r: 6 }} />
@@ -1094,7 +1094,7 @@ export default function ReportsPage() {
                               <td className="px-4 py-3 font-medium text-foreground">{t.MedicineName}</td>
                               <td className="px-4 py-3 text-right font-medium">{t.SoldQuantity}</td>
                               <td className="px-4 py-3 text-right">{t.SalesVelocity}</td>
-                              <td className="px-4 py-3 text-right text-muted-foreground">₹{t.Revenue.toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
+                              <td className="px-4 py-3 text-right text-muted-foreground">Rs {t.Revenue.toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
                               <td className="px-4 py-3">
                                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                                   t.Classification === 'Fast Moving' ? 'bg-emerald-100 text-emerald-700' : 
@@ -1127,16 +1127,16 @@ export default function ReportsPage() {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <Card className="p-4 border border-blue-100 dark:border-blue-900/50 bg-blue-50/50 dark:bg-blue-950/20 rounded-xl">
               <div className="text-sm font-medium text-blue-600 dark:text-blue-400 mb-1">Total Net Revenue</div>
-              <div className="text-2xl font-bold text-foreground">₹{data?.summary?.TotalRevenue?.toLocaleString(undefined, {maximumFractionDigits: 2}) || '0'}</div>
+              <div className="text-2xl font-bold text-foreground">Rs {data?.summary?.TotalRevenue?.toLocaleString(undefined, {maximumFractionDigits: 2}) || '0'}</div>
             </Card>
             <Card className="p-4 border border-rose-100 dark:border-rose-900/50 bg-rose-50/50 dark:bg-rose-950/20 rounded-xl">
               <div className="text-sm font-medium text-rose-600 dark:text-rose-400 mb-1">Cost of Goods Sold (COGS)</div>
-              <div className="text-2xl font-bold text-foreground">₹{data?.summary?.TotalCOGS?.toLocaleString(undefined, {maximumFractionDigits: 2}) || '0'}</div>
+              <div className="text-2xl font-bold text-foreground">Rs {data?.summary?.TotalCOGS?.toLocaleString(undefined, {maximumFractionDigits: 2}) || '0'}</div>
             </Card>
             <Card className="p-4 border border-emerald-100 dark:border-emerald-900/50 bg-emerald-50/50 dark:bg-emerald-950/20 rounded-xl">
               <div className="text-sm font-medium text-emerald-600 dark:text-emerald-400 mb-1">Net Profit</div>
               <div className={`text-2xl font-bold ${data?.summary?.NetProfit >= 0 ? 'text-emerald-600 dark:text-emerald-500' : 'text-rose-600 dark:text-rose-500'}`}>
-                ₹{data?.summary?.NetProfit?.toLocaleString(undefined, {maximumFractionDigits: 2}) || '0'}
+                Rs {data?.summary?.NetProfit?.toLocaleString(undefined, {maximumFractionDigits: 2}) || '0'}
               </div>
             </Card>
             <Card className="p-4 border border-purple-100 dark:border-purple-900/50 bg-purple-50/50 dark:bg-purple-950/20 rounded-xl">
@@ -1174,12 +1174,12 @@ export default function ReportsPage() {
                       {data?.income_breakdown?.map((item: any, idx: number) => (
                         <tr key={`inc-${idx}`} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
                           <td className="px-6 py-3 text-muted-foreground">{item.Category}</td>
-                          <td className="px-6 py-3 text-right font-medium">₹{item.Amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                          <td className="px-6 py-3 text-right font-medium">Rs {item.Amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
                         </tr>
                       ))}
                       <tr className="border-t-2 border-border bg-slate-50 dark:bg-slate-900/50">
                         <td className="px-6 py-3 font-semibold text-right">Total Net Revenue</td>
-                        <td className="px-6 py-3 text-right font-bold text-blue-600 dark:text-blue-500">₹{data?.summary?.TotalRevenue?.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                        <td className="px-6 py-3 text-right font-bold text-blue-600 dark:text-blue-500">Rs {data?.summary?.TotalRevenue?.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
                       </tr>
 
                       {/* Expenses Section */}
@@ -1189,19 +1189,19 @@ export default function ReportsPage() {
                       {data?.expense_breakdown?.map((item: any, idx: number) => (
                         <tr key={`exp-${idx}`} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
                           <td className="px-6 py-3 text-muted-foreground">{item.Category}</td>
-                          <td className="px-6 py-3 text-right font-medium text-rose-600/80 dark:text-rose-400/80">- ₹{item.Amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                          <td className="px-6 py-3 text-right font-medium text-rose-600/80 dark:text-rose-400/80">- Rs {item.Amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
                         </tr>
                       ))}
                       <tr className="border-t-2 border-border bg-slate-50 dark:bg-slate-900/50">
                         <td className="px-6 py-3 font-semibold text-right">Total Expenses & Deductions</td>
-                        <td className="px-6 py-3 text-right font-bold text-rose-600 dark:text-rose-500">- ₹{((data?.summary?.TotalCOGS || 0) + (data?.summary?.InventoryLoss || 0) + (data?.summary?.TotalExpenses || 0) + (data?.summary?.DiscountsApplied || 0) + (data?.summary?.SalesReturns || 0)).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                        <td className="px-6 py-3 text-right font-bold text-rose-600 dark:text-rose-500">- Rs {((data?.summary?.TotalCOGS || 0) + (data?.summary?.InventoryLoss || 0) + (data?.summary?.TotalExpenses || 0) + (data?.summary?.DiscountsApplied || 0) + (data?.summary?.SalesReturns || 0)).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
                       </tr>
 
                       {/* Net Profit Section */}
                       <tr className="bg-emerald-50/30 dark:bg-emerald-900/10 border-t border-border">
                         <td className="px-6 py-4 font-bold text-lg text-right">NET PROFIT / LOSS</td>
                         <td className={`px-6 py-4 text-right font-bold text-xl ${data?.summary?.NetProfit >= 0 ? 'text-emerald-600 dark:text-emerald-500' : 'text-rose-600 dark:text-rose-500'}`}>
-                          ₹{data?.summary?.NetProfit?.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                          Rs {data?.summary?.NetProfit?.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                         </td>
                       </tr>
                     </tbody>
@@ -1219,7 +1219,7 @@ export default function ReportsPage() {
                     <LineChart data={data?.trend_data || []} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                       <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} />
-                      <YAxis yAxisId="left" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} tickFormatter={(val) => `₹${val/1000}k`} />
+                      <YAxis yAxisId="left" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} tickFormatter={(val) => `Rs ${val/1000}k`} />
                       <Tooltip content={<CustomTooltip />} />
                       <Legend />
                       <Line yAxisId="left" type="monotone" name="Net Profit" dataKey="profit" stroke="#10b981" strokeWidth={3} dot={{ r: 4, fill: "#10b981", strokeWidth: 2, stroke: "#fff" }} activeDot={{ r: 6 }} />

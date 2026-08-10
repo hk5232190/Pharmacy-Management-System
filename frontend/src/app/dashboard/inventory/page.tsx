@@ -291,7 +291,7 @@ export default function InventoryManagementPage() {
           />
           <KPICard 
             title="Inventory Value" 
-            value={`₹ ${summary.inventory_value.toLocaleString(undefined, {minimumFractionDigits: 2})}`} 
+            value={`Rs ${summary.inventory_value.toLocaleString(undefined, {minimumFractionDigits: 2})}`} 
             icon={<CircleDollarSign className="h-5 w-5 text-purple-500" />} 
             trend="up" trendValue="15% vs last month" 
             bgColor="bg-purple-50 dark:bg-purple-900/20" 
@@ -438,8 +438,8 @@ export default function InventoryManagementPage() {
                             {new Date(item.ExpiryDate).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-right">₹ {item.PurchasePrice.toFixed(2)}</td>
-                        <td className="px-4 py-3 text-right">₹ {item.SellingPrice.toFixed(2)}</td>
+                        <td className="px-4 py-3 text-right">Rs {item.PurchasePrice.toFixed(2)}</td>
+                        <td className="px-4 py-3 text-right">Rs {item.SellingPrice.toFixed(2)}</td>
                         <td className="px-4 py-3 text-center font-bold">{item.CurrentStock}</td>
                         <td className="px-4 py-3 text-center text-muted-foreground">{item.MinStock}</td>
                         <td className="px-4 py-3 text-center">
@@ -806,8 +806,8 @@ export default function InventoryManagementPage() {
                     {new Date(selectedBatch.ExpiryDate).toLocaleDateString('en-GB', { day:'2-digit', month: 'short', year: 'numeric' })}
                   </span>
                 </div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Purchase Price</span> <span className="font-medium">₹ {selectedBatch.PurchasePrice.toFixed(2)}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Selling Price</span> <span className="font-medium">₹ {selectedBatch.SellingPrice.toFixed(2)}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Purchase Price</span> <span className="font-medium">Rs {selectedBatch.PurchasePrice.toFixed(2)}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Selling Price</span> <span className="font-medium">Rs {selectedBatch.SellingPrice.toFixed(2)}</span></div>
               </div>
             </div>
 
@@ -817,7 +817,7 @@ export default function InventoryManagementPage() {
               <div className="space-y-2.5 text-sm">
                 <div className="flex justify-between items-center"><span className="text-muted-foreground">Current Stock</span> <span className="font-bold text-emerald-600 text-lg">{selectedBatch.CurrentStock}</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Minimum Stock</span> <span className="font-medium">{selectedBatch.MinStock}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Stock Value</span> <span className="font-bold text-foreground">₹ {selectedBatch.StockValue.toLocaleString(undefined, {minimumFractionDigits: 2})}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Stock Value</span> <span className="font-bold text-foreground">Rs {selectedBatch.StockValue.toLocaleString(undefined, {minimumFractionDigits: 2})}</span></div>
               </div>
             </div>
 

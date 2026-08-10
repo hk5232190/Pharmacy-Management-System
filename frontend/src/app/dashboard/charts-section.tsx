@@ -130,9 +130,9 @@ export default function ChartsSection({ timeframe = 'last_30_days', dateRange = 
                     <LineChart data={data.sales_trend} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" opacity={0.5} />
                       <XAxis dataKey="date" stroke="var(--muted-foreground)" fontSize={12} tickMargin={10} />
-                      <YAxis stroke="var(--muted-foreground)" fontSize={12} tickFormatter={(val) => `₹${val}`} width={40} />
+                      <YAxis stroke="var(--muted-foreground)" fontSize={12} tickFormatter={(val) => `Rs ${val}`} width={40} />
                       <Tooltip content={<CustomTooltip />} />
-                      <Line type="monotone" dataKey="value" name="Sales (₹)" stroke="#3b82f6" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} animationDuration={1000} />
+                      <Line type="monotone" dataKey="value" name="Sales (Rs )" stroke="#3b82f6" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} animationDuration={1000} />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
@@ -148,9 +148,9 @@ export default function ChartsSection({ timeframe = 'last_30_days', dateRange = 
                     <BarChart data={data.purchase_trend} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" opacity={0.5} />
                       <XAxis dataKey="date" stroke="var(--muted-foreground)" fontSize={12} tickMargin={10} />
-                      <YAxis stroke="var(--muted-foreground)" fontSize={12} tickFormatter={(val) => `₹${val}`} width={40} />
+                      <YAxis stroke="var(--muted-foreground)" fontSize={12} tickFormatter={(val) => `Rs ${val}`} width={40} />
                       <Tooltip content={<CustomTooltip />} cursor={{ fill: 'var(--muted)', opacity: 0.2 }} />
-                      <Bar dataKey="value" name="Purchases (₹)" fill="#8b5cf6" radius={[4, 4, 0, 0]} animationDuration={1000} />
+                      <Bar dataKey="value" name="Purchases (Rs )" fill="#8b5cf6" radius={[4, 4, 0, 0]} animationDuration={1000} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -172,9 +172,9 @@ export default function ChartsSection({ timeframe = 'last_30_days', dateRange = 
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" opacity={0.5} />
                       <XAxis dataKey="date" stroke="var(--muted-foreground)" fontSize={12} tickMargin={10} />
-                      <YAxis stroke="var(--muted-foreground)" fontSize={12} tickFormatter={(val) => `₹${val}`} width={40} />
+                      <YAxis stroke="var(--muted-foreground)" fontSize={12} tickFormatter={(val) => `Rs ${val}`} width={40} />
                       <Tooltip content={<CustomTooltip />} />
-                      <Area type="monotone" dataKey="value" name="Profit (₹)" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorProfit)" animationDuration={1000} />
+                      <Area type="monotone" dataKey="value" name="Profit (Rs )" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorProfit)" animationDuration={1000} />
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>
@@ -247,11 +247,11 @@ export default function ChartsSection({ timeframe = 'last_30_days', dateRange = 
                     <BarChart data={data.monthly_comparison} margin={{ top: 20, right: 10, left: 0, bottom: 5 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" opacity={0.5} />
                       <XAxis dataKey="month" stroke="var(--muted-foreground)" fontSize={12} tickMargin={10} />
-                      <YAxis stroke="var(--muted-foreground)" fontSize={12} tickFormatter={(val) => `₹${val}`} width={40} />
+                      <YAxis stroke="var(--muted-foreground)" fontSize={12} tickFormatter={(val) => `Rs ${val}`} width={40} />
                       <Tooltip content={<CustomTooltip />} cursor={{ fill: 'var(--muted)', opacity: 0.2 }} />
                       <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px' }} />
-                      <Bar dataKey="sales" name="Sales (₹)" fill="#0ea5e9" radius={[4, 4, 0, 0]} animationDuration={1000} />
-                      <Bar dataKey="purchases" name="Purchases (₹)" fill="#f59e0b" radius={[4, 4, 0, 0]} animationDuration={1000} />
+                      <Bar dataKey="sales" name="Sales (Rs )" fill="#0ea5e9" radius={[4, 4, 0, 0]} animationDuration={1000} />
+                      <Bar dataKey="purchases" name="Purchases (Rs )" fill="#f59e0b" radius={[4, 4, 0, 0]} animationDuration={1000} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>

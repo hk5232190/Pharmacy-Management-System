@@ -419,7 +419,7 @@ export default function POSBillingPage() {
       };
       const res = await apiClient.post('/sales/return', payload);
       if (res.success) {
-        toast.success(`Return Processed! Refund: ₹${formatNumber(res.data.RefundAmount)}`);
+        toast.success(`Return Processed! Refund: Rs ${formatNumber(res.data.RefundAmount)}`);
         setReturnInvoiceData(null);
         setReturnInvoiceNo("");
         setReturnItems([]);
@@ -504,11 +504,11 @@ export default function POSBillingPage() {
         {/* KPIs (Placeholders for 6.1 Layout) */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
           {[
-            { label: "Today's Sales", val: "₹ 0.00", icon: ShoppingCart, color: "text-blue-500", bg: "bg-blue-50 dark:bg-blue-900/20" },
-            { label: "Total Revenue", val: "₹ 0.00", icon: FileText, color: "text-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-900/20" },
+            { label: "Today's Sales", val: "Rs 0.00", icon: ShoppingCart, color: "text-blue-500", bg: "bg-blue-50 dark:bg-blue-900/20" },
+            { label: "Total Revenue", val: "Rs 0.00", icon: FileText, color: "text-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-900/20" },
             { label: "Total Invoices", val: "0", icon: FileText, color: "text-indigo-500", bg: "bg-indigo-50 dark:bg-indigo-900/20" },
             { label: "Items Sold Today", val: "0", icon: ShoppingCart, color: "text-amber-500", bg: "bg-amber-50 dark:bg-amber-900/20" },
-            { label: "Pending Payments", val: "₹ 0.00", icon: FileText, color: "text-rose-500", bg: "bg-rose-50 dark:bg-rose-900/20" },
+            { label: "Pending Payments", val: "Rs 0.00", icon: FileText, color: "text-rose-500", bg: "bg-rose-50 dark:bg-rose-900/20" },
           ].map((k, i) => (
             <div key={i} className="bg-white dark:bg-card rounded-xl border border-border p-4 flex items-center gap-4 shadow-sm">
               <div className={cn("p-3 rounded-xl", k.bg, k.color)}>
@@ -635,7 +635,7 @@ export default function POSBillingPage() {
                                 <p className="text-xs text-muted-foreground">{res.GenericName}</p>
                               </div>
                               <div className="text-right">
-                                <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">₹ {formatNumber(res.Batches[0].UnitPrice)}</p>
+                                <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">Rs {formatNumber(res.Batches[0].UnitPrice)}</p>
                                 <p className="text-xs text-muted-foreground">Stock: {res.Batches[0].AvailableStock}</p>
                               </div>
                             </li>
@@ -702,7 +702,7 @@ export default function POSBillingPage() {
                             </td>
                             <td className="px-3 py-3 font-mono text-xs text-muted-foreground">{item.BatchCode}</td>
                             <td className="px-3 py-3 text-center text-muted-foreground text-xs">{item.AvailableStock}</td>
-                            <td className="px-3 py-3 text-right">₹ {formatNumber(item.UnitPrice)}</td>
+                            <td className="px-3 py-3 text-right">Rs {formatNumber(item.UnitPrice)}</td>
                             <td className="px-3 py-3 text-center">
                               <div className="flex items-center border border-input rounded-md overflow-hidden h-8">
                                 <button onClick={() => updateCartItem(item.id, 'Quantity', item.Quantity - 1)} className="px-2 bg-secondary/50 hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors">-</button>
@@ -731,7 +731,7 @@ export default function POSBillingPage() {
                                 onChange={(e) => updateCartItem(item.id, 'TaxPercent', parseFloat(e.target.value) || 0)}
                               />
                             </td>
-                            <td className="px-3 py-3 text-right font-bold">₹ {formatNumber(item.LineTotal)}</td>
+                            <td className="px-3 py-3 text-right font-bold">Rs {formatNumber(item.LineTotal)}</td>
                             <td className="px-3 py-3 text-center">
                               <Button onClick={() => removeCartItem(item.id)} variant="ghost" size="icon" className="h-8 w-8 text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30">
                                 <Trash2 className="w-4 h-4" />
@@ -767,21 +767,21 @@ export default function POSBillingPage() {
                   </div>
                   <div className="flex justify-between text-muted-foreground">
                     <span>Subtotal</span>
-                    <span className="font-medium text-foreground">₹ {formatNumber(subtotal)}</span>
+                    <span className="font-medium text-foreground">Rs {formatNumber(subtotal)}</span>
                   </div>
                   <div className="flex justify-between text-muted-foreground">
                     <span>Discount</span>
-                    <span className="font-medium text-rose-500">- ₹ {formatNumber(totalDiscount)}</span>
+                    <span className="font-medium text-rose-500">- Rs {formatNumber(totalDiscount)}</span>
                   </div>
                   <div className="flex justify-between text-muted-foreground">
                     <span>Tax ({taxRate}%)</span>
-                    <span className="font-medium text-foreground">₹ {formatNumber(totalTax)}</span>
+                    <span className="font-medium text-foreground">Rs {formatNumber(totalTax)}</span>
                   </div>
 
                   <div className="border-t border-dashed border-border my-4 pt-4">
                     <div className="flex justify-between items-center mb-4">
                       <span className="text-lg font-bold text-blue-600 dark:text-blue-400">Grand Total</span>
-                      <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">₹ {formatNumber(grandTotal)}</span>
+                      <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">Rs {formatNumber(grandTotal)}</span>
                     </div>
                   </div>
 
@@ -789,7 +789,7 @@ export default function POSBillingPage() {
                     <div className="flex justify-between items-center">
                       <span className="font-medium text-muted-foreground">Paid Amount</span>
                       <div className="flex items-center gap-1">
-                        <span className="text-muted-foreground font-medium">₹</span>
+                        <span className="text-muted-foreground font-medium">Rs </span>
                         <Input
                           type="number"
                           className="w-24 h-9 font-bold text-right"
@@ -800,11 +800,11 @@ export default function POSBillingPage() {
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="font-medium text-emerald-600 dark:text-emerald-500">Change Due</span>
-                      <span className="font-bold text-emerald-600 dark:text-emerald-500 text-lg">₹ {formatNumber(changeDue)}</span>
+                      <span className="font-bold text-emerald-600 dark:text-emerald-500 text-lg">Rs {formatNumber(changeDue)}</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="font-medium text-rose-600 dark:text-rose-500">Remaining Bal.</span>
-                      <span className="font-bold text-rose-600 dark:text-rose-500">₹ {formatNumber(remainingBalance)}</span>
+                      <span className="font-bold text-rose-600 dark:text-rose-500">Rs {formatNumber(remainingBalance)}</span>
                     </div>
                   </div>
                 </div>
@@ -856,7 +856,7 @@ export default function POSBillingPage() {
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground">Grand Total</p>
-                    <p className="font-bold text-foreground">₹{formatNumber(returnInvoiceData.GrandTotal)}</p>
+                    <p className="font-bold text-foreground">Rs {formatNumber(returnInvoiceData.GrandTotal)}</p>
                   </div>
                 </div>
 
@@ -907,7 +907,7 @@ export default function POSBillingPage() {
                                 <option value="Damaged/Quarantine">Damaged/Quarantine (Write-off)</option>
                               </select>
                             </td>
-                            <td className="px-3 py-3 text-right font-bold text-emerald-600">₹{formatNumber(refund)}</td>
+                            <td className="px-3 py-3 text-right font-bold text-emerald-600">Rs {formatNumber(refund)}</td>
                           </tr>
                         );
                       })}
@@ -927,7 +927,7 @@ export default function POSBillingPage() {
                   </div>
                   <div className="text-right flex-shrink-0">
                     <p className="text-sm text-muted-foreground mb-1">Total Refund to Customer</p>
-                    <p className="text-4xl font-bold text-rose-600 mb-4">₹{formatNumber(totalRefundPreview)}</p>
+                    <p className="text-4xl font-bold text-rose-600 mb-4">Rs {formatNumber(totalRefundPreview)}</p>
                     <Button onClick={handleSubmitReturn} size="lg" className="w-full bg-rose-600 hover:bg-rose-700 text-white shadow-lg">
                       Process Refund <ArrowRight className="ml-2 w-4 h-4" />
                     </Button>
@@ -1016,7 +1016,7 @@ export default function POSBillingPage() {
                         <td className="px-3 py-3 font-mono font-bold text-foreground">{item.InvoiceNumber}</td>
                         <td className="px-3 py-3">{item.CustomerName}</td>
                         <td className="px-3 py-3 text-xs">{item.CashierName}</td>
-                        <td className="px-3 py-3 text-right font-bold">₹{formatNumber(item.GrandTotal)}</td>
+                        <td className="px-3 py-3 text-right font-bold">Rs {formatNumber(item.GrandTotal)}</td>
                         <td className="px-3 py-3 text-center">
                           <span className={cn(
                             "px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider",
@@ -1064,10 +1064,6 @@ export default function POSBillingPage() {
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <span className="bg-secondary/80 text-foreground font-mono px-2 py-1 rounded text-xs font-semibold shadow-sm border border-border/50">F8</span>
           <span className="font-medium">Recent Sales</span>
-        </div>
-        <div className="ml-auto flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400">
-          <Barcode className="w-5 h-5" />
-          <span className="font-medium">Barcode Scanner Ready</span>
         </div>
       </div>
 
@@ -1152,8 +1148,8 @@ export default function POSBillingPage() {
                         <span>Batch: {item.BatchCode} | Exp: {item.ExpiryDate}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>{item.Quantity} x ₹{formatNumber(item.UnitPrice)}</span>
-                        <span>₹{formatNumber(item.LineTotal)}</span>
+                        <span>{item.Quantity} x Rs {formatNumber(item.UnitPrice)}</span>
+                        <span>Rs {formatNumber(item.LineTotal)}</span>
                       </div>
                     </div>
                   ))}
@@ -1162,26 +1158,26 @@ export default function POSBillingPage() {
                 <div className="border-t border-dashed border-gray-400 pt-2 mb-4 space-y-1">
                   <div className="flex justify-between">
                     <span>Subtotal:</span>
-                    <span>₹{formatNumber(completedReceipt.SubTotal)}</span>
+                    <span>Rs {formatNumber(completedReceipt.SubTotal)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Discount:</span>
-                    <span>- ₹{formatNumber(completedReceipt.Discount)}</span>
+                    <span>- Rs {formatNumber(completedReceipt.Discount)}</span>
                   </div>
                   <div className="flex justify-between font-bold text-sm mt-2">
                     <span>GRAND TOTAL:</span>
-                    <span>₹{formatNumber(completedReceipt.GrandTotal)}</span>
+                    <span>Rs {formatNumber(completedReceipt.GrandTotal)}</span>
                   </div>
                 </div>
 
                 <div className="border-t border-dashed border-gray-400 pt-2 mb-6 space-y-1">
                   <div className="flex justify-between">
                     <span>Paid:</span>
-                    <span>₹{formatNumber(completedReceipt.PaidAmount)}</span>
+                    <span>Rs {formatNumber(completedReceipt.PaidAmount)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Change Due:</span>
-                    <span>₹{formatNumber(completedReceipt.ChangeDue)}</span>
+                    <span>Rs {formatNumber(completedReceipt.ChangeDue)}</span>
                   </div>
                 </div>
 
