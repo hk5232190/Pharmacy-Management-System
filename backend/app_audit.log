@@ -221,3 +221,9 @@ NoneType: None
 2026-08-10 10:44:49,366 - apscheduler.scheduler - INFO - Scheduler started
 2026-08-10 10:45:22,325 - pms - WARNING - License token has expired.
 2026-08-10 10:45:27,870 - pms - WARNING - License token has expired.
+2026-08-10 23:17:51,987 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-10 23:17:52,063 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-10 23:26:59,394 - pms - INFO - AUDIT: User admin exported 5 categories to CSV.
+2026-08-10 23:27:08,784 - pms - INFO - AUDIT: User admin exported 5 companies to CSV.
+2026-08-10 23:27:14,570 - pms - INFO - AUDIT: User admin exported 5 suppliers to CSV.
+2026-08-10 23:27:25,944 - pms - INFO - AUDIT: User admin exported 5 customers to CSV.
