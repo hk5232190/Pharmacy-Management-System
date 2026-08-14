@@ -227,3 +227,42 @@ NoneType: None
 2026-08-10 23:27:08,784 - pms - INFO - AUDIT: User admin exported 5 companies to CSV.
 2026-08-10 23:27:14,570 - pms - INFO - AUDIT: User admin exported 5 suppliers to CSV.
 2026-08-10 23:27:25,944 - pms - INFO - AUDIT: User admin exported 5 customers to CSV.
+2026-08-10 23:28:16,245 - pms - INFO - Safe Data Reset | SUCCESS | User: admin | Snapshot: pre_reset_snapshot_20260810_232816.sqlite
+2026-08-10 23:32:53,288 - pms - INFO - AUDIT: User admin imported 5 categories. Skipped: 0. Errors: 0
+2026-08-10 23:33:03,881 - pms - INFO - AUDIT: User admin imported 5 companies. Skipped: 0. Errors: 0
+2026-08-10 23:33:18,598 - pms - INFO - AUDIT: User admin imported 0 suppliers. Skipped: 5. Errors: 5
+2026-08-10 23:33:33,985 - pms - INFO - AUDIT: User admin imported 5 suppliers. Skipped: 0. Errors: 0
+2026-08-10 23:33:37,798 - pms - INFO - AUDIT: User admin successfully deleted supplier 1 (Ahmed Raza).
+2026-08-10 23:33:39,853 - pms - INFO - AUDIT: User admin successfully deleted supplier 2 (Ali Hassan).
+2026-08-10 23:33:45,127 - pms - INFO - AUDIT: User admin successfully deleted supplier 5 (Hamza Khan).
+2026-08-10 23:33:47,527 - pms - INFO - AUDIT: User admin successfully deleted supplier 3 (Muhammad Usman).
+2026-08-10 23:33:49,796 - pms - INFO - AUDIT: User admin successfully deleted supplier 4 (Sara Ahmed).
+2026-08-10 23:34:10,063 - pms - INFO - AUDIT: User admin imported 5 suppliers. Skipped: 0. Errors: 0
+2026-08-10 23:34:20,503 - pms - INFO - AUDIT: User admin imported 5 customers. Skipped: 0. Errors: 0
+2026-08-13 20:15:33,934 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-13 20:15:33,973 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-14 09:07:19,147 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-14 09:07:19,175 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-14 09:07:27,688 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-14 09:07:27,697 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-14 09:08:49,665 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-14 09:08:49,673 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-14 09:08:57,197 - pms - WARNING - Hardware mismatch. License HWID: PMS-B4BF-21C8-A772-2D88, Machine HWID: PMS-0DA3-2839-37CC-B6F4
+2026-08-14 09:08:57,516 - pms - WARNING - Hardware mismatch. License HWID: PMS-B4BF-21C8-A772-2D88, Machine HWID: PMS-0DA3-2839-37CC-B6F4
+2026-08-14 09:09:02,731 - pms - WARNING - Hardware mismatch. License HWID: PMS-B4BF-21C8-A772-2D88, Machine HWID: PMS-0DA3-2839-37CC-B6F4
+2026-08-14 09:09:03,745 - pms - WARNING - Hardware mismatch. License HWID: PMS-B4BF-21C8-A772-2D88, Machine HWID: PMS-0DA3-2839-37CC-B6F4
+2026-08-14 09:12:05,887 - pms - WARNING - Hardware mismatch. License HWID: PMS-B4BF-21C8-A772-2D88, Machine HWID: PMS-0DA3-2839-37CC-B6F4
+2026-08-14 09:12:38,771 - pms - WARNING - Hardware mismatch. License HWID: PMS-B4BF-21C8-A772-2D88, Machine HWID: PMS-0DA3-2839-37CC-B6F4
+2026-08-14 11:15:30,247 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-14 11:15:30,303 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-14 11:16:10,673 - pms - WARNING - Hardware mismatch. License HWID: PMS-0DA3-2839-37CC-B6F4, Machine HWID: PMS-CE99-0735-E628-EBF3
+2026-08-14 11:16:11,941 - pms - WARNING - Hardware mismatch. License HWID: PMS-0DA3-2839-37CC-B6F4, Machine HWID: PMS-CE99-0735-E628-EBF3
+2026-08-14 11:16:20,353 - pms - WARNING - Hardware mismatch. License HWID: PMS-0DA3-2839-37CC-B6F4, Machine HWID: PMS-CE99-0735-E628-EBF3
+2026-08-14 11:16:20,621 - pms - WARNING - Hardware mismatch. License HWID: PMS-0DA3-2839-37CC-B6F4, Machine HWID: PMS-CE99-0735-E628-EBF3
+2026-08-14 11:16:22,179 - pms - WARNING - Hardware mismatch. License HWID: PMS-0DA3-2839-37CC-B6F4, Machine HWID: PMS-CE99-0735-E628-EBF3
+2026-08-14 11:17:16,572 - pms - WARNING - Hardware mismatch. License HWID: PMS-0DA3-2839-37CC-B6F4, Machine HWID: PMS-CE99-0735-E628-EBF3
+2026-08-14 11:17:33,302 - pms - WARNING - Hardware mismatch. License HWID: PMS-0DA3-2839-37CC-B6F4, Machine HWID: PMS-CE99-0735-E628-EBF3
+2026-08-14 11:17:33,478 - pms - WARNING - Hardware mismatch. License HWID: PMS-0DA3-2839-37CC-B6F4, Machine HWID: PMS-CE99-0735-E628-EBF3
+2026-08-14 11:17:38,550 - pms - WARNING - Hardware mismatch. License HWID: PMS-0DA3-2839-37CC-B6F4, Machine HWID: PMS-CE99-0735-E628-EBF3
+2026-08-14 11:17:38,708 - pms - WARNING - Hardware mismatch. License HWID: PMS-0DA3-2839-37CC-B6F4, Machine HWID: PMS-CE99-0735-E628-EBF3
+2026-08-14 11:17:51,022 - pms - WARNING - Hardware mismatch. License HWID: PMS-0DA3-2839-37CC-B6F4, Machine HWID: PMS-CE99-0735-E628-EBF3

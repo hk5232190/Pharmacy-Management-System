@@ -66,7 +66,6 @@ export default function POSBillingPage() {
   const [taxRate, setTaxRate] = useState(0);
   const [customers, setCustomers] = useState<any[]>([]);
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>("walkin");
-  const [prescriptionRef, setPrescriptionRef] = useState("");
   const [salesperson, setSalesperson] = useState("");
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -78,7 +77,6 @@ export default function POSBillingPage() {
   const [paidAmount, setPaidAmount] = useState<number>(0);
 
   // --- Modals ---
-  const [prescriptionPromptObj, setPrescriptionPromptObj] = useState<ProductSearchResponse | null>(null);
   const [completedReceipt, setCompletedReceipt] = useState<any>(null);
   const [isPrintingThermal, setIsPrintingThermal] = useState(false);
 
@@ -169,20 +167,7 @@ export default function POSBillingPage() {
       return;
     }
 
-    if (product.RequiresPrescription && !prescriptionRef) {
-      setPrescriptionPromptObj(product);
-      return;
-    }
-
     addToCart(product);
-  };
-
-  const confirmPrescription = (ref: string) => {
-    setPrescriptionRef(ref);
-    if (prescriptionPromptObj) {
-      addToCart(prescriptionPromptObj);
-      setPrescriptionPromptObj(null);
-    }
   };
 
   const addToCart = (product: ProductSearchResponse) => {
@@ -279,13 +264,6 @@ export default function POSBillingPage() {
   const handleCompleteSale = async () => {
     if (cart.length === 0) return;
 
-    // Check prescription requirement
-    const needsPrescription = cart.some(item => item.RequiresPrescription);
-    if (needsPrescription && !prescriptionRef) {
-      toast.error("Prescription reference is required to complete this sale.");
-      document.getElementById('prescription-ref-input')?.focus();
-      return;
-    }
 
     try {
       const payload = {
@@ -296,7 +274,6 @@ export default function POSBillingPage() {
         GrandTotal: grandTotal,
         PaidAmount: paidAmount,
         PaymentMethod: "Cash",
-        PrescriptionRef: prescriptionRef || null,
         Items: cart.map(item => ({
           MedicineId: item.MedicineId,
           BatchId: item.BatchId,
@@ -305,7 +282,6 @@ export default function POSBillingPage() {
           Discount: item.Discount,
           TaxPercent: item.TaxPercent,
           LineTotal: item.LineTotal,
-          RequiresPrescription: item.RequiresPrescription
         }))
       };
 
@@ -330,7 +306,6 @@ export default function POSBillingPage() {
 
         setCart([]);
         setPaidAmount(0);
-        setPrescriptionRef("");
         fetchInitData(); // get next invoice number
       } else {
         toast.error(res.error || "Failed to complete sale");
@@ -573,16 +548,6 @@ export default function POSBillingPage() {
                     </div>
                   </div>
 
-                  <div>
-                    <label className="text-xs font-medium text-muted-foreground mb-1 block">Prescription Ref. (Optional)</label>
-                    <Input
-                      id="prescription-ref-input"
-                      placeholder="Enter Prescription Ref"
-                      value={prescriptionRef}
-                      onChange={e => setPrescriptionRef(e.target.value)}
-                      className="text-sm"
-                    />
-                  </div>
 
                   <div>
                     <label className="text-xs font-medium text-muted-foreground mb-1 block">Salesperson</label>
@@ -630,7 +595,7 @@ export default function POSBillingPage() {
                               <div>
                                 <p className="font-medium text-foreground flex items-center gap-2">
                                   {res.MedicineName}
-                                  {res.RequiresPrescription && <span className="text-[10px] bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-400 px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider">Rx</span>}
+
                                 </p>
                                 <p className="text-xs text-muted-foreground">{res.GenericName}</p>
                               </div>
@@ -698,7 +663,7 @@ export default function POSBillingPage() {
                             <td className="px-3 py-3 text-muted-foreground">{idx + 1}</td>
                             <td className="px-3 py-3 font-medium text-foreground">
                               {item.MedicineName}
-                              {item.RequiresPrescription && <span className="ml-2 text-[10px] text-rose-500 font-bold">Rx</span>}
+
                             </td>
                             <td className="px-3 py-3 font-mono text-xs text-muted-foreground">{item.BatchCode}</td>
                             <td className="px-3 py-3 text-center text-muted-foreground text-xs">{item.AvailableStock}</td>
@@ -1067,33 +1032,7 @@ export default function POSBillingPage() {
         </div>
       </div>
 
-      {/* Prescription Modal */}
-      {prescriptionPromptObj && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-white dark:bg-card rounded-xl shadow-2xl p-6 w-full max-w-md border border-border">
-            <h2 className="text-xl font-bold text-rose-600 mb-2 flex items-center gap-2">
-              ⚠️ Prescription Required
-            </h2>
-            <p className="text-muted-foreground text-sm mb-6">
-              <strong>{prescriptionPromptObj.MedicineName}</strong> requires a valid prescription before it can be dispensed. Please enter the prescription reference or doctor details.
-            </p>
-            <Input
-              autoFocus
-              placeholder="e.g. Dr. Smith / RX-7742"
-              className="mb-6"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') confirmPrescription((e.target as HTMLInputElement).value || 'Verified');
-              }}
-            />
-            <div className="flex justify-end gap-3">
-              <Button variant="outline" onClick={() => setPrescriptionPromptObj(null)}>Cancel</Button>
-              <Button className="bg-rose-600 hover:bg-rose-700 text-white" onClick={() => confirmPrescription(document.querySelector<HTMLInputElement>('input[placeholder="e.g. Dr. Smith / RX-7742"]')?.value || 'Verified')}>
-                Confirm Dispense
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+
 
       {/* Completed Receipt Modal */}
       {completedReceipt && (
