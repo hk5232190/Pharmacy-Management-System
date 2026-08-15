@@ -26,6 +26,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { useProfile } from "@/contexts/ProfileContext";
 
 interface InventorySummary {
   total_medicines: number;
@@ -101,6 +102,7 @@ interface AuditLogEntry {
 }
 
 export default function InventoryManagementPage() {
+  const { profile } = useProfile();
   const [summary, setSummary] = useState<InventorySummary>({
     total_medicines: 0,
     total_stock_quantity: 0,
@@ -279,10 +281,149 @@ export default function InventoryManagementPage() {
     setExportOpen(false);
   };
 
-  // Export via browser print (PDF)
+  // Export via a self-contained professional print window
   const exportStockPDF = () => {
     setExportOpen(false);
-    setTimeout(() => window.print(), 100);
+    if (!stockList.length) return toast.error("No data to export");
+
+    const pharmName  = profile.PharmacyName || "Pharmacy Management System";
+    const pharmAddr  = [profile.Address, profile.City, profile.State].filter(Boolean).join(", ") || "";
+    const pharmPhone = profile.PhoneNumber || "";
+    const printDate  = new Date().toLocaleString("en-GB", { day:"2-digit", month:"short", year:"numeric", hour:"2-digit", minute:"2-digit" });
+    const totalValue = stockList.reduce((s, i) => s + i.StockValue, 0);
+
+    const statusColour = (s: string) => {
+      if (s === "Out of Stock") return "#ef4444";
+      if (s === "Low Stock")    return "#f59e0b";
+      if (s === "Overstock")    return "#8b5cf6";
+      return "#10b981";
+    };
+    const statusBg = (s: string) => {
+      if (s === "Out of Stock") return "#fee2e2";
+      if (s === "Low Stock")    return "#fef3c7";
+      if (s === "Overstock")    return "#ede9fe";
+      return "#d1fae5";
+    };
+
+    const rows = stockList.map((item, idx) => {
+      const exp   = new Date(item.ExpiryDate);
+      const today = new Date(); today.setHours(0,0,0,0);
+      const days  = Math.ceil((exp.getTime() - today.getTime()) / 86400000);
+      const expStr = exp.toLocaleDateString("en-GB", { day:"2-digit", month:"short", year:"numeric" });
+      const expColour = days < 0 ? "#ef4444" : days <= 90 ? "#f59e0b" : "#111827";
+      const expExtra  = days < 0 ? " (Expired)" : days <= 90 ? ` (${days}d)` : "";
+      return `
+        <tr style="background:${idx % 2 === 0 ? "#ffffff" : "#f9fafb"}">
+          <td style="padding:8px 10px;color:#6b7280;font-size:11px">${idx + 1}</td>
+          <td style="padding:8px 10px;font-family:monospace;font-size:11px;color:#111827">${item.CodeBarcode}</td>
+          <td style="padding:8px 10px;font-weight:700;color:#111827;font-size:12px">${item.MedicineName}</td>
+          <td style="padding:8px 10px;color:#374151;font-size:11px">${item.CategoryName}</td>
+          <td style="padding:8px 10px;font-family:monospace;font-size:10px;color:#6366f1">${item.RackNumber || "—"}</td>
+          <td style="padding:8px 10px;font-family:monospace;font-size:11px;color:#111827">${item.BatchCode}</td>
+          <td style="padding:8px 10px;font-size:11px;color:${expColour};font-weight:600">${expStr}${expExtra}</td>
+          <td style="padding:8px 10px;text-align:right;font-size:11px;color:#374151">Rs ${item.PurchasePrice.toFixed(2)}</td>
+          <td style="padding:8px 10px;text-align:right;font-size:11px;color:#374151">Rs ${item.SellingPrice.toFixed(2)}</td>
+          <td style="padding:8px 10px;text-align:right;font-weight:700;font-size:12px;color:#111827">${item.CurrentStock}</td>
+          <td style="padding:8px 10px;text-align:right;color:#6b7280;font-size:11px">${item.MinStock}</td>
+          <td style="padding:8px 10px;text-align:center">
+            <span style="display:inline-block;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:700;background:${statusBg(item.Status)};color:${statusColour(item.Status)}">${item.Status}</span>
+          </td>
+          <td style="padding:8px 10px;text-align:right;font-weight:600;font-size:11px">Rs ${item.StockValue.toFixed(2)}</td>
+        </tr>`;
+    }).join("");
+
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Inventory Stock Report — ${pharmName}</title>
+  <style>
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family:'Segoe UI',Arial,sans-serif; background:#fff; color:#111827; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    @page { size:A4 landscape; margin:12mm 10mm; }
+    @media print { .no-print { display:none!important; } }
+    table { width:100%; border-collapse:collapse; }
+    thead tr th { background:#0f172a!important; color:#fff!important; padding:9px 10px; font-size:10px; text-transform:uppercase; letter-spacing:.06em; font-weight:700; white-space:nowrap; }
+    tbody tr td { border-bottom:1px solid #e5e7eb; vertical-align:middle; }
+    .kpi-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin:20px 0; }
+    .kpi { padding:12px 16px; border-radius:8px; border-left:4px solid; }
+    .btn { display:inline-block; padding:8px 20px; background:#0f172a; color:#fff; border:none; border-radius:6px; cursor:pointer; font-size:13px; font-weight:600; margin-right:8px; }
+    .btn-outline { background:#fff; color:#0f172a; border:1.5px solid #0f172a; }
+  </style>
+</head>
+<body>
+  <div style="max-width:100%;padding:0">
+
+    <!-- Header -->
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;padding:20px 24px 16px;background:#0f172a;color:#fff;border-radius:0">
+      <div>
+        <div style="font-size:22px;font-weight:900;letter-spacing:-.5px">${pharmName}</div>
+        ${pharmAddr ? `<div style="font-size:11px;color:#94a3b8;margin-top:3px">${pharmAddr}</div>` : ""}
+        ${pharmPhone ? `<div style="font-size:11px;color:#94a3b8">${pharmPhone}</div>` : ""}
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:26px;font-weight:900;color:#cbd5e1;letter-spacing:-1px;text-transform:uppercase">Stock Report</div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:4px">Generated: ${printDate}</div>
+        <div style="font-size:11px;color:#94a3b8">Total Records: ${stockList.length}</div>
+      </div>
+    </div>
+
+    <!-- KPI Summary -->
+    <div class="kpi-grid" style="padding:0 24px">
+      <div class="kpi" style="border-color:#3b82f6;background:#eff6ff">
+        <div style="font-size:10px;font-weight:700;color:#3b82f6;text-transform:uppercase;letter-spacing:.05em">Total Items</div>
+        <div style="font-size:24px;font-weight:900;color:#1e40af;margin-top:2px">${stockList.length}</div>
+      </div>
+      <div class="kpi" style="border-color:#10b981;background:#ecfdf5">
+        <div style="font-size:10px;font-weight:700;color:#10b981;text-transform:uppercase;letter-spacing:.05em">Total Stock Value</div>
+        <div style="font-size:20px;font-weight:900;color:#065f46;margin-top:2px">Rs ${totalValue.toLocaleString(undefined,{minimumFractionDigits:2})}</div>
+      </div>
+      <div class="kpi" style="border-color:#f59e0b;background:#fffbeb">
+        <div style="font-size:10px;font-weight:700;color:#f59e0b;text-transform:uppercase;letter-spacing:.05em">Low / Out of Stock</div>
+        <div style="font-size:24px;font-weight:900;color:#92400e;margin-top:2px">${stockList.filter(i=>i.Status==="Low Stock"||i.Status==="Out of Stock").length}</div>
+      </div>
+      <div class="kpi" style="border-color:#8b5cf6;background:#f5f3ff">
+        <div style="font-size:10px;font-weight:700;color:#8b5cf6;text-transform:uppercase;letter-spacing:.05em">Overstock Items</div>
+        <div style="font-size:24px;font-weight:900;color:#4c1d95;margin-top:2px">${stockList.filter(i=>i.Status==="Overstock").length}</div>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div style="padding:0 24px;margin-top:8px">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th><th>Barcode</th><th>Medicine Name</th><th>Category</th>
+            <th>Rack</th><th>Batch</th><th>Expiry</th>
+            <th style="text-align:right">Pur. Price</th><th style="text-align:right">Sell. Price</th>
+            <th style="text-align:right">Stock</th><th style="text-align:right">Min</th>
+            <th style="text-align:center">Status</th><th style="text-align:right">Value (Rs)</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+
+    <!-- Footer -->
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 24px;margin-top:24px;border-top:2px solid #e5e7eb;font-size:10px;color:#9ca3af">
+      <span>Pharmacy Management System — Confidential</span>
+      <span>${pharmName} &nbsp;|&nbsp; ${printDate}</span>
+    </div>
+
+    <!-- Print / Close buttons (hidden on print) -->
+    <div class="no-print" style="text-align:center;padding:20px;gap:10px;display:flex;justify-content:center">
+      <button class="btn" onclick="window.print()">🖨️ Print / Save PDF</button>
+      <button class="btn btn-outline" onclick="window.close()">✕ Close</button>
+    </div>
+  </div>
+</body>
+</html>`;
+
+    const win = window.open("", "_blank", "width=1200,height=850");
+    if (!win) return toast.error("Popup blocked — please allow popups for this site");
+    win.document.write(html);
+    win.document.close();
+    toast.success("Print preview opened in new window");
   };
 
   useEffect(() => {
