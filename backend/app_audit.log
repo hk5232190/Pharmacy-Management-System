@@ -266,3 +266,9 @@ NoneType: None
 2026-08-14 11:17:38,550 - pms - WARNING - Hardware mismatch. License HWID: PMS-0DA3-2839-37CC-B6F4, Machine HWID: PMS-CE99-0735-E628-EBF3
 2026-08-14 11:17:38,708 - pms - WARNING - Hardware mismatch. License HWID: PMS-0DA3-2839-37CC-B6F4, Machine HWID: PMS-CE99-0735-E628-EBF3
 2026-08-14 11:17:51,022 - pms - WARNING - Hardware mismatch. License HWID: PMS-0DA3-2839-37CC-B6F4, Machine HWID: PMS-CE99-0735-E628-EBF3
+2026-08-14 11:51:06,670 - pms - ERROR - PMSException caught: Invalid authentication credentials (status: 401) | Path: /api/v1/backup-settings
+2026-08-14 11:51:06,693 - pms - ERROR - PMSException caught: Invalid authentication credentials (status: 401) | Path: /api/v1/backup-settings
+2026-08-14 16:05:11,445 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-14 16:05:11,506 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-14 16:51:36,607 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-14 16:51:36,682 - apscheduler.scheduler - INFO - Scheduler started

@@ -131,6 +131,17 @@ export default function InventoryManagementPage() {
   const [isAdjustModalOpen, setIsAdjustModalOpen] = useState(false);
   const [adjustData, setAdjustData] = useState({ BatchId: 0, Type: "Decrease", Quantity: "", Reason: "" });
 
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const tabParam = params.get('tab');
+      const statusParam = params.get('status');
+      
+      if (tabParam) setActiveTab(tabParam);
+      if (statusParam) setStatusFilter(statusParam);
+    }
+  }, []);
+
   const fetchData = async () => {
     setLoading(true);
     try {

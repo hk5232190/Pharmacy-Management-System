@@ -102,9 +102,14 @@ export default function WidgetsSection({ timeframe = 'today', dateRange = null, 
             <AlertTriangle className="w-5 h-5" />
             Low Stock Alerts
           </div>
-          <span className="bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-400 text-xs font-bold px-2 py-0.5 rounded-full">
-            {data.low_stock.length}
-          </span>
+          <div className="flex items-center gap-3">
+            <span className="bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-400 text-xs font-bold px-2 py-0.5 rounded-full">
+              {data.low_stock.length}
+            </span>
+            <Link href="/dashboard/inventory?tab=current&status=Low%20Stock" className="text-xs font-medium text-orange-600 hover:text-orange-700 flex items-center gap-1">
+              View All <ArrowRight className="w-3 h-3" />
+            </Link>
+          </div>
         </div>
         <div className="overflow-y-auto flex-1 p-0">
           {data.low_stock.length === 0 ? (
@@ -139,9 +144,14 @@ export default function WidgetsSection({ timeframe = 'today', dateRange = null, 
             <Clock className="w-5 h-5" />
             Expiry Alerts
           </div>
-          <span className="bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-400 text-xs font-bold px-2 py-0.5 rounded-full">
-            {data.expiry_alerts.length}
-          </span>
+          <div className="flex items-center gap-3">
+            <span className="bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-400 text-xs font-bold px-2 py-0.5 rounded-full">
+              {data.expiry_alerts.length}
+            </span>
+            <Link href="/dashboard/inventory?tab=expiry" className="text-xs font-medium text-red-600 hover:text-red-700 flex items-center gap-1">
+              View All <ArrowRight className="w-3 h-3" />
+            </Link>
+          </div>
         </div>
         <div className="overflow-y-auto flex-1 p-0">
           {data.expiry_alerts.length === 0 ? (
