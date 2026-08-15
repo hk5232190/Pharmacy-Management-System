@@ -126,6 +126,10 @@ export default function InventoryManagementPage() {
   const [statusFilter, setStatusFilter] = useState("All");
   const [categoryFilter, setCategoryFilter] = useState("All");
   const [companyFilter, setCompanyFilter] = useState("All");
+
+  // Master Lists for Filters
+  const [masterCategories, setMasterCategories] = useState<{CategoryId: number, CategoryName: string}[]>([]);
+  const [masterCompanies, setMasterCompanies] = useState<{CompanyId: number, CompanyName: string}[]>([]);
   
   // Movement Filters
   const [movBatchFilter, setMovBatchFilter] = useState("");
@@ -152,9 +156,9 @@ export default function InventoryManagementPage() {
     return true;
   });
 
-  // Unique lists for dropdowns
-  const uniqueCategories = Array.from(new Set(stockList.map(i => i.CategoryName))).filter(Boolean).sort();
-  const uniqueCompanies = Array.from(new Set(stockList.map(i => i.CompanyName))).filter(Boolean).sort();
+  // Use master data for dropdowns, sorted alphabetically
+  const uniqueCategories = masterCategories.map(c => c.CategoryName).filter(Boolean).sort();
+  const uniqueCompanies = masterCompanies.map(c => c.CompanyName).filter(Boolean).sort();
 
   // Current Stock pagination
   const [stockPageSize, setStockPageSize] = useState(10);
@@ -239,6 +243,17 @@ export default function InventoryManagementPage() {
       if (auditRes.success && auditRes.data) {
         setAuditLogs(auditRes.data);
       }
+
+      // Fetch master lists for filters (page_size=0 gets all)
+      const catRes = await apiClient.get("/categories?page_size=0");
+      if (catRes.success && catRes.data) {
+        setMasterCategories(catRes.data);
+      }
+      const compRes = await apiClient.get("/companies?page_size=0");
+      if (compRes.success && compRes.data) {
+        setMasterCompanies(compRes.data);
+      }
+
     } catch (error) {
       toast.error("Failed to load inventory data");
     } finally {
