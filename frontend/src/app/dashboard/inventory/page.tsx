@@ -130,6 +130,14 @@ export default function InventoryManagementPage() {
   const [isAdjustModalOpen, setIsAdjustModalOpen] = useState(false);
   const [adjustData, setAdjustData] = useState({ BatchId: 0, Type: "Decrease", Quantity: "", Reason: "" });
 
+  // Current Stock pagination
+  const [stockPageSize, setStockPageSize] = useState(10);
+  const [stockCurrentPage, setStockCurrentPage] = useState(1);
+  const totalStockPages = Math.max(1, Math.ceil(stockList.length / stockPageSize));
+  const pagedStockList = stockList.slice((stockCurrentPage - 1) * stockPageSize, stockCurrentPage * stockPageSize);
+  // Reset to page 1 whenever list or page size changes
+  useEffect(() => { setStockCurrentPage(1); }, [stockList.length, stockPageSize]);
+
   // F2 global shortcut → open Stock Adjustment modal
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -410,7 +418,7 @@ export default function InventoryManagementPage() {
                   ) : stockList.length === 0 ? (
                     <tr><td colSpan={14} className="px-4 py-8 text-center text-muted-foreground">No stock batches found.</td></tr>
                   ) : (
-                    stockList.map((item, idx) => {
+                    pagedStockList.map((item, idx) => {
                       const today = new Date();
                       today.setHours(0, 0, 0, 0);
                       const expiryDate = new Date(item.ExpiryDate);
@@ -506,15 +514,40 @@ export default function InventoryManagementPage() {
               </table>
             </div>
             
-            <div className="p-4 border-t border-border flex justify-between items-center text-sm text-muted-foreground bg-slate-50/50 dark:bg-secondary/20">
-              <div>Showing 1 to {stockList.length} of {summary.total_medicines} entries</div>
-              {/* Pagination Placeholder */}
-              <div className="flex items-center gap-1">
-                <Button variant="outline" size="sm" className="h-8 w-8 p-0" disabled>«</Button>
-                <Button variant="outline" size="sm" className="h-8 w-8 p-0" disabled>‹</Button>
-                <Button variant="default" size="sm" className="h-8 w-8 p-0 bg-primary text-primary-foreground">1</Button>
-                <Button variant="outline" size="sm" className="h-8 w-8 p-0">›</Button>
-                <Button variant="outline" size="sm" className="h-8 w-8 p-0">»</Button>
+            <div className="px-6 py-4 border-t border-border bg-slate-50/50 dark:bg-secondary/20 flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2">
+                <span>Rows per page:</span>
+                <select
+                  className="h-8 rounded-md border border-input bg-background px-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  value={stockPageSize}
+                  onChange={e => { setStockPageSize(Number(e.target.value)); setStockCurrentPage(1); }}
+                >
+                  <option value={10}>10</option>
+                  <option value={25}>25</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                </select>
+              </div>
+              <div className="flex items-center gap-4">
+                <span>
+                  Showing {stockList.length === 0 ? 0 : (stockCurrentPage - 1) * stockPageSize + 1}–{Math.min(stockList.length, stockCurrentPage * stockPageSize)} of {stockList.length}
+                </span>
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="outline" size="sm" className="h-8 px-3"
+                    onClick={() => setStockCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={stockCurrentPage === 1}
+                  >
+                    Prev
+                  </Button>
+                  <Button
+                    variant="outline" size="sm" className="h-8 px-3"
+                    onClick={() => setStockCurrentPage(p => Math.min(totalStockPages, p + 1))}
+                    disabled={stockCurrentPage >= totalStockPages}
+                  >
+                    Next
+                  </Button>
+                </div>
               </div>
             </div>
             
