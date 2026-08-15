@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { apiClient } from "@/lib/api-client";
 import { toast } from "react-hot-toast";
 import {
@@ -17,7 +17,11 @@ import {
   Eye,
   Edit,
   History,
-  X
+  X,
+  Check,
+  ChevronDown,
+  FileText,
+  FileSpreadsheet
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -130,6 +134,13 @@ export default function InventoryManagementPage() {
   const [isAdjustModalOpen, setIsAdjustModalOpen] = useState(false);
   const [adjustData, setAdjustData] = useState({ BatchId: 0, Type: "Decrease", Quantity: "", Reason: "" });
 
+  // Export dropdown
+  const [exportOpen, setExportOpen] = useState(false);
+  const exportRef = useRef<HTMLDivElement>(null);
+
+  // Premium refresh state: 'idle' | 'loading' | 'done'
+  const [refreshState, setRefreshState] = useState<"idle" | "loading" | "done">("idle");
+
   // Current Stock pagination
   const [stockPageSize, setStockPageSize] = useState(10);
   const [stockCurrentPage, setStockCurrentPage] = useState(1);
@@ -149,6 +160,17 @@ export default function InventoryManagementPage() {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Close export dropdown on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (exportRef.current && !exportRef.current.contains(e.target as Node)) {
+        setExportOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
   }, []);
 
   useEffect(() => {
@@ -206,6 +228,61 @@ export default function InventoryManagementPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Premium refresh handler — shows spinner then checkmark briefly
+  const handleRefresh = async () => {
+    if (refreshState === "loading") return;
+    setRefreshState("loading");
+    await fetchData();
+    setRefreshState("done");
+    setTimeout(() => setRefreshState("idle"), 1500);
+  };
+
+  // Export current stock list to CSV
+  const exportStockCSV = () => {
+    if (!stockList.length) return toast.error("No data to export");
+    const headers = [
+      "#", "Barcode", "Medicine Name", "Category", "Company", "Rack/Shelf",
+      "Batch No.", "Expiry Date", "Pur. Price (Rs)", "Sell. Price (Rs)",
+      "Current Stock", "Min. Stock", "Status", "Stock Value (Rs)"
+    ];
+    const rows = stockList.map((item, idx) => [
+      idx + 1,
+      item.CodeBarcode,
+      item.MedicineName,
+      item.CategoryName,
+      item.CompanyName,
+      item.RackNumber || "—",
+      item.BatchCode,
+      new Date(item.ExpiryDate).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }),
+      item.PurchasePrice.toFixed(2),
+      item.SellingPrice.toFixed(2),
+      item.CurrentStock,
+      item.MinStock,
+      item.Status,
+      item.StockValue.toFixed(2)
+    ]);
+    const csv = [headers, ...rows]
+      .map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `inventory_stock_${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success("Stock list exported as CSV");
+    setExportOpen(false);
+  };
+
+  // Export via browser print (PDF)
+  const exportStockPDF = () => {
+    setExportOpen(false);
+    setTimeout(() => window.print(), 100);
   };
 
   useEffect(() => {
@@ -344,11 +421,64 @@ export default function InventoryManagementPage() {
             <Button onClick={() => openAdjustmentModal()} variant="outline" className="h-9 border-primary/20 text-primary hover:bg-primary/5">
               <Plus className="h-4 w-4 mr-2" /> Stock Adjustment
             </Button>
-            <Button variant="outline" className="h-9">
-              <Download className="h-4 w-4 mr-2" /> Export
-            </Button>
-            <Button variant="outline" className="h-9" onClick={fetchData}>
-              <RefreshCcw className={cn("h-4 w-4 mr-2", loading && "animate-spin")} /> Refresh
+
+            {/* Export Dropdown */}
+            <div className="relative" ref={exportRef}>
+              <Button
+                variant="outline"
+                className="h-9 gap-2"
+                onClick={() => setExportOpen(o => !o)}
+              >
+                <Download className="h-4 w-4" />
+                Export
+                <ChevronDown className={cn("h-3.5 w-3.5 transition-transform duration-200", exportOpen && "rotate-180")} />
+              </Button>
+              {exportOpen && (
+                <div className="absolute right-0 top-full mt-1.5 w-48 bg-white dark:bg-card rounded-xl shadow-xl border border-border z-50 overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150">
+                  <div className="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border">
+                    Export Current Stock
+                  </div>
+                  <button
+                    onClick={exportStockCSV}
+                    className="flex w-full items-center gap-3 px-4 py-2.5 text-sm hover:bg-emerald-50 dark:hover:bg-emerald-900/20 text-foreground transition-colors group"
+                  >
+                    <FileSpreadsheet className="h-4 w-4 text-emerald-500 group-hover:scale-110 transition-transform" />
+                    <div className="text-left">
+                      <div className="font-medium">Export CSV</div>
+                      <div className="text-[11px] text-muted-foreground">Spreadsheet format</div>
+                    </div>
+                  </button>
+                  <button
+                    onClick={exportStockPDF}
+                    className="flex w-full items-center gap-3 px-4 py-2.5 text-sm hover:bg-rose-50 dark:hover:bg-rose-900/20 text-foreground transition-colors group border-t border-border"
+                  >
+                    <FileText className="h-4 w-4 text-rose-500 group-hover:scale-110 transition-transform" />
+                    <div className="text-left">
+                      <div className="font-medium">Export PDF</div>
+                      <div className="text-[11px] text-muted-foreground">Print / Save as PDF</div>
+                    </div>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Premium Refresh Button */}
+            <Button
+              variant="outline"
+              className={cn(
+                "h-9 gap-2 transition-all duration-300",
+                refreshState === "loading" && "border-primary/40 text-primary",
+                refreshState === "done" && "border-emerald-400 text-emerald-600 dark:text-emerald-400 bg-emerald-50/60 dark:bg-emerald-900/20"
+              )}
+              onClick={handleRefresh}
+              disabled={refreshState === "loading"}
+            >
+              {refreshState === "done" ? (
+                <Check className="h-4 w-4 animate-in zoom-in-50 duration-200" />
+              ) : (
+                <RefreshCcw className={cn("h-4 w-4 transition-transform", refreshState === "loading" && "animate-spin")} />
+              )}
+              {refreshState === "loading" ? "Refreshing..." : refreshState === "done" ? "Updated!" : "Refresh"}
             </Button>
           </div>
         </div>
