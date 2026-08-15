@@ -140,7 +140,16 @@ export default function InventoryManagementPage() {
   // Side Panel & Modals
   const [selectedBatch, setSelectedBatch] = useState<StockBatch | null>(null);
   const [isAdjustModalOpen, setIsAdjustModalOpen] = useState(false);
-  const [adjustData, setAdjustData] = useState({ BatchId: 0, Type: "Decrease", Quantity: "", Reason: "" });
+  const [adjustData, setAdjustData] = useState({ BatchId: 0, Type: "Increase", Quantity: "", Reason: "", Notes: "" });
+  const [adjustBatchLabel, setAdjustBatchLabel] = useState("");
+
+  // Adjustment History Pagination & Filters
+  const [adjSearchQuery, setAdjSearchQuery] = useState("");
+  const [adjTypeFilter, setAdjTypeFilter] = useState("All");
+  const [adjStartDate, setAdjStartDate] = useState("");
+  const [adjEndDate, setAdjEndDate] = useState("");
+  const [adjPageSize, setAdjPageSize] = useState(10);
+  const [adjCurrentPage, setAdjCurrentPage] = useState(1);
 
   // Export dropdown
   const [exportOpen, setExportOpen] = useState(false);
@@ -168,6 +177,26 @@ export default function InventoryManagementPage() {
   
   // Reset to page 1 whenever filtered list or page size changes
   useEffect(() => { setStockCurrentPage(1); }, [filteredStockList.length, stockPageSize]);
+
+  // Client-side filtering for Adjustments
+  const filteredAdjHistory = adjustmentHistory.filter(adj => {
+    if (adjSearchQuery) {
+      const q = adjSearchQuery.toLowerCase();
+      if (!adj.MedicineName.toLowerCase().includes(q) && !adj.BatchCode.toLowerCase().includes(q)) {
+        return false;
+      }
+    }
+    if (adjTypeFilter === "Additions (+)" && adj.AdjustmentType !== "Increase") return false;
+    if (adjTypeFilter === "Deductions (-)" && adj.AdjustmentType !== "Decrease") return false;
+    if (adjStartDate && new Date(adj.AdjustmentDate) < new Date(adjStartDate)) return false;
+    if (adjEndDate && new Date(adj.AdjustmentDate) > new Date(adjEndDate + "T23:59:59")) return false;
+    return true;
+  });
+
+  const totalAdjPages = Math.max(1, Math.ceil(filteredAdjHistory.length / adjPageSize));
+  const pagedAdjHistory = filteredAdjHistory.slice((adjCurrentPage - 1) * adjPageSize, adjCurrentPage * adjPageSize);
+  
+  useEffect(() => { setAdjCurrentPage(1); }, [filteredAdjHistory.length, adjPageSize]);
 
   // F2 global shortcut → open Stock Adjustment modal
   useEffect(() => {
@@ -455,33 +484,40 @@ export default function InventoryManagementPage() {
     toast.success("Print preview opened in new window");
   };
 
+  // Debounced auto-search and filter change listener
   useEffect(() => {
-    fetchData();
-  }, [statusFilter]); // Refetch on filter change. For search, we can use a debounce or button.
-
-  const handleSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
+    const timer = setTimeout(() => {
       fetchData();
-    }
-  };
+    }, 300);
+    return () => clearTimeout(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery, statusFilter]);
 
   const handleStockAdjustment = async () => {
-    if (!adjustData.BatchId) return toast.error("Please select a batch");
+    if (!adjustData.BatchId || adjustData.BatchId <= 0) return toast.error("Please select a valid batch from the list");
     if (!adjustData.Quantity || isNaN(Number(adjustData.Quantity)) || Number(adjustData.Quantity) <= 0) return toast.error("Enter a valid quantity > 0");
-    if (adjustData.Reason.length < 5) return toast.error("Please provide a valid justification reason (min 5 chars)");
+    if (!adjustData.Reason) return toast.error("Please select a justification reason");
+
+    const currentStock = stockList.find(b => b.BatchId === adjustData.BatchId)?.CurrentStock || 0;
+    if (adjustData.Type === "Decrease" && Number(adjustData.Quantity) > currentStock) {
+        return toast.error(`Cannot deduct more than current available stock (${currentStock} units)`);
+    }
+
+    const finalReason = adjustData.Notes ? `[${adjustData.Reason}] ${adjustData.Notes}` : adjustData.Reason;
 
     try {
       const res = await apiClient.post("/inventory/adjust", {
         BatchId: adjustData.BatchId,
         AdjustmentType: adjustData.Type,
         Quantity: Number(adjustData.Quantity),
-        Reason: adjustData.Reason
+        Reason: finalReason
       });
 
       if (res.success) {
         toast.success(res.message);
         setIsAdjustModalOpen(false);
-        setAdjustData({ BatchId: 0, Type: "Decrease", Quantity: "", Reason: "" });
+        setAdjustData({ BatchId: 0, Type: "Increase", Quantity: "", Reason: "", Notes: "" });
+        setAdjustBatchLabel("");
         if (selectedBatch && selectedBatch.BatchId === adjustData.BatchId) {
             setSelectedBatch({
                 ...selectedBatch,
@@ -500,10 +536,15 @@ export default function InventoryManagementPage() {
   };
 
   const openAdjustmentModal = (batch?: StockBatch) => {
+    if (batch && batch.BatchId < 0) {
+        return toast.error("Cannot adjust stock for a medicine that has never been purchased. Please add it via a Purchase Invoice first.");
+    }
     if (batch) {
-        setAdjustData({ BatchId: batch.BatchId, Type: "Decrease", Quantity: "", Reason: "" });
+        setAdjustData({ BatchId: batch.BatchId, Type: "Increase", Quantity: "", Reason: "", Notes: "" });
+        setAdjustBatchLabel(`${batch.MedicineName} (Batch: ${batch.BatchCode})`);
     } else {
-        setAdjustData({ BatchId: 0, Type: "Decrease", Quantity: "", Reason: "" });
+        setAdjustData({ BatchId: 0, Type: "Increase", Quantity: "", Reason: "", Notes: "" });
+        setAdjustBatchLabel("");
     }
     setIsAdjustModalOpen(true);
   };
@@ -588,9 +629,7 @@ export default function InventoryManagementPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <Button onClick={() => openAdjustmentModal()} variant="outline" className="h-9 border-primary/20 text-primary hover:bg-primary/5">
-              <Plus className="h-4 w-4 mr-2" /> Stock Adjustment
-            </Button>
+
 
             {/* Export Dropdown */}
             <div className="relative" ref={exportRef}>
@@ -666,7 +705,6 @@ export default function InventoryManagementPage() {
                   className="h-9 pl-9"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={handleSearch}
                 />
               </div>
               
@@ -870,32 +908,73 @@ export default function InventoryManagementPage() {
         
         {activeTab === "adjustments" && (
           <div className="bg-white dark:bg-card rounded-xl border border-border shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300 flex flex-col h-[600px]">
-            <div className="p-4 border-b border-border bg-slate-50/50 dark:bg-secondary/20 flex justify-between items-center">
+            <div className="p-4 border-b border-border bg-slate-50/50 dark:bg-secondary/20 flex flex-wrap justify-between items-center gap-3">
               <h3 className="font-semibold text-foreground">Stock Adjustment History</h3>
               <Button onClick={() => openAdjustmentModal()} className="bg-primary hover:bg-primary/90 text-white h-9">
                 <Plus className="h-4 w-4 mr-2" /> New Adjustment
               </Button>
             </div>
+            
+            {/* Filter Bar */}
+            <div className="p-4 border-b border-border bg-slate-50/50 dark:bg-secondary/20 flex flex-wrap gap-3 items-center">
+              <div className="relative w-64">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input 
+                  placeholder="Search medicine, batch..." 
+                  className="h-9 pl-9 bg-background"
+                  value={adjSearchQuery}
+                  onChange={(e) => setAdjSearchQuery(e.target.value)}
+                />
+              </div>
+              <select 
+                className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                value={adjTypeFilter}
+                onChange={(e) => setAdjTypeFilter(e.target.value)}
+              >
+                <option value="All">All Types</option>
+                <option value="Additions (+)">Additions (+)</option>
+                <option value="Deductions (-)">Deductions (-)</option>
+              </select>
+              <div className="flex items-center gap-2">
+                <Input 
+                  type="date" 
+                  className="h-9 w-[130px] bg-background text-sm"
+                  value={adjStartDate}
+                  onChange={(e) => setAdjStartDate(e.target.value)}
+                  title="From Date"
+                />
+                <span className="text-muted-foreground text-sm">to</span>
+                <Input 
+                  type="date" 
+                  className="h-9 w-[130px] bg-background text-sm"
+                  value={adjEndDate}
+                  onChange={(e) => setAdjEndDate(e.target.value)}
+                  title="To Date"
+                />
+              </div>
+            </div>
+
             <div className="overflow-auto flex-1 custom-scrollbar">
               <table className="w-full text-left text-sm border-collapse min-w-[1000px]">
                 <thead className="sticky top-0 z-10 bg-white dark:bg-card">
                   <tr className="bg-secondary/40 text-muted-foreground text-xs uppercase tracking-wider border-b border-border">
                     <th className="px-4 py-3 font-semibold">Date</th>
-                    <th className="px-4 py-3 font-semibold">Medicine</th>
+                    <th className="px-4 py-3 font-semibold">Medicine Name</th>
                     <th className="px-4 py-3 font-semibold">Batch No.</th>
                     <th className="px-4 py-3 font-semibold text-center">Type</th>
-                    <th className="px-4 py-3 font-semibold text-center">Quantity</th>
+                    <th className="px-4 py-3 font-semibold text-right">Previous Qty</th>
+                    <th className="px-4 py-3 font-semibold text-right">Adjusted Qty</th>
+                    <th className="px-4 py-3 font-semibold text-right">New Qty</th>
                     <th className="px-4 py-3 font-semibold">Reason / Justification</th>
-                    <th className="px-4 py-3 font-semibold">Adjusted By</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
                   {loading ? (
-                    <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">Loading history...</td></tr>
-                  ) : adjustmentHistory.length === 0 ? (
-                    <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">No stock adjustments found.</td></tr>
+                    <tr><td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">Loading history...</td></tr>
+                  ) : pagedAdjHistory.length === 0 ? (
+                    <tr><td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">No stock adjustments found.</td></tr>
                   ) : (
-                    adjustmentHistory.map(adj => (
+                    pagedAdjHistory.map(adj => (
                       <tr key={adj.AdjustmentId} className="hover:bg-secondary/10 transition-colors">
                         <td className="px-4 py-3 text-muted-foreground">
                           {new Date(adj.AdjustmentDate).toLocaleString('en-GB', { day:'2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute:'2-digit' })}
@@ -905,22 +984,57 @@ export default function InventoryManagementPage() {
                         <td className="px-4 py-3 text-center">
                           <span className={cn(
                             "px-2 py-1 rounded-full text-[10px] font-bold uppercase",
-                            adj.AdjustmentType === "Increase" ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"
+                            adj.AdjustmentType === "Increase" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400" : "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-400"
                           )}>
                             {adj.AdjustmentType}
                           </span>
                         </td>
-                        <td className={cn("px-4 py-3 text-center font-bold", adj.AdjustmentType === "Increase" ? "text-emerald-600" : "text-rose-500")}>
+                        <td className="px-4 py-3 text-right text-muted-foreground">
+                          {adj.PreviousQuantity !== null && adj.PreviousQuantity !== undefined ? adj.PreviousQuantity : "—"}
+                        </td>
+                        <td className={cn("px-4 py-3 text-right font-bold", adj.AdjustmentType === "Increase" ? "text-emerald-600 dark:text-emerald-400" : "text-rose-500 dark:text-rose-400")}>
                           {adj.AdjustmentType === "Increase" ? "+" : "-"}{adj.Quantity}
                         </td>
+                        <td className="px-4 py-3 text-right font-semibold">
+                          {adj.NewQuantity !== null && adj.NewQuantity !== undefined ? adj.NewQuantity : "—"}
+                        </td>
                         <td className="px-4 py-3 text-muted-foreground max-w-[300px] truncate" title={adj.Reason}>{adj.Reason}</td>
-                        <td className="px-4 py-3 text-muted-foreground">{adj.UserName}</td>
                       </tr>
                     ))
                   )}
                 </tbody>
               </table>
             </div>
+
+            {/* Pagination */}
+            <div className="p-4 border-t border-border bg-slate-50/50 dark:bg-secondary/20 flex items-center justify-between text-sm">
+              <div className="text-muted-foreground">
+                Showing {Math.min((adjCurrentPage - 1) * adjPageSize + 1, filteredAdjHistory.length)}–
+                {Math.min(adjCurrentPage * adjPageSize, filteredAdjHistory.length)} of {filteredAdjHistory.length} records
+              </div>
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setAdjCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={adjCurrentPage === 1}
+                >
+                  Previous
+                </Button>
+                <div className="px-2 text-sm font-medium">
+                  Page {adjCurrentPage} of {totalAdjPages}
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setAdjCurrentPage(p => Math.min(totalAdjPages, p + 1))}
+                  disabled={adjCurrentPage >= totalAdjPages}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+
           </div>
         )}
 
@@ -1272,60 +1386,124 @@ export default function InventoryManagementPage() {
             </div>
             
             <div className="p-6 space-y-5">
+              {/* Batch Selection */}
               <div className="space-y-1.5">
                 <label className="text-sm font-semibold text-foreground">Select Batch <span className="text-rose-500">*</span></label>
-                <select 
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                  value={adjustData.BatchId}
-                  onChange={(e) => setAdjustData({...adjustData, BatchId: Number(e.target.value)})}
-                  disabled={!!(selectedBatch && selectedBatch.BatchId === adjustData.BatchId)}
-                >
-                  <option value={0}>-- Select Medicine Batch --</option>
-                  {stockList.map(batch => (
-                    <option key={batch.BatchId} value={batch.BatchId}>
-                      {batch.MedicineName} (Batch: {batch.BatchCode}) - Stock: {batch.CurrentStock}
-                    </option>
-                  ))}
-                </select>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
+                  <Input 
+                    list="batch-options"
+                    className="pl-9 h-10 font-medium bg-background"
+                    placeholder="Search by medicine or batch..."
+                    value={adjustBatchLabel}
+                    onChange={(e) => {
+                      setAdjustBatchLabel(e.target.value);
+                      const matched = stockList.find(b => `${b.MedicineName} (Batch: ${b.BatchCode})` === e.target.value);
+                      setAdjustData(prev => ({...prev, BatchId: matched ? matched.BatchId : 0}));
+                    }}
+                    disabled={!!(selectedBatch && selectedBatch.BatchId === adjustData.BatchId)}
+                  />
+                  <datalist id="batch-options">
+                    {stockList.filter(b => b.BatchId > 0).map(batch => (
+                      <option key={batch.BatchId} value={`${batch.MedicineName} (Batch: ${batch.BatchCode})`} />
+                    ))}
+                  </datalist>
+                </div>
+                {adjustData.BatchId > 0 && (
+                  <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 mt-1.5 ml-1">
+                    Current Available Stock: {stockList.find(b => b.BatchId === adjustData.BatchId)?.CurrentStock || 0} units
+                  </p>
+                )}
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              {/* Type and Quantity */}
+              <div className="grid grid-cols-2 gap-5">
                 <div className="space-y-1.5">
                   <label className="text-sm font-semibold text-foreground">Adjustment Type <span className="text-rose-500">*</span></label>
-                  <select 
-                    className={cn(
-                      "flex h-10 w-full rounded-md border border-input px-3 py-2 text-sm shadow-sm font-bold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
-                      adjustData.Type === "Increase" ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20" : "bg-rose-50 text-rose-700 dark:bg-rose-900/20"
-                    )}
-                    value={adjustData.Type}
-                    onChange={(e) => setAdjustData({...adjustData, Type: e.target.value})}
-                  >
-                    <option value="Decrease">Decrease (-)</option>
-                    <option value="Increase">Increase (+)</option>
-                  </select>
+                  <div className="flex h-10 bg-slate-100 dark:bg-secondary/40 p-1 rounded-md border border-border">
+                    <button 
+                      onClick={() => setAdjustData({...adjustData, Type: "Increase"})}
+                      className={cn(
+                        "flex-1 text-sm font-bold rounded flex items-center justify-center transition-all",
+                        adjustData.Type === "Increase" ? "bg-white dark:bg-card text-emerald-600 shadow-sm" : "text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      + Add Stock
+                    </button>
+                    <button 
+                      onClick={() => setAdjustData({...adjustData, Type: "Decrease"})}
+                      className={cn(
+                        "flex-1 text-sm font-bold rounded flex items-center justify-center transition-all",
+                        adjustData.Type === "Decrease" ? "bg-white dark:bg-card text-rose-600 shadow-sm" : "text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      - Deduct Stock
+                    </button>
+                  </div>
                 </div>
+                
                 <div className="space-y-1.5">
                   <label className="text-sm font-semibold text-foreground">Quantity <span className="text-rose-500">*</span></label>
                   <Input 
                     type="number" min="1"
                     placeholder="E.g. 5"
-                    className="h-10"
+                    className="h-10 bg-background"
                     value={adjustData.Quantity}
                     onChange={(e) => setAdjustData({...adjustData, Quantity: e.target.value})}
                   />
+                  {/* Dynamic Preview */}
+                  {adjustData.BatchId > 0 && adjustData.Quantity && !isNaN(Number(adjustData.Quantity)) && (
+                    <div className="text-[11px] font-medium bg-slate-50 dark:bg-secondary/30 border border-border p-2 rounded mt-2">
+                      <span className="text-muted-foreground">Preview: </span> 
+                      {(() => {
+                        const current = stockList.find(b => b.BatchId === adjustData.BatchId)?.CurrentStock || 0;
+                        const qty = Number(adjustData.Quantity) || 0;
+                        const resulting = adjustData.Type === "Increase" ? current + qty : current - qty;
+                        return (
+                          <span>
+                            {current} <span className="mx-1 text-muted-foreground">→</span> 
+                            <span className={cn("font-bold text-xs", resulting < 0 ? "text-rose-500" : "text-emerald-600")}>
+                              {resulting} units
+                            </span>
+                          </span>
+                        );
+                      })()}
+                    </div>
+                  )}
                 </div>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-sm font-semibold text-foreground">Written Justification Reason <span className="text-rose-500">*</span></label>
-                <textarea 
-                  className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring custom-scrollbar"
-                  placeholder="E.g. 2 bottles broken during transit, or 1 box found expired during stock count..."
-                  value={adjustData.Reason}
-                  onChange={(e) => setAdjustData({...adjustData, Reason: e.target.value})}
-                />
-                <p className="text-[11px] text-muted-foreground flex items-center gap-1 mt-1">
-                  <AlertTriangle className="h-3 w-3" />
+              {/* Justification & Notes */}
+              <div className="space-y-4 pt-2 border-t border-border">
+                <div className="space-y-1.5">
+                  <label className="text-sm font-semibold text-foreground">Justification Reason <span className="text-rose-500">*</span></label>
+                  <select 
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    value={adjustData.Reason}
+                    onChange={(e) => setAdjustData({...adjustData, Reason: e.target.value})}
+                  >
+                    <option value="">-- Select Reason --</option>
+                    <option value="Physical Count Mismatch">Physical Count Mismatch</option>
+                    <option value="Damaged / Broken in Store">Damaged / Broken in Store</option>
+                    <option value="Expired Scrap">Expired Scrap</option>
+                    <option value="Customer Return without Invoice">Customer Return without Invoice</option>
+                    <option value="Supplier Correction">Supplier Correction</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                
+                <div className="space-y-1.5">
+                  <label className="text-sm font-semibold text-foreground">Notes / Remarks <span className="text-muted-foreground font-normal">(Optional)</span></label>
+                  <Input 
+                    placeholder="Additional context for this adjustment..."
+                    className="h-10 bg-background"
+                    value={adjustData.Notes}
+                    onChange={(e) => setAdjustData({...adjustData, Notes: e.target.value})}
+                  />
+                </div>
+
+                <p className="text-[11px] text-muted-foreground flex items-center gap-1.5 pt-1">
+                  <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
                   This action generates a permanent immutable audit log entry.
                 </p>
               </div>

@@ -247,6 +247,8 @@ class StockAdjustment(Base):
     UserId = Column(Integer, ForeignKey("users.UserId"), nullable=False)
     AdjustmentType = Column(String(20), nullable=False) # 'Increase' or 'Decrease'
     Quantity = Column(Integer, nullable=False)
+    PreviousQuantity = Column(Integer, nullable=True)
+    NewQuantity = Column(Integer, nullable=True)
     Reason = Column(Text, nullable=False)
     AdjustmentDate = Column(DateTime, server_default=func.now())
 

@@ -82,7 +82,10 @@ export default function PurchasesPage() {
   
   // Invoice Info
   const [invoiceNo, setInvoiceNo] = useState(`PI-${new Date().getFullYear().toString().slice(-2)}${String(new Date().getMonth()+1).padStart(2, '0')}-${Math.floor(1000 + Math.random() * 9000)}`);
-  const [purchaseDate, setPurchaseDate] = useState(new Date().toISOString().split('T')[0]);
+  const [purchaseDate, setPurchaseDate] = useState(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  });
   const [supplierId, setSupplierId] = useState<number>(0);
   const [supplierInvNo, setSupplierInvNo] = useState("");
   const [paymentStatus, setPaymentStatus] = useState("Paid");

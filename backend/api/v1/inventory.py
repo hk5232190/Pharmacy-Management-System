@@ -87,13 +87,13 @@ def get_stock_list(
     current_user = Depends(get_current_user)
 ):
     try:
-        # Base query joining necessary tables
+        # Base query joining necessary tables, starting from Medicine to include out of stock ones
         query = db.query(
+            Medicine,
             StockBatch, 
-            Medicine, 
             Category, 
             Company
-        ).join(Medicine, StockBatch.MedicineId == Medicine.MedicineId)\
+        ).outerjoin(StockBatch, Medicine.MedicineId == StockBatch.MedicineId)\
          .outerjoin(Category, Medicine.CategoryId == Category.CategoryId)\
          .outerjoin(Company, Medicine.CompanyId == Company.CompanyId)
         
@@ -116,20 +116,18 @@ def get_stock_list(
         results = query.order_by(desc(StockBatch.ReceivedDate)).limit(limit).all()
         
         formatted_data = []
-        for batch, med, cat, comp in results:
-            
-            # Fetch Supplier Name from recent purchase item matching this batch
-            # This is a bit heavy in a loop, but ok for small datasets.
-            pi = db.query(PurchaseItem).join(Purchase, PurchaseItem.PurchaseId == Purchase.PurchaseId)\
-                .filter(PurchaseItem.BatchCode == batch.BatchCode, PurchaseItem.MedicineId == batch.MedicineId)\
-                .order_by(desc(Purchase.PurchaseDate)).first()
+        for med, batch, cat, comp in results:
             
             supplier_name = "Unknown"
-            if pi and pi.purchase and pi.purchase.supplier:
-                supplier_name = pi.purchase.supplier.Name
+            if batch:
+                pi = db.query(PurchaseItem).join(Purchase, PurchaseItem.PurchaseId == Purchase.PurchaseId)\
+                    .filter(PurchaseItem.BatchCode == batch.BatchCode, PurchaseItem.MedicineId == batch.MedicineId)\
+                    .order_by(desc(Purchase.PurchaseDate)).first()
+                if pi and pi.purchase and pi.purchase.supplier:
+                    supplier_name = pi.purchase.supplier.Name
 
             # Determine Status
-            current_stock = batch.Quantity
+            current_stock = batch.Quantity if batch else 0
             min_stock = med.ReorderLevel
             max_stock = (med.ReorderLevel * 3) if med.ReorderLevel > 0 else None
             
@@ -146,23 +144,23 @@ def get_stock_list(
                 continue 
                 
             formatted_data.append({
-                "BatchId": batch.BatchId,
+                "BatchId": batch.BatchId if batch else -med.MedicineId,
                 "MedicineId": med.MedicineId,
                 "CodeBarcode": med.Barcode or f"MED{med.MedicineId:05d}",
                 "MedicineName": med.BrandName,
                 "CategoryName": cat.CategoryName if cat else "Unknown",
                 "CompanyName": comp.CompanyName if comp else "Unknown",
                 "SupplierName": supplier_name,
-                "BatchCode": batch.BatchCode,
+                "BatchCode": batch.BatchCode if batch else "—",
                 "RackNumber": med.RackNumber or "—",
-                "ExpiryDate": batch.ExpiryDate,
-                "PurchasePrice": float(batch.CostPrice),
-                "SellingPrice": float(batch.SellingPrice),
-                "CurrentStock": batch.Quantity,
+                "ExpiryDate": batch.ExpiryDate if batch else None,
+                "PurchasePrice": float(batch.CostPrice) if batch else 0.0,
+                "SellingPrice": float(batch.SellingPrice) if batch else 0.0,
+                "CurrentStock": current_stock,
                 "MinStock": med.ReorderLevel,
                 "Status": med_status,
-                "StockValue": float(batch.Quantity * batch.CostPrice),
-                "LastPurchaseDate": batch.ReceivedDate,
+                "StockValue": float(current_stock * batch.CostPrice) if batch else 0.0,
+                "LastPurchaseDate": batch.ReceivedDate if batch else None,
                 "LastSaleDate": None
             })
             
@@ -187,11 +185,15 @@ def adjust_stock(
         if adjustment_in.AdjustmentType == "Decrease" and batch.Quantity < adjustment_in.Quantity:
             raise HTTPException(status_code=400, detail=f"Cannot decrease {adjustment_in.Quantity} units. Only {batch.Quantity} in stock.")
 
+        previous_qty = batch.Quantity
+
         # Perform Adjustment
         if adjustment_in.AdjustmentType == "Increase":
             batch.Quantity += adjustment_in.Quantity
         else:
             batch.Quantity -= adjustment_in.Quantity
+            
+        new_qty = batch.Quantity
 
         # Log in StockAdjustments
         new_adj = StockAdjustment(
@@ -199,6 +201,8 @@ def adjust_stock(
             UserId=current_user.UserId,
             AdjustmentType=adjustment_in.AdjustmentType,
             Quantity=adjustment_in.Quantity,
+            PreviousQuantity=previous_qty,
+            NewQuantity=new_qty,
             Reason=adjustment_in.Reason
         )
         db.add(new_adj)
@@ -239,6 +243,8 @@ def get_adjustments(
                 "BatchCode": adj.batch.BatchCode if adj.batch else "Unknown",
                 "AdjustmentType": adj.AdjustmentType,
                 "Quantity": adj.Quantity,
+                "PreviousQuantity": adj.PreviousQuantity,
+                "NewQuantity": adj.NewQuantity,
                 "Reason": adj.Reason,
                 "AdjustmentDate": adj.AdjustmentDate,
                 "UserName": adj.user.FullName if adj.user else "Unknown"
