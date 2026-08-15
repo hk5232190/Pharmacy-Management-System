@@ -17,9 +17,7 @@ import {
   Eye,
   Edit,
   History,
-  X,
-  ArrowUpRight,
-  ArrowDownRight
+  X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -131,6 +129,19 @@ export default function InventoryManagementPage() {
   const [selectedBatch, setSelectedBatch] = useState<StockBatch | null>(null);
   const [isAdjustModalOpen, setIsAdjustModalOpen] = useState(false);
   const [adjustData, setAdjustData] = useState({ BatchId: 0, Type: "Decrease", Quantity: "", Reason: "" });
+
+  // F2 global shortcut → open Stock Adjustment modal
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "F2") {
+        e.preventDefault();
+        openAdjustmentModal();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -264,6 +275,12 @@ export default function InventoryManagementPage() {
     window.print();
   };
 
+  // Navigate to Movement History tab and pre-fill batch filter
+  const goToHistoryForBatch = (batchCode: string) => {
+    setMovBatchFilter(batchCode);
+    setActiveTab("history");
+  };
+
   const tabs = [
     { id: "current", label: "Current Stock" },
     { id: "adjustments", label: "Stock Adjustments" },
@@ -287,55 +304,13 @@ export default function InventoryManagementPage() {
 
         {/* KPI Cards */}
         <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-7 gap-4 mb-8">
-          <KPICard 
-            title="Total Medicines" 
-            value={summary.total_medicines} 
-            icon={<Pill className="h-5 w-5 text-blue-500" />} 
-            trend="up" trendValue="18 this month" 
-            bgColor="bg-blue-50 dark:bg-blue-900/20" 
-          />
-          <KPICard 
-            title="Total Stock Qty" 
-            value={summary.total_stock_quantity.toLocaleString()} 
-            icon={<Package className="h-5 w-5 text-emerald-500" />} 
-            trend="up" trendValue="12% vs last month" 
-            bgColor="bg-emerald-50 dark:bg-emerald-900/20" 
-          />
-          <KPICard 
-            title="Inventory Value" 
-            value={`Rs ${summary.inventory_value.toLocaleString(undefined, {minimumFractionDigits: 2})}`} 
-            icon={<CircleDollarSign className="h-5 w-5 text-purple-500" />} 
-            trend="up" trendValue="15% vs last month" 
-            bgColor="bg-purple-50 dark:bg-purple-900/20" 
-          />
-          <KPICard 
-            title="Low Stock" 
-            value={summary.low_stock_items} 
-            icon={<AlertTriangle className="h-5 w-5 text-orange-500" />} 
-            trend="down" trendValue="5 vs last month" 
-            bgColor="bg-orange-50 dark:bg-orange-900/20" 
-          />
-          <KPICard 
-            title="Expiring" 
-            value={summary.expiring_medicines} 
-            icon={<CalendarDays className="h-5 w-5 text-amber-500" />} 
-            trend="down" trendValue="3 vs last month" 
-            bgColor="bg-amber-50 dark:bg-amber-900/20" 
-          />
-          <KPICard 
-            title="Overstock" 
-            value={summary.overstock_items} 
-            icon={<Package className="h-5 w-5 text-indigo-500" />} 
-            trend="up" trendValue="2 vs last month" 
-            bgColor="bg-indigo-50 dark:bg-indigo-900/20" 
-          />
-          <KPICard 
-            title="Out of Stock" 
-            value={summary.out_of_stock_medicines} 
-            icon={<Box className="h-5 w-5 text-rose-500" />} 
-            trend="down" trendValue="4 vs last month" 
-            bgColor="bg-rose-50 dark:bg-rose-900/20" 
-          />
+          <KPICard title="Total Medicines"  value={summary.total_medicines}                                                              icon={<Pill           className="h-6 w-6" />} accent="blue"    />
+          <KPICard title="Total Stock Qty"  value={summary.total_stock_quantity.toLocaleString()}                                       icon={<Package        className="h-6 w-6" />} accent="emerald" />
+          <KPICard title="Inventory Value"  value={`Rs ${summary.inventory_value.toLocaleString(undefined, {minimumFractionDigits: 2})}`} icon={<CircleDollarSign className="h-6 w-6" />} accent="purple"  />
+          <KPICard title="Low Stock"        value={summary.low_stock_items}                                                              icon={<AlertTriangle  className="h-6 w-6" />} accent="orange"  />
+          <KPICard title="Expiring (90d)"   value={summary.expiring_medicines}                                                           icon={<CalendarDays   className="h-6 w-6" />} accent="amber"   />
+          <KPICard title="Overstock"        value={summary.overstock_items}                                                              icon={<Package        className="h-6 w-6" />} accent="indigo"  />
+          <KPICard title="Out of Stock"     value={summary.out_of_stock_medicines}                                                       icon={<Box            className="h-6 w-6" />} accent="rose"    />
         </div>
 
         {/* Tabs & Actions */}
@@ -514,7 +489,11 @@ export default function InventoryManagementPage() {
                               <button className="p-1.5 text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-md transition-colors">
                                 <Edit className="h-4 w-4" />
                               </button>
-                              <button className="p-1.5 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors">
+                              <button
+                                title="View stock movement history for this batch"
+                                onClick={() => goToHistoryForBatch(item.BatchCode)}
+                                className="p-1.5 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors"
+                              >
                                 <History className="h-4 w-4" />
                               </button>
                             </div>
@@ -912,7 +891,11 @@ export default function InventoryManagementPage() {
             <Button onClick={() => openAdjustmentModal(selectedBatch)} className="w-full bg-blue-600 hover:bg-blue-700 text-white">
               <Edit className="h-4 w-4 mr-2" /> Adjust Stock
             </Button>
-            <Button variant="outline" className="w-full bg-white dark:bg-card">
+            <Button
+              variant="outline"
+              className="w-full bg-white dark:bg-card"
+              onClick={() => selectedBatch && goToHistoryForBatch(selectedBatch.BatchCode)}
+            >
               <History className="h-4 w-4 mr-2" /> View History
             </Button>
           </div>
@@ -1015,28 +998,33 @@ export default function InventoryManagementPage() {
   );
 }
 
-// Subcomponent for KPI Cards
-function KPICard({ title, value, icon, trend, trendValue, bgColor }: any) {
+// Accent colour map for KPI Cards
+const accentMap: Record<string, { border: string; icon: string; text: string; bg: string }> = {
+  blue:    { border: "border-l-blue-500",    icon: "text-blue-500",    text: "text-blue-600 dark:text-blue-400",    bg: "bg-blue-50 dark:bg-blue-900/20" },
+  emerald: { border: "border-l-emerald-500", icon: "text-emerald-500", text: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-900/20" },
+  purple:  { border: "border-l-purple-500",  icon: "text-purple-500",  text: "text-purple-600 dark:text-purple-400",  bg: "bg-purple-50 dark:bg-purple-900/20" },
+  orange:  { border: "border-l-orange-500",  icon: "text-orange-500",  text: "text-orange-600 dark:text-orange-400",  bg: "bg-orange-50 dark:bg-orange-900/20" },
+  amber:   { border: "border-l-amber-500",   icon: "text-amber-500",   text: "text-amber-600 dark:text-amber-400",   bg: "bg-amber-50 dark:bg-amber-900/20" },
+  indigo:  { border: "border-l-indigo-500",  icon: "text-indigo-500",  text: "text-indigo-600 dark:text-indigo-400",  bg: "bg-indigo-50 dark:bg-indigo-900/20" },
+  rose:    { border: "border-l-rose-500",    icon: "text-rose-500",    text: "text-rose-600 dark:text-rose-400",    bg: "bg-rose-50 dark:bg-rose-900/20" },
+};
+
+// High-contrast KPI Card — no trend subtitles, strong colour accents
+function KPICard({ title, value, icon, accent = "blue" }: { title: string; value: string | number; icon: React.ReactNode; accent?: string }) {
+  const a = accentMap[accent] ?? accentMap.blue;
   return (
-    <div className="bg-white dark:bg-card rounded-xl border border-border shadow-sm p-4 flex flex-col justify-between">
-      <div className="flex justify-between items-start mb-2">
-        <h3 className="text-sm font-medium text-muted-foreground">{title}</h3>
-        <div className={cn("p-2 rounded-lg", bgColor)}>
-          {icon}
-        </div>
+    <div className={cn(
+      "relative bg-white dark:bg-card rounded-xl border border-border border-l-4 shadow-sm p-4 flex flex-col gap-3 overflow-hidden transition-shadow hover:shadow-md",
+      a.border
+    )}>
+      {/* Icon */}
+      <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center shrink-0", a.bg)}>
+        <span className={a.icon}>{icon}</span>
       </div>
+      {/* Metric */}
       <div>
-        <div className="text-2xl font-bold text-foreground mb-1">{value}</div>
-        <div className="flex items-center text-xs font-medium">
-          {trend === "up" ? (
-            <ArrowUpRight className="h-3.5 w-3.5 text-emerald-500 mr-1" />
-          ) : (
-            <ArrowDownRight className="h-3.5 w-3.5 text-rose-500 mr-1" />
-          )}
-          <span className={trend === "up" ? "text-emerald-500" : "text-rose-500"}>
-            {trendValue}
-          </span>
-        </div>
+        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-0.5">{title}</p>
+        <p className={cn("text-2xl font-extrabold leading-none tabular-nums", a.text)}>{value}</p>
       </div>
     </div>
   );
