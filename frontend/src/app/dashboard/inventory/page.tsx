@@ -124,6 +124,8 @@ export default function InventoryManagementPage() {
   // Filters
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
+  const [categoryFilter, setCategoryFilter] = useState("All");
+  const [companyFilter, setCompanyFilter] = useState("All");
   
   // Movement Filters
   const [movBatchFilter, setMovBatchFilter] = useState("");
@@ -143,13 +145,25 @@ export default function InventoryManagementPage() {
   // Premium refresh state: 'idle' | 'loading' | 'done'
   const [refreshState, setRefreshState] = useState<"idle" | "loading" | "done">("idle");
 
+  // Client-side filtering for Category & Company
+  const filteredStockList = stockList.filter(item => {
+    if (categoryFilter !== "All" && item.CategoryName !== categoryFilter) return false;
+    if (companyFilter !== "All" && item.CompanyName !== companyFilter) return false;
+    return true;
+  });
+
+  // Unique lists for dropdowns
+  const uniqueCategories = Array.from(new Set(stockList.map(i => i.CategoryName))).filter(Boolean).sort();
+  const uniqueCompanies = Array.from(new Set(stockList.map(i => i.CompanyName))).filter(Boolean).sort();
+
   // Current Stock pagination
   const [stockPageSize, setStockPageSize] = useState(10);
   const [stockCurrentPage, setStockCurrentPage] = useState(1);
-  const totalStockPages = Math.max(1, Math.ceil(stockList.length / stockPageSize));
-  const pagedStockList = stockList.slice((stockCurrentPage - 1) * stockPageSize, stockCurrentPage * stockPageSize);
-  // Reset to page 1 whenever list or page size changes
-  useEffect(() => { setStockCurrentPage(1); }, [stockList.length, stockPageSize]);
+  const totalStockPages = Math.max(1, Math.ceil(filteredStockList.length / stockPageSize));
+  const pagedStockList = filteredStockList.slice((stockCurrentPage - 1) * stockPageSize, stockCurrentPage * stockPageSize);
+  
+  // Reset to page 1 whenever filtered list or page size changes
+  useEffect(() => { setStockCurrentPage(1); }, [filteredStockList.length, stockPageSize]);
 
   // F2 global shortcut → open Stock Adjustment modal
   useEffect(() => {
@@ -642,11 +656,25 @@ export default function InventoryManagementPage() {
               </div>
               
               <div className="flex items-center gap-2 ml-auto">
-                <select className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+                <select 
+                  className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring max-w-[200px]"
+                  value={categoryFilter}
+                  onChange={(e) => setCategoryFilter(e.target.value)}
+                >
                   <option value="All">Category: All</option>
+                  {uniqueCategories.map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
                 </select>
-                <select className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+                <select 
+                  className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring max-w-[200px]"
+                  value={companyFilter}
+                  onChange={(e) => setCompanyFilter(e.target.value)}
+                >
                   <option value="All">Company: All</option>
+                  {uniqueCompanies.map(comp => (
+                    <option key={comp} value={comp}>{comp}</option>
+                  ))}
                 </select>
                 <select 
                   className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
@@ -685,8 +713,8 @@ export default function InventoryManagementPage() {
                 </thead>
                 <tbody className="divide-y divide-border">
                   {loading ? (
-                    <tr><td colSpan={14} className="px-4 py-8 text-center text-muted-foreground">Loading inventory...</td></tr>
-                  ) : stockList.length === 0 ? (
+                    <tr><td colSpan={14} className="px-4 py-8 text-center text-muted-foreground">Loading stock data...</td></tr>
+                  ) : filteredStockList.length === 0 ? (
                     <tr><td colSpan={14} className="px-4 py-8 text-center text-muted-foreground">No stock batches found.</td></tr>
                   ) : (
                     pagedStockList.map((item, idx) => {
@@ -801,7 +829,7 @@ export default function InventoryManagementPage() {
               </div>
               <div className="flex items-center gap-4">
                 <span>
-                  Showing {stockList.length === 0 ? 0 : (stockCurrentPage - 1) * stockPageSize + 1}–{Math.min(stockList.length, stockCurrentPage * stockPageSize)} of {stockList.length}
+                  Showing {filteredStockList.length === 0 ? 0 : (stockCurrentPage - 1) * stockPageSize + 1}–{Math.min(filteredStockList.length, stockCurrentPage * stockPageSize)} of {filteredStockList.length}
                 </span>
                 <div className="flex items-center gap-1">
                   <Button
