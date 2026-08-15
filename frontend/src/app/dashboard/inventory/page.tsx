@@ -44,6 +44,7 @@ interface StockBatch {
   CompanyName: string;
   SupplierName: string;
   BatchCode: string;
+  RackNumber: string;
   ExpiryDate: string;
   PurchasePrice: number;
   SellingPrice: number;
@@ -413,72 +414,114 @@ export default function InventoryManagementPage() {
                 <thead className="sticky top-0 z-10 bg-white dark:bg-card">
                   <tr className="bg-secondary/40 text-muted-foreground text-xs uppercase tracking-wider border-b border-border">
                     <th className="px-4 py-3 font-semibold">#</th>
-                    <th className="px-4 py-3 font-semibold">Code / Barcode</th>
+                    <th className="px-4 py-3 font-semibold min-w-[140px]">Code / Barcode</th>
                     <th className="px-4 py-3 font-semibold">Medicine Name</th>
                     <th className="px-4 py-3 font-semibold">Category</th>
+                    <th className="px-4 py-3 font-semibold">Rack / Shelf</th>
                     <th className="px-4 py-3 font-semibold">Company</th>
                     <th className="px-4 py-3 font-semibold">Batch No.</th>
                     <th className="px-4 py-3 font-semibold">Expiry Date</th>
                     <th className="px-4 py-3 font-semibold text-right">Pur. Price</th>
                     <th className="px-4 py-3 font-semibold text-right">Sell. Price</th>
-                    <th className="px-4 py-3 font-semibold text-center">Current Stock</th>
-                    <th className="px-4 py-3 font-semibold text-center">Min. Stock</th>
-                    <th className="px-4 py-3 font-semibold text-center">Status</th>
+                    <th className="px-4 py-3 font-semibold text-right">Current Stock</th>
+                    <th className="px-4 py-3 font-semibold text-right">Min. Stock</th>
+                    <th className="px-4 py-3 font-semibold">Status</th>
                     <th className="px-4 py-3 font-semibold text-center">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
                   {loading ? (
-                    <tr><td colSpan={13} className="px-4 py-8 text-center text-muted-foreground">Loading inventory...</td></tr>
+                    <tr><td colSpan={14} className="px-4 py-8 text-center text-muted-foreground">Loading inventory...</td></tr>
                   ) : stockList.length === 0 ? (
-                    <tr><td colSpan={13} className="px-4 py-8 text-center text-muted-foreground">No stock batches found.</td></tr>
+                    <tr><td colSpan={14} className="px-4 py-8 text-center text-muted-foreground">No stock batches found.</td></tr>
                   ) : (
-                    stockList.map((item, idx) => (
-                      <tr key={item.BatchId} className="hover:bg-secondary/10 transition-colors">
-                        <td className="px-4 py-3 text-muted-foreground">{idx + 1}</td>
-                        <td className="px-4 py-3 font-mono text-xs">{item.CodeBarcode}</td>
-                        <td className="px-4 py-3 font-semibold text-foreground">{item.MedicineName}</td>
-                        <td className="px-4 py-3 text-muted-foreground">{item.CategoryName}</td>
-                        <td className="px-4 py-3 text-muted-foreground">{item.CompanyName}</td>
-                        <td className="px-4 py-3 font-mono text-xs text-primary">{item.BatchCode}</td>
-                        <td className="px-4 py-3">
-                          <span className={cn(
-                            "font-medium", 
-                            new Date(item.ExpiryDate) < new Date() ? "text-rose-500" : "text-emerald-600"
-                          )}>
-                            {new Date(item.ExpiryDate).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-right">Rs {item.PurchasePrice.toFixed(2)}</td>
-                        <td className="px-4 py-3 text-right">Rs {item.SellingPrice.toFixed(2)}</td>
-                        <td className="px-4 py-3 text-center font-bold">{item.CurrentStock}</td>
-                        <td className="px-4 py-3 text-center text-muted-foreground">{item.MinStock}</td>
-                        <td className="px-4 py-3 text-center">
-                          <span className={cn(
-                            "px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap",
-                            item.Status === "In Stock" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" :
-                            item.Status === "Overstock" ? "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400" :
-                            item.Status === "Low Stock" ? "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400" :
-                            "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400"
-                          )}>
-                            {item.Status}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-center">
-                          <div className="flex items-center justify-center gap-2">
-                            <button onClick={() => setSelectedBatch(item)} className="p-1.5 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-md transition-colors">
-                              <Eye className="h-4 w-4" />
-                            </button>
-                            <button className="p-1.5 text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-md transition-colors">
-                              <Edit className="h-4 w-4" />
-                            </button>
-                            <button className="p-1.5 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors">
-                              <History className="h-4 w-4" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
+                    stockList.map((item, idx) => {
+                      const today = new Date();
+                      today.setHours(0, 0, 0, 0);
+                      const expiryDate = new Date(item.ExpiryDate);
+                      expiryDate.setHours(0, 0, 0, 0);
+                      const daysToExpiry = Math.ceil((expiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+                      const isExpired = daysToExpiry < 0;
+                      const isNearExpiry = !isExpired && daysToExpiry <= 90;
+
+                      return (
+                        <tr key={item.BatchId} className={cn(
+                          "transition-colors",
+                          isExpired
+                            ? "bg-rose-50/40 hover:bg-rose-100/50 dark:bg-rose-950/10 dark:hover:bg-rose-900/20"
+                            : isNearExpiry
+                            ? "bg-amber-50/30 hover:bg-amber-100/40 dark:bg-amber-950/10 dark:hover:bg-amber-900/20"
+                            : "hover:bg-secondary/10"
+                        )}>
+                          <td className="px-4 py-3 text-muted-foreground">{idx + 1}</td>
+                          <td className="px-4 py-3 font-mono text-xs min-w-[140px]">{item.CodeBarcode}</td>
+                          <td className="px-4 py-3 font-semibold text-foreground">{item.MedicineName}</td>
+                          <td className="px-4 py-3 text-muted-foreground">{item.CategoryName}</td>
+                          <td className="px-4 py-3">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-slate-100 dark:bg-secondary/60 text-xs font-mono text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-border">
+                              {item.RackNumber || "—"}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-muted-foreground">{item.CompanyName}</td>
+                          <td className="px-4 py-3 font-mono text-xs text-primary">{item.BatchCode}</td>
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-1.5 whitespace-nowrap">
+                              <span
+                                title={isExpired ? "This batch has expired" : isNearExpiry ? `Expires in ${daysToExpiry} day${daysToExpiry === 1 ? "" : "s"}` : ""}
+                                className={cn(
+                                  "font-semibold text-xs",
+                                  isExpired
+                                    ? "text-rose-600 dark:text-rose-400"
+                                    : isNearExpiry
+                                    ? "text-amber-600 dark:text-amber-400"
+                                    : "text-slate-600 dark:text-slate-300"
+                                )}
+                              >
+                                {expiryDate.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
+                              </span>
+                              {isExpired && (
+                                <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-400 border border-rose-200 dark:border-rose-800">
+                                  Expired
+                                </span>
+                              )}
+                              {isNearExpiry && (
+                                <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400 border border-amber-200 dark:border-amber-800">
+                                  Near Expiry
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 text-right tabular-nums">Rs {item.PurchasePrice.toFixed(2)}</td>
+                          <td className="px-4 py-3 text-right tabular-nums">Rs {item.SellingPrice.toFixed(2)}</td>
+                          <td className="px-4 py-3 text-right font-bold tabular-nums">{item.CurrentStock}</td>
+                          <td className="px-4 py-3 text-right text-muted-foreground tabular-nums">{item.MinStock}</td>
+                          <td className="px-4 py-3">
+                            <span className={cn(
+                              "px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap",
+                              item.Status === "In Stock" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" :
+                              item.Status === "Overstock" ? "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400" :
+                              item.Status === "Low Stock" ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" :
+                              "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400"
+                            )}>
+                              {item.Status}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <div className="flex items-center justify-center gap-2">
+                              <button onClick={() => setSelectedBatch(item)} className="p-1.5 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-md transition-colors">
+                                <Eye className="h-4 w-4" />
+                              </button>
+                              <button className="p-1.5 text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-md transition-colors">
+                                <Edit className="h-4 w-4" />
+                              </button>
+                              <button className="p-1.5 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors">
+                                <History className="h-4 w-4" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
                   )}
                 </tbody>
               </table>
@@ -811,11 +854,29 @@ export default function InventoryManagementPage() {
                 <div className="flex justify-between"><span className="text-muted-foreground">Category</span> <span className="font-medium text-right">{selectedBatch.CategoryName}</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Company</span> <span className="font-medium text-right">{selectedBatch.CompanyName}</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Supplier</span> <span className="font-medium text-right">{selectedBatch.SupplierName}</span></div>
+                <div className="flex justify-between items-center"><span className="text-muted-foreground">Rack / Shelf</span>
+                  <span className="font-mono text-xs bg-slate-100 dark:bg-secondary/60 border border-slate-200 dark:border-border px-2 py-0.5 rounded">{selectedBatch.RackNumber || "—"}</span>
+                </div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Batch Number</span> <span className="font-mono text-xs bg-secondary/50 px-2 py-0.5 rounded">{selectedBatch.BatchCode}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Expiry Date</span> 
-                  <span className={cn("font-semibold", new Date(selectedBatch.ExpiryDate) < new Date() ? "text-rose-500" : "text-emerald-600")}>
-                    {new Date(selectedBatch.ExpiryDate).toLocaleDateString('en-GB', { day:'2-digit', month: 'short', year: 'numeric' })}
-                  </span>
+                <div className="flex justify-between items-center"><span className="text-muted-foreground">Expiry Date</span>
+                  <div className="flex items-center gap-1.5">
+                    {(() => {
+                      const today = new Date(); today.setHours(0,0,0,0);
+                      const exp = new Date(selectedBatch.ExpiryDate); exp.setHours(0,0,0,0);
+                      const days = Math.ceil((exp.getTime() - today.getTime()) / 86400000);
+                      const expired = days < 0;
+                      const near = !expired && days <= 90;
+                      return (
+                        <>
+                          <span className={cn("font-semibold text-sm", expired ? "text-rose-600 dark:text-rose-400" : near ? "text-amber-600 dark:text-amber-400" : "text-emerald-600 dark:text-emerald-400")}>
+                            {exp.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
+                          </span>
+                          {expired && <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-400 border border-rose-200 dark:border-rose-800">Expired</span>}
+                          {near && <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400 border border-amber-200 dark:border-amber-800">Near Expiry</span>}
+                        </>
+                      );
+                    })()}
+                  </div>
                 </div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Purchase Price</span> <span className="font-medium">Rs {selectedBatch.PurchasePrice.toFixed(2)}</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Selling Price</span> <span className="font-medium">Rs {selectedBatch.SellingPrice.toFixed(2)}</span></div>

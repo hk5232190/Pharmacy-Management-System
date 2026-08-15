@@ -129,15 +129,18 @@ def get_stock_list(
                 supplier_name = pi.purchase.supplier.Name
 
             # Determine Status
-            total_med_qty = db.query(func.sum(StockBatch.Quantity)).filter(StockBatch.MedicineId == med.MedicineId).scalar() or 0
+            current_stock = batch.Quantity
+            min_stock = med.ReorderLevel
+            max_stock = (med.ReorderLevel * 3) if med.ReorderLevel > 0 else None
             
-            med_status = "In Stock"
-            if total_med_qty == 0:
+            if current_stock <= 0:
                 med_status = "Out of Stock"
-            elif total_med_qty <= med.ReorderLevel:
+            elif current_stock > 0 and current_stock <= min_stock:
                 med_status = "Low Stock"
-            elif total_med_qty > (med.ReorderLevel * 3) and med.ReorderLevel > 0:
+            elif max_stock is not None and current_stock > max_stock:
                 med_status = "Overstock"
+            else:
+                med_status = "In Stock"
                 
             if status and status != "All" and med_status != status:
                 continue 
@@ -151,6 +154,7 @@ def get_stock_list(
                 "CompanyName": comp.CompanyName if comp else "Unknown",
                 "SupplierName": supplier_name,
                 "BatchCode": batch.BatchCode,
+                "RackNumber": med.RackNumber or "—",
                 "ExpiryDate": batch.ExpiryDate,
                 "PurchasePrice": float(batch.CostPrice),
                 "SellingPrice": float(batch.SellingPrice),
