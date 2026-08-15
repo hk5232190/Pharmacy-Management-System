@@ -16,11 +16,13 @@ from core.logger import logger
 
 router = APIRouter()
 
-@router.get("", response_model=BaseResponse[List[MedicineResponse]], summary="Get all medicines")
+@router.get("", summary="Get all medicines")
 def get_medicines(
     search: str = Query(None, description="Search by name, generic name, or barcode"),
     category_id: int = Query(None, description="Filter by CategoryId"),
     company_id: int = Query(None, description="Filter by CompanyId"),
+    page: int = Query(1, ge=1, description="Page number"),
+    page_size: int = Query(25, ge=0, description="Items per page. 0 for all."),
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
@@ -29,19 +31,37 @@ def get_medicines(
               .outerjoin(Company, Medicine.CompanyId == Company.CompanyId)
     
     if search:
-        query = query.filter(
-            or_(
-                Medicine.BrandName.ilike(f"%{search}%"),
-                Medicine.GenericName.ilike(f"%{search}%"),
-                Medicine.Barcode.ilike(f"%{search}%")
-            )
-        )
+        search_term = search.strip()
+        search_id = None
+        if search_term.upper().startswith("MED-"):
+            id_part = search_term[4:].lstrip("0")
+            if id_part.isdigit():
+                search_id = int(id_part)
+        elif search_term.isdigit():
+            search_id = int(search_term)
+            
+        conditions = [
+            Medicine.BrandName.ilike(f"%{search_term}%"),
+            Medicine.GenericName.ilike(f"%{search_term}%"),
+            Medicine.Barcode.ilike(f"%{search_term}%")
+        ]
+        if search_id is not None:
+            conditions.append(Medicine.MedicineId == search_id)
+            
+        query = query.filter(or_(*conditions))
     if category_id:
         query = query.filter(Medicine.CategoryId == category_id)
     if company_id:
         query = query.filter(Medicine.CompanyId == company_id)
         
-    results = query.order_by(Medicine.BrandName).all()
+    total = query.count()
+    
+    if page_size > 0:
+        query = query.order_by(Medicine.BrandName).offset((page - 1) * page_size).limit(page_size)
+    else:
+        query = query.order_by(Medicine.BrandName)
+        
+    results = query.all()
     
     medicines_list = []
     for med, cat_name, comp_name in results:
@@ -50,7 +70,7 @@ def get_medicines(
         med_dict["CompanyName"] = comp_name
         medicines_list.append(med_dict)
         
-    return {"data": medicines_list}
+    return {"success": True, "data": medicines_list, "total": total, "page": page, "page_size": page_size}
 
 @router.post("", response_model=BaseResponse[MedicineResponse], summary="Create a new medicine")
 def create_medicine(
@@ -97,14 +117,14 @@ def export_medicines(db: Session = Depends(get_db), current_user = Depends(get_c
     writer.writerow([
         "BrandName", "GenericName", "CategoryId", "CompanyId", 
         "RackNumber", "ReorderLevel", "RequiresPrescription", 
-        "Unit", "Barcode", "DefaultCostPrice", "DefaultSellingPrice"
+        "Unit", "DosageForm", "Strength", "Barcode", "DefaultCostPrice", "DefaultSellingPrice"
     ])
     
     for med in medicines:
         writer.writerow([
             med.BrandName, med.GenericName, med.CategoryId, med.CompanyId,
             med.RackNumber or "", med.ReorderLevel, int(med.RequiresPrescription),
-            med.Unit, med.Barcode or "", med.DefaultCostPrice, med.DefaultSellingPrice
+            med.Unit, med.DosageForm or "", med.Strength or "", med.Barcode or "", med.DefaultCostPrice, med.DefaultSellingPrice
         ])
         
     return Response(
@@ -142,6 +162,8 @@ def import_medicines(
                 ReorderLevel=int(row.get("ReorderLevel", 10)),
                 RequiresPrescription=bool(int(row.get("RequiresPrescription", 0))),
                 Unit=row.get("Unit", "Box"),
+                DosageForm=row.get("DosageForm") or None,
+                Strength=row.get("Strength") or None,
                 Barcode=row.get("Barcode") or None,
                 DefaultCostPrice=float(row.get("DefaultCostPrice", 0)),
                 DefaultSellingPrice=float(row.get("DefaultSellingPrice", 0))

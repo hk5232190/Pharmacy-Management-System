@@ -20,7 +20,8 @@ class Category(Base):
     __tablename__ = "categories"
 
     CategoryId = Column(Integer, primary_key=True, autoincrement=True)
-    CategoryName = Column(String(50), unique=True, nullable=False)
+    CategoryName = Column(String(100), unique=True, index=True, nullable=False)
+    Description = Column(String(255), nullable=True)
     IsActive = Column(Boolean, default=True)
 
     medicines = relationship("Medicine", back_populates="category")
@@ -29,7 +30,10 @@ class Company(Base):
     __tablename__ = "companies"
 
     CompanyId = Column(Integer, primary_key=True, autoincrement=True)
-    CompanyName = Column(String(100), unique=True, nullable=False)
+    CompanyName = Column(String(100), unique=True, index=True, nullable=False)
+    ContactPerson = Column(String(100), nullable=True)
+    Phone = Column(String(50), nullable=True)
+    Address = Column(String(255), nullable=True)
     IsActive = Column(Boolean, default=True)
 
     medicines = relationship("Medicine", back_populates="company")
@@ -46,6 +50,8 @@ class Medicine(Base):
     ReorderLevel = Column(Integer, default=10, nullable=False)
     RequiresPrescription = Column(Boolean, default=False)
     Unit = Column(String(50), nullable=False, default="Box")
+    DosageForm = Column(String(50), nullable=True)
+    Strength = Column(String(50), nullable=True)
     Barcode = Column(String(100), unique=True, nullable=True)
     DefaultCostPrice = Column(Numeric(18, 2), nullable=False, default=0)
     DefaultSellingPrice = Column(Numeric(18, 2), nullable=False, default=0)
@@ -68,6 +74,8 @@ class Supplier(Base):
     Phone = Column(String(20), nullable=False)
     TaxNumber = Column(String(100), nullable=True)
     Address = Column(Text, nullable=True)
+    ContactPerson = Column(String(100), nullable=True)
+    CurrentBalance = Column(Numeric(10, 2), default=0.0)
     IsActive = Column(Boolean, default=True)
 
     purchases = relationship("Purchase", back_populates="supplier")
@@ -142,7 +150,9 @@ class Customer(Base):
     CustomerId = Column(Integer, primary_key=True, autoincrement=True)
     Name = Column(String(100), nullable=False)
     Phone = Column(String(20), nullable=True)
+    Address = Column(Text, nullable=True)
     LoyaltyPoints = Column(Integer, default=0, nullable=False)
+    DueBalance = Column(Numeric(10, 2), default=0.0)
     IsActive = Column(Boolean, default=True)
 
     sales = relationship("Sale", back_populates="customer")

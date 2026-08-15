@@ -14,9 +14,12 @@ from core.logger import logger
 
 router = APIRouter()
 
-@router.get("", response_model=BaseResponse[List[SupplierResponse]], summary="Get all suppliers")
+@router.get("", summary="Get all suppliers")
 def get_suppliers(
     search: str = Query(None, description="Search by supplier name, phone, or tax number"),
+    status: str = Query(None, description="Filter by status (active/inactive)"),
+    page: int = Query(1, ge=1, description="Page number"),
+    page_size: int = Query(25, ge=0, description="Items per page. 0 for all."),
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
@@ -31,8 +34,20 @@ def get_suppliers(
             )
         )
         
-    suppliers = query.order_by(Supplier.Name).all()
-    return {"data": suppliers}
+    if status and status.lower() != 'all':
+        is_active = status.lower() == 'active'
+        query = query.filter(Supplier.IsActive == is_active)
+        
+    total = query.count()
+    
+    if page_size > 0:
+        query = query.order_by(Supplier.Name).offset((page - 1) * page_size).limit(page_size)
+    else:
+        query = query.order_by(Supplier.Name)
+        
+    suppliers = query.all()
+    
+    return {"success": True, "data": suppliers, "total": total, "page": page, "page_size": page_size}
 
 @router.post("", response_model=BaseResponse[SupplierResponse], summary="Create a new supplier")
 def create_supplier(
@@ -49,6 +64,8 @@ def create_supplier(
         Phone=supplier_in.Phone,
         TaxNumber=supplier_in.TaxNumber,
         Address=supplier_in.Address,
+        ContactPerson=supplier_in.ContactPerson,
+        CurrentBalance=supplier_in.CurrentBalance,
         IsActive=supplier_in.IsActive
     )
     db.add(new_supplier)
@@ -82,6 +99,10 @@ def update_supplier(
         supplier.TaxNumber = supplier_in.TaxNumber
     if supplier_in.Address is not None:
         supplier.Address = supplier_in.Address
+    if supplier_in.ContactPerson is not None:
+        supplier.ContactPerson = supplier_in.ContactPerson
+    if supplier_in.CurrentBalance is not None:
+        supplier.CurrentBalance = supplier_in.CurrentBalance
     if supplier_in.IsActive is not None:
         supplier.IsActive = supplier_in.IsActive
         

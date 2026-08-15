@@ -27,6 +27,8 @@ interface Medicine {
   ReorderLevel: number;
   RequiresPrescription: boolean;
   Unit: string;
+  DosageForm?: string;
+  Strength?: string;
   Barcode?: string;
   DefaultCostPrice: number;
   DefaultSellingPrice: number;
@@ -43,6 +45,9 @@ export default function MedicinesPage() {
   const [search, setSearch] = useState("");
   const [filterCategory, setFilterCategory] = useState<number | "">("");
   const [filterCompany, setFilterCompany] = useState<number | "">("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
+  const [totalRecords, setTotalRecords] = useState(0);
   
   // Delete State
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -71,7 +76,7 @@ export default function MedicinesPage() {
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [currentMedicine, setCurrentMedicine] = useState<Partial<Medicine>>({
     BrandName: "", GenericName: "", CategoryId: 0, CompanyId: 0, RackNumber: "",
-    ReorderLevel: 10, RequiresPrescription: false, Unit: "Box", Barcode: "",
+    ReorderLevel: 10, RequiresPrescription: false, Unit: "Box", DosageForm: "", Strength: "", Barcode: "",
     DefaultCostPrice: 0, DefaultSellingPrice: 0, IsActive: true
   });
   const [isSaving, setIsSaving] = useState(false);
@@ -79,7 +84,7 @@ export default function MedicinesPage() {
   const fetchMedicines = async () => {
     setLoading(true);
     try {
-      const params: any = {};
+      const params: any = { page, page_size: pageSize };
       if (search) params.search = search;
       if (filterCategory) params.category_id = filterCategory.toString();
       if (filterCompany) params.company_id = filterCompany.toString();
@@ -87,6 +92,7 @@ export default function MedicinesPage() {
       const data = await apiClient.get("/medicines", { params });
       if (data.success) {
         setMedicines(data.data);
+        setTotalRecords(data.total || 0);
         setSelectedIds(new Set());
       }
       
@@ -109,7 +115,14 @@ export default function MedicinesPage() {
       fetchMedicines();
     }, 300);
     return () => clearTimeout(timer);
+  }, [search, filterCategory, filterCompany, page, pageSize]);
+
+  // Reset page to 1 when filters change
+  useEffect(() => {
+    setPage(1);
   }, [search, filterCategory, filterCompany]);
+
+  // Removed Keyboard shortcut for Add New per user request
 
   const handleToggleStatus = async (id: number) => {
     try {
@@ -364,33 +377,33 @@ export default function MedicinesPage() {
                 </TableRow>
               ) : (
                 medicines.map((med, idx) => (
-                  <TableRow key={med.MedicineId} className="hover:bg-secondary/30 transition-colors">
-                    <TableCell className="text-center">
+                  <TableRow key={med.MedicineId} className="hover:bg-secondary/50 transition-colors h-14">
+                    <TableCell className="text-center py-3">
                       <Checkbox
                         checked={selectedIds.has(med.MedicineId)}
                         onCheckedChange={() => toggleSelect(med.MedicineId)}
                       />
                     </TableCell>
-                    <TableCell className="text-center text-[13px] text-muted-foreground font-medium">{idx + 1}</TableCell>
-                    <TableCell className="font-mono text-[13px] text-muted-foreground">
+                    <TableCell className="text-center py-3 text-[#111827] dark:text-gray-200 font-medium text-[14px]">{idx + 1}</TableCell>
+                    <TableCell className="py-3 font-mono text-[14px] font-semibold text-[#111827] dark:text-gray-200">
                       MED-{med.MedicineId.toString().padStart(4, '0')}
                     </TableCell>
-                    <TableCell className="font-medium text-foreground">
+                    <TableCell className="py-3 font-bold text-[#111827] dark:text-white text-[15px]">
                       {med.BrandName}
                     </TableCell>
-                    <TableCell className="text-muted-foreground text-[13px]">
+                    <TableCell className="py-3 text-[#111827] dark:text-gray-200 text-[14px] font-medium">
                       {med.GenericName}
                     </TableCell>
-                    <TableCell className="text-muted-foreground text-[13px]">
+                    <TableCell className="py-3 text-[#111827] dark:text-gray-200 text-[14px] font-medium">
                       {med.CategoryName || "—"}
                     </TableCell>
-                    <TableCell className="text-muted-foreground text-[13px]">
+                    <TableCell className="py-3 text-[#111827] dark:text-gray-200 text-[14px] font-medium">
                       {med.CompanyName || "—"}
                     </TableCell>
-                    <TableCell className="text-muted-foreground text-[13px]">
+                    <TableCell className="py-3 text-[#111827] dark:text-gray-200 text-[14px] font-medium">
                       {med.Unit}
                     </TableCell>
-                    <TableCell className="text-center">
+                    <TableCell className="text-center py-3">
                       <button 
                         onClick={() => handleToggleStatus(med.MedicineId)}
                         className={cn(
@@ -416,6 +429,52 @@ export default function MedicinesPage() {
             </TableBody>
           </Table>
         </div>
+
+        {/* Bottom Pagination */}
+        {!loading && totalRecords > 0 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-4 px-2 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <span>Rows per page:</span>
+              <select
+                className="h-8 rounded-md border border-input bg-background px-2 py-1 focus:outline-none focus:ring-2 focus:ring-ring"
+                value={pageSize}
+                onChange={(e) => {
+                  setPageSize(Number(e.target.value));
+                  setPage(1);
+                }}
+              >
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+            </div>
+            <div className="flex items-center gap-4">
+              <span>
+                Showing {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, totalRecords)} of {totalRecords}
+              </span>
+              <div className="flex items-center gap-1">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="h-8 px-2" 
+                  disabled={page === 1}
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                >
+                  Prev
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="h-8 px-2" 
+                  disabled={page * pageSize >= totalRecords}
+                  onClick={() => setPage(p => p + 1)}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -491,6 +550,35 @@ export default function MedicinesPage() {
                 <option value="Injection">Injection</option>
                 <option value="Pieces">Pieces</option>
               </select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-foreground">Dosage Form</label>
+              <select 
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                value={currentMedicine.DosageForm || ""}
+                onChange={e => setCurrentMedicine({...currentMedicine, DosageForm: e.target.value})}
+              >
+                <option value="">Select Type</option>
+                <option value="Tablet">Tablet</option>
+                <option value="Capsule">Capsule</option>
+                <option value="Syrup">Syrup</option>
+                <option value="Injection">Injection</option>
+                <option value="Cream">Cream</option>
+                <option value="Drops">Drops</option>
+                <option value="Ointment">Ointment</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-foreground">Strength</label>
+              <Input 
+                value={currentMedicine.Strength || ""}
+                onChange={e => setCurrentMedicine({...currentMedicine, Strength: e.target.value})}
+                placeholder="e.g. 500mg, 10ml"
+                className="h-10"
+              />
             </div>
 
             <div className="space-y-2">
@@ -676,7 +764,7 @@ export default function MedicinesPage() {
               <p className="text-sm">{currentMedicine.GenericName}</p>
             </div>
             
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4 border-t border-border pt-2">
               <div className="space-y-1">
                 <p className="text-sm font-medium text-muted-foreground">Category</p>
                 <p className="text-sm">{currentMedicine.CategoryName}</p>
@@ -684,6 +772,17 @@ export default function MedicinesPage() {
               <div className="space-y-1">
                 <p className="text-sm font-medium text-muted-foreground">Company</p>
                 <p className="text-sm">{currentMedicine.CompanyName}</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 pt-1">
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-muted-foreground">Dosage Form</p>
+                <p className="text-sm">{currentMedicine.DosageForm || "—"}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-muted-foreground">Strength</p>
+                <p className="text-sm">{currentMedicine.Strength || "—"}</p>
               </div>
             </div>
             
@@ -703,6 +802,7 @@ export default function MedicinesPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
     </div>
   );
 }

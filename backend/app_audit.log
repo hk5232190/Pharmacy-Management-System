@@ -272,3 +272,215 @@ NoneType: None
 2026-08-14 16:05:11,506 - apscheduler.scheduler - INFO - Scheduler started
 2026-08-14 16:51:36,607 - pms - INFO - Starting Pharmacy Management System backend...
 2026-08-14 16:51:36,682 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-15 10:44:07,040 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-15 10:44:07,088 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-15 12:49:36,474 - pms - ERROR - PMSException caught: Session expired. Please log in again. (status: 401) | Path: /api/v1/suppliers
+2026-08-15 12:49:36,480 - pms - ERROR - PMSException caught: Session expired. Please log in again. (status: 401) | Path: /api/v1/customers
+2026-08-15 12:49:36,481 - pms - ERROR - PMSException caught: Session expired. Please log in again. (status: 401) | Path: /api/v1/medicines
+2026-08-15 12:49:36,481 - pms - ERROR - PMSException caught: Session expired. Please log in again. (status: 401) | Path: /api/v1/companies
+2026-08-15 12:49:36,481 - pms - ERROR - PMSException caught: Session expired. Please log in again. (status: 401) | Path: /api/v1/categories
+2026-08-15 12:49:36,496 - pms - ERROR - PMSException caught: Session expired. Please log in again. (status: 401) | Path: /api/v1/auth/me
+2026-08-15 13:00:29,375 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-15 13:00:29,391 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-15 13:11:59,076 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-15 13:11:59,098 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-15 13:13:00,464 - pms - INFO - AUDIT: User admin exported 5 categories to CSV.
+2026-08-15 13:13:06,545 - pms - INFO - AUDIT: User admin exported 5 companies to CSV.
+2026-08-15 13:13:13,365 - pms - INFO - AUDIT: User admin exported 5 suppliers to CSV.
+2026-08-15 13:13:17,901 - pms - INFO - AUDIT: User admin exported 5 customers to CSV.
+2026-08-15 13:15:21,638 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-15 13:15:21,673 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-15 13:30:26,861 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-15 13:30:26,907 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-15 13:33:30,744 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-15 13:33:30,790 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-15 13:41:07,837 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-15 13:41:07,854 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-15 13:47:08,836 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-15 13:47:08,850 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-15 13:53:08,137 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-15 13:53:08,155 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-15 13:55:16,081 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-15 13:55:16,179 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-15 13:59:55,390 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-15 13:59:55,407 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-15 14:00:07,752 - pms - ERROR - Unhandled Exception caught: (sqlite3.OperationalError) no such column: suppliers.Email
+[SQL: SELECT count(*) AS count_1 
+FROM (SELECT suppliers."SupplierId" AS "suppliers_SupplierId", suppliers."Name" AS "suppliers_Name", suppliers."Phone" AS "suppliers_Phone", suppliers."Email" AS "suppliers_Email", suppliers."Address" AS "suppliers_Address", suppliers."ContactPerson" AS "suppliers_ContactPerson", suppliers."CurrentBalance" AS "suppliers_CurrentBalance", suppliers."IsActive" AS "suppliers_IsActive" 
+FROM suppliers) AS anon_1]
+(Background on this error at: https://sqlalche.me/e/20/e3q8) | Path: /api/v1/suppliers
+NoneType: None
+2026-08-15 14:00:08,817 - pms - ERROR - Unhandled Exception caught: (sqlite3.OperationalError) no such column: suppliers.Email
+[SQL: SELECT count(*) AS count_1 
+FROM (SELECT suppliers."SupplierId" AS "suppliers_SupplierId", suppliers."Name" AS "suppliers_Name", suppliers."Phone" AS "suppliers_Phone", suppliers."Email" AS "suppliers_Email", suppliers."Address" AS "suppliers_Address", suppliers."ContactPerson" AS "suppliers_ContactPerson", suppliers."CurrentBalance" AS "suppliers_CurrentBalance", suppliers."IsActive" AS "suppliers_IsActive" 
+FROM suppliers) AS anon_1]
+(Background on this error at: https://sqlalche.me/e/20/e3q8) | Path: /api/v1/suppliers
+NoneType: None
+2026-08-15 14:00:08,819 - pms - ERROR - Unhandled Exception caught: (sqlite3.OperationalError) no such column: suppliers.Email
+[SQL: SELECT count(*) AS count_1 
+FROM (SELECT suppliers."SupplierId" AS "suppliers_SupplierId", suppliers."Name" AS "suppliers_Name", suppliers."Phone" AS "suppliers_Phone", suppliers."Email" AS "suppliers_Email", suppliers."Address" AS "suppliers_Address", suppliers."ContactPerson" AS "suppliers_ContactPerson", suppliers."CurrentBalance" AS "suppliers_CurrentBalance", suppliers."IsActive" AS "suppliers_IsActive" 
+FROM suppliers) AS anon_1]
+(Background on this error at: https://sqlalche.me/e/20/e3q8) | Path: /api/v1/suppliers
+NoneType: None
+2026-08-15 14:00:08,905 - pms - ERROR - Unhandled Exception caught: (sqlite3.OperationalError) no such column: suppliers.Email
+[SQL: SELECT count(*) AS count_1 
+FROM (SELECT suppliers."SupplierId" AS "suppliers_SupplierId", suppliers."Name" AS "suppliers_Name", suppliers."Phone" AS "suppliers_Phone", suppliers."Email" AS "suppliers_Email", suppliers."Address" AS "suppliers_Address", suppliers."ContactPerson" AS "suppliers_ContactPerson", suppliers."CurrentBalance" AS "suppliers_CurrentBalance", suppliers."IsActive" AS "suppliers_IsActive" 
+FROM suppliers) AS anon_1]
+(Background on this error at: https://sqlalche.me/e/20/e3q8) | Path: /api/v1/suppliers
+NoneType: None
+2026-08-15 14:00:08,961 - pms - ERROR - Unhandled Exception caught: (sqlite3.OperationalError) no such column: suppliers.Email
+[SQL: SELECT count(*) AS count_1 
+FROM (SELECT suppliers."SupplierId" AS "suppliers_SupplierId", suppliers."Name" AS "suppliers_Name", suppliers."Phone" AS "suppliers_Phone", suppliers."Email" AS "suppliers_Email", suppliers."Address" AS "suppliers_Address", suppliers."ContactPerson" AS "suppliers_ContactPerson", suppliers."CurrentBalance" AS "suppliers_CurrentBalance", suppliers."IsActive" AS "suppliers_IsActive" 
+FROM suppliers) AS anon_1]
+(Background on this error at: https://sqlalche.me/e/20/e3q8) | Path: /api/v1/suppliers
+NoneType: None
+2026-08-15 14:00:13,228 - pms - ERROR - Unhandled Exception caught: (sqlite3.OperationalError) no such column: suppliers.Email
+[SQL: SELECT count(*) AS count_1 
+FROM (SELECT suppliers."SupplierId" AS "suppliers_SupplierId", suppliers."Name" AS "suppliers_Name", suppliers."Phone" AS "suppliers_Phone", suppliers."Email" AS "suppliers_Email", suppliers."Address" AS "suppliers_Address", suppliers."ContactPerson" AS "suppliers_ContactPerson", suppliers."CurrentBalance" AS "suppliers_CurrentBalance", suppliers."IsActive" AS "suppliers_IsActive" 
+FROM suppliers) AS anon_1]
+(Background on this error at: https://sqlalche.me/e/20/e3q8) | Path: /api/v1/suppliers
+NoneType: None
+2026-08-15 14:00:13,306 - pms - ERROR - Unhandled Exception caught: (sqlite3.OperationalError) no such column: suppliers.Email
+[SQL: SELECT count(*) AS count_1 
+FROM (SELECT suppliers."SupplierId" AS "suppliers_SupplierId", suppliers."Name" AS "suppliers_Name", suppliers."Phone" AS "suppliers_Phone", suppliers."Email" AS "suppliers_Email", suppliers."Address" AS "suppliers_Address", suppliers."ContactPerson" AS "suppliers_ContactPerson", suppliers."CurrentBalance" AS "suppliers_CurrentBalance", suppliers."IsActive" AS "suppliers_IsActive" 
+FROM suppliers) AS anon_1]
+(Background on this error at: https://sqlalche.me/e/20/e3q8) | Path: /api/v1/suppliers
+NoneType: None
+2026-08-15 14:00:13,386 - pms - ERROR - Unhandled Exception caught: (sqlite3.OperationalError) no such column: suppliers.Email
+[SQL: SELECT count(*) AS count_1 
+FROM (SELECT suppliers."SupplierId" AS "suppliers_SupplierId", suppliers."Name" AS "suppliers_Name", suppliers."Phone" AS "suppliers_Phone", suppliers."Email" AS "suppliers_Email", suppliers."Address" AS "suppliers_Address", suppliers."ContactPerson" AS "suppliers_ContactPerson", suppliers."CurrentBalance" AS "suppliers_CurrentBalance", suppliers."IsActive" AS "suppliers_IsActive" 
+FROM suppliers) AS anon_1]
+(Background on this error at: https://sqlalche.me/e/20/e3q8) | Path: /api/v1/suppliers
+NoneType: None
+2026-08-15 14:00:13,450 - pms - ERROR - Unhandled Exception caught: (sqlite3.OperationalError) no such column: suppliers.Email
+[SQL: SELECT count(*) AS count_1 
+FROM (SELECT suppliers."SupplierId" AS "suppliers_SupplierId", suppliers."Name" AS "suppliers_Name", suppliers."Phone" AS "suppliers_Phone", suppliers."Email" AS "suppliers_Email", suppliers."Address" AS "suppliers_Address", suppliers."ContactPerson" AS "suppliers_ContactPerson", suppliers."CurrentBalance" AS "suppliers_CurrentBalance", suppliers."IsActive" AS "suppliers_IsActive" 
+FROM suppliers) AS anon_1]
+(Background on this error at: https://sqlalche.me/e/20/e3q8) | Path: /api/v1/suppliers
+NoneType: None
+2026-08-15 14:00:13,508 - pms - ERROR - Unhandled Exception caught: (sqlite3.OperationalError) no such column: suppliers.Email
+[SQL: SELECT count(*) AS count_1 
+FROM (SELECT suppliers."SupplierId" AS "suppliers_SupplierId", suppliers."Name" AS "suppliers_Name", suppliers."Phone" AS "suppliers_Phone", suppliers."Email" AS "suppliers_Email", suppliers."Address" AS "suppliers_Address", suppliers."ContactPerson" AS "suppliers_ContactPerson", suppliers."CurrentBalance" AS "suppliers_CurrentBalance", suppliers."IsActive" AS "suppliers_IsActive" 
+FROM suppliers) AS anon_1]
+(Background on this error at: https://sqlalche.me/e/20/e3q8) | Path: /api/v1/suppliers
+NoneType: None
+2026-08-15 14:00:13,968 - pms - ERROR - Unhandled Exception caught: (sqlite3.OperationalError) no such column: suppliers.Email
+[SQL: SELECT count(*) AS count_1 
+FROM (SELECT suppliers."SupplierId" AS "suppliers_SupplierId", suppliers."Name" AS "suppliers_Name", suppliers."Phone" AS "suppliers_Phone", suppliers."Email" AS "suppliers_Email", suppliers."Address" AS "suppliers_Address", suppliers."ContactPerson" AS "suppliers_ContactPerson", suppliers."CurrentBalance" AS "suppliers_CurrentBalance", suppliers."IsActive" AS "suppliers_IsActive" 
+FROM suppliers 
+WHERE suppliers."IsActive" = 1) AS anon_1]
+(Background on this error at: https://sqlalche.me/e/20/e3q8) | Path: /api/v1/dashboard/summary
+NoneType: None
+2026-08-15 14:00:14,013 - pms - ERROR - Unhandled Exception caught: (sqlite3.OperationalError) no such column: suppliers.Email
+[SQL: SELECT count(*) AS count_1 
+FROM (SELECT suppliers."SupplierId" AS "suppliers_SupplierId", suppliers."Name" AS "suppliers_Name", suppliers."Phone" AS "suppliers_Phone", suppliers."Email" AS "suppliers_Email", suppliers."Address" AS "suppliers_Address", suppliers."ContactPerson" AS "suppliers_ContactPerson", suppliers."CurrentBalance" AS "suppliers_CurrentBalance", suppliers."IsActive" AS "suppliers_IsActive" 
+FROM suppliers 
+WHERE suppliers."IsActive" = 1) AS anon_1]
+(Background on this error at: https://sqlalche.me/e/20/e3q8) | Path: /api/v1/dashboard/summary
+NoneType: None
+2026-08-15 14:00:15,487 - pms - ERROR - Unhandled Exception caught: (sqlite3.OperationalError) no such column: suppliers.Email
+[SQL: SELECT count(*) AS count_1 
+FROM (SELECT suppliers."SupplierId" AS "suppliers_SupplierId", suppliers."Name" AS "suppliers_Name", suppliers."Phone" AS "suppliers_Phone", suppliers."Email" AS "suppliers_Email", suppliers."Address" AS "suppliers_Address", suppliers."ContactPerson" AS "suppliers_ContactPerson", suppliers."CurrentBalance" AS "suppliers_CurrentBalance", suppliers."IsActive" AS "suppliers_IsActive" 
+FROM suppliers 
+WHERE suppliers."IsActive" = 1) AS anon_1]
+(Background on this error at: https://sqlalche.me/e/20/e3q8) | Path: /api/v1/dashboard/summary
+NoneType: None
+2026-08-15 14:00:15,538 - pms - ERROR - Unhandled Exception caught: (sqlite3.OperationalError) no such column: suppliers.Email
+[SQL: SELECT count(*) AS count_1 
+FROM (SELECT suppliers."SupplierId" AS "suppliers_SupplierId", suppliers."Name" AS "suppliers_Name", suppliers."Phone" AS "suppliers_Phone", suppliers."Email" AS "suppliers_Email", suppliers."Address" AS "suppliers_Address", suppliers."ContactPerson" AS "suppliers_ContactPerson", suppliers."CurrentBalance" AS "suppliers_CurrentBalance", suppliers."IsActive" AS "suppliers_IsActive" 
+FROM suppliers 
+WHERE suppliers."IsActive" = 1) AS anon_1]
+(Background on this error at: https://sqlalche.me/e/20/e3q8) | Path: /api/v1/dashboard/summary
+NoneType: None
+2026-08-15 14:00:18,620 - pms - ERROR - Unhandled Exception caught: (sqlite3.OperationalError) no such column: suppliers.Email
+[SQL: SELECT count(*) AS count_1 
+FROM (SELECT suppliers."SupplierId" AS "suppliers_SupplierId", suppliers."Name" AS "suppliers_Name", suppliers."Phone" AS "suppliers_Phone", suppliers."Email" AS "suppliers_Email", suppliers."Address" AS "suppliers_Address", suppliers."ContactPerson" AS "suppliers_ContactPerson", suppliers."CurrentBalance" AS "suppliers_CurrentBalance", suppliers."IsActive" AS "suppliers_IsActive" 
+FROM suppliers 
+WHERE suppliers."IsActive" = 1) AS anon_1]
+(Background on this error at: https://sqlalche.me/e/20/e3q8) | Path: /api/v1/dashboard/summary
+NoneType: None
+2026-08-15 14:00:18,669 - pms - ERROR - Unhandled Exception caught: (sqlite3.OperationalError) no such column: suppliers.Email
+[SQL: SELECT count(*) AS count_1 
+FROM (SELECT suppliers."SupplierId" AS "suppliers_SupplierId", suppliers."Name" AS "suppliers_Name", suppliers."Phone" AS "suppliers_Phone", suppliers."Email" AS "suppliers_Email", suppliers."Address" AS "suppliers_Address", suppliers."ContactPerson" AS "suppliers_ContactPerson", suppliers."CurrentBalance" AS "suppliers_CurrentBalance", suppliers."IsActive" AS "suppliers_IsActive" 
+FROM suppliers 
+WHERE suppliers."IsActive" = 1) AS anon_1]
+(Background on this error at: https://sqlalche.me/e/20/e3q8) | Path: /api/v1/dashboard/summary
+NoneType: None
+2026-08-15 14:00:35,711 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-15 14:00:35,729 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-15 14:00:37,349 - pms - ERROR - Unhandled Exception caught: (sqlite3.OperationalError) no such column: suppliers.Email
+[SQL: SELECT count(*) AS count_1 
+FROM (SELECT suppliers."SupplierId" AS "suppliers_SupplierId", suppliers."Name" AS "suppliers_Name", suppliers."Phone" AS "suppliers_Phone", suppliers."Email" AS "suppliers_Email", suppliers."Address" AS "suppliers_Address", suppliers."ContactPerson" AS "suppliers_ContactPerson", suppliers."CurrentBalance" AS "suppliers_CurrentBalance", suppliers."IsActive" AS "suppliers_IsActive" 
+FROM suppliers 
+WHERE suppliers."IsActive" = 1) AS anon_1]
+(Background on this error at: https://sqlalche.me/e/20/e3q8) | Path: /api/v1/dashboard/summary
+NoneType: None
+2026-08-15 14:00:37,413 - pms - ERROR - Unhandled Exception caught: (sqlite3.OperationalError) no such column: suppliers.Email
+[SQL: SELECT count(*) AS count_1 
+FROM (SELECT suppliers."SupplierId" AS "suppliers_SupplierId", suppliers."Name" AS "suppliers_Name", suppliers."Phone" AS "suppliers_Phone", suppliers."Email" AS "suppliers_Email", suppliers."Address" AS "suppliers_Address", suppliers."ContactPerson" AS "suppliers_ContactPerson", suppliers."CurrentBalance" AS "suppliers_CurrentBalance", suppliers."IsActive" AS "suppliers_IsActive" 
+FROM suppliers 
+WHERE suppliers."IsActive" = 1) AS anon_1]
+(Background on this error at: https://sqlalche.me/e/20/e3q8) | Path: /api/v1/dashboard/summary
+NoneType: None
+2026-08-15 14:00:39,445 - pms - ERROR - Unhandled Exception caught: (sqlite3.OperationalError) no such column: suppliers.Email
+[SQL: SELECT count(*) AS count_1 
+FROM (SELECT suppliers."SupplierId" AS "suppliers_SupplierId", suppliers."Name" AS "suppliers_Name", suppliers."Phone" AS "suppliers_Phone", suppliers."Email" AS "suppliers_Email", suppliers."Address" AS "suppliers_Address", suppliers."ContactPerson" AS "suppliers_ContactPerson", suppliers."CurrentBalance" AS "suppliers_CurrentBalance", suppliers."IsActive" AS "suppliers_IsActive" 
+FROM suppliers 
+WHERE suppliers."IsActive" = 1) AS anon_1]
+(Background on this error at: https://sqlalche.me/e/20/e3q8) | Path: /api/v1/dashboard/summary
+NoneType: None
+2026-08-15 14:00:39,499 - pms - ERROR - Unhandled Exception caught: (sqlite3.OperationalError) no such column: suppliers.Email
+[SQL: SELECT count(*) AS count_1 
+FROM (SELECT suppliers."SupplierId" AS "suppliers_SupplierId", suppliers."Name" AS "suppliers_Name", suppliers."Phone" AS "suppliers_Phone", suppliers."Email" AS "suppliers_Email", suppliers."Address" AS "suppliers_Address", suppliers."ContactPerson" AS "suppliers_ContactPerson", suppliers."CurrentBalance" AS "suppliers_CurrentBalance", suppliers."IsActive" AS "suppliers_IsActive" 
+FROM suppliers 
+WHERE suppliers."IsActive" = 1) AS anon_1]
+(Background on this error at: https://sqlalche.me/e/20/e3q8) | Path: /api/v1/dashboard/summary
+NoneType: None
+2026-08-15 14:00:42,391 - pms - ERROR - Unhandled Exception caught: (sqlite3.OperationalError) no such column: suppliers.Email
+[SQL: SELECT count(*) AS count_1 
+FROM (SELECT suppliers."SupplierId" AS "suppliers_SupplierId", suppliers."Name" AS "suppliers_Name", suppliers."Phone" AS "suppliers_Phone", suppliers."Email" AS "suppliers_Email", suppliers."Address" AS "suppliers_Address", suppliers."ContactPerson" AS "suppliers_ContactPerson", suppliers."CurrentBalance" AS "suppliers_CurrentBalance", suppliers."IsActive" AS "suppliers_IsActive" 
+FROM suppliers) AS anon_1]
+(Background on this error at: https://sqlalche.me/e/20/e3q8) | Path: /api/v1/suppliers
+NoneType: None
+2026-08-15 14:00:42,474 - pms - ERROR - Unhandled Exception caught: (sqlite3.OperationalError) no such column: suppliers.Email
+[SQL: SELECT suppliers."SupplierId" AS "suppliers_SupplierId", suppliers."Name" AS "suppliers_Name", suppliers."Phone" AS "suppliers_Phone", suppliers."Email" AS "suppliers_Email", suppliers."Address" AS "suppliers_Address", suppliers."ContactPerson" AS "suppliers_ContactPerson", suppliers."CurrentBalance" AS "suppliers_CurrentBalance", suppliers."IsActive" AS "suppliers_IsActive" 
+FROM suppliers 
+WHERE suppliers."SupplierId" = ?]
+[parameters: (5,)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8) | Path: /api/v1/purchases
+NoneType: None
+2026-08-15 14:00:42,670 - pms - ERROR - Unhandled Exception caught: (sqlite3.OperationalError) no such column: suppliers.Email
+[SQL: SELECT count(*) AS count_1 
+FROM (SELECT suppliers."SupplierId" AS "suppliers_SupplierId", suppliers."Name" AS "suppliers_Name", suppliers."Phone" AS "suppliers_Phone", suppliers."Email" AS "suppliers_Email", suppliers."Address" AS "suppliers_Address", suppliers."ContactPerson" AS "suppliers_ContactPerson", suppliers."CurrentBalance" AS "suppliers_CurrentBalance", suppliers."IsActive" AS "suppliers_IsActive" 
+FROM suppliers 
+WHERE suppliers."IsActive" = 1) AS anon_1]
+(Background on this error at: https://sqlalche.me/e/20/e3q8) | Path: /api/v1/purchases/summary
+NoneType: None
+2026-08-15 14:00:42,713 - pms - ERROR - Unhandled Exception caught: (sqlite3.OperationalError) no such column: suppliers.Email
+[SQL: SELECT count(*) AS count_1 
+FROM (SELECT suppliers."SupplierId" AS "suppliers_SupplierId", suppliers."Name" AS "suppliers_Name", suppliers."Phone" AS "suppliers_Phone", suppliers."Email" AS "suppliers_Email", suppliers."Address" AS "suppliers_Address", suppliers."ContactPerson" AS "suppliers_ContactPerson", suppliers."CurrentBalance" AS "suppliers_CurrentBalance", suppliers."IsActive" AS "suppliers_IsActive" 
+FROM suppliers) AS anon_1]
+(Background on this error at: https://sqlalche.me/e/20/e3q8) | Path: /api/v1/suppliers
+NoneType: None
+2026-08-15 14:00:42,759 - pms - ERROR - Unhandled Exception caught: (sqlite3.OperationalError) no such column: suppliers.Email
+[SQL: SELECT suppliers."SupplierId" AS "suppliers_SupplierId", suppliers."Name" AS "suppliers_Name", suppliers."Phone" AS "suppliers_Phone", suppliers."Email" AS "suppliers_Email", suppliers."Address" AS "suppliers_Address", suppliers."ContactPerson" AS "suppliers_ContactPerson", suppliers."CurrentBalance" AS "suppliers_CurrentBalance", suppliers."IsActive" AS "suppliers_IsActive" 
+FROM suppliers 
+WHERE suppliers."SupplierId" = ?]
+[parameters: (5,)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8) | Path: /api/v1/purchases
+NoneType: None
+2026-08-15 14:00:42,793 - pms - ERROR - Unhandled Exception caught: (sqlite3.OperationalError) no such column: suppliers.Email
+[SQL: SELECT count(*) AS count_1 
+FROM (SELECT suppliers."SupplierId" AS "suppliers_SupplierId", suppliers."Name" AS "suppliers_Name", suppliers."Phone" AS "suppliers_Phone", suppliers."Email" AS "suppliers_Email", suppliers."Address" AS "suppliers_Address", suppliers."ContactPerson" AS "suppliers_ContactPerson", suppliers."CurrentBalance" AS "suppliers_CurrentBalance", suppliers."IsActive" AS "suppliers_IsActive" 
+FROM suppliers 
+WHERE suppliers."IsActive" = 1) AS anon_1]
+(Background on this error at: https://sqlalche.me/e/20/e3q8) | Path: /api/v1/purchases/summary
+NoneType: None
+2026-08-15 14:01:38,250 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-15 14:01:38,305 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-15 14:05:27,429 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-15 14:05:27,465 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-15 14:12:56,334 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-15 14:12:56,425 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-15 14:17:02,986 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-15 14:17:03,013 - apscheduler.scheduler - INFO - Scheduler started

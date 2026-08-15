@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional
 from datetime import datetime
 
@@ -7,7 +7,7 @@ class PharmacyProfileBase(BaseModel):
     OwnerName: Optional[str] = None
     RegistrationNumber: Optional[str] = None
     DrugLicenseNumber: Optional[str] = None
-    PhoneNumber: Optional[str] = None
+    PhoneNumber: Optional[str] = Field(None, pattern=r'^(?:(?:\+92|0)[-\s]?\d{2,4}[-\s]?\d{6,8})?$')
     EmailAddress: Optional[str] = None
     Address: Optional[str] = None
     City: Optional[str] = None

@@ -21,6 +21,7 @@ interface Customer {
   CustomerId: number;
   Name: string;
   Phone?: string;
+  Address?: string;
   LoyaltyPoints: number;
   IsActive: boolean;
 }
@@ -29,6 +30,10 @@ export default function CustomersPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
+  const [totalRecords, setTotalRecords] = useState(0);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isImporting, setIsImporting] = useState(false);
@@ -37,7 +42,7 @@ export default function CustomersPage() {
   // Dialog State
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
-  const [currentCustomer, setCurrentCustomer] = useState<Partial<Customer>>({ Name: "", Phone: "", LoyaltyPoints: 0, IsActive: true });
+  const [currentCustomer, setCurrentCustomer] = useState<Partial<Customer>>({ Name: "", Phone: "", Address: "", LoyaltyPoints: 0, IsActive: true });
   const [isSaving, setIsSaving] = useState(false);
 
   // Delete State
@@ -60,9 +65,14 @@ export default function CustomersPage() {
   const fetchCustomers = async () => {
     setLoading(true);
     try {
-      const data = await apiClient.get("/customers", { params: search ? { search } : undefined });
+      const params: any = { page, page_size: pageSize };
+      if (search) params.search = search;
+      if (filterStatus !== "all") params.status = filterStatus;
+
+      const data = await apiClient.get("/customers", { params });
       if (data.success) {
         setCustomers(data.data);
+        setTotalRecords(data.total || 0);
         setSelectedIds(new Set());
       } else {
         toast.error("Failed to load customers");
@@ -75,12 +85,16 @@ export default function CustomersPage() {
   };
 
   useEffect(() => {
+    setPage(1);
+  }, [search, filterStatus]);
+
+  useEffect(() => {
     // Debounce search
     const timer = setTimeout(() => {
       fetchCustomers();
     }, 300);
     return () => clearTimeout(timer);
-  }, [search]);
+  }, [search, filterStatus, page, pageSize]);
 
   const handleToggleStatus = async (id: number) => {
     try {
@@ -129,7 +143,7 @@ export default function CustomersPage() {
   };
 
   const openNewDialog = () => {
-    setCurrentCustomer({ Name: "", Phone: "", LoyaltyPoints: 0, IsActive: true });
+    setCurrentCustomer({ Name: "", Phone: "", Address: "", LoyaltyPoints: 0, IsActive: true });
     setIsDialogOpen(true);
   };
 
@@ -245,14 +259,25 @@ export default function CustomersPage() {
     <div className="flex flex-col h-full bg-card">
       {/* Toolbar */}
       <div className="p-4 border-b border-border flex flex-col sm:flex-row gap-4 justify-between items-center bg-secondary/20">
-        <div className="relative w-full sm:w-[400px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input 
-            placeholder="Search customers by name or phone..." 
-            className="pl-9 h-10 w-full bg-background border-border"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto flex-1">
+          <div className="relative w-full sm:w-[400px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input 
+              placeholder="Search customers by name or phone..." 
+              className="pl-9 h-10 w-full bg-background border-border"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          <select 
+            className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+          >
+            <option value="all">All Status</option>
+            <option value="active">Active Only</option>
+            <option value="inactive">Inactive Only</option>
+          </select>
         </div>
         <div className="flex items-center gap-2 w-full sm:w-auto">
           <Button onClick={openNewDialog} className="h-10 bg-primary text-primary-foreground hover:bg-primary/90 px-4 font-semibold">
@@ -305,46 +330,50 @@ export default function CustomersPage() {
                 </TableRow>
               ) : (
                 customers.map((customer, idx) => (
-                  <TableRow key={customer.CustomerId} className="hover:bg-secondary/30 transition-colors">
-                    <TableCell className="text-center">
+                  <TableRow key={customer.CustomerId} className="hover:bg-secondary/50 transition-colors h-14">
+                    <TableCell className="text-center py-3">
                       <Checkbox
                         checked={selectedIds.has(customer.CustomerId)}
                         onCheckedChange={() => toggleSelect(customer.CustomerId)}
+                        disabled={customer.CustomerId === 0}
                       />
                     </TableCell>
-                    <TableCell className="text-center text-[13px] text-muted-foreground font-medium">{idx + 1}</TableCell>
-                    <TableCell className="font-mono text-[13px] text-muted-foreground">
+                    <TableCell className="text-center py-3 text-[#111827] dark:text-gray-200 font-medium text-[14px]">{(page - 1) * pageSize + idx + 1}</TableCell>
+                    <TableCell className="py-3 font-mono text-[14px] font-semibold text-[#111827] dark:text-gray-200">
                       CUST-{customer.CustomerId.toString().padStart(5, '0')}
                     </TableCell>
-                    <TableCell className="font-medium text-foreground">
+                    <TableCell className="py-3 font-bold text-[#111827] dark:text-white text-[15px]">
                       {customer.Name}
+                      {customer.CustomerId === 0 && <span className="ml-2 text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full">Default</span>}
                     </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {customer.Phone || "N/A"}
+                    <TableCell className="py-3 text-[#111827] dark:text-gray-200 text-[14px]">
+                      {customer.Phone || "—"}
                     </TableCell>
-                    <TableCell className="text-center">
+                    <TableCell className="text-center py-3">
                       <span className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
                         {customer.LoyaltyPoints} pts
                       </span>
                     </TableCell>
-                    <TableCell className="text-center">
+                    <TableCell className="text-center py-3">
                       <button 
                         onClick={() => handleToggleStatus(customer.CustomerId)}
+                        disabled={customer.CustomerId === 0}
                         className={cn(
                           "px-3 py-1 text-[11px] font-bold rounded-full transition-colors",
                           customer.IsActive 
                             ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-900/50" 
-                            : "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 hover:bg-rose-200 dark:hover:bg-rose-900/50"
+                            : "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 hover:bg-rose-200 dark:hover:bg-rose-900/50",
+                          customer.CustomerId === 0 && "opacity-50 cursor-not-allowed"
                         )}
                       >
                         {customer.IsActive ? "Active" : "Inactive"}
                       </button>
                     </TableCell>
-                    <TableCell className="text-right pr-6">
+                    <TableCell className="text-right pr-6 py-3">
                       <div className="flex items-center justify-end gap-3 text-muted-foreground">
                         <button onClick={() => openViewDialog(customer)} className="hover:text-primary transition-colors"><Eye className="h-4 w-4" /></button>
-                        <button onClick={() => openEditDialog(customer)} className="hover:text-blue-500 transition-colors"><Edit className="h-4 w-4" /></button>
-                        <button onClick={() => openDeleteDialog(customer)} className="hover:text-rose-500 transition-colors"><Trash2 className="h-4 w-4" /></button>
+                        <button onClick={() => openEditDialog(customer)} disabled={customer.CustomerId === 0} className={cn("hover:text-blue-500 transition-colors", customer.CustomerId === 0 && "opacity-30 cursor-not-allowed")}><Edit className="h-4 w-4" /></button>
+                        <button onClick={() => openDeleteDialog(customer)} disabled={customer.CustomerId === 0} className={cn("hover:text-rose-500 transition-colors", customer.CustomerId === 0 && "opacity-30 cursor-not-allowed")}><Trash2 className="h-4 w-4" /></button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -353,6 +382,53 @@ export default function CustomersPage() {
             </TableBody>
           </Table>
         </div>
+
+        {/* Bottom Pagination */}
+        {!loading && totalRecords > 0 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-4 px-2 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <span>Rows per page:</span>
+              <select
+                className="h-8 rounded-md border border-input bg-background px-2 py-1 focus:outline-none focus:ring-2 focus:ring-ring"
+                value={pageSize}
+                onChange={(e) => {
+                  setPageSize(Number(e.target.value));
+                  setPage(1);
+                }}
+              >
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+            </div>
+            
+            <div className="flex items-center gap-4">
+              <span>
+                Showing {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, totalRecords)} of {totalRecords}
+              </span>
+              <div className="flex items-center gap-1">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="h-8 px-2" 
+                  disabled={page === 1}
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                >
+                  Prev
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="h-8 px-2" 
+                  disabled={page * pageSize >= totalRecords}
+                  onClick={() => setPage(p => p + 1)}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Add/Edit Dialog */}
@@ -372,17 +448,27 @@ export default function CustomersPage() {
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-foreground">Phone Number <span className="text-muted-foreground font-normal">(Optional)</span></label>
+              <label className="text-sm font-semibold text-foreground">Mobile / Phone <span className="text-muted-foreground font-normal">(Required for credit customers)</span></label>
               <Input 
                 value={currentCustomer.Phone || ""}
                 onChange={e => setCurrentCustomer({...currentCustomer, Phone: e.target.value})}
-                placeholder="e.g. +1 234 567 890"
+                placeholder="e.g. 0300-1234567"
+                className="h-11"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-foreground">Address / Area <span className="text-muted-foreground font-normal">(Optional)</span></label>
+              <Input 
+                value={currentCustomer.Address || ""}
+                onChange={e => setCurrentCustomer({...currentCustomer, Address: e.target.value})}
+                placeholder="e.g. DHA Phase 5, Street 12"
                 className="h-11"
               />
             </div>
             
             {/* Loyalty points can usually be viewed/edited by admin */}
-            {currentCustomer.CustomerId && (
+            {currentCustomer.CustomerId !== undefined && (
                <div className="space-y-2">
                  <label className="text-sm font-semibold text-foreground">Loyalty Points</label>
                  <Input 
@@ -477,9 +563,16 @@ export default function CustomersPage() {
             
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
-                <p className="text-sm font-medium text-muted-foreground">Phone Number</p>
+                <p className="text-sm font-medium text-muted-foreground">Mobile / Phone</p>
                 <p className="text-sm">{currentCustomer.Phone || "N/A"}</p>
               </div>
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-muted-foreground">Address / Area</p>
+                <p className="text-sm">{currentCustomer.Address || "N/A"}</p>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
                 <p className="text-sm font-medium text-muted-foreground">Loyalty Points</p>
                 <p className="text-sm font-semibold text-primary">{currentCustomer.LoyaltyPoints}</p>

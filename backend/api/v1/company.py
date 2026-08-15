@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File, Response
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy import or_
+from sqlalchemy import or_, func
 from typing import List
 import csv
 import io
@@ -14,19 +14,47 @@ from core.logger import logger
 
 router = APIRouter()
 
-@router.get("", response_model=BaseResponse[List[CompanyResponse]], summary="Get all companies")
+@router.get("", summary="Get all companies")
 def get_companies(
     search: str = Query(None, description="Search by company name"),
+    status: str = Query(None, description="Filter by status (active/inactive)"),
+    page: int = Query(1, ge=1, description="Page number"),
+    page_size: int = Query(25, ge=0, description="Items per page. 0 for all."),
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
-    query = db.query(Company)
+    query = db.query(Company, func.count(Medicine.MedicineId).label('TotalProducts'))\
+              .outerjoin(Medicine, Company.CompanyId == Medicine.CompanyId)\
+              .group_by(Company.CompanyId)
     
     if search:
-        query = query.filter(Company.CompanyName.ilike(f"%{search}%"))
+        query = query.filter(
+            or_(
+                Company.CompanyName.ilike(f"%{search}%"),
+                Company.Phone.ilike(f"%{search}%")
+            )
+        )
         
-    companies = query.order_by(Company.CompanyName).all()
-    return {"data": companies}
+    if status and status.lower() != 'all':
+        is_active = status.lower() == 'active'
+        query = query.filter(Company.IsActive == is_active)
+        
+    total = query.count()
+    
+    if page_size > 0:
+        query = query.order_by(Company.CompanyName).offset((page - 1) * page_size).limit(page_size)
+    else:
+        query = query.order_by(Company.CompanyName)
+        
+    results = query.all()
+    
+    companies_list = []
+    for comp, med_count in results:
+        comp_dict = {c.name: getattr(comp, c.name) for c in comp.__table__.columns}
+        comp_dict["TotalProducts"] = med_count
+        companies_list.append(comp_dict)
+        
+    return {"success": True, "data": companies_list, "total": total, "page": page, "page_size": page_size}
 
 @router.post("", response_model=BaseResponse[CompanyResponse], summary="Create a new company")
 def create_company(
@@ -40,6 +68,9 @@ def create_company(
         
     new_company = Company(
         CompanyName=company_in.CompanyName,
+        ContactPerson=company_in.ContactPerson,
+        Phone=company_in.Phone,
+        Address=company_in.Address,
         IsActive=company_in.IsActive
     )
     db.add(new_company)
@@ -66,6 +97,15 @@ def update_company(
         if existing:
             raise HTTPException(status_code=400, detail="Another company with this name already exists")
         company.CompanyName = company_in.CompanyName
+        
+    if company_in.ContactPerson is not None:
+        company.ContactPerson = company_in.ContactPerson
+        
+    if company_in.Phone is not None:
+        company.Phone = company_in.Phone
+        
+    if company_in.Address is not None:
+        company.Address = company_in.Address
         
     if company_in.IsActive is not None:
         company.IsActive = company_in.IsActive

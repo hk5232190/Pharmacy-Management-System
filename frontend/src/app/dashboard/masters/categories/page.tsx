@@ -20,13 +20,19 @@ import { apiClient } from "@/lib/api-client";
 interface Category {
   CategoryId: number;
   CategoryName: string;
+  Description?: string;
   IsActive: boolean;
+  TotalMedicines?: number;
 }
 
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
+  const [totalRecords, setTotalRecords] = useState(0);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isImporting, setIsImporting] = useState(false);
@@ -35,7 +41,7 @@ export default function CategoriesPage() {
   // Dialog State
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
-  const [currentCategory, setCurrentCategory] = useState<Partial<Category>>({ CategoryName: "", IsActive: true });
+  const [currentCategory, setCurrentCategory] = useState<Partial<Category>>({ CategoryName: "", Description: "", IsActive: true });
   const [isSaving, setIsSaving] = useState(false);
 
   // Delete State
@@ -58,9 +64,14 @@ export default function CategoriesPage() {
   const fetchCategories = async () => {
     setLoading(true);
     try {
-      const data = await apiClient.get("/categories", { params: search ? { search } : undefined });
+      const params: any = { page, page_size: pageSize };
+      if (search) params.search = search;
+      if (filterStatus !== "all") params.status = filterStatus;
+      
+      const data = await apiClient.get("/categories", { params });
       if (data.success) {
         setCategories(data.data);
+        setTotalRecords(data.total || 0);
         setSelectedIds(new Set());
       } else {
         toast.error("Failed to load categories");
@@ -73,12 +84,16 @@ export default function CategoriesPage() {
   };
 
   useEffect(() => {
+    setPage(1);
+  }, [search, filterStatus]);
+
+  useEffect(() => {
     // Debounce search
     const timer = setTimeout(() => {
       fetchCategories();
     }, 300);
     return () => clearTimeout(timer);
-  }, [search]);
+  }, [search, filterStatus, page, pageSize]);
 
   const handleToggleStatus = async (id: number) => {
     try {
@@ -126,7 +141,7 @@ export default function CategoriesPage() {
   };
 
   const openNewDialog = () => {
-    setCurrentCategory({ CategoryName: "", IsActive: true });
+    setCurrentCategory({ CategoryName: "", Description: "", IsActive: true });
     setIsDialogOpen(true);
   };
 
@@ -246,14 +261,25 @@ export default function CategoriesPage() {
     <div className="flex flex-col h-full bg-card">
       {/* Toolbar */}
       <div className="p-4 border-b border-border flex flex-col sm:flex-row gap-4 justify-between items-center bg-secondary/20">
-        <div className="relative w-full sm:w-[400px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input 
-            placeholder="Search categories..." 
-            className="pl-9 h-10 w-full bg-background border-border"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto flex-1">
+          <div className="relative w-full sm:w-[400px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input 
+              placeholder="Search categories..." 
+              className="pl-9 h-10 w-full bg-background border-border"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          <select 
+            className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+          >
+            <option value="all">All Status</option>
+            <option value="active">Active Only</option>
+            <option value="inactive">Inactive Only</option>
+          </select>
         </div>
         <div className="flex items-center gap-2 w-full sm:w-auto">
           <Button onClick={openNewDialog} className="h-10 bg-primary text-primary-foreground hover:bg-primary/90 px-4 font-semibold">
@@ -288,7 +314,9 @@ export default function CategoriesPage() {
                 </TableHead>
                 <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-10 text-center">#</TableHead>
                 <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-32">Code</TableHead>
-                <TableHead className="font-semibold text-slate-700 dark:text-slate-300">Category Name</TableHead>
+                <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-1/4">Category Name</TableHead>
+                <TableHead className="font-semibold text-slate-700 dark:text-slate-300">Description</TableHead>
+                <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-36 text-center">Total Medicines</TableHead>
                 <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-32 text-center">Status</TableHead>
                 <TableHead className="font-semibold text-slate-700 dark:text-slate-300 text-right pr-6 w-32">Actions</TableHead>
               </TableRow>
@@ -296,29 +324,35 @@ export default function CategoriesPage() {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="h-32 text-center text-muted-foreground">Loading categories...</TableCell>
+                  <TableCell colSpan={8} className="h-32 text-center text-muted-foreground">Loading categories...</TableCell>
                 </TableRow>
               ) : categories.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="h-32 text-center text-muted-foreground">No categories found.</TableCell>
+                  <TableCell colSpan={8} className="h-32 text-center text-muted-foreground">No categories found.</TableCell>
                 </TableRow>
               ) : (
                 categories.map((category, idx) => (
-                  <TableRow key={category.CategoryId} className="hover:bg-secondary/30 transition-colors">
-                    <TableCell className="text-center">
+                  <TableRow key={category.CategoryId} className="hover:bg-secondary/50 transition-colors h-14">
+                    <TableCell className="text-center py-3">
                       <Checkbox
                         checked={selectedIds.has(category.CategoryId)}
                         onCheckedChange={() => toggleSelect(category.CategoryId)}
                       />
                     </TableCell>
-                    <TableCell className="text-center text-[13px] text-muted-foreground font-medium">{idx + 1}</TableCell>
-                    <TableCell className="font-mono text-[13px] text-muted-foreground">
+                    <TableCell className="text-center py-3 text-[#111827] dark:text-gray-200 font-medium text-[14px]">{idx + 1}</TableCell>
+                    <TableCell className="py-3 font-mono text-[14px] font-semibold text-[#111827] dark:text-gray-200">
                       CAT-{category.CategoryId.toString().padStart(5, '0')}
                     </TableCell>
-                    <TableCell className="font-medium text-foreground">
+                    <TableCell className="py-3 font-bold text-[#111827] dark:text-white text-[15px]">
                       {category.CategoryName}
                     </TableCell>
-                    <TableCell className="text-center">
+                    <TableCell className="py-3 text-[#111827] dark:text-gray-200 text-[14px] max-w-[200px] truncate">
+                      {category.Description || "—"}
+                    </TableCell>
+                    <TableCell className="text-center py-3 text-[#111827] dark:text-gray-200 text-[14px] font-medium">
+                      {category.TotalMedicines || 0}
+                    </TableCell>
+                    <TableCell className="text-center py-3">
                       <button 
                         onClick={() => handleToggleStatus(category.CategoryId)}
                         className={cn(
@@ -344,6 +378,53 @@ export default function CategoriesPage() {
             </TableBody>
           </Table>
         </div>
+
+        {/* Bottom Pagination */}
+        {!loading && totalRecords > 0 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-4 px-2 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <span>Rows per page:</span>
+              <select
+                className="h-8 rounded-md border border-input bg-background px-2 py-1 focus:outline-none focus:ring-2 focus:ring-ring"
+                value={pageSize}
+                onChange={(e) => {
+                  setPageSize(Number(e.target.value));
+                  setPage(1);
+                }}
+              >
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+            </div>
+            
+            <div className="flex items-center gap-4">
+              <span>
+                Showing {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, totalRecords)} of {totalRecords}
+              </span>
+              <div className="flex items-center gap-1">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="h-8 px-2" 
+                  disabled={page === 1}
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                >
+                  Prev
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="h-8 px-2" 
+                  disabled={page * pageSize >= totalRecords}
+                  onClick={() => setPage(p => p + 1)}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Add/Edit Dialog */}
@@ -361,6 +442,17 @@ export default function CategoriesPage() {
                 onChange={e => setCurrentCategory({...currentCategory, CategoryName: e.target.value})}
                 placeholder="e.g. Analgesics"
                 className="h-11"
+              />
+            </div>
+
+            {/* Description */}
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-foreground">Description</label>
+              <textarea 
+                value={currentCategory.Description || ""}
+                onChange={e => setCurrentCategory({...currentCategory, Description: e.target.value})}
+                placeholder="Optional notes or details about this category..."
+                className="w-full min-h-[80px] p-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-y"
               />
             </div>
 

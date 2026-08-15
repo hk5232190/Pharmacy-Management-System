@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File, Response
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy import or_
+from sqlalchemy import or_, func
 from typing import List
 import csv
 import io
@@ -14,20 +14,43 @@ from core.logger import logger
 
 router = APIRouter()
 
-@router.get("", response_model=BaseResponse[List[CategoryResponse]], summary="Get all categories")
+@router.get("", summary="Get all categories")
 def get_categories(
     search: str = Query(None, description="Search by category name"),
+    status: str = Query(None, description="Filter by status (active/inactive)"),
+    page: int = Query(1, ge=1, description="Page number"),
+    page_size: int = Query(25, ge=0, description="Items per page. 0 for all."),
     db: Session = Depends(get_db),
     # Require authentication, but we don't need to use the user object here
     current_user = Depends(get_current_user)
 ):
-    query = db.query(Category)
+    query = db.query(Category, func.count(Medicine.MedicineId).label('TotalMedicines'))\
+              .outerjoin(Medicine, Category.CategoryId == Medicine.CategoryId)\
+              .group_by(Category.CategoryId)
     
     if search:
         query = query.filter(Category.CategoryName.ilike(f"%{search}%"))
         
-    categories = query.order_by(Category.CategoryName).all()
-    return {"data": categories}
+    if status and status.lower() != 'all':
+        is_active = status.lower() == 'active'
+        query = query.filter(Category.IsActive == is_active)
+        
+    total = query.count()
+    
+    if page_size > 0:
+        query = query.order_by(Category.CategoryName).offset((page - 1) * page_size).limit(page_size)
+    else:
+        query = query.order_by(Category.CategoryName)
+        
+    results = query.all()
+    
+    categories_list = []
+    for cat, med_count in results:
+        cat_dict = {c.name: getattr(cat, c.name) for c in cat.__table__.columns}
+        cat_dict["TotalMedicines"] = med_count
+        categories_list.append(cat_dict)
+        
+    return {"success": True, "data": categories_list, "total": total, "page": page, "page_size": page_size}
 
 @router.post("", response_model=BaseResponse[CategoryResponse], summary="Create a new category")
 def create_category(
@@ -42,6 +65,7 @@ def create_category(
         
     new_category = Category(
         CategoryName=category_in.CategoryName,
+        Description=category_in.Description,
         IsActive=category_in.IsActive
     )
     db.add(new_category)
@@ -69,6 +93,9 @@ def update_category(
         if existing:
             raise HTTPException(status_code=400, detail="Another category with this name already exists")
         category.CategoryName = category_in.CategoryName
+        
+    if category_in.Description is not None:
+        category.Description = category_in.Description
         
     if category_in.IsActive is not None:
         category.IsActive = category_in.IsActive

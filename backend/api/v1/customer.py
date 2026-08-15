@@ -14,13 +14,17 @@ from core.logger import logger
 
 router = APIRouter()
 
-@router.get("", response_model=BaseResponse[List[CustomerResponse]], summary="Get all customers")
+@router.get("", summary="Get all customers")
 def get_customers(
     search: str = Query(None, description="Search by customer name or phone"),
+    status: str = Query(None, description="Filter by status (active/inactive)"),
+    page: int = Query(1, ge=1, description="Page number"),
+    page_size: int = Query(25, ge=0, description="Items per page. 0 for all."),
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
-    query = db.query(Customer)
+    # Exclude the default walk-in customer (CustomerId 0) from the UI list
+    query = db.query(Customer).filter(Customer.CustomerId != 0)
     
     if search:
         query = query.filter(
@@ -30,8 +34,19 @@ def get_customers(
             )
         )
         
-    customers = query.order_by(Customer.Name).all()
-    return {"data": customers}
+    if status and status.lower() != 'all':
+        is_active = status.lower() == 'active'
+        query = query.filter(Customer.IsActive == is_active)
+        
+    total = query.count()
+    
+    if page_size > 0:
+        query = query.order_by(Customer.CustomerId).offset((page - 1) * page_size).limit(page_size)
+    else:
+        query = query.order_by(Customer.CustomerId)
+        
+    customers = query.all()
+    return {"success": True, "data": customers, "total": total, "page": page, "page_size": page_size}
 
 @router.post("", response_model=BaseResponse[CustomerResponse], summary="Create a new customer")
 def create_customer(
@@ -43,7 +58,9 @@ def create_customer(
     new_customer = Customer(
         Name=customer_in.Name,
         Phone=customer_in.Phone,
+        Address=customer_in.Address,
         LoyaltyPoints=customer_in.LoyaltyPoints,
+        DueBalance=customer_in.DueBalance,
         IsActive=customer_in.IsActive
     )
     db.add(new_customer)
@@ -58,6 +75,9 @@ def update_customer(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
+    if customer_id == 0:
+        raise HTTPException(status_code=403, detail="Cannot edit the default Walk-in Customer")
+        
     customer = db.query(Customer).filter(Customer.CustomerId == customer_id).first()
     if not customer:
         raise HTTPException(status_code=404, detail="Customer not found")
@@ -66,8 +86,12 @@ def update_customer(
         customer.Name = customer_in.Name
     if customer_in.Phone is not None:
         customer.Phone = customer_in.Phone
+    if customer_in.Address is not None:
+        customer.Address = customer_in.Address
     if customer_in.LoyaltyPoints is not None:
         customer.LoyaltyPoints = customer_in.LoyaltyPoints
+    if customer_in.DueBalance is not None:
+        customer.DueBalance = customer_in.DueBalance
     if customer_in.IsActive is not None:
         customer.IsActive = customer_in.IsActive
         
@@ -81,6 +105,9 @@ def toggle_customer_status(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
+    if customer_id == 0:
+        raise HTTPException(status_code=403, detail="Cannot toggle status of the default Walk-in Customer")
+        
     customer = db.query(Customer).filter(Customer.CustomerId == customer_id).first()
     if not customer:
         raise HTTPException(status_code=404, detail="Customer not found")

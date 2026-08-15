@@ -11,6 +11,8 @@ class MedicineBase(BaseModel):
     ReorderLevel: int = 10
     RequiresPrescription: bool = False
     Unit: str = "Box"
+    DosageForm: Optional[str] = None
+    Strength: Optional[str] = None
     Barcode: Optional[str] = None
     DefaultCostPrice: Decimal = Field(default=0, ge=0)
     DefaultSellingPrice: Decimal = Field(default=0, ge=0)
@@ -28,6 +30,8 @@ class MedicineUpdate(BaseModel):
     ReorderLevel: Optional[int] = None
     RequiresPrescription: Optional[bool] = None
     Unit: Optional[str] = None
+    DosageForm: Optional[str] = None
+    Strength: Optional[str] = None
     Barcode: Optional[str] = None
     DefaultCostPrice: Optional[Decimal] = None
     DefaultSellingPrice: Optional[Decimal] = None
