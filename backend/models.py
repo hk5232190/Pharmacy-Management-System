@@ -222,6 +222,7 @@ class PurchaseReturn(Base):
     ReturnDate = Column(DateTime, server_default=func.now())
     TotalRefundAmount = Column(Numeric(18, 2), nullable=False)
     Reason = Column(Text, nullable=True)
+    SettlementType = Column(String(50), nullable=True, default="Adjust in Supplier Balance")
 
     items = relationship("PurchaseReturnItem", back_populates="purchase_return")
 
@@ -234,6 +235,7 @@ class PurchaseReturnItem(Base):
     BatchCode = Column(String(50), nullable=False)
     ReturnQuantity = Column(Integer, nullable=False)
     RefundAmount = Column(Numeric(18, 2), nullable=False)
+    ReturnReason = Column(String(100), nullable=True)
 
     purchase_return = relationship("PurchaseReturn", back_populates="items")
 

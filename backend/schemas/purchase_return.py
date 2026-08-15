@@ -7,6 +7,7 @@ class PurchaseReturnItemCreate(BaseModel):
     BatchCode: str = Field(..., min_length=1)
     ReturnQuantity: int = Field(..., gt=0)
     RefundAmount: float = Field(..., ge=0)
+    ReturnReason: Optional[str] = None
 
 class PurchaseReturnCreate(BaseModel):
     PurchaseId: int
@@ -14,6 +15,7 @@ class PurchaseReturnCreate(BaseModel):
     ReturnInvoiceNumber: str = Field(..., min_length=1)
     TotalRefundAmount: float = Field(..., ge=0)
     Reason: Optional[str] = None
+    SettlementType: str = "Adjust in Supplier Balance"
     items: List[PurchaseReturnItemCreate] = Field(..., min_items=1)
 
 class PurchaseReturnItemResponse(BaseModel):
@@ -23,6 +25,7 @@ class PurchaseReturnItemResponse(BaseModel):
     BatchCode: str
     ReturnQuantity: int
     RefundAmount: float
+    ReturnReason: Optional[str] = None
     
     MedicineName: Optional[str] = None
 
@@ -37,9 +40,11 @@ class PurchaseReturnResponse(BaseModel):
     ReturnDate: datetime
     TotalRefundAmount: float
     Reason: Optional[str] = None
+    SettlementType: Optional[str] = None
     
     items: List[PurchaseReturnItemResponse]
     SupplierName: Optional[str] = None
+    OriginalInvoiceNumber: Optional[str] = None
 
     class Config:
         from_attributes = True

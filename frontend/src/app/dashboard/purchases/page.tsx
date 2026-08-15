@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { 
   ShoppingCart, DollarSign, Undo2, Users, FileText, 
   Search, Plus, Save, Printer, Eye, X, Trash2, Calendar,
-  ArrowDownToLine
+  ArrowDownToLine, CreditCard, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -103,14 +103,23 @@ export default function PurchasesPage() {
   const [purchaseHistory, setPurchaseHistory] = useState<PurchaseHistory[]>([]);
   const [viewingInvoice, setViewingInvoice] = useState<PurchaseHistory | null>(null);
   const [showDraftPreview, setShowDraftPreview] = useState(false);
+  const [historySearchQuery, setHistorySearchQuery] = useState("");
+  const [filterSupplierId, setFilterSupplierId] = useState<number>(0);
+  const [filterFromDate, setFilterFromDate] = useState("");
+  const [filterToDate, setFilterToDate] = useState("");
+  const [historyPageSize, setHistoryPageSize] = useState(10);
+  const [historyCurrentPage, setHistoryCurrentPage] = useState(1);
 
   // --- States for Returns Tab ---
   const [returnsHistory, setReturnsHistory] = useState<any[]>([]);
   const [selectedReturnInvoice, setSelectedReturnInvoice] = useState<PurchaseHistory | null>(null);
-  const [returnItems, setReturnItems] = useState<{ PurchaseItemId: number; MedicineId: number; MedicineName: string; BatchCode: string; OriginalQty: number; ReturnQty: number; CostPrice: number; RefundAmount: number }[]>([]);
+  const [returnItems, setReturnItems] = useState<{ PurchaseItemId: number; MedicineId: number; MedicineName: string; BatchCode: string; OriginalQty: number; ReturnQty: number; CostPrice: number; RefundAmount: number; ReturnReason: string }[]>([]);
   const [returnReason, setReturnReason] = useState("");
+  const [settlementType, setSettlementType] = useState("Adjust in Supplier Balance");
   const [returnInvNo, setReturnInvNo] = useState(`DN-${new Date().getFullYear().toString().slice(-2)}${Math.floor(1000 + Math.random() * 9000)}`);
   const [summaryData, setSummaryData] = useState<any>(null);
+  const [returnsCurrentPage, setReturnsCurrentPage] = useState(1);
+  const [returnsPageSize, setReturnsPageSize] = useState(10);
 
   const fmt = (n: number) => formatNumber ? formatNumber(n) : n.toLocaleString('en-PK', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
@@ -132,8 +141,21 @@ export default function PurchasesPage() {
   }, [searchQuery]);
 
   useEffect(() => {
+    setHistoryCurrentPage(1);
+  }, [historySearchQuery, filterSupplierId, filterFromDate, filterToDate]);
+
+  useEffect(() => {
     calculateTotals();
-  }, [items, paymentStatus]);
+  }, [items]);
+
+  useEffect(() => {
+    if (grandTotal > 0) {
+      const balance = Math.max(0, grandTotal - paidAmount);
+      if (balance <= 0) setPaymentStatus("Paid");
+      else if (paidAmount > 0) setPaymentStatus("Partial");
+      else setPaymentStatus("Unpaid");
+    }
+  }, [paidAmount, grandTotal]);
 
   // --- API Calls ---
   const fetchSummary = async () => {
@@ -234,15 +256,19 @@ export default function PurchasesPage() {
     setItems(items.map(item => {
       if (item.id === id) {
         const updated = { ...item, [field]: value };
+        if (field === 'Discount') {
+          updated.Discount = Math.min(100, Math.max(0, Number(value) || 0));
+        }
         if (['CostPrice', 'Quantity', 'Discount', 'TaxPercentage'].includes(field)) {
           const qty = Number(updated.Quantity) || 0;
           const cost = Number(updated.CostPrice) || 0;
-          const discount = Number(updated.Discount) || 0;
+          const discountPct = Number(updated.Discount) || 0;
           const taxPct = Number(updated.TaxPercentage) || 0;
           
-          const base = (qty * cost) - discount;
-          const taxAmt = base * (taxPct / 100);
-          updated.LineTotal = base + taxAmt;
+          const base = (qty * cost);
+          const discAmt = base * (discountPct / 100);
+          const taxAmt = (base - discAmt) * (taxPct / 100);
+          updated.LineTotal = (base - discAmt) + taxAmt;
         }
         return updated;
       }
@@ -260,16 +286,17 @@ export default function PurchasesPage() {
     items.forEach(item => {
       const qty = Number(item.Quantity) || 0;
       const cost = Number(item.CostPrice) || 0;
-      const itemDisc = Number(item.Discount) || 0;
+      const discountPct = Math.min(100, Math.max(0, Number(item.Discount) || 0));
       const taxPct = Number(item.TaxPercentage) || 0;
       
       const basePrice = qty * cost;
-      const taxAmt = (basePrice - itemDisc) * (taxPct / 100);
+      const discAmt = basePrice * (discountPct / 100);
+      const taxAmt = (basePrice - discAmt) * (taxPct / 100);
       
       sub += basePrice;
-      disc += itemDisc;
+      disc += discAmt;
       tax += taxAmt;
-      grand += (basePrice - itemDisc + taxAmt);
+      grand += (basePrice - discAmt + taxAmt);
     });
     
     setSubTotal(sub);
@@ -285,11 +312,11 @@ export default function PurchasesPage() {
   };
 
   const handleSave = async (printAfterSave: boolean = false) => {
-    if (!supplierId) return toast.error("Please select a supplier");
+    if (!supplierId || supplierId === 0) return toast.error("Please select a supplier");
     if (items.length === 0) return toast.error("Please add at least one medicine to the invoice");
     
     for (const item of items) {
-      if (!item.BatchCode) return toast.error(`Missing Batch Code for ${item.MedicineName}`);
+      if (!item.BatchCode || !item.BatchCode.trim()) return toast.error(`Missing Batch Code for ${item.MedicineName}`);
       if (!item.ExpiryDate) return toast.error(`Missing Expiry Date for ${item.MedicineName}`);
       
       if (Number(item.CostPrice) > Number(item.SellingPrice)) {
@@ -297,6 +324,8 @@ export default function PurchasesPage() {
       }
       
       const expDate = new Date(item.ExpiryDate);
+      if (isNaN(expDate.getTime())) return toast.error(`Invalid Expiry Date for ${item.MedicineName}`);
+
       const minDate = new Date();
       minDate.setDate(minDate.getDate() + 30);
       if (expDate <= minDate) {
@@ -394,17 +423,22 @@ export default function PurchasesPage() {
         OriginalQty: i.Quantity + i.FreeQty,
         ReturnQty: 0,
         CostPrice: i.CostPrice,
-        RefundAmount: 0
+        RefundAmount: 0,
+        ReturnReason: 'Expired'
       })));
     }
   };
 
-  const updateReturnItem = (itemId: number, returnQty: string) => {
-    const qtyNum = Number(returnQty);
+  const updateReturnItem = (itemId: number, field: string, value: any) => {
     setReturnItems(returnItems.map(item => {
       if (item.PurchaseItemId === itemId) {
-        const qty = Math.min(Math.max(0, qtyNum), item.OriginalQty);
-        return { ...item, ReturnQty: qty, RefundAmount: qty * item.CostPrice };
+        const updated = { ...item, [field]: value };
+        if (field === 'ReturnQty') {
+           const qtyNum = Number(value);
+           updated.ReturnQty = Math.min(Math.max(0, qtyNum), item.OriginalQty);
+           updated.RefundAmount = updated.ReturnQty * item.CostPrice;
+        }
+        return updated;
       }
       return item;
     }));
@@ -423,11 +457,13 @@ export default function PurchasesPage() {
       ReturnInvoiceNumber: returnInvNo,
       TotalRefundAmount: totalRefund,
       Reason: returnReason || null,
+      SettlementType: settlementType,
       items: itemsToReturn.map(i => ({
         MedicineId: i.MedicineId,
         BatchCode: i.BatchCode,
         ReturnQuantity: i.ReturnQty,
-        RefundAmount: i.RefundAmount
+        RefundAmount: i.RefundAmount,
+        ReturnReason: i.ReturnReason
       }))
     };
 
@@ -451,14 +487,74 @@ export default function PurchasesPage() {
   const totalRefundDue = returnItems.reduce((sum, item) => sum + item.RefundAmount, 0);
 
   // Data to print or preview
-  const printData = viewingInvoice || (showDraftPreview ? {
-    InvoiceNumber: invoiceNo,
-    SupplierName: suppliers.find(s => s.SupplierId === supplierId)?.Name || "Unknown Supplier",
-    PurchaseDate: purchaseDate,
-    GrandTotal: grandTotal,
-    PaidAmount: paidAmount,
-    items: items.map(i => ({ ...i, PurchaseItemId: i.id }))
-  } as any : null);
+  let printData: any = null;
+  if (viewingInvoice) {
+    if ((viewingInvoice as any).ReturnInvoiceNumber) { // It's a Debit Note
+      const rn = viewingInvoice as any;
+      printData = {
+        IsReturn: true,
+        InvoiceNumber: rn.ReturnInvoiceNumber,
+        SupplierName: rn.SupplierName || "Unknown Supplier",
+        PurchaseDate: rn.ReturnDate,
+        GrandTotal: rn.TotalRefundAmount,
+        PaidAmount: 0,
+        SettlementType: rn.SettlementType,
+        items: rn.items.map((i: any) => ({ ...i, PurchaseItemId: i.ReturnItemId, LineTotal: i.RefundAmount, CostPrice: (i.RefundAmount/i.ReturnQuantity) || 0, Quantity: i.ReturnQuantity }))
+      };
+    } else {
+      printData = { ...viewingInvoice, IsReturn: false };
+    }
+  } else if (showDraftPreview) {
+    printData = {
+      IsReturn: false,
+      InvoiceNumber: invoiceNo,
+      SupplierName: suppliers.find(s => s.SupplierId === supplierId)?.Name || "Unknown Supplier",
+      PurchaseDate: purchaseDate,
+      GrandTotal: grandTotal,
+      PaidAmount: paidAmount,
+      items: items.map(i => ({ ...i, PurchaseItemId: i.id }))
+    };
+  }
+
+  const handleEnterKey = (e: React.KeyboardEvent<HTMLInputElement>, nextId: string) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const nextElement = document.getElementById(nextId);
+      if (nextElement) {
+        nextElement.focus();
+        if (nextElement instanceof HTMLInputElement) {
+           nextElement.select();
+        }
+      }
+    }
+  };
+
+  const filteredPurchaseHistory = purchaseHistory.filter(inv => {
+    let match = true;
+    if (historySearchQuery) {
+      const q = historySearchQuery.toLowerCase();
+      match = match && (inv.InvoiceNumber.toLowerCase().includes(q) || (inv.SupplierName && inv.SupplierName.toLowerCase().includes(q)) || ((inv as any).SupplierInvNo && String((inv as any).SupplierInvNo).toLowerCase().includes(q)));
+    }
+    if (filterSupplierId > 0) {
+      match = match && (inv.SupplierId === filterSupplierId);
+    }
+    if (filterFromDate) {
+      match = match && (new Date(inv.PurchaseDate) >= new Date(filterFromDate));
+    }
+    if (filterToDate) {
+      // Set to end of day for proper comparison
+      const toDate = new Date(filterToDate);
+      toDate.setHours(23, 59, 59, 999);
+      match = match && (new Date(inv.PurchaseDate) <= toDate);
+    }
+    return match;
+  });
+
+  const totalHistoryPages = Math.max(1, Math.ceil(filteredPurchaseHistory.length / historyPageSize));
+  const paginatedHistory = filteredPurchaseHistory.slice(
+    (historyCurrentPage - 1) * historyPageSize,
+    historyCurrentPage * historyPageSize
+  );
 
   // --- Render ---
   return (
@@ -476,15 +572,16 @@ export default function PurchasesPage() {
           </p>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+        {/* Stats Cards — only visible on History tab */}
+        {activeTab === "history" && (
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
           <div className="bg-white dark:bg-card p-4 rounded-xl shadow-sm border border-border flex items-center gap-4">
             <div className="h-12 w-12 rounded-lg bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center text-blue-600 dark:text-blue-400">
               <ShoppingCart size={24} />
             </div>
             <div>
               <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Today's Purchases</p>
-              <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">₨ {fmt(summaryData?.today_purchase_amount || 0)}</h3>
+              <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">₨ {fmt(Math.max(0, purchaseHistory.filter(p => new Date(p.PurchaseDate).toDateString() === new Date().toDateString()).reduce((acc, curr) => acc + curr.GrandTotal, 0)))}</h3>
             </div>
           </div>
           <div className="bg-white dark:bg-card p-4 rounded-xl shadow-sm border border-border flex items-center gap-4">
@@ -493,7 +590,7 @@ export default function PurchasesPage() {
             </div>
             <div>
               <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Total Purchase Amount</p>
-              <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">₨ {fmt(summaryData?.total_purchase_amount || 0)}</h3>
+              <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">₨ {fmt(Math.max(0, purchaseHistory.reduce((acc, curr) => acc + curr.GrandTotal, 0)))}</h3>
             </div>
           </div>
           <div className="bg-white dark:bg-card p-4 rounded-xl shadow-sm border border-border flex items-center gap-4">
@@ -506,12 +603,12 @@ export default function PurchasesPage() {
             </div>
           </div>
           <div className="bg-white dark:bg-card p-4 rounded-xl shadow-sm border border-border flex items-center gap-4">
-            <div className="h-12 w-12 rounded-lg bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
-              <Users size={24} />
+            <div className="h-12 w-12 rounded-lg bg-rose-100 dark:bg-rose-900/40 flex items-center justify-center text-rose-600 dark:text-rose-400">
+              <CreditCard size={24} />
             </div>
             <div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Total Suppliers</p>
-              <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">{summaryData?.total_suppliers_count || suppliers.length}</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Total Balance Due</p>
+              <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">₨ {fmt(summaryData?.total_balance_due || purchaseHistory.reduce((acc, curr) => acc + Math.max(0, curr.GrandTotal - curr.PaidAmount), 0))}</h3>
             </div>
           </div>
           <div className="bg-white dark:bg-card p-4 rounded-xl shadow-sm border border-border flex items-center gap-4">
@@ -524,6 +621,7 @@ export default function PurchasesPage() {
             </div>
           </div>
         </div>
+        )}
 
         {/* Tabs */}
         <div className="flex gap-2 border-b border-border mb-6">
@@ -562,7 +660,7 @@ export default function PurchasesPage() {
                     Purchase Information
                   </h3>
                 </div>
-                <div className="p-4 grid grid-cols-2 gap-x-5 gap-y-3">
+                <div className="p-4 grid grid-cols-2 sm:grid-cols-4 gap-x-5 gap-y-3">
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-muted-foreground">Invoice No.</label>
                     <Input value={invoiceNo} disabled className="h-9 bg-slate-50 dark:bg-secondary/50 font-medium" />
@@ -595,7 +693,10 @@ export default function PurchasesPage() {
                       className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                       value={paymentStatus}
                       onChange={e=>{
-                        setPaymentStatus(e.target.value);
+                        const val = e.target.value;
+                        setPaymentStatus(val);
+                        if (val === "Paid") setPaidAmount(grandTotal);
+                        else if (val === "Unpaid") setPaidAmount(0);
                       }}
                     >
                       <option value="Paid">Paid</option>
@@ -649,16 +750,12 @@ export default function PurchasesPage() {
                   <div className="flex justify-between items-center text-sm text-emerald-400">
                     <span>Paid</span>
                     <div className="w-24 text-right">
-                      {paymentStatus === "Paid" ? (
-                        <span className="font-medium text-emerald-400">Rs. {formatNumber(Number(grandTotal || 0))}</span>
-                      ) : (
                         <Input
-                          type="number" min="0" step="0.01"
+                          type="number" min="0" step="0.01" max={grandTotal}
                           value={paidAmount}
                           onChange={e => setPaidAmount(Number(e.target.value))}
                           className="h-7 text-xs px-2 text-right text-emerald-400 font-semibold bg-slate-800 border-slate-600"
                         />
-                      )}
                     </div>
                   </div>
                   <div className="flex justify-between items-center text-sm text-rose-400">
@@ -717,6 +814,7 @@ export default function PurchasesPage() {
                   
                   <div className="relative w-full sm:w-48 hidden md:block">
                     <Input 
+                      id="search-barcode"
                       placeholder="Scan / Enter Barcode" 
                       className="h-9 text-sm text-center font-mono"
                       value={barcodeQuery}
@@ -729,10 +827,6 @@ export default function PurchasesPage() {
                       }}
                     />
                   </div>
-                  
-                  <Button size="sm" onClick={handleAddByBarcode} className="h-9 px-3 bg-blue-600 hover:bg-blue-700 text-white shrink-0">
-                    <Plus className="h-4 w-4 mr-1" /> Add
-                  </Button>
                 </div>
               </div>
               
@@ -749,7 +843,7 @@ export default function PurchasesPage() {
                       <th className="px-3 py-2.5 font-semibold w-28">Sale Price</th>
                       <th className="px-3 py-2.5 font-semibold w-20">Qty</th>
                       <th className="px-3 py-2.5 font-semibold w-20">Free</th>
-                      <th className="px-3 py-2.5 font-semibold w-24">Disc (₨)</th>
+                      <th className="px-3 py-2.5 font-semibold w-24">Disc %</th>
                       <th className="px-3 py-2.5 font-semibold w-20">Tax %</th>
                       <th className="px-3 py-2.5 font-semibold w-28">Line Total</th>
                       <th className="px-3 py-2.5 font-semibold w-16 text-center">Act</th>
@@ -773,77 +867,95 @@ export default function PurchasesPage() {
                           <td className="px-3 py-2 font-medium text-slate-700 dark:text-slate-300">{item.MedicineName}</td>
                           <td className="px-3 py-2">
                             <Input 
+                              id={`batch-${item.id}`}
                               value={item.BatchCode} 
                               onChange={e => updateItem(item.id, 'BatchCode', e.target.value.toUpperCase())}
+                              onKeyDown={e => handleEnterKey(e, `mfg-${item.id}`)}
                               className="h-8 text-xs font-mono px-2"
                               placeholder="Required"
                             />
                           </td>
                           <td className="px-3 py-2">
                             <Input 
+                              id={`mfg-${item.id}`}
                               type="date"
                               value={item.ManufacturingDate} 
                               onChange={e => updateItem(item.id, 'ManufacturingDate', e.target.value)}
+                              onKeyDown={e => handleEnterKey(e, `expiry-${item.id}`)}
                               className="h-8 text-xs px-2"
                             />
                           </td>
                           <td className="px-3 py-2">
                             <Input 
+                              id={`expiry-${item.id}`}
                               type="date"
                               value={item.ExpiryDate} 
                               onChange={e => updateItem(item.id, 'ExpiryDate', e.target.value)}
+                              onKeyDown={e => handleEnterKey(e, `cost-${item.id}`)}
                               className="h-8 text-xs px-2"
                             />
                           </td>
                           <td className="px-3 py-2">
                             <Input 
+                              id={`cost-${item.id}`}
                               type="number" min="0" step="0.01"
                               value={item.CostPrice} 
                               onChange={e => updateItem(item.id, 'CostPrice', e.target.value)}
-                              className="h-8 text-xs px-2"
+                              onKeyDown={e => handleEnterKey(e, `sale-${item.id}`)}
+                              className="h-8 text-xs px-2 text-right"
                             />
                           </td>
                           <td className="px-3 py-2">
                             <Input 
+                              id={`sale-${item.id}`}
                               type="number" min="0" step="0.01"
                               value={item.SellingPrice} 
                               onChange={e => updateItem(item.id, 'SellingPrice', e.target.value)}
-                              className="h-8 text-xs px-2"
+                              onKeyDown={e => handleEnterKey(e, `qty-${item.id}`)}
+                              className="h-8 text-xs px-2 text-right"
                             />
                           </td>
                           <td className="px-3 py-2">
                             <Input 
+                              id={`qty-${item.id}`}
                               type="number" min="1"
                               value={item.Quantity} 
                               onChange={e => updateItem(item.id, 'Quantity', e.target.value)}
-                              className="h-8 text-xs px-2 text-center"
+                              onKeyDown={e => handleEnterKey(e, `free-${item.id}`)}
+                              className="h-8 text-xs px-2 text-right"
                             />
                           </td>
                           <td className="px-3 py-2">
                             <Input 
+                              id={`free-${item.id}`}
                               type="number" min="0"
                               value={item.FreeQty} 
                               onChange={e => updateItem(item.id, 'FreeQty', e.target.value)}
-                              className="h-8 text-xs px-2 text-center"
+                              onKeyDown={e => handleEnterKey(e, `disc-${item.id}`)}
+                              className="h-8 text-xs px-2 text-right"
                             />
                           </td>
                           <td className="px-3 py-2">
                             <Input 
-                              type="number" min="0" step="0.01"
+                              id={`disc-${item.id}`}
+                              type="number" min="0" max="100" step="0.1"
                               value={item.Discount} 
                               onChange={e => updateItem(item.id, 'Discount', e.target.value)}
-                              className="h-8 text-xs px-2"
+                              onKeyDown={e => handleEnterKey(e, `tax-${item.id}`)}
+                              className="h-8 text-xs px-2 text-right"
                             />
                           </td>
                           <td className="px-3 py-2">
                             <Input 
+                              id={`tax-${item.id}`}
                               type="number" min="0" max="100"
                               value={item.TaxPercentage} 
                               onChange={e => updateItem(item.id, 'TaxPercentage', e.target.value)}
-                              className="h-8 text-xs px-2 text-center"
+                              onKeyDown={e => handleEnterKey(e, 'search-barcode')}
+                              className="h-8 text-xs px-2 text-right"
                             />
                           </td>
-                          <td className="px-3 py-2 font-semibold text-slate-700 dark:text-slate-300">
+                          <td className="px-3 py-2 text-right font-semibold text-slate-700 dark:text-slate-300">
                             ₨ {formatNumber(Number(item.LineTotal || 0))}
                           </td>
                           <td className="px-3 py-2 text-center">
@@ -874,11 +986,35 @@ export default function PurchasesPage() {
         {/* --- HISTORY TAB --- */}
         {activeTab === "history" && (
           <div className="bg-white dark:bg-card rounded-xl border border-border shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300">
-            <div className="px-6 py-4 border-b border-border bg-slate-50/50 dark:bg-secondary/20 flex justify-between items-center">
-              <h3 className="font-semibold text-foreground">Purchase Invoices History</h3>
-              <div className="relative w-64">
-                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Search invoice or supplier..." className="h-9 pl-9" />
+            <div className="px-6 py-4 border-b border-border bg-slate-50/50 dark:bg-secondary/20 flex flex-col gap-4">
+              <div className="flex justify-between items-center">
+                <h3 className="font-semibold text-foreground">Purchase Invoices History</h3>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-4 items-end">
+                <div className="flex-1 w-full relative">
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input placeholder="Search invoice or supplier..." className="h-9 pl-9" value={historySearchQuery} onChange={e => setHistorySearchQuery(e.target.value)} />
+                </div>
+                <div className="w-full sm:w-48">
+                  <select 
+                    className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    value={filterSupplierId} onChange={e => setFilterSupplierId(Number(e.target.value))}
+                  >
+                    <option value={0}>All Suppliers</option>
+                    {suppliers.map(s => <option key={s.SupplierId} value={s.SupplierId}>{s.Name}</option>)}
+                  </select>
+                </div>
+                <div className="w-full sm:w-36">
+                  <Input type="date" className="h-9 text-sm" value={filterFromDate} onChange={e => setFilterFromDate(e.target.value)} title="From Date" />
+                </div>
+                <div className="w-full sm:w-36">
+                  <Input type="date" className="h-9 text-sm" value={filterToDate} onChange={e => setFilterToDate(e.target.value)} title="To Date" />
+                </div>
+                {(historySearchQuery || filterSupplierId > 0 || filterFromDate || filterToDate) && (
+                  <Button variant="ghost" onClick={() => { setHistorySearchQuery(""); setFilterSupplierId(0); setFilterFromDate(""); setFilterToDate(""); }} className="h-9 px-3 text-rose-500 hover:text-rose-600 hover:bg-rose-50 shrink-0">
+                    Clear
+                  </Button>
+                )}
               </div>
             </div>
             
@@ -891,51 +1027,125 @@ export default function PurchasesPage() {
                     <th className="px-6 py-3 font-semibold">Supplier</th>
                     <th className="px-6 py-3 font-semibold text-right">Grand Total</th>
                     <th className="px-6 py-3 font-semibold text-right">Paid</th>
+                    <th className="px-6 py-3 font-semibold text-right">Due / Balance</th>
                     <th className="px-6 py-3 font-semibold text-center">Status</th>
                     <th className="px-6 py-3 font-semibold text-center">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {purchaseHistory.length === 0 ? (
+                  {paginatedHistory.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="px-6 py-16 text-center text-muted-foreground">
+                      <td colSpan={8} className="px-6 py-16 text-center text-muted-foreground">
                         <FileText className="h-10 w-10 mx-auto text-slate-300 dark:text-slate-600 mb-3" />
                         <p>No purchase history found.</p>
                       </td>
                     </tr>
                   ) : (
-                    purchaseHistory.map(inv => (
-                      <tr key={inv.PurchaseId} className="hover:bg-secondary/10 transition-colors">
+                    paginatedHistory.map(inv => {
+                      const balance = Math.max(0, (inv.GrandTotal || 0) - (inv.PaidAmount || 0));
+                      let dynamicStatus = "";
+                      if (balance <= 0) dynamicStatus = "Paid";
+                      else if ((inv.PaidAmount || 0) > 0) dynamicStatus = "Partial";
+                      else dynamicStatus = "Unpaid";
+                      
+                      return (
+                      <tr 
+                        key={inv.PurchaseId} 
+                        className="hover:bg-secondary/10 transition-colors cursor-pointer"
+                        onClick={() => setViewingInvoice(inv)}
+                      >
                         <td className="px-6 py-3 text-muted-foreground">{new Date(inv.PurchaseDate).toLocaleDateString()}</td>
-                        <td className="px-6 py-3 font-medium">{inv.InvoiceNumber}</td>
+                        <td className="px-6 py-3">
+                           <div className="font-medium text-slate-800 dark:text-slate-200">{inv.InvoiceNumber}</div>
+                           {(inv as any).SupplierInvNo && <div className="text-xs text-slate-500 mt-0.5">Ref: {(inv as any).SupplierInvNo}</div>}
+                        </td>
                         <td className="px-6 py-3">{inv.SupplierName || 'Unknown Supplier'}</td>
                         <td className="px-6 py-3 text-right font-semibold">₨ {formatNumber(Number(inv.GrandTotal || 0))}</td>
                         <td className="px-6 py-3 text-right text-emerald-600">₨ {formatNumber(Number(inv.PaidAmount || 0))}</td>
+                        <td className="px-6 py-3 text-right">
+                          {balance > 0 ? (
+                            <span className="font-semibold text-rose-500">₨ {formatNumber(balance)}</span>
+                          ) : (
+                            <span className="text-slate-400">₨ 0.00</span>
+                          )}
+                        </td>
                         <td className="px-6 py-3 text-center">
                           <span className={cn(
                             "px-2 py-1 rounded-full text-xs font-medium",
-                            inv.PaymentStatus === "Paid" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" :
-                            inv.PaymentStatus === "Partial" ? "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400" :
+                            dynamicStatus === "Paid" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" :
+                            dynamicStatus === "Partial" ? "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400" :
                             "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400"
                           )}>
-                            {inv.PaymentStatus}
+                            {dynamicStatus}
                           </span>
                         </td>
-                        <td className="px-6 py-3 text-center">
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="h-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20"
-                            onClick={() => setViewingInvoice(inv)}
-                          >
-                            <Eye className="h-4 w-4 mr-1" /> View
-                          </Button>
+                        <td className="px-6 py-3 text-center" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex items-center justify-center gap-2">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                              onClick={() => setViewingInvoice(inv)}
+                              title="View Invoice"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-8 w-8 p-0 text-slate-600 hover:text-slate-800 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800"
+                              onClick={() => {
+                                setViewingInvoice(inv);
+                                setTimeout(() => window.print(), 300);
+                              }}
+                              title="Print Invoice"
+                            >
+                              <Printer className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </td>
                       </tr>
-                    ))
+                      );
+                    })
                   )}
                 </tbody>
               </table>
+            </div>
+
+            <div className="px-6 py-4 border-t border-border bg-slate-50/50 dark:bg-secondary/20 flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2">
+                <span>Rows per page:</span>
+                <select 
+                  className="h-8 rounded-md border border-input bg-background px-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  value={historyPageSize}
+                  onChange={e => { setHistoryPageSize(Number(e.target.value)); setHistoryCurrentPage(1); }}
+                >
+                  <option value={10}>10</option>
+                  <option value={25}>25</option>
+                  <option value={50}>50</option>
+                </select>
+              </div>
+              <div className="flex items-center gap-4">
+                <div>
+                  Showing {Math.min(filteredPurchaseHistory.length, (historyCurrentPage - 1) * historyPageSize + (filteredPurchaseHistory.length > 0 ? 1 : 0))}–{Math.min(filteredPurchaseHistory.length, historyCurrentPage * historyPageSize)} of {filteredPurchaseHistory.length}
+                </div>
+                <div className="flex items-center gap-1">
+                  <Button 
+                    variant="outline" size="sm" className="h-8 px-3"
+                    onClick={() => setHistoryCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={historyCurrentPage === 1}
+                  >
+                    Prev
+                  </Button>
+                  <Button 
+                    variant="outline" size="sm" className="h-8 px-3"
+                    onClick={() => setHistoryCurrentPage(p => Math.min(totalHistoryPages, p + 1))}
+                    disabled={historyCurrentPage >= totalHistoryPages}
+                  >
+                    Next
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -982,8 +1192,9 @@ export default function PurchasesPage() {
                           <th className="px-4 py-2 font-semibold">Medicine</th>
                           <th className="px-4 py-2 font-semibold">Batch Code</th>
                           <th className="px-4 py-2 font-semibold text-center">Orig. Qty</th>
-                          <th className="px-4 py-2 font-semibold text-right">Cost Price</th>
+                          <th className="px-4 py-2 font-semibold text-right">Unit Price</th>
                           <th className="px-4 py-2 font-semibold text-center text-primary">Return Qty</th>
+                          <th className="px-4 py-2 font-semibold text-center">Reason</th>
                           <th className="px-4 py-2 font-semibold text-right text-rose-500">Refund Amt</th>
                         </tr>
                       </thead>
@@ -993,18 +1204,33 @@ export default function PurchasesPage() {
                             <td className="px-4 py-2 font-medium">{item.MedicineName}</td>
                             <td className="px-4 py-2 font-mono text-xs">{item.BatchCode}</td>
                             <td className="px-4 py-2 text-center text-muted-foreground">{item.OriginalQty}</td>
-                            <td className="px-4 py-2 text-right">₨ {formatNumber(Number(item.CostPrice || 0))}</td>
+                            <td className="px-4 py-2 text-right font-mono text-xs">₨ {formatNumber(Number(item.CostPrice || 0))}</td>
                             <td className="px-4 py-2">
                               <div className="flex justify-center">
                                 <Input 
                                   type="number" min="0" max={item.OriginalQty}
                                   value={item.ReturnQty} 
-                                  onChange={e => updateReturnItem(item.PurchaseItemId, e.target.value)}
-                                  className="h-8 w-24 text-center border-primary/50 focus-visible:ring-primary"
+                                  onChange={e => updateReturnItem(item.PurchaseItemId, 'ReturnQty', e.target.value)}
+                                  className="h-8 w-20 text-center border-primary/50 focus-visible:ring-primary font-mono"
                                 />
                               </div>
                             </td>
-                            <td className="px-4 py-2 text-right font-semibold text-rose-500">
+                            <td className="px-4 py-2">
+                              <div className="flex justify-center">
+                                <select
+                                  className="h-8 rounded-md border border-input bg-background px-2 py-1 text-xs shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring w-[120px]"
+                                  value={item.ReturnReason}
+                                  onChange={e => updateReturnItem(item.PurchaseItemId, 'ReturnReason', e.target.value)}
+                                >
+                                  <option value="Expired">Expired</option>
+                                  <option value="Damaged">Damaged</option>
+                                  <option value="Near Expiry">Near Expiry</option>
+                                  <option value="Slow Moving">Slow Moving</option>
+                                  <option value="Wrong Delivery">Wrong Delivery</option>
+                                </select>
+                              </div>
+                            </td>
+                            <td className="px-4 py-2 text-right font-semibold text-rose-500 font-mono text-xs">
                               ₨ {formatNumber(Number(item.RefundAmount || 0))}
                             </td>
                           </tr>
@@ -1026,26 +1252,98 @@ export default function PurchasesPage() {
                       <tr className="bg-secondary/40 text-muted-foreground text-xs uppercase tracking-wider border-b border-border">
                         <th className="px-4 py-2 font-semibold">Date</th>
                         <th className="px-4 py-2 font-semibold">Debit Note</th>
+                        <th className="px-4 py-2 font-semibold">Original Inv.</th>
                         <th className="px-4 py-2 font-semibold">Supplier</th>
+                        <th className="px-4 py-2 font-semibold">Settlement Type</th>
                         <th className="px-4 py-2 font-semibold text-right">Refund Amount</th>
+                        <th className="px-4 py-2 font-semibold text-center">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
                       {returnsHistory.length === 0 ? (
-                        <tr><td colSpan={4} className="text-center py-8 text-muted-foreground">No returns processed yet.</td></tr>
+                        <tr><td colSpan={7} className="text-center py-12 text-muted-foreground"><div className="flex flex-col items-center gap-2"><Undo2 className="h-10 w-10 opacity-20" /><span>No debit notes processed yet.</span></div></td></tr>
                       ) : (
-                        returnsHistory.map(r => (
-                          <tr key={r.ReturnId}>
+                        returnsHistory
+                          .slice((returnsCurrentPage - 1) * returnsPageSize, returnsCurrentPage * returnsPageSize)
+                          .map(r => (
+                          <tr key={r.ReturnId} className="hover:bg-secondary/10 transition-colors">
                             <td className="px-4 py-2 text-muted-foreground">{new Date(r.ReturnDate).toLocaleDateString()}</td>
                             <td className="px-4 py-2 font-medium">{r.ReturnInvoiceNumber}</td>
+                            <td className="px-4 py-2 text-slate-600">{r.OriginalInvoiceNumber || "-"}</td>
                             <td className="px-4 py-2">{r.SupplierName}</td>
-                            <td className="px-4 py-2 text-right font-bold text-rose-500">₨ {formatNumber(Number(r.TotalRefundAmount || 0))}</td>
+                            <td className="px-4 py-2">
+                              <span className={cn("px-2 py-1 rounded-full text-[10px] font-bold tracking-wide", 
+                                r.SettlementType === 'Cash Refund' ? "bg-emerald-100 text-emerald-700" : "bg-blue-100 text-blue-700"
+                              )}>
+                                {r.SettlementType || 'Ledger Adjusted'}
+                              </span>
+                            </td>
+                            <td className="px-4 py-2 text-right font-bold text-rose-500 font-mono">₨ {formatNumber(Number(r.TotalRefundAmount || 0))}</td>
+                            <td className="px-4 py-2 text-center" onClick={(e) => e.stopPropagation()}>
+                              <div className="flex items-center justify-center gap-2">
+                                <Button 
+                                  variant="ghost" size="sm" className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                  onClick={() => setViewingInvoice(r)} title="View Debit Note"
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                                <Button 
+                                  variant="ghost" size="sm" className="h-8 w-8 p-0 text-slate-600 hover:text-slate-800 hover:bg-slate-100"
+                                  onClick={() => { setViewingInvoice(r); setTimeout(() => window.print(), 300); }} title="Print Debit Note"
+                                >
+                                  <Printer className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </td>
                           </tr>
                         ))
                       )}
                     </tbody>
                   </table>
                 </div>
+                {/* Debit Notes Pagination Footer */}
+                {(() => {
+                  const totalReturnsPages = Math.max(1, Math.ceil(returnsHistory.length / returnsPageSize));
+                  const startIdx = returnsHistory.length === 0 ? 0 : (returnsCurrentPage - 1) * returnsPageSize + 1;
+                  const endIdx = Math.min(returnsCurrentPage * returnsPageSize, returnsHistory.length);
+                  return (
+                    <div className="px-6 py-4 border-t border-border bg-slate-50/50 dark:bg-secondary/20 flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-2">
+                        <span>Rows per page:</span>
+                        <select
+                          className="h-8 rounded-md border border-input bg-background px-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                          value={returnsPageSize}
+                          onChange={e => { setReturnsPageSize(Number(e.target.value)); setReturnsCurrentPage(1); }}
+                        >
+                          <option value={10}>10</option>
+                          <option value={25}>25</option>
+                          <option value={50}>50</option>
+                        </select>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <div>
+                          Showing {startIdx}–{endIdx} of {returnsHistory.length}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="outline" size="sm" className="h-8 px-3"
+                            onClick={() => setReturnsCurrentPage(p => Math.max(1, p - 1))}
+                            disabled={returnsCurrentPage === 1}
+                          >
+                            Prev
+                          </Button>
+                          <Button
+                            variant="outline" size="sm" className="h-8 px-3"
+                            onClick={() => setReturnsCurrentPage(p => Math.min(totalReturnsPages, p + 1))}
+                            disabled={returnsCurrentPage >= totalReturnsPages}
+                          >
+                            Next
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
             </div>
 
@@ -1057,12 +1355,24 @@ export default function PurchasesPage() {
                     <ArrowDownToLine className="h-5 w-5 text-rose-500" /> Return Summary
                   </h3>
                   
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     <div className="space-y-1.5">
-                      <label className="text-xs font-semibold text-muted-foreground">Reason for Return</label>
+                      <label className="text-xs font-semibold text-muted-foreground">Settlement Method</label>
+                      <select 
+                        className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        value={settlementType}
+                        onChange={e=>setSettlementType(e.target.value)}
+                      >
+                        <option value="Adjust in Supplier Balance">Adjust in Supplier Balance</option>
+                        <option value="Cash Refund">Cash Refund</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold text-muted-foreground">Global Note (Optional)</label>
                       <textarea 
-                        className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring custom-scrollbar"
-                        placeholder="e.g. Expired stock, Damaged goods..."
+                        className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring custom-scrollbar"
+                        placeholder="Additional notes for this debit note..."
                         value={returnReason}
                         onChange={e=>setReturnReason(e.target.value)}
                       />
@@ -1071,14 +1381,14 @@ export default function PurchasesPage() {
                     <div className="border-t border-border pt-4 mt-2">
                       <div className="flex justify-between items-center">
                         <span className="font-bold text-base text-foreground">Total Refund Due</span>
-                        <span className="font-bold text-xl text-rose-500">₨ {formatNumber(Number(totalRefundDue || 0))}</span>
+                        <span className="font-bold text-xl text-rose-500 font-mono">₨ {formatNumber(Number(totalRefundDue || 0))}</span>
                       </div>
                     </div>
                   </div>
                 </div>
                 
                 <Button onClick={handleSaveReturn} className="bg-rose-600 hover:bg-rose-700 text-white font-semibold shadow-sm w-full h-11" disabled={totalRefundDue <= 0}>
-                  <ArrowDownToLine className="h-4 w-4 mr-2" /> Process Return & Deduct Stock
+                  <ArrowDownToLine className="h-4 w-4 mr-2" /> Process Return (Generate Debit Note)
                 </Button>
               </div>
             )}
@@ -1089,79 +1399,109 @@ export default function PurchasesPage() {
 
       {/* --- INVOICE DETAILS MODAL --- */}
       {printData && (
-        <div className="absolute inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-card w-full max-w-4xl rounded-2xl shadow-2xl border border-border flex flex-col max-h-full overflow-hidden animate-in zoom-in-95 duration-200">
+        <div className="absolute inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6">
+          <div className="bg-white dark:bg-[#0f172a] w-full max-w-4xl rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col max-h-[95vh] overflow-hidden animate-in zoom-in-95 duration-300">
             
-            <div className="px-6 py-4 border-b border-border flex justify-between items-center bg-slate-50/50 dark:bg-secondary/20">
-              <div>
-                <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
-                  <FileText className="h-5 w-5 text-primary" />
-                  {showDraftPreview ? "Draft Invoice Preview: " : "Invoice Details: "}
-                  {printData.InvoiceNumber}
-                </h2>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Supplier: {printData.SupplierName} | Date: {new Date(printData.PurchaseDate).toLocaleDateString()}
-                </p>
+            {/* Modal Header */}
+            <div className="px-6 py-4 flex justify-between items-center border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-xl bg-blue-600 flex items-center justify-center shadow-inner">
+                  <FileText className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">
+                    {printData.IsReturn ? "Debit Note Details" : (showDraftPreview ? "Draft Invoice Preview" : "Invoice Details")}
+                  </h2>
+                  <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-0.5">
+                    ID: <span className="text-slate-700 dark:text-slate-300 font-mono">{printData.InvoiceNumber}</span>
+                  </p>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <Button onClick={() => window.print()} className="bg-primary hover:bg-primary/90 text-primary-foreground h-9 shadow-sm">
+              <div className="flex items-center gap-3">
+                <Button onClick={() => window.print()} className="bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-500/20 h-10 px-5 transition-all">
                   <Printer className="h-4 w-4 mr-2" /> Print PDF
                 </Button>
                 <button 
                   onClick={() => { setViewingInvoice(null); setShowDraftPreview(false); }}
-                  className="p-2 rounded-full hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground"
+                  className="h-10 w-10 flex items-center justify-center rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-slate-500 hover:text-slate-900 dark:hover:text-white"
                 >
                   <X className="h-5 w-5" />
                 </button>
               </div>
             </div>
             
-            <div className="p-6 overflow-y-auto custom-scrollbar flex-1">
-              <table className="w-full text-left text-sm border-collapse">
-                <thead>
-                  <tr className="bg-secondary/40 text-muted-foreground text-xs uppercase tracking-wider border-b border-border">
-                    <th className="px-4 py-2 font-semibold">Medicine</th>
-                    <th className="px-4 py-2 font-semibold">Batch</th>
-                    <th className="px-4 py-2 font-semibold">Expiry</th>
-                    <th className="px-4 py-2 font-semibold text-center">Qty</th>
-                    <th className="px-4 py-2 font-semibold text-center">Free</th>
-                    <th className="px-4 py-2 font-semibold text-right">Cost</th>
-                    <th className="px-4 py-2 font-semibold text-right">Total</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {printData.items.map((item: any, idx: number) => (
-                    <tr key={item.PurchaseItemId || idx} className="hover:bg-secondary/10 transition-colors">
-                      <td className="px-4 py-3 font-medium">{item.MedicineName}</td>
-                      <td className="px-4 py-3 font-mono text-xs">{item.BatchCode || "-"}</td>
-                      <td className="px-4 py-3 text-muted-foreground">{item.ExpiryDate || "-"}</td>
-                      <td className="px-4 py-3 text-center">{item.Quantity}</td>
-                      <td className="px-4 py-3 text-center text-muted-foreground">{item.FreeQty || 0}</td>
-                      <td className="px-4 py-3 text-right">₨ {formatNumber(Number(item.CostPrice || 0))}</td>
-                      <td className="px-4 py-3 text-right font-semibold">₨ {formatNumber(Number(item.LineTotal || 0))}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            {/* Modal Body */}
+            <div className="p-6 md:p-8 overflow-y-auto custom-scrollbar flex-1 bg-white dark:bg-[#0f172a]">
               
-              <div className="mt-6 flex justify-end">
-                <div className="w-64 space-y-2 text-sm bg-slate-50 dark:bg-secondary/20 p-4 rounded-xl border border-border">
-                  <div className="flex justify-between font-bold text-base border-b border-border pb-2 mb-2">
-                    <span>Grand Total:</span>
-                    <span>₨ {formatNumber(Number(printData.GrandTotal || 0))}</span>
+              {/* Premium Header Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                <div>
+                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Supplier Details</h3>
+                  <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
+                    <p className="text-lg font-bold text-slate-800 dark:text-slate-100">{printData.SupplierName}</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Authorized Pharmaceutical Distributor</p>
                   </div>
-                  <div className="flex justify-between text-emerald-600 font-medium">
-                    <span>Paid:</span>
-                    <span>₨ {formatNumber(Number(printData.PaidAmount || 0))}</span>
-                  </div>
-                  <div className="flex justify-between text-rose-500 font-medium">
-                    <span>Balance:</span>
-                    <span>₨ {formatNumber(Number((printData.GrandTotal || 0) - (printData.PaidAmount || 0)))}</span>
+                </div>
+                <div className="md:text-right">
+                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Purchase Info</h3>
+                  <div className="space-y-1">
+                    <p className="text-sm text-slate-600 dark:text-slate-400">Date: <span className="font-semibold text-slate-900 dark:text-slate-200">{new Date(printData.PurchaseDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span></p>
+                    <p className="text-sm text-slate-600 dark:text-slate-400">Status: <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">Completed</span></p>
                   </div>
                 </div>
               </div>
+
+              {/* Items Table */}
+              <div className="rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
+                <table className="w-full text-left text-sm border-collapse">
+                  <thead>
+                    <tr className="bg-slate-50 dark:bg-slate-900 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider border-b border-slate-200 dark:border-slate-800">
+                      <th className="px-5 py-3.5 font-bold">Medicine</th>
+                      <th className="px-5 py-3.5 font-bold">Batch</th>
+                      <th className="px-5 py-3.5 font-bold">Expiry</th>
+                      <th className="px-5 py-3.5 font-bold text-center">Qty</th>
+                      <th className="px-5 py-3.5 font-bold text-center">Free</th>
+                      <th className="px-5 py-3.5 font-bold text-right">Cost</th>
+                      <th className="px-5 py-3.5 font-bold text-right">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
+                    {printData.items.map((item: any, idx: number) => (
+                      <tr key={item.PurchaseItemId || idx} className="hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors">
+                        <td className="px-5 py-4 font-semibold text-slate-800 dark:text-slate-200">{item.MedicineName}</td>
+                        <td className="px-5 py-4 font-mono text-xs text-slate-600 dark:text-slate-400">{item.BatchCode || "-"}</td>
+                        <td className="px-5 py-4 text-slate-600 dark:text-slate-400">{item.ExpiryDate || "-"}</td>
+                        <td className="px-5 py-4 text-center font-medium text-slate-800 dark:text-slate-200">{item.Quantity}</td>
+                        <td className="px-5 py-4 text-center text-slate-500">{item.FreeQty || 0}</td>
+                        <td className="px-5 py-4 text-right text-slate-600 dark:text-slate-400">₨ {formatNumber(Number(item.CostPrice || 0))}</td>
+                        <td className="px-5 py-4 text-right font-bold text-slate-900 dark:text-white">₨ {formatNumber(Number(item.LineTotal || 0))}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              
+              {/* Grand Totals */}
+              <div className="mt-8 flex justify-end">
+                <div className="w-80 rounded-2xl bg-slate-50 dark:bg-slate-900 p-6 border border-slate-100 dark:border-slate-800 shadow-sm">
+                  <div className="space-y-3 text-sm">
+                    <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
+                      <span className="font-bold">Grand Total</span>
+                      <span className="font-semibold text-slate-900 dark:text-slate-200">₨ {formatNumber(Number(printData.GrandTotal || 0))}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-emerald-600 dark:text-emerald-400 font-medium pt-3 border-t border-slate-200 dark:border-slate-800">
+                      <span>Amount Paid</span>
+                      <span>₨ {formatNumber(Number(printData.PaidAmount || 0))}</span>
+                    </div>
+                    <div className="flex justify-between items-center pt-3 mt-1 border-t-2 border-slate-200 dark:border-slate-700">
+                      <span className="font-bold text-base text-slate-900 dark:text-white">Balance Due</span>
+                      <span className="font-bold text-xl text-rose-500">₨ {formatNumber(Number((printData.GrandTotal || 0) - (printData.PaidAmount || 0)))}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
             </div>
-            
           </div>
         </div>
       )}
@@ -1169,75 +1509,143 @@ export default function PurchasesPage() {
     </div>
 
     {/* --- PRINT ONLY LAYOUT --- */}
-    <div className="hidden print:block bg-white text-black min-h-screen p-8">
+    <div id="printable-invoice" className="hidden print:block bg-white text-black w-full">
+      <style dangerouslySetInnerHTML={{__html: `
+        @media print {
+          body * {
+            visibility: hidden;
+          }
+          #printable-invoice, #printable-invoice * {
+            visibility: visible;
+          }
+          #printable-invoice {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+          }
+          @page {
+            size: auto;
+            margin: 10mm;
+          }
+        }
+      `}} />
+      
       {printData && (
-        <div className="max-w-4xl mx-auto space-y-8">
-          {/* Print Header */}
-          <div className="flex justify-between items-start border-b-2 border-slate-800 pb-6">
-            <div>
-              <h1 className="text-4xl font-black text-slate-900 tracking-tight">PURCHASE INVOICE</h1>
-              <p className="text-sm font-medium text-slate-500 mt-2">Invoice No: {printData.InvoiceNumber}</p>
+        <div className="max-w-[210mm] mx-auto bg-white p-8">
+          
+          {/* Header Section */}
+          <div className="flex justify-between items-start border-b-[3px] border-slate-900 pb-6 mb-8">
+            <div className="flex items-center gap-4">
+              <div className="h-16 w-16 bg-slate-900 rounded-xl flex items-center justify-center text-white">
+                <FileText size={32} />
+              </div>
+              <div>
+                <h1 className="text-3xl font-black text-slate-900 tracking-tight">CarePlus Pharmacy</h1>
+                <p className="text-sm font-semibold text-slate-500 tracking-widest mt-1 uppercase">{printData.IsReturn ? "Purchase Return Record" : "Purchase Record"}</p>
+              </div>
             </div>
             <div className="text-right">
-              <h2 className="font-bold text-2xl text-slate-800">Pharmacy Management System</h2>
-              <p className="text-sm text-slate-600 mt-1">123 Health Ave, Medical District</p>
-              <p className="text-sm text-slate-600">Date: {new Date(printData.PurchaseDate).toLocaleDateString()}</p>
+              <h2 className="text-4xl font-black text-slate-200 tracking-tighter uppercase">{printData.IsReturn ? "Debit Note" : "Invoice"}</h2>
+              <p className="text-sm font-semibold text-slate-800 mt-2">No: <span className="text-slate-600 font-mono">{printData.InvoiceNumber}</span></p>
+              <p className="text-sm font-semibold text-slate-800">Date: <span className="text-slate-600 font-mono">{new Date(printData.PurchaseDate).toLocaleDateString('en-GB')}</span></p>
             </div>
           </div>
           
-          {/* Print Supplier Info */}
-          <div className="pb-4">
-            <h3 className="font-bold text-sm text-slate-500 uppercase tracking-wider mb-1">Supplier Details:</h3>
-            <p className="text-xl font-bold text-slate-800">{printData.SupplierName}</p>
+          {/* Meta Information */}
+          <div className="grid grid-cols-2 gap-12 mb-10">
+            <div>
+              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Distributor / Supplier</h3>
+              <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/50">
+                <p className="text-xl font-bold text-slate-900">{printData.SupplierName}</p>
+                <p className="text-sm text-slate-500 mt-1">Authorized Pharmaceutical Supplier</p>
+              </div>
+            </div>
+            <div>
+              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Ship To / Facility</h3>
+              <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/50">
+                <p className="text-lg font-bold text-slate-900">CarePlus Central Pharmacy</p>
+                <p className="text-sm text-slate-500 mt-1">123 Health Ave, Medical District<br/>City, State, ZIP</p>
+              </div>
+            </div>
           </div>
 
-          {/* Print Items Table */}
-          <table className="w-full text-left border-collapse mt-6">
-             <thead>
-               <tr className="border-b-2 border-slate-800 text-slate-800">
-                 <th className="py-3 font-bold">Item Name</th>
-                 <th className="py-3 font-bold">Batch</th>
-                 <th className="py-3 font-bold text-center">Qty</th>
-                 <th className="py-3 font-bold text-right">Cost Price</th>
-                 <th className="py-3 font-bold text-right">Total</th>
-               </tr>
-             </thead>
-             <tbody className="divide-y divide-slate-200">
-               {printData.items.map((item: any, idx: number) => (
-                 <tr key={idx}>
-                   <td className="py-4 text-slate-800 font-medium">{item.MedicineName}</td>
-                   <td className="py-4 text-slate-600 font-mono text-sm">{item.BatchCode || "-"}</td>
-                   <td className="py-4 text-center text-slate-800">{item.Quantity}</td>
-                   <td className="py-4 text-right text-slate-600">₨ {formatNumber(Number(item.CostPrice || 0))}</td>
-                   <td className="py-4 text-right font-bold text-slate-800">₨ {formatNumber(Number(item.LineTotal || 0))}</td>
+          {/* Items Table */}
+          <div className="mb-10 overflow-hidden rounded-xl border border-slate-200">
+            <table className="w-full text-left border-collapse text-sm">
+               <thead>
+                 <tr className="bg-slate-900 text-white">
+                   <th className="py-3 px-4 font-semibold text-xs uppercase tracking-wider w-[40%]">Item Description</th>
+                   <th className="py-3 px-4 font-semibold text-xs uppercase tracking-wider">Batch/Exp</th>
+                   <th className="py-3 px-4 font-semibold text-xs uppercase tracking-wider text-center">Qty</th>
+                   <th className="py-3 px-4 font-semibold text-xs uppercase tracking-wider text-right">Unit Price</th>
+                   <th className="py-3 px-4 font-semibold text-xs uppercase tracking-wider text-right">Total</th>
                  </tr>
-               ))}
-             </tbody>
-          </table>
+               </thead>
+               <tbody className="divide-y divide-slate-200">
+                 {printData.items.map((item: any, idx: number) => (
+                   <tr key={idx} className={idx % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
+                     <td className="py-3 px-4 text-slate-900 font-bold">{item.MedicineName}</td>
+                     <td className="py-3 px-4">
+                       <div className="text-slate-800 font-mono text-xs font-semibold">{item.BatchCode || "N/A"}</div>
+                       <div className="text-slate-400 text-[10px] mt-0.5">Exp: {item.ExpiryDate || "N/A"}</div>
+                     </td>
+                     <td className="py-3 px-4 text-center font-semibold text-slate-800">
+                        {item.Quantity}
+                        {item.FreeQty > 0 && <span className="text-slate-400 text-xs ml-1">(+{item.FreeQty})</span>}
+                     </td>
+                     <td className="py-3 px-4 text-right text-slate-600 font-mono text-xs">₨ {formatNumber(Number(item.CostPrice || 0))}</td>
+                     <td className="py-3 px-4 text-right font-bold text-slate-900 font-mono">₨ {formatNumber(Number(item.LineTotal || 0))}</td>
+                   </tr>
+                 ))}
+               </tbody>
+            </table>
+          </div>
 
-          {/* Print Totals */}
-          <div className="flex justify-end pt-8">
-             <div className="w-80 space-y-3">
-                <div className="flex justify-between font-black text-xl border-b-2 border-slate-800 pb-3 text-slate-900">
-                   <span>Grand Total:</span>
-                   <span>₨ {formatNumber(Number(printData.GrandTotal || 0))}</span>
-                </div>
-                <div className="flex justify-between text-slate-700 font-medium text-lg pt-2">
-                   <span>Paid Amount:</span>
-                   <span>₨ {formatNumber(Number(printData.PaidAmount || 0))}</span>
-                </div>
-                <div className="flex justify-between text-slate-500 font-medium text-lg pt-1">
-                   <span>Balance Due:</span>
-                   <span>₨ {formatNumber(Number((printData.GrandTotal || 0) - (printData.PaidAmount || 0)))}</span>
+          {/* Totals Section */}
+          <div className="flex justify-end mb-16">
+             <div className="w-[320px]">
+                <div className="space-y-3 p-5 rounded-xl border-2 border-slate-100 bg-slate-50 text-sm">
+                   <div className="flex justify-between text-slate-600 font-semibold">
+                      <span>{printData.IsReturn ? "Total Return Value" : "Subtotal"}</span>
+                      <span className="font-mono">₨ {formatNumber(Number(printData.GrandTotal || 0))}</span>
+                   </div>
+                   {!printData.IsReturn && (
+                     <div className="flex justify-between text-slate-600 font-semibold pb-3 border-b border-slate-200">
+                        <span>Amount Paid</span>
+                        <span className="font-mono text-emerald-600">₨ {formatNumber(Number(printData.PaidAmount || 0))}</span>
+                     </div>
+                   )}
+                   {printData.IsReturn && (
+                     <div className="flex justify-between text-slate-600 font-semibold pb-3 border-b border-slate-200">
+                        <span>Settlement</span>
+                        <span className="font-semibold text-emerald-600">{printData.SettlementType}</span>
+                     </div>
+                   )}
+                   <div className="flex justify-between font-black text-xl text-slate-900 pt-2 items-center">
+                      <span>{printData.IsReturn ? "Refund Total" : "Balance Due"}</span>
+                      <span className="font-mono text-rose-600">₨ {formatNumber(Number(printData.IsReturn ? printData.GrandTotal : ((printData.GrandTotal || 0) - (printData.PaidAmount || 0))))}</span>
+                   </div>
                 </div>
              </div>
           </div>
           
-          {/* Print Footer */}
-          <div className="mt-16 pt-8 border-t border-slate-200 text-center text-slate-500 text-sm">
-            <p>Thank you for your business.</p>
-            <p>Generated by Pharmacy Management System</p>
+          {/* Signatures & Footer */}
+          <div className="pt-16 mt-8 flex justify-between items-end">
+             <div className="w-48 text-center border-t border-slate-300 pt-2">
+                <p className="text-xs font-bold text-slate-500 uppercase">Received By</p>
+             </div>
+             <div className="text-center text-slate-400 text-xs">
+                <p className="font-semibold text-slate-500">CarePlus Pharmacy Management System</p>
+                <p className="mt-1">Computer Generated Document</p>
+             </div>
+             <div className="w-48 text-center border-t border-slate-300 pt-2">
+                <p className="text-xs font-bold text-slate-500 uppercase">Authorized Signatory</p>
+             </div>
           </div>
+          
         </div>
       )}
     </div>

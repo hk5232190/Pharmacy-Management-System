@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import desc
 from typing import List
 
-from models import PurchaseReturn, PurchaseReturnItem, StockBatch, Supplier, Medicine
+from models import PurchaseReturn, PurchaseReturnItem, StockBatch, Supplier, Medicine, Purchase
 from schemas.purchase_return import PurchaseReturnCreate, PurchaseReturnResponse
 from schemas.base import BaseResponse
 from api.deps import get_current_user, get_db
@@ -26,7 +26,8 @@ def create_purchase_return(
             SupplierId=return_in.SupplierId,
             ReturnInvoiceNumber=return_in.ReturnInvoiceNumber,
             TotalRefundAmount=return_in.TotalRefundAmount,
-            Reason=return_in.Reason
+            Reason=return_in.Reason,
+            SettlementType=return_in.SettlementType
         )
         db.add(new_return)
         db.flush()
@@ -42,7 +43,8 @@ def create_purchase_return(
                 MedicineId=item.MedicineId,
                 BatchCode=item.BatchCode,
                 ReturnQuantity=item.ReturnQuantity,
-                RefundAmount=item.RefundAmount
+                RefundAmount=item.RefundAmount,
+                ReturnReason=item.ReturnReason
             )
             db.add(new_item)
             
@@ -62,6 +64,9 @@ def create_purchase_return(
                 
             existing_batch.Quantity -= item.ReturnQuantity
                 
+        if return_in.SettlementType == "Adjust in Supplier Balance":
+            supplier.CurrentBalance -= return_in.TotalRefundAmount
+            
         db.commit()
         db.refresh(new_return)
         
@@ -91,6 +96,9 @@ def get_purchase_returns(
         # I'll query it manually.
         supplier = db.query(Supplier).filter(Supplier.SupplierId == r.SupplierId).first()
         r_dict["SupplierName"] = supplier.Name if supplier else None
+        
+        purchase = db.query(Purchase).filter(Purchase.PurchaseId == r.PurchaseId).first()
+        r_dict["OriginalInvoiceNumber"] = purchase.InvoiceNumber if purchase else None
         
         items_list = []
         for i in r.items:
