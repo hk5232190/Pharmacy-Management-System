@@ -27,6 +27,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useProfile } from "@/contexts/ProfileContext";
+import { useRouter } from "next/navigation";
 
 interface InventorySummary {
   total_medicines: number;
@@ -66,31 +67,46 @@ interface StockAdjustment {
   BatchCode: string;
   AdjustmentType: string;
   Quantity: number;
+  PreviousQuantity: number;
+  NewQuantity: number;
   Reason: string;
   AdjustmentDate: string;
   UserName: string;
 }
 
-interface ExpiryTrack {
+interface ExpiryItem {
   BatchId: number;
   MedicineName: string;
   CategoryName: string;
   SupplierName: string;
   BatchCode: string;
   CurrentStock: number;
+  PurchasePrice: number;
+  ValueAtRisk: number;
   ExpiryDate: string;
   DaysToExpiry: number;
   ExpiryStatus: string;
+}
+
+interface ExpiryKpiSummary {
+  expired_count: number;
+  expired_value: number;
+  expiring_30d_count: number;
+  expiring_30d_value: number;
+  expiring_90d_count: number;
+  expiring_90d_value: number;
 }
 
 interface StockMovement {
   Date: string;
   MedicineName: string;
   BatchCode: string;
+  Barcode?: string;
   MovementType: string;
   QuantityChange: number;
+  BalanceStock: number;
   Reference: string;
-  UserName: string;
+  SourceId?: number;
 }
 
 interface AuditLogEntry {
@@ -103,6 +119,7 @@ interface AuditLogEntry {
 
 export default function InventoryManagementPage() {
   const { profile } = useProfile();
+  const router = useRouter();
   const [summary, setSummary] = useState<InventorySummary>({
     total_medicines: 0,
     total_stock_quantity: 0,
@@ -115,7 +132,14 @@ export default function InventoryManagementPage() {
 
   const [stockList, setStockList] = useState<StockBatch[]>([]);
   const [adjustmentHistory, setAdjustmentHistory] = useState<StockAdjustment[]>([]);
-  const [expiryList, setExpiryList] = useState<ExpiryTrack[]>([]);
+  const [expiryItems, setExpiryItems] = useState<ExpiryItem[]>([]);
+  const [expiryKpi, setExpiryKpi] = useState<ExpiryKpiSummary | null>(null);
+  const [expiryTotal, setExpiryTotal] = useState(0);
+  const [expiryTimeframe, setExpiryTimeframe] = useState(30);
+  const [expirySearch, setExpirySearch] = useState("");
+  const [expirySupplierFilter, setExpirySupplierFilter] = useState("All");
+  const [expiryPage, setExpiryPage] = useState(1);
+  const expiryPageSize = 15;
   const [movementList, setMovementList] = useState<StockMovement[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -132,6 +156,7 @@ export default function InventoryManagementPage() {
   const [masterCompanies, setMasterCompanies] = useState<{CompanyId: number, CompanyName: string}[]>([]);
   
   // Movement Filters
+  const [movSearchQuery, setMovSearchQuery] = useState("");
   const [movBatchFilter, setMovBatchFilter] = useState("");
   const [movTypeFilter, setMovTypeFilter] = useState("");
   const [movStartDate, setMovStartDate] = useState("");
@@ -151,12 +176,21 @@ export default function InventoryManagementPage() {
   const [adjPageSize, setAdjPageSize] = useState(10);
   const [adjCurrentPage, setAdjCurrentPage] = useState(1);
 
-  // Export dropdown
+  // Export dropdown (stock tab only)
   const [exportOpen, setExportOpen] = useState(false);
   const exportRef = useRef<HTMLDivElement>(null);
 
   // Premium refresh state: 'idle' | 'loading' | 'done'
   const [refreshState, setRefreshState] = useState<"idle" | "loading" | "done">("idle");
+
+  // Movement pagination
+  const [movPageSize] = useState(20);
+  const [movCurrentPage, setMovCurrentPage] = useState(1);
+
+  // Document preview modal
+  const [previewDoc, setPreviewDoc] = useState<{ type: string; id: number; ref: string } | null>(null);
+  const [previewData, setPreviewData] = useState<any>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
 
   // Client-side filtering for Category & Company
   const filteredStockList = stockList.filter(item => {
@@ -251,15 +285,13 @@ export default function InventoryManagementPage() {
         setAdjustmentHistory(adjRes.data);
       }
       
-      const expRes = await apiClient.get(`/inventory/expiry?days=90`);
-      if (expRes.success && expRes.data) {
-        setExpiryList(expRes.data);
-      }
+      // Expiry data is now fetched via a separate effect/function (fetchExpiryData)
+      // to avoid corrupting KPIs and allow standalone pagination.
 
       // Build movement query string
       let movQuery = [];
-      if (movBatchFilter) movQuery.push(`batch_code=${movBatchFilter}`);
-      if (movTypeFilter) movQuery.push(`movement_type=${movTypeFilter}`);
+      if (movBatchFilter) movQuery.push(`batch_code=${encodeURIComponent(movBatchFilter)}`);
+      if (movTypeFilter) movQuery.push(`movement_type=${encodeURIComponent(movTypeFilter)}`);
       if (movStartDate) movQuery.push(`start_date=${movStartDate}`);
       if (movEndDate) movQuery.push(`end_date=${movEndDate}`);
       
@@ -289,6 +321,37 @@ export default function InventoryManagementPage() {
       setLoading(false);
     }
   };
+
+  const fetchExpiryData = async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams({
+        days: String(expiryTimeframe),
+        page: String(expiryPage),
+        page_size: String(expiryPageSize)
+      });
+      if (expirySearch) params.append("medicine_name", expirySearch);
+      if (expirySupplierFilter !== "All") params.append("supplier_name", expirySupplierFilter);
+      
+      const res = await apiClient.get(`/inventory/expiry?${params.toString()}`);
+      if (res.success && res.data) {
+        setExpiryItems(res.data.items);
+        setExpiryTotal(res.data.total);
+        setExpiryKpi(res.data.kpi_summary);
+      }
+    } catch (error) {
+      toast.error("Failed to load expiry data");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === "expiry") {
+      fetchExpiryData();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [expiryTimeframe, expiryPage, expirySearch, expirySupplierFilter, activeTab]);
 
   // Premium refresh handler — shows spinner then checkmark briefly
   const handleRefresh = async () => {
@@ -577,12 +640,49 @@ export default function InventoryManagementPage() {
     setActiveTab("history");
   };
 
+  // Open document preview modal for a movement reference
+  const openPreview = async (mov: StockMovement) => {
+    if (!mov.SourceId) return;
+    const type = mov.MovementType;
+    setPreviewDoc({ type, id: mov.SourceId, ref: mov.Reference });
+    setPreviewData(null);
+    setPreviewLoading(true);
+    try {
+      let res: any = null;
+      if (type === "Purchase") {
+        res = await apiClient.get("/purchases");
+        if (res.success && res.data) {
+          const found = res.data.find((p: any) => p.PurchaseId === mov.SourceId);
+          setPreviewData(found || null);
+        }
+      } else if (type === "POS Sale") {
+        const sRes = await apiClient.get(`/sales/history?limit=500`);
+        if (sRes.success && sRes.data) {
+          const found = sRes.data.find((s: any) => s.SalesId === mov.SourceId);
+          setPreviewData(found || null);
+        }
+      } else if (type === "Purchase Return") {
+        const rRes = await apiClient.get("/purchase-returns");
+        if (rRes.success && rRes.data) {
+          const found = rRes.data.find((r: any) => r.ReturnId === mov.SourceId);
+          setPreviewData(found || null);
+        }
+      } else {
+        setPreviewData({ note: "No linked document available for this movement type." });
+      }
+    } catch {
+      setPreviewData(null);
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
+
+
   const tabs = [
     { id: "current", label: "Current Stock" },
     { id: "adjustments", label: "Stock Adjustments" },
     { id: "history", label: "Stock Movement History" },
     { id: "expiry", label: "Expiry Tracking" },
-    { id: "audit", label: "Audit Logs" },
   ];
 
   return (
@@ -599,15 +699,17 @@ export default function InventoryManagementPage() {
         </div>
 
         {/* KPI Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-7 gap-4 mb-8">
-          <KPICard title="Total Medicines"  value={summary.total_medicines}                                                              icon={<Pill           className="h-6 w-6" />} accent="blue"    />
-          <KPICard title="Total Stock Qty"  value={summary.total_stock_quantity.toLocaleString()}                                       icon={<Package        className="h-6 w-6" />} accent="emerald" />
-          <KPICard title="Inventory Value"  value={`Rs ${summary.inventory_value.toLocaleString(undefined, {minimumFractionDigits: 2})}`} icon={<CircleDollarSign className="h-6 w-6" />} accent="purple"  />
-          <KPICard title="Low Stock"        value={summary.low_stock_items}                                                              icon={<AlertTriangle  className="h-6 w-6" />} accent="orange"  />
-          <KPICard title="Expiring (90d)"   value={summary.expiring_medicines}                                                           icon={<CalendarDays   className="h-6 w-6" />} accent="amber"   />
-          <KPICard title="Overstock"        value={summary.overstock_items}                                                              icon={<Package        className="h-6 w-6" />} accent="indigo"  />
-          <KPICard title="Out of Stock"     value={summary.out_of_stock_medicines}                                                       icon={<Box            className="h-6 w-6" />} accent="rose"    />
-        </div>
+        {activeTab !== "expiry" && (
+          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-7 gap-4 mb-8">
+            <KPICard title="Total Medicines"  value={summary.total_medicines}                                                              icon={<Pill           className="h-6 w-6" />} accent="blue"    />
+            <KPICard title="Total Stock Qty"  value={summary.total_stock_quantity.toLocaleString()}                                       icon={<Package        className="h-6 w-6" />} accent="emerald" />
+            <KPICard title="Inventory Value"  value={`Rs ${summary.inventory_value.toLocaleString(undefined, {minimumFractionDigits: 2})}`} icon={<CircleDollarSign className="h-6 w-6" />} accent="purple"  />
+            <KPICard title="Low Stock"        value={summary.low_stock_items}                                                              icon={<AlertTriangle  className="h-6 w-6" />} accent="orange"  />
+            <KPICard title="Expiring (90d)"   value={summary.expiring_medicines}                                                           icon={<CalendarDays   className="h-6 w-6" />} accent="amber"   />
+            <KPICard title="Overstock"        value={summary.overstock_items}                                                              icon={<Package        className="h-6 w-6" />} accent="indigo"  />
+            <KPICard title="Out of Stock"     value={summary.out_of_stock_medicines}                                                       icon={<Box            className="h-6 w-6" />} accent="rose"    />
+          </div>
+        )}
 
         {/* Tabs & Actions */}
         <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 border-b border-border pb-4 mb-6">
@@ -630,46 +732,6 @@ export default function InventoryManagementPage() {
 
           <div className="flex items-center gap-2">
 
-
-            {/* Export Dropdown */}
-            <div className="relative" ref={exportRef}>
-              <Button
-                variant="outline"
-                className="h-9 gap-2"
-                onClick={() => setExportOpen(o => !o)}
-              >
-                <Download className="h-4 w-4" />
-                Export
-                <ChevronDown className={cn("h-3.5 w-3.5 transition-transform duration-200", exportOpen && "rotate-180")} />
-              </Button>
-              {exportOpen && (
-                <div className="absolute right-0 top-full mt-1.5 w-48 bg-white dark:bg-card rounded-xl shadow-xl border border-border z-50 overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150">
-                  <div className="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border">
-                    Export Current Stock
-                  </div>
-                  <button
-                    onClick={exportStockCSV}
-                    className="flex w-full items-center gap-3 px-4 py-2.5 text-sm hover:bg-emerald-50 dark:hover:bg-emerald-900/20 text-foreground transition-colors group"
-                  >
-                    <FileSpreadsheet className="h-4 w-4 text-emerald-500 group-hover:scale-110 transition-transform" />
-                    <div className="text-left">
-                      <div className="font-medium">Export CSV</div>
-                      <div className="text-[11px] text-muted-foreground">Spreadsheet format</div>
-                    </div>
-                  </button>
-                  <button
-                    onClick={exportStockPDF}
-                    className="flex w-full items-center gap-3 px-4 py-2.5 text-sm hover:bg-rose-50 dark:hover:bg-rose-900/20 text-foreground transition-colors group border-t border-border"
-                  >
-                    <FileText className="h-4 w-4 text-rose-500 group-hover:scale-110 transition-transform" />
-                    <div className="text-left">
-                      <div className="font-medium">Export PDF</div>
-                      <div className="text-[11px] text-muted-foreground">Print / Save as PDF</div>
-                    </div>
-                  </button>
-                </div>
-              )}
-            </div>
 
             {/* Premium Refresh Button */}
             <Button
@@ -1039,158 +1101,454 @@ export default function InventoryManagementPage() {
         )}
 
         {activeTab === "expiry" && (
-          <div className="bg-white dark:bg-card rounded-xl border border-border shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300 flex flex-col h-[600px]">
-            <div className="p-4 border-b border-border bg-slate-50/50 dark:bg-secondary/20 flex justify-between items-center">
-              <h3 className="font-semibold text-foreground flex items-center gap-2">
-                <CalendarDays className="h-5 w-5 text-rose-500" /> Expiry Tracking (Next 90 Days)
-              </h3>
-            </div>
-            <div className="overflow-auto flex-1 custom-scrollbar">
-              <table className="w-full text-left text-sm border-collapse min-w-[1000px]">
-                <thead className="sticky top-0 z-10 bg-white dark:bg-card">
-                  <tr className="bg-secondary/40 text-muted-foreground text-xs uppercase tracking-wider border-b border-border">
-                    <th className="px-4 py-3 font-semibold">Medicine</th>
-                    <th className="px-4 py-3 font-semibold">Category</th>
-                    <th className="px-4 py-3 font-semibold">Batch No.</th>
-                    <th className="px-4 py-3 font-semibold text-center">Stock Remaining</th>
-                    <th className="px-4 py-3 font-semibold">Expiry Date</th>
-                    <th className="px-4 py-3 font-semibold text-right">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {loading ? (
-                    <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">Loading expiry data...</td></tr>
-                  ) : expiryList.length === 0 ? (
-                    <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">No expiring medicines in the next 90 days.</td></tr>
-                  ) : (
-                    expiryList.map(item => (
-                      <tr key={item.BatchId} className={cn(
-                        "transition-colors",
-                        item.DaysToExpiry < 0 ? "bg-rose-50/50 hover:bg-rose-100/50 dark:bg-rose-950/20 dark:hover:bg-rose-900/30" : "hover:bg-secondary/10"
-                      )}>
-                        <td className="px-4 py-3 font-semibold text-foreground">{item.MedicineName}</td>
-                        <td className="px-4 py-3 text-muted-foreground">{item.CategoryName}</td>
-                        <td className="px-4 py-3 font-mono text-xs">{item.BatchCode}</td>
-                        <td className="px-4 py-3 text-center font-bold">{item.CurrentStock}</td>
-                        <td className="px-4 py-3">
-                          <span className={cn(
-                            "font-medium", 
-                            item.DaysToExpiry < 0 ? "text-rose-600 dark:text-rose-400 font-bold" : "text-amber-600 dark:text-amber-400"
-                          )}>
+          <div className="flex flex-col gap-4 animate-in fade-in duration-300">
+            {/* KPI Summary Cards */}
+            {expiryKpi && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-white dark:bg-card border-l-4 border-l-rose-500 rounded-xl p-4 shadow-sm">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Already Expired</p>
+                      <h3 className="text-2xl font-bold mt-1 text-rose-600 dark:text-rose-400">{expiryKpi.expired_count} batches</h3>
+                    </div>
+                    <div className="p-2 bg-rose-50 dark:bg-rose-900/20 rounded-lg">
+                      <AlertTriangle className="h-5 w-5 text-rose-500" />
+                    </div>
+                  </div>
+                  <div className="mt-4 pt-3 border-t border-border flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Total Risk Value</span>
+                    <span className="font-semibold text-rose-600 dark:text-rose-400">Rs {expiryKpi.expired_value.toLocaleString()}</span>
+                  </div>
+                </div>
+
+                <div className="bg-white dark:bg-card border-l-4 border-l-orange-500 rounded-xl p-4 shadow-sm">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Expiring in ≤ 30 Days</p>
+                      <h3 className="text-2xl font-bold mt-1 text-orange-600 dark:text-orange-400">{expiryKpi.expiring_30d_count} batches</h3>
+                    </div>
+                    <div className="p-2 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
+                      <CalendarDays className="h-5 w-5 text-orange-500" />
+                    </div>
+                  </div>
+                  <div className="mt-4 pt-3 border-t border-border flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Total Risk Value</span>
+                    <span className="font-semibold text-orange-600 dark:text-orange-400">Rs {expiryKpi.expiring_30d_value.toLocaleString()}</span>
+                  </div>
+                </div>
+
+                <div className="bg-white dark:bg-card border-l-4 border-l-amber-500 rounded-xl p-4 shadow-sm">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Expiring in ≤ 90 Days</p>
+                      <h3 className="text-2xl font-bold mt-1 text-amber-600 dark:text-amber-400">{expiryKpi.expiring_90d_count} batches</h3>
+                    </div>
+                    <div className="p-2 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
+                      <Box className="h-5 w-5 text-amber-500" />
+                    </div>
+                  </div>
+                  <div className="mt-4 pt-3 border-t border-border flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Total Risk Value</span>
+                    <span className="font-semibold text-amber-600 dark:text-amber-400">Rs {expiryKpi.expiring_90d_value.toLocaleString()}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Main Table Block */}
+            <div className="bg-white dark:bg-card rounded-xl border border-border shadow-sm flex flex-col h-[600px]">
+              
+              {/* Filter Toolbar */}
+              <div className="p-4 border-b border-border bg-slate-50/50 dark:bg-secondary/20 flex flex-wrap items-center justify-between gap-4">
+                <div className="flex items-center gap-1 bg-secondary/40 p-1 rounded-lg">
+                  {[
+                    { label: "Already Expired", value: -1, color: "text-rose-600" },
+                    { label: "30 Days", value: 30, color: "text-orange-600" },
+                    { label: "60 Days", value: 60, color: "text-amber-600" },
+                    { label: "90 Days", value: 90, color: "text-amber-600" },
+                    { label: "180 Days", value: 180, color: "text-blue-600" },
+                    { label: "All Expiring", value: 9999, color: "text-foreground" }
+                  ].map(pill => (
+                    <button
+                      key={pill.value}
+                      onClick={() => { setExpiryTimeframe(pill.value); setExpiryPage(1); }}
+                      className={cn(
+                        "px-3 py-1.5 rounded-md text-xs font-semibold transition-all",
+                        expiryTimeframe === pill.value 
+                          ? "bg-white dark:bg-card shadow-sm border border-border" 
+                          : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                      )}
+                    >
+                      <span className={expiryTimeframe === pill.value ? pill.color : ""}>{pill.label}</span>
+                    </button>
+                  ))}
+                </div>
+
+                <div className="flex items-center gap-2 flex-1 max-w-lg">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input 
+                      placeholder="Search medicine or batch..." 
+                      className="h-9 pl-9"
+                      value={expirySearch}
+                      onChange={(e) => { setExpirySearch(e.target.value); setExpiryPage(1); }}
+                    />
+                  </div>
+                  <select 
+                    className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    value={expirySupplierFilter}
+                    onChange={(e) => { setExpirySupplierFilter(e.target.value); setExpiryPage(1); }}
+                  >
+                    <option value="All">All Suppliers</option>
+                    {/* Render static or dynamic list of suppliers; using dynamic from current fetch for now */}
+                    {Array.from(new Set(expiryItems.map(i => i.SupplierName))).filter(s => s !== "Unknown").map(sup => (
+                      <option key={sup} value={sup}>{sup}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Button onClick={() => exportToCSV(expiryItems, 'expiry_tracking')} variant="outline" size="sm" className="h-9">
+                    <FileSpreadsheet className="h-4 w-4 mr-2 text-emerald-500" /> Export CSV
+                  </Button>
+                  <Button onClick={exportToPDF} variant="outline" size="sm" className="h-9">
+                    <FileText className="h-4 w-4 mr-2 text-rose-500" /> Print
+                  </Button>
+                </div>
+              </div>
+
+              {/* Table */}
+              <div className="overflow-auto flex-1 custom-scrollbar" id="print-area">
+                <table className="w-full text-left text-sm border-collapse min-w-[1100px]">
+                  <thead className="sticky top-0 z-10 bg-white dark:bg-card">
+                    <tr className="bg-secondary/40 text-muted-foreground text-[11px] uppercase tracking-wider border-b border-border">
+                      <th className="px-4 py-3 font-semibold">Medicine Name</th>
+                      <th className="px-4 py-3 font-semibold">Batch No.</th>
+                      <th className="px-4 py-3 font-semibold">Supplier</th>
+                      <th className="px-4 py-3 font-semibold text-center">Stock Remaining</th>
+                      <th className="px-4 py-3 font-semibold text-center">Expiry Date</th>
+                      <th className="px-4 py-3 font-semibold text-center">Days Remaining</th>
+                      <th className="px-4 py-3 font-semibold text-right">Value at Risk (Rs.)</th>
+                      <th className="px-4 py-3 font-semibold text-center">Status</th>
+                      <th className="px-4 py-3 font-semibold text-center">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {loading ? (
+                      <tr><td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">Loading expiry data...</td></tr>
+                    ) : expiryItems.length === 0 ? (
+                      <tr><td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">No expiring medicines found for this criteria.</td></tr>
+                    ) : (
+                      expiryItems.map(item => (
+                        <tr key={item.BatchId} className={cn(
+                          "transition-colors hover:bg-secondary/10",
+                          item.DaysToExpiry < 0 ? "bg-rose-50/30 dark:bg-rose-950/10" : ""
+                        )}>
+                          <td className="px-4 py-3 font-semibold text-foreground">{item.MedicineName}</td>
+                          <td className="px-4 py-3 font-mono text-xs">{item.BatchCode}</td>
+                          <td className="px-4 py-3 text-muted-foreground truncate max-w-[150px]" title={item.SupplierName}>{item.SupplierName}</td>
+                          <td className="px-4 py-3 text-center font-bold text-foreground">{item.CurrentStock}</td>
+                          <td className="px-4 py-3 text-center text-muted-foreground">
                             {new Date(item.ExpiryDate).toLocaleDateString('en-GB', { day:'2-digit', month: 'short', year: 'numeric' })}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          <span className={cn(
-                            "px-2.5 py-1 rounded-full text-xs font-bold uppercase",
-                            item.DaysToExpiry < 0 ? "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-400" :
-                            item.DaysToExpiry < 30 ? "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-400" :
-                            "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400"
-                          )}>
-                            {item.ExpiryStatus}
-                          </span>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <span className={cn(
+                              "px-2 py-1 rounded text-xs font-bold",
+                              item.DaysToExpiry < 0 ? "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-400" :
+                              item.DaysToExpiry < 30 ? "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-400" :
+                              "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400"
+                            )}>
+                              {item.DaysToExpiry < 0 ? "Expired" : `${item.DaysToExpiry} Days`}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-right font-bold text-foreground">
+                            Rs {item.ValueAtRisk.toLocaleString()}
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <div className="flex items-center justify-center gap-1.5">
+                              {item.DaysToExpiry < 0 ? <AlertTriangle className="h-4 w-4 text-rose-500" /> :
+                               item.DaysToExpiry < 30 ? <AlertTriangle className="h-4 w-4 text-orange-500" /> :
+                               <CalendarDays className="h-4 w-4 text-amber-500" />}
+                              <span className={cn(
+                                "text-xs font-semibold uppercase",
+                                item.DaysToExpiry < 0 ? "text-rose-600 dark:text-rose-400" :
+                                item.DaysToExpiry < 30 ? "text-orange-600 dark:text-orange-400" :
+                                "text-amber-600 dark:text-amber-400"
+                              )}>
+                                {item.DaysToExpiry < 0 ? "Expired" : item.DaysToExpiry < 30 ? "Critical" : "Warning"}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <div className="flex justify-center gap-2">
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="h-8 px-2 text-xs"
+                                title="Purchase Return"
+                                onClick={() => router.push(`/dashboard/purchases?tab=returns&batch=${item.BatchCode}`)}
+                              >
+                                Return
+                              </Button>
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="h-8 px-2 text-xs text-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:hover:bg-rose-950"
+                                title="Scrap / Adjust"
+                                onClick={() => {
+                                  // Pre-fill adjustment modal
+                                  setAdjustData({ 
+                                    BatchId: item.BatchId, 
+                                    Type: "Decrease", 
+                                    Quantity: String(item.CurrentStock), 
+                                    Reason: "Expired Scrap", 
+                                    Notes: "" 
+                                  });
+                                  setAdjustBatchLabel(`${item.MedicineName} (Batch: ${item.BatchCode})`);
+                                  setIsAdjustModalOpen(true);
+                                }}
+                              >
+                                Scrap
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Pagination */}
+              {!loading && expiryItems.length > 0 && (
+                <div className="px-4 py-2.5 border-t border-border bg-slate-50/50 dark:bg-secondary/20 text-xs text-muted-foreground flex items-center justify-between">
+                  <div>
+                    Showing {Math.min((expiryPage - 1) * expiryPageSize + 1, expiryTotal)}–
+                    {Math.min(expiryPage * expiryPageSize, expiryTotal)} of {expiryTotal} expiring batches
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="h-7 px-2 text-[11px]" 
+                      disabled={expiryPage === 1}
+                      onClick={() => setExpiryPage(p => Math.max(1, p - 1))}
+                    >
+                      Previous
+                    </Button>
+                    <span className="px-2 font-medium">Page {expiryPage} of {Math.max(1, Math.ceil(expiryTotal / expiryPageSize))}</span>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="h-7 px-2 text-[11px]" 
+                      disabled={expiryPage >= Math.ceil(expiryTotal / expiryPageSize)}
+                      onClick={() => setExpiryPage(p => p + 1)}
+                    >
+                      Next
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
 
-        {activeTab === "history" && (
-          <div className="bg-white dark:bg-card rounded-xl border border-border shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300 flex flex-col h-[600px]">
-            <div className="p-4 border-b border-border bg-slate-50/50 dark:bg-secondary/20 flex flex-wrap gap-3 items-center justify-between">
-              <div className="flex items-center gap-2 flex-wrap">
-                <Input 
-                  placeholder="Batch Code..." 
-                  className="h-9 w-40"
-                  value={movBatchFilter}
-                  onChange={(e) => setMovBatchFilter(e.target.value)}
-                />
-                <select 
-                  className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                  value={movTypeFilter}
-                  onChange={(e) => setMovTypeFilter(e.target.value)}
-                >
-                  <option value="">All Movements</option>
-                  <option value="Purchase">Purchases (IN)</option>
-                  <option value="Sale">Sales (OUT)</option>
-                  <option value="Adjustment">Adjustments</option>
-                  <option value="Return">Returns (OUT)</option>
-                </select>
-                <div className="flex items-center gap-1">
+        {activeTab === "history" && (() => {
+          // Client-side multi-field search filter
+          const filteredMovements = movSearchQuery
+            ? movementList.filter(mov => {
+                const q = movSearchQuery.toLowerCase();
+                return (
+                  mov.MedicineName.toLowerCase().includes(q) ||
+                  mov.BatchCode.toLowerCase().includes(q) ||
+                  (mov.Barcode || "").toLowerCase().includes(q) ||
+                  mov.Reference.toLowerCase().includes(q)
+                );
+              })
+            : movementList;
+
+          const totalMovPages = Math.max(1, Math.ceil(filteredMovements.length / movPageSize));
+          // If current page is out of bounds due to filtering, clamp it
+          const safePage = Math.min(movCurrentPage, totalMovPages) || 1;
+          const pagedMovements = filteredMovements.slice((safePage - 1) * movPageSize, safePage * movPageSize);
+
+          // Movement type badge config
+          const movTypeBadge = (type: string) => {
+            switch (type) {
+              case "Purchase":        return "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300";
+              case "POS Sale":        return "bg-slate-100 text-slate-600 dark:bg-slate-700/60 dark:text-slate-300";
+              case "Purchase Return": return "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300";
+              case "Sale Return":     return "bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300";
+              case "Stock Adjustment":return "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300";
+              default:               return "bg-secondary text-muted-foreground";
+            }
+          };
+
+          return (
+            <div className="bg-white dark:bg-card rounded-xl border border-border shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300 flex flex-col h-[600px]">
+              {/* Filter / Toolbar */}
+              <div className="p-4 border-b border-border bg-slate-50/50 dark:bg-secondary/20 flex flex-wrap gap-3 items-center justify-between">
+                <div className="flex items-center gap-2 flex-wrap">
+                  {/* Multi-field search */}
+                  <div className="relative">
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <input
+                      type="text"
+                      placeholder="Search medicine, barcode, or batch..."
+                      className="h-9 pl-9 pr-3 w-64 rounded-md border border-input bg-background text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                      value={movSearchQuery}
+                      onChange={(e) => { setMovSearchQuery(e.target.value); setMovCurrentPage(1); }}
+                    />
+                  </div>
+                  {/* Batch code server-side filter */}
+                  <input
+                    type="text"
+                    placeholder="Batch Code…"
+                    className="h-9 px-3 w-36 rounded-md border border-input bg-background text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    value={movBatchFilter}
+                    onChange={(e) => setMovBatchFilter(e.target.value)}
+                  />
+                  <select
+                    className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    value={movTypeFilter}
+                    onChange={(e) => setMovTypeFilter(e.target.value)}
+                  >
+                    <option value="">All Movements</option>
+                    <option value="Purchase">Purchases</option>
+                    <option value="POS Sale">POS Sales</option>
+                    <option value="Purchase Return">Purchase Returns</option>
+                    <option value="Sale Return">Sales Returns</option>
+                    <option value="Stock Adjustment">Adjustments</option>
+                  </select>
+                  <div className="flex items-center gap-1">
                     <Input type="date" className="h-9 w-36" value={movStartDate} onChange={(e) => setMovStartDate(e.target.value)} />
-                    <span className="text-muted-foreground">-</span>
+                    <span className="text-muted-foreground text-sm">–</span>
                     <Input type="date" className="h-9 w-36" value={movEndDate} onChange={(e) => setMovEndDate(e.target.value)} />
+                  </div>
+                  <Button onClick={fetchData} variant="outline" size="sm" className="h-9 bg-primary text-primary-foreground hover:bg-primary/90 hover:text-white border-0">
+                    <Search className="h-4 w-4 mr-1" /> Filter
+                  </Button>
                 </div>
-                <Button onClick={fetchData} variant="outline" size="sm" className="h-9 bg-primary text-primary-foreground hover:bg-primary/90 hover:text-white border-0">
-                  <Search className="h-4 w-4 mr-1" /> Filter
-                </Button>
+                <div className="flex gap-2">
+                  <Button onClick={() => exportToCSV(filteredMovements, 'stock_movements')} variant="outline" size="sm" className="h-9">
+                    <FileSpreadsheet className="h-4 w-4 mr-2 text-emerald-500" /> CSV
+                  </Button>
+                  <Button onClick={exportToPDF} variant="outline" size="sm" className="h-9">
+                    <FileText className="h-4 w-4 mr-2 text-rose-500" /> PDF
+                  </Button>
+                </div>
               </div>
-              <div className="flex gap-2">
-                <Button onClick={() => exportToCSV(movementList, 'stock_movements')} variant="outline" size="sm" className="h-9">
-                  <Download className="h-4 w-4 mr-2" /> CSV
-                </Button>
-                <Button onClick={exportToPDF} variant="outline" size="sm" className="h-9">
-                  <Download className="h-4 w-4 mr-2" /> PDF
-                </Button>
-              </div>
-            </div>
-            <div className="overflow-auto flex-1 custom-scrollbar" id="print-area">
-              <table className="w-full text-left text-sm border-collapse min-w-[1000px]">
-                <thead className="sticky top-0 z-10 bg-white dark:bg-card">
-                  <tr className="bg-secondary/40 text-muted-foreground text-xs uppercase tracking-wider border-b border-border">
-                    <th className="px-4 py-3 font-semibold">Date & Time</th>
-                    <th className="px-4 py-3 font-semibold">Medicine</th>
-                    <th className="px-4 py-3 font-semibold">Batch No.</th>
-                    <th className="px-4 py-3 font-semibold text-center">Type</th>
-                    <th className="px-4 py-3 font-semibold text-center">Qty Change</th>
-                    <th className="px-4 py-3 font-semibold">Reference</th>
-                    <th className="px-4 py-3 font-semibold">User</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {loading ? (
-                    <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">Loading movements...</td></tr>
-                  ) : movementList.length === 0 ? (
-                    <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">No stock movements found for the selected criteria.</td></tr>
-                  ) : (
-                    movementList.map((mov, idx) => (
-                      <tr key={idx} className="hover:bg-secondary/10 transition-colors">
-                        <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
-                          {new Date(mov.Date).toLocaleString('en-GB', { day:'2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute:'2-digit' })}
-                        </td>
-                        <td className="px-4 py-3 font-semibold text-foreground">{mov.MedicineName}</td>
-                        <td className="px-4 py-3 font-mono text-xs">{mov.BatchCode}</td>
-                        <td className="px-4 py-3 text-center">
-                          <span className={cn(
-                            "px-2 py-1 rounded-full text-[10px] font-bold uppercase",
-                            mov.MovementType === "Purchase" ? "bg-emerald-100 text-emerald-700" : 
-                            mov.MovementType === "Sale" ? "bg-blue-100 text-blue-700" :
-                            mov.MovementType === "Return" ? "bg-rose-100 text-rose-700" :
-                            "bg-amber-100 text-amber-700"
+
+              {/* Table */}
+              <div className="overflow-auto flex-1 custom-scrollbar" id="print-area">
+                <table className="w-full text-left text-sm border-collapse min-w-[900px]">
+                  <thead className="sticky top-0 z-10 bg-white dark:bg-card">
+                    <tr className="bg-secondary/40 text-muted-foreground text-xs uppercase tracking-wider border-b border-border">
+                      <th className="px-4 py-3 font-semibold whitespace-nowrap">Date &amp; Time</th>
+                      <th className="px-4 py-3 font-semibold">Medicine Name</th>
+                      <th className="px-4 py-3 font-semibold">Batch No.</th>
+                      <th className="px-4 py-3 font-semibold text-center">Movement Type</th>
+                      <th className="px-4 py-3 font-semibold text-center">Qty Change</th>
+                      <th className="px-4 py-3 font-semibold text-right">Balance Stock</th>
+                      <th className="px-4 py-3 font-semibold">Reference No.</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {loading ? (
+                      <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">Loading movements...</td></tr>
+                    ) : pagedMovements.length === 0 ? (
+                      <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">No stock movements found for the selected criteria.</td></tr>
+                    ) : (
+                      pagedMovements.map((mov, idx) => (
+                        <tr key={idx} className="hover:bg-secondary/10 transition-colors">
+                          {/* Date & Time */}
+                          <td className="px-4 py-3 text-muted-foreground whitespace-nowrap text-xs">
+                            {new Date(mov.Date).toLocaleString('en-GB', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' })}
+                          </td>
+                          {/* Medicine Name */}
+                          <td className="px-4 py-3 font-semibold text-foreground">{mov.MedicineName}</td>
+                          {/* Batch No. */}
+                          <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{mov.BatchCode}</td>
+                          {/* Movement Type Badge */}
+                          <td className="px-4 py-3 text-center">
+                            <span className={cn(
+                              "px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide whitespace-nowrap",
+                              movTypeBadge(mov.MovementType)
+                            )}>
+                              {mov.MovementType}
+                            </span>
+                          </td>
+                          {/* Qty Change */}
+                          <td className={cn(
+                            "px-4 py-3 text-center font-bold text-sm",
+                            mov.QuantityChange > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-500 dark:text-rose-400"
                           )}>
-                            {mov.MovementType}
-                          </span>
-                        </td>
-                        <td className={cn(
-                            "px-4 py-3 text-center font-bold text-lg", 
-                            mov.QuantityChange > 0 ? "text-emerald-600" : "text-rose-500"
-                        )}>
-                          {mov.QuantityChange > 0 ? "+" : ""}{mov.QuantityChange}
-                        </td>
-                        <td className="px-4 py-3 text-muted-foreground max-w-[250px] truncate" title={mov.Reference}>{mov.Reference}</td>
-                        <td className="px-4 py-3 text-muted-foreground">{mov.UserName}</td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+                            {mov.QuantityChange > 0 ? "+" : ""}{mov.QuantityChange}
+                          </td>
+                          {/* Balance Stock */}
+                          <td className="px-4 py-3 text-right font-semibold text-foreground tabular-nums">
+                            {mov.BalanceStock ?? "—"}
+                          </td>
+                          {/* Reference No. */}
+                          <td className="px-4 py-3 text-muted-foreground text-xs max-w-[220px] truncate" title={mov.Reference}>
+                            {mov.SourceId && (mov.MovementType === "Purchase" || mov.MovementType === "POS Sale" || mov.MovementType === "Purchase Return") ? (
+                                <button 
+                                  onClick={() => openPreview(mov)}
+                                  className="text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer focus:outline-none"
+                                >
+                                  {mov.Reference}
+                                </button>
+                            ) : (
+                                <span>{mov.Reference}</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Footer Pagination */}
+              {!loading && filteredMovements.length > 0 && (
+                <div className="px-4 py-2.5 border-t border-border bg-slate-50/50 dark:bg-secondary/20 text-xs text-muted-foreground flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <span>Showing {Math.min((safePage - 1) * movPageSize + 1, filteredMovements.length)}–{Math.min(safePage * movPageSize, filteredMovements.length)} of {filteredMovements.length} movements</span>
+                    <div className="flex gap-4">
+                      <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
+                        +{filteredMovements.filter(m => m.QuantityChange > 0).reduce((s, m) => s + m.QuantityChange, 0)} in
+                      </span>
+                      <span className="text-rose-500 dark:text-rose-400 font-semibold">
+                        {filteredMovements.filter(m => m.QuantityChange < 0).reduce((s, m) => s + m.QuantityChange, 0)} out
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="h-7 px-2 text-[11px]" 
+                      disabled={safePage === 1}
+                      onClick={() => setMovCurrentPage(p => Math.max(1, p - 1))}
+                    >
+                      Previous
+                    </Button>
+                    <span className="px-2 font-medium">Page {safePage} of {totalMovPages}</span>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="h-7 px-2 text-[11px]" 
+                      disabled={safePage === totalMovPages}
+                      onClick={() => setMovCurrentPage(p => Math.min(totalMovPages, p + 1))}
+                    >
+                      Next
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         {activeTab === "audit" && (
           <div className="bg-white dark:bg-card rounded-xl border border-border shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300 flex flex-col h-[600px]">
@@ -1514,6 +1872,124 @@ export default function InventoryManagementPage() {
               <Button onClick={handleStockAdjustment} className="bg-primary hover:bg-primary/90 text-white shadow-sm">
                 Confirm Adjustment
               </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Document Preview Modal */}
+      {previewDoc && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-card w-full max-w-3xl rounded-xl shadow-2xl border border-border overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="p-4 border-b border-border bg-slate-50/50 dark:bg-secondary/20 flex justify-between items-center">
+              <div>
+                <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
+                  <FileText className="h-5 w-5 text-indigo-500" />
+                  {previewDoc.type} Document
+                </h2>
+                <p className="text-xs text-muted-foreground mt-0.5">Reference: <span className="font-mono text-foreground font-semibold">{previewDoc.ref}</span></p>
+              </div>
+              <button 
+                onClick={() => setPreviewDoc(null)}
+                className="p-2 hover:bg-secondary rounded-full transition-colors"
+              >
+                <X className="h-5 w-5 text-muted-foreground hover:text-foreground" />
+              </button>
+            </div>
+            
+            <div className="p-6 flex-1 overflow-auto custom-scrollbar">
+              {previewLoading ? (
+                <div className="flex flex-col items-center justify-center py-12">
+                  <RefreshCcw className="h-8 w-8 text-primary animate-spin mb-4" />
+                  <p className="text-sm text-muted-foreground">Loading document details...</p>
+                </div>
+              ) : !previewData ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <AlertTriangle className="h-10 w-10 text-rose-400 mb-4" />
+                  <p className="text-base font-semibold text-foreground">Document Not Found</p>
+                  <p className="text-sm text-muted-foreground mt-1">This document may have been deleted or is unavailable.</p>
+                </div>
+              ) : previewData.note ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <FileText className="h-10 w-10 text-slate-400 mb-4" />
+                  <p className="text-sm text-muted-foreground">{previewData.note}</p>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {/* Meta Grid */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-secondary/30 rounded-lg border border-border">
+                    {previewDoc.type === "Purchase" && (
+                      <>
+                        <div><p className="text-xs text-muted-foreground">Supplier</p><p className="font-semibold text-sm">{previewData.SupplierName || "—"}</p></div>
+                        <div><p className="text-xs text-muted-foreground">Date</p><p className="font-semibold text-sm">{new Date(previewData.PurchaseDate).toLocaleDateString()}</p></div>
+                        <div><p className="text-xs text-muted-foreground">Payment Status</p><p className="font-semibold text-sm">{previewData.PaymentStatus}</p></div>
+                        <div><p className="text-xs text-muted-foreground">Grand Total</p><p className="font-semibold text-sm text-primary">Rs {previewData.GrandTotal?.toLocaleString()}</p></div>
+                      </>
+                    )}
+                    {previewDoc.type === "POS Sale" && (
+                      <>
+                        <div><p className="text-xs text-muted-foreground">Customer</p><p className="font-semibold text-sm">{previewData.CustomerName || "Walk-in"}</p></div>
+                        <div><p className="text-xs text-muted-foreground">Date</p><p className="font-semibold text-sm">{new Date(previewData.TransactionDate).toLocaleDateString()}</p></div>
+                        <div><p className="text-xs text-muted-foreground">Payment Mode</p><p className="font-semibold text-sm">{previewData.PaymentMethod}</p></div>
+                        <div><p className="text-xs text-muted-foreground">Grand Total</p><p className="font-semibold text-sm text-primary">Rs {previewData.GrandTotal?.toLocaleString()}</p></div>
+                      </>
+                    )}
+                    {previewDoc.type === "Purchase Return" && (
+                      <>
+                        <div><p className="text-xs text-muted-foreground">Supplier</p><p className="font-semibold text-sm">{previewData.SupplierName || "—"}</p></div>
+                        <div><p className="text-xs text-muted-foreground">Date</p><p className="font-semibold text-sm">{new Date(previewData.ReturnDate).toLocaleDateString()}</p></div>
+                        <div><p className="text-xs text-muted-foreground">Original Invoice</p><p className="font-semibold text-sm">{previewData.OriginalInvoiceNumber || "—"}</p></div>
+                        <div><p className="text-xs text-muted-foreground">Refund Total</p><p className="font-semibold text-sm text-rose-500">Rs {previewData.TotalRefundAmount?.toLocaleString()}</p></div>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Items Table */}
+                  <div>
+                    <h3 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
+                      <Box className="h-4 w-4 text-muted-foreground" /> Line Items
+                    </h3>
+                    <div className="border border-border rounded-lg overflow-hidden">
+                      <table className="w-full text-left text-sm">
+                        <thead className="bg-secondary/50 text-muted-foreground text-[11px] uppercase tracking-wider">
+                          <tr>
+                            <th className="px-4 py-2.5 font-semibold">Medicine</th>
+                            <th className="px-4 py-2.5 font-semibold">Batch</th>
+                            <th className="px-4 py-2.5 font-semibold text-right">Qty</th>
+                            <th className="px-4 py-2.5 font-semibold text-right">Unit Price</th>
+                            <th className="px-4 py-2.5 font-semibold text-right">Total</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border">
+                          {previewData.items?.map((item: any, idx: number) => (
+                            <tr key={idx} className="hover:bg-secondary/20">
+                              <td className="px-4 py-2.5 font-medium">{item.MedicineName || "—"}</td>
+                              <td className="px-4 py-2.5 font-mono text-xs text-muted-foreground">{item.BatchCode || "—"}</td>
+                              <td className="px-4 py-2.5 text-right font-semibold">{item.Quantity || item.ReturnQuantity || 0}</td>
+                              <td className="px-4 py-2.5 text-right text-muted-foreground">Rs {(item.SellingPrice || item.CostPrice || item.UnitRefundPrice || 0).toLocaleString()}</td>
+                              <td className="px-4 py-2.5 text-right font-medium">Rs {(item.LineTotal || item.TotalRefund || 0).toLocaleString()}</td>
+                            </tr>
+                          ))}
+                          {!previewData.items || previewData.items.length === 0 && (
+                            <tr><td colSpan={5} className="px-4 py-4 text-center text-muted-foreground">No line items found.</td></tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                  
+                  {previewData.Notes && previewData.Notes.trim() && (
+                    <div className="text-sm text-muted-foreground bg-secondary/20 p-3 rounded-md border border-border">
+                      <span className="font-semibold text-foreground">Notes:</span> {previewData.Notes}
+                    </div>
+                  )}
+                  {previewData.ReturnReason && previewData.ReturnReason.trim() && (
+                    <div className="text-sm text-muted-foreground bg-rose-50/50 dark:bg-rose-900/10 p-3 rounded-md border border-border">
+                      <span className="font-semibold text-foreground">Reason:</span> {previewData.ReturnReason}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
