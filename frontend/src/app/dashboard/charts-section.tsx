@@ -31,9 +31,10 @@ interface ChartsSectionProps {
   refreshTrigger?: number;
 }
 
-export default function ChartsSection({ timeframe = 'last_30_days', dateRange = null, refreshTrigger = 0 }: ChartsSectionProps) {
+export default function ChartsSection({ timeframe: initialTimeframe = 'last_30_days', dateRange = null, refreshTrigger = 0 }: ChartsSectionProps) {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<any>(null);
+  const [timeframe, setTimeframe] = useState(initialTimeframe);
 
   useEffect(() => {
     if (timeframe === 'custom' && !dateRange) return;

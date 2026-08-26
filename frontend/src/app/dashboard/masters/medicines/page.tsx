@@ -351,7 +351,7 @@ export default function MedicinesPage() {
               <TableRow className="hover:bg-transparent">
                 <TableHead className="w-12 text-center">
                   <Checkbox
-                    checked={allSelected ? true : someSelected ? "indeterminate" : false}
+                    checked={allSelected ? true : someSelected ? (true as any) : false}
                     onCheckedChange={toggleSelectAll}
                   />
                 </TableHead>

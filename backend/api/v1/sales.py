@@ -2,11 +2,16 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import func, or_
 from typing import List, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 
-from models import Sale, Medicine, StockBatch
+def utc_to_local_str(dt_obj):
+    if not dt_obj:
+        return ""
+    return dt_obj.replace(tzinfo=timezone.utc).astimezone().strftime('%Y-%m-%d %I:%M %p')
+
+from models import Sale, Medicine, StockBatch, Customer, StockAdjustment, SaleReturn
 from schemas.base import BaseResponse
-from schemas.sales import SaleInitResponse, ProductSearchResponse, ProductSearchBatch
+from schemas.sales import SaleInitResponse, ProductSearchResponse, ProductSearchBatch, SaleReturnHistoryItem, SaleReturnHistoryPagedResponse
 from api.deps import get_current_user, get_db
 from core.config import settings
 
@@ -100,11 +105,6 @@ def complete_sale(
     try:
         if not sale_data.Items:
             raise ValidationError("Cart is empty")
-
-        # Prescription Validation
-        for item in sale_data.Items:
-            if item.RequiresPrescription and not sale_data.PrescriptionRef:
-                raise ValidationError(f"Prescription reference is required for restricted medicines (e.g. {item.MedicineId})")
 
         current_date = dt.date.today()
 
@@ -228,7 +228,7 @@ def print_thermal_receipt(
         # Details
         bytes_data += ALIGN_LEFT
         bytes_data += f"Invoice : {sale.InvoiceNumber}\n".encode()
-        bytes_data += f"Date    : {sale.TransactionDate.strftime('%Y-%m-%d %H:%M')}\n".encode()
+        bytes_data += f"Date    : {utc_to_local_str(sale.TransactionDate)}\n".encode()
         bytes_data += f"Cashier : {sale.user.Username if sale.user else 'Admin'}\n".encode()
         bytes_data += b"------------------------------------------\n"
         
@@ -287,16 +287,79 @@ def print_thermal_receipt(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-from schemas.sales import SaleHistoryItem
+@router.get("/kpi", response_model=BaseResponse[dict], summary="Get Sales KPIs")
+def get_sales_kpi(db: Session = Depends(get_db)):
+    try:
+        from datetime import datetime, timezone
+        from models import SaleItem
+        
+        # Local start and end of today, converted to naive UTC for SQLite
+        now = datetime.now()
+        start_of_today = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        end_of_today = now.replace(hour=23, minute=59, second=59, microsecond=999999)
+        
+        start_utc = start_of_today.astimezone().astimezone(timezone.utc).replace(tzinfo=None)
+        end_utc = end_of_today.astimezone().astimezone(timezone.utc).replace(tzinfo=None)
+        
+        # Today's Sales
+        todays_sales = db.query(func.sum(Sale.GrandTotal)).filter(
+            Sale.TransactionDate >= start_utc,
+            Sale.TransactionDate <= end_utc,
+            Sale.Status == "Completed"
+        ).scalar() or 0.0
+        
+        # Total Revenue (Today's PaidAmount)
+        total_revenue = db.query(func.sum(Sale.PaidAmount)).filter(
+            Sale.TransactionDate >= start_utc,
+            Sale.TransactionDate <= end_utc,
+            Sale.Status == "Completed"
+        ).scalar() or 0.0
+        
+        # Total Invoices Today
+        total_invoices = db.query(func.count(Sale.SalesId)).filter(
+            Sale.TransactionDate >= start_utc,
+            Sale.TransactionDate <= end_utc,
+            Sale.Status == "Completed"
+        ).scalar() or 0
+        
+        # Items Sold Today
+        items_sold = db.query(func.sum(SaleItem.Quantity)).join(
+            Sale, SaleItem.SalesId == Sale.SalesId
+        ).filter(
+            Sale.TransactionDate >= start_utc,
+            Sale.TransactionDate <= end_utc,
+            Sale.Status == "Completed"
+        ).scalar() or 0
+        
+        # Pending Payments (All time)
+        pending_payments = db.query(func.sum(Sale.GrandTotal - Sale.PaidAmount)).filter(
+            Sale.GrandTotal > Sale.PaidAmount,
+            Sale.Status == "Completed"
+        ).scalar() or 0.0
+        
+        return {"success": True, "data": {
+            "todaysSales": float(todays_sales),
+            "totalRevenue": float(total_revenue),
+            "totalInvoices": int(total_invoices),
+            "itemsSoldToday": int(items_sold),
+            "pendingPayments": float(pending_payments)
+        }}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+from schemas.sales import SaleHistoryItem, SaleHistoryPagedResponse
 from models import Customer
 
-@router.get("/history", response_model=BaseResponse[List[SaleHistoryItem]], summary="Fetch sales history with advanced filtering")
+@router.get("/history", response_model=BaseResponse[SaleHistoryPagedResponse], summary="Fetch sales history with advanced filtering")
 def get_sales_history(
     start_date: Optional[str] = Query(None),
     end_date: Optional[str] = Query(None),
     payment_method: Optional[str] = Query(None),
     user_id: Optional[int] = Query(None),
     q: Optional[str] = Query(None),
+    page: int = Query(1),
+    page_size: int = Query(15),
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
@@ -306,14 +369,16 @@ def get_sales_history(
         if start_date:
             try:
                 sd = datetime.strptime(start_date, "%Y-%m-%d")
-                query = query.filter(Sale.TransactionDate >= sd)
-            except Exception:
+                sd_utc = sd.astimezone().astimezone(timezone.utc).replace(tzinfo=None)
+                query = query.filter(Sale.TransactionDate >= sd_utc)
+            except Exception as e:
                 pass
         if end_date:
             try:
-                ed = datetime.strptime(end_date, "%Y-%m-%d").replace(hour=23, minute=59, second=59)
-                query = query.filter(Sale.TransactionDate <= ed)
-            except Exception:
+                ed = datetime.strptime(end_date, "%Y-%m-%d").replace(hour=23, minute=59, second=59, microsecond=999999)
+                ed_utc = ed.astimezone().astimezone(timezone.utc).replace(tzinfo=None)
+                query = query.filter(Sale.TransactionDate <= ed_utc)
+            except Exception as e:
                 pass
                 
         if payment_method:
@@ -321,6 +386,8 @@ def get_sales_history(
             
         if user_id:
             query = query.filter(Sale.UserId == user_id)
+            
+        print(f"DEBUG: Query count before q filter: {query.count()}")
             
         if q:
             search_term = f"%{q}%"
@@ -331,7 +398,13 @@ def get_sales_history(
                 )
             )
             
-        sales = query.order_by(Sale.TransactionDate.desc()).limit(100).all()
+        query = query.order_by(Sale.TransactionDate.desc())
+        total_count = query.count()
+        
+        if page_size > 0:
+            sales = query.offset((page - 1) * page_size).limit(page_size).all()
+        else:
+            sales = query.all()
         
         results = []
         for sale in sales:
@@ -351,15 +424,24 @@ def get_sales_history(
             results.append(SaleHistoryItem(
                 SalesId=sale.SalesId,
                 InvoiceNumber=sale.InvoiceNumber,
-                TransactionDate=sale.TransactionDate.strftime('%Y-%m-%d %H:%M'),
+                TransactionDate=utc_to_local_str(sale.TransactionDate),
                 CustomerName=sale.customer.Name if sale.customer else "Walk-in",
                 CashierName=sale.user.Username if sale.user else "Unknown",
                 PaymentMethod=sale.PaymentMethod,
                 GrandTotal=float(sale.GrandTotal),
+                PaidAmount=float(sale.PaidAmount),
                 Status=status
             ))
             
-        return {"success": True, "data": results}
+        return {
+            "success": True, 
+            "data": {
+                "items": results,
+                "total": total_count,
+                "page": page,
+                "page_size": page_size
+            }
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -420,8 +502,9 @@ def get_invoice_for_return(
         resp = InvoiceSearchResponse(
             SalesId=sale.SalesId,
             InvoiceNumber=sale.InvoiceNumber,
-            TransactionDate=sale.TransactionDate.strftime('%Y-%m-%d %H:%M'),
+            TransactionDate=utc_to_local_str(sale.TransactionDate),
             CustomerName=sale.customer.Name if sale.customer else "Walk-in",
+            CustomerId=sale.CustomerId,
             Items=items_resp,
             SubTotal=float(sale.SubTotal),
             DiscountAmount=float(sale.DiscountAmount),
@@ -472,6 +555,7 @@ def process_sales_return(
             UserId=current_user.UserId,
             ReturnInvoiceNumber=ret_invoice_no,
             TotalRefundAmount=0, # Will update
+            RefundMode=return_data.RefundMode,
             Reason=return_data.Reason
         )
         db.add(new_return)
@@ -489,9 +573,8 @@ def process_sales_return(
             if already_ret + ret_item.ReturnQuantity > orig_item.Quantity:
                 raise ValidationError(f"Cannot return more than originally sold for Batch {ret_item.BatchId}.")
                 
-            # Discount recalculation: refund is proportional to the original total price after discount
-            ratio = ret_item.ReturnQuantity / orig_item.Quantity
-            item_refund = float(orig_item.TotalPrice) * ratio
+            # Refund = UnitPrice × ReturnQty (matches frontend)
+            item_refund = float(orig_item.UnitPrice) * ret_item.ReturnQuantity
             total_refund += item_refund
             
             # Stock Update vs Quarantine
@@ -499,18 +582,31 @@ def process_sales_return(
             if not batch:
                 raise ValidationError(f"Batch {ret_item.BatchId} no longer exists in inventory.")
                 
+            prev_qty = batch.Quantity
+
             if ret_item.ItemCondition == "Restockable":
                 batch.Quantity += ret_item.ReturnQuantity
-            elif ret_item.ItemCondition == "Damaged/Quarantine":
-                # Do NOT increment StockBatch. Log as write-off.
+                # Record stock increase in StockAdjustment (shows in Stock Movement History)
                 adjustment = StockAdjustment(
                     BatchId=batch.BatchId,
                     UserId=current_user.UserId,
-                    AdjustmentType="Decrease", # It's a write-off, but it never entered stock so technically we just log it.
-                    # Actually, if it never enters stock, we might just log it as a loss.
-                    # Wait, StockAdjustment requires Quantity > 0 and type Decrease.
+                    AdjustmentType="Increase",
                     Quantity=ret_item.ReturnQuantity,
-                    Reason=f"Quarantine from Return {ret_invoice_no}: {return_data.Reason}"
+                    PreviousQuantity=prev_qty,
+                    NewQuantity=batch.Quantity,
+                    Reason=f"Sale Return (+) {ret_invoice_no}: {return_data.Reason}"
+                )
+                db.add(adjustment)
+            elif ret_item.ItemCondition == "Damaged/Quarantine":
+                # Write-off: log as decrease for tracking
+                adjustment = StockAdjustment(
+                    BatchId=batch.BatchId,
+                    UserId=current_user.UserId,
+                    AdjustmentType="Decrease",
+                    Quantity=ret_item.ReturnQuantity,
+                    PreviousQuantity=prev_qty,
+                    NewQuantity=prev_qty,
+                    Reason=f"Quarantine Write-off from Return {ret_invoice_no}: {return_data.Reason}"
                 )
                 db.add(adjustment)
             else:
@@ -521,19 +617,75 @@ def process_sales_return(
                 BatchId=ret_item.BatchId,
                 ReturnQuantity=ret_item.ReturnQuantity,
                 RefundAmount=item_refund,
-                ItemCondition=ret_item.ItemCondition
+                ItemCondition=ret_item.ItemCondition,
+                ReturnReason=ret_item.ReturnReason
             )
             db.add(ri)
             
         new_return.TotalRefundAmount = total_refund
+
+        # Customer Balance Credit
+        if return_data.RefundMode == "Balance" and sale.CustomerId:
+            customer = db.query(Customer).filter(Customer.CustomerId == sale.CustomerId).with_for_update().first()
+            if customer:
+                customer.DueBalance = float(customer.DueBalance or 0) + total_refund
+            else:
+                raise ValidationError("Customer not found for balance adjustment.")
+        elif return_data.RefundMode == "Balance" and not sale.CustomerId:
+            raise ValidationError("Balance adjustment requires a registered customer.")
         
         # Audit Logging
         audit = AuditLog(
             UserId=current_user.UserId,
             Action="Sale Return Processed",
-            Description=f"Processed return {ret_invoice_no} for Sale {sale.InvoiceNumber}. Refund: {total_refund:.2f}. Reason: {return_data.Reason}"
+            Description=f"Processed return {ret_invoice_no} for Sale {sale.InvoiceNumber}. Refund: {total_refund:.2f}. Mode: {return_data.RefundMode}. Reason: {return_data.Reason}"
         )
         db.add(audit)
+        
+        # Spool Thermal Receipt for Return
+        try:
+            import os
+            ESC = b'\x1b'
+            GS = b'\x1d'
+            LF = b'\x0a'
+            INIT = ESC + b'@'
+            ALIGN_CENTER = ESC + b'a\x01'
+            ALIGN_LEFT = ESC + b'a\x00'
+            BOLD_ON = ESC + b'E\x01'
+            BOLD_OFF = ESC + b'E\x00'
+            CUT = GS + b'V\x00'
+            
+            bytes_data = bytearray()
+            bytes_data += INIT
+            bytes_data += ALIGN_CENTER + BOLD_ON + b"PHARMACY MANAGEMENT SYSTEM\n" + BOLD_OFF
+            bytes_data += b"*** RETURN RECEIPT ***\n\n"
+            bytes_data += ALIGN_LEFT
+            bytes_data += f"Return No: {ret_invoice_no}\n".encode()
+            bytes_data += f"Orig Inv : {sale.InvoiceNumber}\n".encode()
+            bytes_data += f"Date     : {datetime.now().strftime('%Y-%m-%d %I:%M %p')}\n".encode()
+            bytes_data += b"------------------------------------------\n"
+            for ret_item in return_data.Items:
+                if ret_item.ReturnQuantity <= 0: continue
+                orig_item = original_items.get(ret_item.BatchId)
+                if not orig_item: continue
+                med_name = orig_item.batch.medicine.BrandName if orig_item.batch and orig_item.batch.medicine else "Unknown"
+                bytes_data += f"{med_name}\n".encode()
+                qty_price = f"  {ret_item.ReturnQuantity} x {float(orig_item.UnitPrice):.2f}"
+                total_str = f"{float(orig_item.UnitPrice) * ret_item.ReturnQuantity:.2f}"
+                spaces = 42 - len(qty_price) - len(total_str)
+                bytes_data += f"{qty_price}{' ' * max(1, spaces)}{total_str}\n".encode()
+            bytes_data += b"------------------------------------------\n"
+            refund_str = f"{total_refund:.2f}"
+            bytes_data += BOLD_ON + f"REFUND TOTAL:{' ' * max(1, 42 - 13 - len(refund_str))}{refund_str}\n".encode() + BOLD_OFF
+            bytes_data += f"Mode: {return_data.RefundMode}\n".encode()
+            bytes_data += LF * 4 + CUT
+            
+            spooler_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "spooler")
+            os.makedirs(spooler_dir, exist_ok=True)
+            with open(os.path.join(spooler_dir, f"{ret_invoice_no}.bin"), 'wb') as f:
+                f.write(bytes_data)
+        except Exception as print_e:
+            print(f"Error spooling return receipt: {print_e}")
         
         db.commit()
         return {"success": True, "data": {"ReturnInvoiceNumber": ret_invoice_no, "RefundAmount": total_refund}}
@@ -542,4 +694,132 @@ def process_sales_return(
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/return-history", response_model=BaseResponse[SaleReturnHistoryPagedResponse], summary="Get paginated sales returns history")
+def get_return_history(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(15, ge=1, le=100),
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    try:
+        total = db.query(func.count(SaleReturn.ReturnId)).scalar() or 0
+        returns = (
+            db.query(SaleReturn)
+            .order_by(SaleReturn.ReturnDate.desc())
+            .offset((page - 1) * page_size)
+            .limit(page_size)
+            .all()
+        )
+
+        items = []
+        for r in returns:
+            customer_name = r.sale.customer.Name if r.sale and r.sale.customer else "Walk-in"
+            original_inv = r.sale.InvoiceNumber if r.sale else "N/A"
+            items.append(SaleReturnHistoryItem(
+                ReturnId=r.ReturnId,
+                ReturnInvoiceNumber=r.ReturnInvoiceNumber,
+                OriginalInvoiceNumber=original_inv,
+                ReturnDate=utc_to_local_str(r.ReturnDate),
+                CustomerName=customer_name,
+                TotalRefundAmount=float(r.TotalRefundAmount),
+                RefundMode=r.RefundMode or "Cash Refund",
+                Reason=r.Reason or ""
+            ))
+
+        return {"success": True, "data": SaleReturnHistoryPagedResponse(
+            items=items,
+            total=total,
+            page=page,
+            page_size=page_size
+        )}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/return/{return_id}", response_model=BaseResponse[dict], summary="Get return details")
+def get_return_details(return_id: int, db: Session = Depends(get_db)):
+    try:
+        ret = db.query(SaleReturn).filter(SaleReturn.ReturnId == return_id).first()
+        if not ret:
+            raise HTTPException(status_code=404, detail="Return not found")
+            
+        items_list = []
+        for ri in ret.items:
+            med_name = ri.batch.medicine.BrandName if ri.batch and ri.batch.medicine else "Unknown"
+            items_list.append({
+                "MedicineName": med_name,
+                "BatchCode": ri.batch.BatchCode if ri.batch else "N/A",
+                "ReturnQuantity": ri.ReturnQuantity,
+                "RefundAmount": float(ri.RefundAmount),
+                "ItemCondition": ri.ItemCondition,
+                "ReturnReason": ri.ReturnReason
+            })
+            
+        return {"success": True, "data": {
+            "ReturnInvoiceNumber": ret.ReturnInvoiceNumber,
+            "OriginalInvoiceNumber": ret.sale.InvoiceNumber if ret.sale else "N/A",
+            "ReturnDate": utc_to_local_str(ret.ReturnDate),
+            "CustomerName": ret.sale.customer.Name if ret.sale and ret.sale.customer else "Walk-in",
+            "CashierName": ret.user.Username if ret.user else "Unknown",
+            "TotalRefundAmount": float(ret.TotalRefundAmount),
+            "RefundMode": ret.RefundMode,
+            "Reason": ret.Reason,
+            "Items": items_list
+        }}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/return/{return_id}/print-thermal", response_model=BaseResponse[dict], summary="Print return receipt")
+def print_return_thermal(return_id: int, db: Session = Depends(get_db)):
+    try:
+        ret = db.query(SaleReturn).filter(SaleReturn.ReturnId == return_id).first()
+        if not ret:
+            raise HTTPException(status_code=404, detail="Return not found")
+            
+        import os
+        ESC = b'\x1b'
+        GS = b'\x1d'
+        LF = b'\x0a'
+        INIT = ESC + b'@'
+        ALIGN_CENTER = ESC + b'a\x01'
+        ALIGN_LEFT = ESC + b'a\x00'
+        BOLD_ON = ESC + b'E\x01'
+        BOLD_OFF = ESC + b'E\x00'
+        CUT = GS + b'V\x00'
+        
+        bytes_data = bytearray()
+        bytes_data += INIT
+        bytes_data += ALIGN_CENTER + BOLD_ON + b"PHARMACY MANAGEMENT SYSTEM\n" + BOLD_OFF
+        bytes_data += b"*** RETURN RECEIPT (REPRINT) ***\n\n"
+        bytes_data += ALIGN_LEFT
+        bytes_data += f"Return No: {ret.ReturnInvoiceNumber}\n".encode()
+        bytes_data += f"Orig Inv : {ret.sale.InvoiceNumber if ret.sale else 'N/A'}\n".encode()
+        bytes_data += f"Date     : {utc_to_local_str(ret.ReturnDate)}\n".encode()
+        bytes_data += b"------------------------------------------\n"
+        
+        for ri in ret.items:
+            if ri.ReturnQuantity <= 0: continue
+            med_name = ri.batch.medicine.BrandName if ri.batch and ri.batch.medicine else "Unknown"
+            bytes_data += f"{med_name}\n".encode()
+            
+            orig_unit_price = float(ri.RefundAmount) / ri.ReturnQuantity if ri.ReturnQuantity > 0 else 0
+            qty_price = f"  {ri.ReturnQuantity} x {orig_unit_price:.2f}"
+            total_str = f"{float(ri.RefundAmount):.2f}"
+            spaces = 42 - len(qty_price) - len(total_str)
+            bytes_data += f"{qty_price}{' ' * max(1, spaces)}{total_str}\n".encode()
+            
+        bytes_data += b"------------------------------------------\n"
+        refund_str = f"{float(ret.TotalRefundAmount):.2f}"
+        bytes_data += BOLD_ON + f"REFUND TOTAL:{' ' * max(1, 42 - 13 - len(refund_str))}{refund_str}\n".encode() + BOLD_OFF
+        bytes_data += f"Mode: {ret.RefundMode}\n".encode()
+        bytes_data += LF * 4 + CUT
+        
+        spooler_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "spooler")
+        os.makedirs(spooler_dir, exist_ok=True)
+        with open(os.path.join(spooler_dir, f"{ret.ReturnInvoiceNumber}.bin"), 'wb') as f:
+            f.write(bytes_data)
+            
+        return {"success": True, "data": {"message": "Receipt spooled successfully"}}
+    except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

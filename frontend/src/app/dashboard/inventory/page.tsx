@@ -1020,6 +1020,7 @@ export default function InventoryManagementPage() {
               <table className="w-full text-left text-sm border-collapse min-w-[1000px]">
                 <thead className="sticky top-0 z-10 bg-white dark:bg-card">
                   <tr className="bg-secondary/40 text-muted-foreground text-xs uppercase tracking-wider border-b border-border">
+                    <th className="px-4 py-3 font-semibold w-12 text-center">#</th>
                     <th className="px-4 py-3 font-semibold">Date</th>
                     <th className="px-4 py-3 font-semibold">Medicine Name</th>
                     <th className="px-4 py-3 font-semibold">Batch No.</th>
@@ -1032,12 +1033,13 @@ export default function InventoryManagementPage() {
                 </thead>
                 <tbody className="divide-y divide-border">
                   {loading ? (
-                    <tr><td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">Loading history...</td></tr>
+                    <tr><td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">Loading history...</td></tr>
                   ) : pagedAdjHistory.length === 0 ? (
-                    <tr><td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">No stock adjustments found.</td></tr>
+                    <tr><td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">No stock adjustments found.</td></tr>
                   ) : (
-                    pagedAdjHistory.map(adj => (
+                    pagedAdjHistory.map((adj, index) => (
                       <tr key={adj.AdjustmentId} className="hover:bg-secondary/10 transition-colors">
+                        <td className="px-4 py-3 text-center font-medium text-muted-foreground">{(adjCurrentPage - 1) * adjPageSize + index + 1}</td>
                         <td className="px-4 py-3 text-muted-foreground">
                           {new Date(adj.AdjustmentDate).toLocaleString('en-GB', { day:'2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute:'2-digit' })}
                         </td>
@@ -1222,6 +1224,7 @@ export default function InventoryManagementPage() {
                 <table className="w-full text-left text-sm border-collapse min-w-[1100px]">
                   <thead className="sticky top-0 z-10 bg-white dark:bg-card">
                     <tr className="bg-secondary/40 text-muted-foreground text-[11px] uppercase tracking-wider border-b border-border">
+                      <th className="px-4 py-3 font-semibold w-12 text-center">#</th>
                       <th className="px-4 py-3 font-semibold">Medicine Name</th>
                       <th className="px-4 py-3 font-semibold">Batch No.</th>
                       <th className="px-4 py-3 font-semibold">Supplier</th>
@@ -1235,15 +1238,16 @@ export default function InventoryManagementPage() {
                   </thead>
                   <tbody className="divide-y divide-border">
                     {loading ? (
-                      <tr><td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">Loading expiry data...</td></tr>
+                      <tr><td colSpan={10} className="px-4 py-8 text-center text-muted-foreground">Loading expiry data...</td></tr>
                     ) : expiryItems.length === 0 ? (
-                      <tr><td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">No expiring medicines found for this criteria.</td></tr>
+                      <tr><td colSpan={10} className="px-4 py-8 text-center text-muted-foreground">No expiring medicines found for this criteria.</td></tr>
                     ) : (
-                      expiryItems.map(item => (
+                      expiryItems.map((item, index) => (
                         <tr key={item.BatchId} className={cn(
                           "transition-colors hover:bg-secondary/10",
                           item.DaysToExpiry < 0 ? "bg-rose-50/30 dark:bg-rose-950/10" : ""
                         )}>
+                          <td className="px-4 py-3 text-center font-medium text-muted-foreground">{(expiryPage - 1) * expiryPageSize + index + 1}</td>
                           <td className="px-4 py-3 font-semibold text-foreground">{item.MedicineName}</td>
                           <td className="px-4 py-3 font-mono text-xs">{item.BatchCode}</td>
                           <td className="px-4 py-3 text-muted-foreground truncate max-w-[150px]" title={item.SupplierName}>{item.SupplierName}</td>
@@ -1444,6 +1448,7 @@ export default function InventoryManagementPage() {
                 <table className="w-full text-left text-sm border-collapse min-w-[900px]">
                   <thead className="sticky top-0 z-10 bg-white dark:bg-card">
                     <tr className="bg-secondary/40 text-muted-foreground text-xs uppercase tracking-wider border-b border-border">
+                      <th className="px-4 py-3 font-semibold w-12 text-center">#</th>
                       <th className="px-4 py-3 font-semibold whitespace-nowrap">Date &amp; Time</th>
                       <th className="px-4 py-3 font-semibold">Medicine Name</th>
                       <th className="px-4 py-3 font-semibold">Batch No.</th>
@@ -1455,19 +1460,17 @@ export default function InventoryManagementPage() {
                   </thead>
                   <tbody className="divide-y divide-border">
                     {loading ? (
-                      <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">Loading movements...</td></tr>
+                      <tr><td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">Loading movements...</td></tr>
                     ) : pagedMovements.length === 0 ? (
-                      <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">No stock movements found for the selected criteria.</td></tr>
+                      <tr><td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">No stock movements found for the selected criteria.</td></tr>
                     ) : (
                       pagedMovements.map((mov, idx) => (
-                        <tr key={idx} className="hover:bg-secondary/10 transition-colors">
-                          {/* Date & Time */}
+                        <tr key={mov.MovementId || idx} className="hover:bg-secondary/10 transition-colors">
+                          <td className="px-4 py-3 text-center font-medium text-muted-foreground">{(safePage - 1) * movPageSize + idx + 1}</td>
                           <td className="px-4 py-3 text-muted-foreground whitespace-nowrap text-xs">
                             {new Date(mov.Date).toLocaleString('en-GB', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' })}
                           </td>
-                          {/* Medicine Name */}
                           <td className="px-4 py-3 font-semibold text-foreground">{mov.MedicineName}</td>
-                          {/* Batch No. */}
                           <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{mov.BatchCode}</td>
                           {/* Movement Type Badge */}
                           <td className="px-4 py-3 text-center">

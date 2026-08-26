@@ -1025,6 +1025,7 @@ export default function PurchasesPage() {
               <table className="w-full text-left text-sm border-collapse">
                 <thead>
                   <tr className="bg-secondary/40 text-muted-foreground text-xs uppercase tracking-wider border-b border-border">
+                    <th className="px-6 py-3 font-semibold w-12 text-center">#</th>
                     <th className="px-6 py-3 font-semibold">Date</th>
                     <th className="px-6 py-3 font-semibold">Invoice No.</th>
                     <th className="px-6 py-3 font-semibold">Supplier</th>
@@ -1038,13 +1039,13 @@ export default function PurchasesPage() {
                 <tbody className="divide-y divide-border">
                   {paginatedHistory.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="px-6 py-16 text-center text-muted-foreground">
+                      <td colSpan={9} className="px-6 py-16 text-center text-muted-foreground">
                         <FileText className="h-10 w-10 mx-auto text-slate-300 dark:text-slate-600 mb-3" />
                         <p>No purchase history found.</p>
                       </td>
                     </tr>
                   ) : (
-                    paginatedHistory.map(inv => {
+                    paginatedHistory.map((inv, index) => {
                       const balance = Math.max(0, (inv.GrandTotal || 0) - (inv.PaidAmount || 0));
                       let dynamicStatus = "";
                       if (balance <= 0) dynamicStatus = "Paid";
@@ -1057,6 +1058,7 @@ export default function PurchasesPage() {
                         className="hover:bg-secondary/10 transition-colors cursor-pointer"
                         onClick={() => setViewingInvoice(inv)}
                       >
+                        <td className="px-6 py-3 text-center font-medium text-muted-foreground">{(historyCurrentPage - 1) * historyPageSize + index + 1}</td>
                         <td className="px-6 py-3 text-muted-foreground">{new Date(inv.PurchaseDate).toLocaleDateString()}</td>
                         <td className="px-6 py-3">
                            <div className="font-medium text-slate-800 dark:text-slate-200">{inv.InvoiceNumber}</div>
@@ -1253,6 +1255,7 @@ export default function PurchasesPage() {
                   <table className="w-full text-left text-sm border-collapse">
                     <thead>
                       <tr className="bg-secondary/40 text-muted-foreground text-xs uppercase tracking-wider border-b border-border">
+                        <th className="px-4 py-2 font-semibold w-12 text-center">#</th>
                         <th className="px-4 py-2 font-semibold">Date</th>
                         <th className="px-4 py-2 font-semibold">Debit Note</th>
                         <th className="px-4 py-2 font-semibold">Original Inv.</th>
@@ -1264,12 +1267,13 @@ export default function PurchasesPage() {
                     </thead>
                     <tbody className="divide-y divide-border">
                       {returnsHistory.length === 0 ? (
-                        <tr><td colSpan={7} className="text-center py-12 text-muted-foreground"><div className="flex flex-col items-center gap-2"><Undo2 className="h-10 w-10 opacity-20" /><span>No debit notes processed yet.</span></div></td></tr>
+                        <tr><td colSpan={8} className="text-center py-12 text-muted-foreground"><div className="flex flex-col items-center gap-2"><Undo2 className="h-10 w-10 opacity-20" /><span>No debit notes processed yet.</span></div></td></tr>
                       ) : (
                         returnsHistory
                           .slice((returnsCurrentPage - 1) * returnsPageSize, returnsCurrentPage * returnsPageSize)
-                          .map(r => (
+                          .map((r, index) => (
                           <tr key={r.ReturnId} className="hover:bg-secondary/10 transition-colors">
+                            <td className="px-4 py-2 text-center font-medium text-muted-foreground">{(returnsCurrentPage - 1) * returnsPageSize + index + 1}</td>
                             <td className="px-4 py-2 text-muted-foreground">{new Date(r.ReturnDate).toLocaleDateString()}</td>
                             <td className="px-4 py-2 font-medium">{r.ReturnInvoiceNumber}</td>
                             <td className="px-4 py-2 text-slate-600">{r.OriginalInvoiceNumber || "-"}</td>

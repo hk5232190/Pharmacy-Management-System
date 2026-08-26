@@ -268,6 +268,7 @@ class SaleReturn(Base):
     UserId = Column(Integer, ForeignKey("users.UserId"), nullable=False)
     ReturnInvoiceNumber = Column(String(50), unique=True, nullable=False)
     TotalRefundAmount = Column(Numeric(18, 2), nullable=False)
+    RefundMode = Column(String(30), default="Cash Refund", nullable=False)
     Reason = Column(Text, nullable=False)
     ReturnDate = Column(DateTime, server_default=func.now())
 
@@ -284,6 +285,7 @@ class SaleReturnItem(Base):
     ReturnQuantity = Column(Integer, nullable=False)
     RefundAmount = Column(Numeric(18, 2), nullable=False)
     ItemCondition = Column(String(50), nullable=False) # 'Restockable' or 'Damaged/Quarantine'
+    ReturnReason = Column(String(100), nullable=True)
 
     sale_return = relationship("SaleReturn", back_populates="items")
     batch = relationship("StockBatch")

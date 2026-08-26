@@ -58,6 +58,7 @@ class InvoiceSearchResponse(BaseModel):
     InvoiceNumber: str
     TransactionDate: str
     CustomerName: str
+    CustomerId: Optional[int] = None
     Items: List[InvoiceSearchItem]
     SubTotal: float
     DiscountAmount: float
@@ -68,10 +69,12 @@ class SaleReturnItemCreate(BaseModel):
     BatchId: int
     ReturnQuantity: int
     ItemCondition: str
+    ReturnReason: Optional[str] = None
 
 class SaleReturnCreate(BaseModel):
     InvoiceNumber: str
     Reason: str
+    RefundMode: str = "Cash Refund"
     Items: List[SaleReturnItemCreate]
 
 class SaleHistoryItem(BaseModel):
@@ -82,4 +85,27 @@ class SaleHistoryItem(BaseModel):
     CashierName: str
     PaymentMethod: str
     GrandTotal: float
-    Status: str # "Completed", "Partially Returned", "Fully Refunded"
+    PaidAmount: float
+    Status: str
+
+class SaleHistoryPagedResponse(BaseModel):
+    items: List[SaleHistoryItem]
+    total: int
+    page: int
+    page_size: int
+
+class SaleReturnHistoryItem(BaseModel):
+    ReturnId: int
+    ReturnInvoiceNumber: str
+    OriginalInvoiceNumber: str
+    ReturnDate: str
+    CustomerName: str
+    TotalRefundAmount: float
+    RefundMode: str
+    Reason: str
+
+class SaleReturnHistoryPagedResponse(BaseModel):
+    items: List[SaleReturnHistoryItem]
+    total: int
+    page: int
+    page_size: int

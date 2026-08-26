@@ -43,7 +43,8 @@ export default function BackupRestorePage() {
     BackupLocation: "./backups/automatic",
     RetentionCount: 7,
     BackupOnStartup: false,
-    CompressBackup: true
+    CompressBackup: true,
+    AutoVerify: true
   });
   const [isSavingSettings, setIsSavingSettings] = useState(false);
 
