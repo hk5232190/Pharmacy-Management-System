@@ -84,6 +84,9 @@ function ReportsPageInner({
   const [purchasePaymentFilter, setPurchasePaymentFilter] = useState("All");
   const [selectedPurchaseTransaction, setSelectedPurchaseTransaction] = useState<any>(null);
 
+  const [inventorySearchTerm, setInventorySearchTerm] = useState("");
+  const [inventoryCategoryFilter, setInventoryCategoryFilter] = useState("All");
+
   useEffect(() => {
     // Don't fetch if custom is selected but no date range has been applied yet
     if (timeframe === 'custom' && !dateRange) return;
@@ -888,12 +891,13 @@ function ReportsPageInner({
         return (
           <div className="space-y-6 animate-in fade-in duration-300">
             {/* Summary KPIs */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+            <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
               <KPICard title="Total Cost Value"       value={`Rs ${data?.summary?.TotalCostValue?.toLocaleString(undefined, {maximumFractionDigits: 2}) || '0'}`}           icon={DollarSign}   accent="blue" />
               <KPICard title="Potential Retail Value" value={`Rs ${data?.summary?.TotalRetailValue?.toLocaleString(undefined, {maximumFractionDigits: 2}) || '0'}`}         icon={TrendingUp}   accent="emerald" />
-              <KPICard title="Expired/Written-Off"    value={`Rs ${data?.summary?.ExpiredWrittenOffValuation?.toLocaleString(undefined, {maximumFractionDigits: 2}) || '0'}`} icon={TrendingUp}   accent="rose" />
+              <KPICard title="Expired"                value={`Rs ${data?.summary?.ExpiredWrittenOffValuation?.toLocaleString(undefined, {maximumFractionDigits: 2}) || '0'}`} icon={TrendingUp}   accent="rose" />
               <KPICard title="Total Items in Stock"   value={data?.summary?.TotalItemsInStock?.toLocaleString() || '0'}                                                     icon={FileText}     accent="purple" />
-              <KPICard title="Low/Out of Stock"       value={`${data?.summary?.LowStockCount || '0'} / ${data?.summary?.OutOfStockCount || '0'}`}                           icon={FileText}     accent="amber" />
+              <KPICard title="Low Stock"              value={data?.summary?.LowStockCount?.toLocaleString() || '0'}                                                         icon={AlertTriangle} accent="amber" />
+              <KPICard title="Out of Stock"           value={data?.summary?.OutOfStockCount?.toLocaleString() || '0'}                                                       icon={PackageMinus}  accent="rose" />
             </div>
 
 
@@ -937,13 +941,13 @@ function ReportsPageInner({
                         { name: 'Adjusted', value: data.movement_summary.ManualAdjustmentsQty },
                         { name: 'Expired', value: data.movement_summary.ExpiredWrittenOffQty }
                       ]} 
-                      layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                      margin={{ top: 10, right: 10, left: -10, bottom: 5 }}
                     >
-                      <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#e2e8f0" />
-                      <XAxis type="number" hide />
-                      <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} width={80} />
-                      <Tooltip content={<CustomTooltip />} />
-                      <Bar dataKey="value" name="Quantity" radius={[0, 4, 4, 0]} barSize={20}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#64748b' }} dy={10} interval={0} />
+                      <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#64748b' }} dx={-5} tickFormatter={(val) => val >= 1000 ? `${(val/1000).toFixed(1)}k` : val} />
+                      <Tooltip cursor={{fill: 'rgba(100,116,139,0.1)'}} content={<CustomTooltip />} />
+                      <Bar dataKey="value" name="Quantity" radius={[4, 4, 0, 0]} barSize={32}>
                         {
                           [
                             { name: 'Purchased', value: data.movement_summary.PurchasedQty },
@@ -972,55 +976,130 @@ function ReportsPageInner({
           <div className="space-y-6">
             
             <Card className="border border-border shadow-sm rounded-xl overflow-hidden">
-              <div className="p-4 border-b border-border bg-slate-50 dark:bg-slate-900 flex justify-between items-center">
+              <div className="p-4 border-b border-border bg-slate-50 dark:bg-slate-900 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <h3 className="font-semibold text-lg">Current Stock Valuation</h3>
-                <div className="flex gap-2">
+                <div className="flex gap-2 items-center w-full sm:w-auto flex-wrap">
+                  <div className="relative w-full sm:w-64">
+                    <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                    <Input 
+                      placeholder="Search medicine, batch..." 
+                      className="pl-9 h-9 w-full rounded-full"
+                      value={inventorySearchTerm}
+                      onChange={(e) => setInventorySearchTerm(e.target.value)}
+                    />
+                  </div>
+                  <select 
+                    className="h-9 rounded-full border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    value={inventoryCategoryFilter}
+                    onChange={(e) => setInventoryCategoryFilter(e.target.value)}
+                  >
+                    <option value="All">All Categories</option>
+                    {Array.from(new Set(data?.stock_items?.map((item: any) => item.Category).filter(Boolean))).map((cat: any) => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
-              <div className="overflow-x-auto max-h-96">
-                <table className="w-full text-sm text-left">
-                  <thead className="bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 border-b border-border sticky top-0">
+              <div className="overflow-x-auto max-h-[500px]">
+                <table className="w-full text-sm text-left relative">
+                  <thead className="bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 border-b border-border sticky top-0 z-10 shadow-sm">
                     <tr>
-                      <th className="px-4 py-3 font-medium">Medicine</th>
-                      <th className="px-4 py-3 font-medium">Batch</th>
+                      <th className="px-4 py-3 font-medium text-left">Medicine</th>
+                      <th className="px-4 py-3 font-medium text-left">Category</th>
+                      <th className="px-4 py-3 font-medium text-left">Batch</th>
                       <th className="px-4 py-3 font-medium text-right">Qty</th>
                       <th className="px-4 py-3 font-medium text-right">Cost</th>
                       <th className="px-4 py-3 font-medium text-right">Retail</th>
                       <th className="px-4 py-3 font-medium text-right">Total Cost</th>
                       <th className="px-4 py-3 font-medium text-right">Total Retail</th>
-                      <th className="px-4 py-3 font-medium">Status</th>
+                      <th className="px-4 py-3 font-medium text-right">Potential Margin (Rs.)</th>
+                      <th className="px-4 py-3 font-medium text-left">Status</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
-                    {data.stock_items && data.stock_items.length > 0 ? (
-                      data.stock_items.map((t: any, idx: number) => (
-                        <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
-                          <td className="px-4 py-3 font-medium text-foreground">{t.MedicineName}</td>
-                          <td className="px-4 py-3">{t.BatchCode}</td>
-                          <td className="px-4 py-3 text-right">{t.Quantity}</td>
-                          <td className="px-4 py-3 text-right">Rs {t.CostPrice}</td>
-                          <td className="px-4 py-3 text-right">Rs {t.SellingPrice}</td>
-                          <td className="px-4 py-3 text-right font-medium">Rs {t.TotalCostValue.toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
-                          <td className="px-4 py-3 text-right font-medium text-emerald-600">Rs {t.TotalRetailValue.toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
-                          <td className="px-4 py-3">
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              t.Status === 'Active' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'
-                            }`}>
-                              {t.Status}
-                            </span>
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">
-                          No stock found.
-                        </td>
-                      </tr>
-                    )}
+                    {(() => {
+                      const filteredStock = data?.stock_items?.filter((t: any) => {
+                        const matchesSearch = !inventorySearchTerm || 
+                          t.MedicineName?.toLowerCase().includes(inventorySearchTerm.toLowerCase()) || 
+                          t.BatchCode?.toLowerCase().includes(inventorySearchTerm.toLowerCase());
+                        const matchesCategory = inventoryCategoryFilter === 'All' || t.Category === inventoryCategoryFilter;
+                        return matchesSearch && matchesCategory;
+                      }) || [];
+
+                      let sumQty = 0;
+                      let sumCost = 0;
+                      let sumRetail = 0;
+                      let sumMargin = 0;
+
+                      const rows = filteredStock.map((t: any, idx: number) => {
+                        const margin = (t.TotalRetailValue || 0) - (t.TotalCostValue || 0);
+                        sumQty += t.Quantity || 0;
+                        sumCost += t.TotalCostValue || 0;
+                        sumRetail += t.TotalRetailValue || 0;
+                        sumMargin += margin;
+
+                        return (
+                          <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
+                            <td className="px-4 py-3 font-medium text-foreground text-left">{t.MedicineName}</td>
+                            <td className="px-4 py-3 text-muted-foreground text-left">{t.Category}</td>
+                            <td className="px-4 py-3 text-left">{t.BatchCode}</td>
+                            <td className="px-4 py-3 text-right tabular-nums">{t.Quantity}</td>
+                            <td className="px-4 py-3 text-right tabular-nums">Rs {t.CostPrice}</td>
+                            <td className="px-4 py-3 text-right tabular-nums">Rs {t.SellingPrice}</td>
+                            <td className="px-4 py-3 text-right font-medium tabular-nums">Rs {t.TotalCostValue?.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                            <td className="px-4 py-3 text-right font-medium tabular-nums text-emerald-600">Rs {t.TotalRetailValue?.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                            <td className="px-4 py-3 text-right font-medium tabular-nums text-blue-600">Rs {margin.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                            <td className="px-4 py-3 text-left">
+                              <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
+                                t.Status === 'Active' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400'
+                              }`}>
+                                {t.Status}
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      });
+
+                      return (
+                        <>
+                          {rows.length > 0 ? rows : (
+                            <tr>
+                              <td colSpan={10} className="px-4 py-12 text-center text-muted-foreground">
+                                No stock items found matching your filters.
+                              </td>
+                            </tr>
+                          )}
+                          {rows.length > 0 && (
+                            <tr className="bg-slate-100 dark:bg-slate-800/80 border-t-2 border-slate-200 dark:border-slate-700 sticky bottom-0 z-10">
+                              <td colSpan={3} className="px-4 py-3 text-right font-bold text-foreground uppercase text-xs tracking-wider">Filtered Totals:</td>
+                              <td className="px-4 py-3 text-right font-bold tabular-nums text-foreground">{sumQty}</td>
+                              <td colSpan={2}></td>
+                              <td className="px-4 py-3 text-right font-bold tabular-nums text-foreground">Rs {sumCost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                              <td className="px-4 py-3 text-right font-bold tabular-nums text-emerald-600">Rs {sumRetail.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                              <td className="px-4 py-3 text-right font-bold tabular-nums text-blue-600">Rs {sumMargin.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                              <td></td>
+                            </tr>
+                          )}
+                        </>
+                      );
+                    })()}
                   </tbody>
                 </table>
               </div>
+              {(() => {
+                const filteredStock = data?.stock_items?.filter((t: any) => {
+                  const matchesSearch = !inventorySearchTerm || 
+                    t.MedicineName?.toLowerCase().includes(inventorySearchTerm.toLowerCase()) || 
+                    t.BatchCode?.toLowerCase().includes(inventorySearchTerm.toLowerCase());
+                  const matchesCategory = inventoryCategoryFilter === 'All' || t.Category === inventoryCategoryFilter;
+                  return matchesSearch && matchesCategory;
+                }) || [];
+                return (
+                  <div className="p-4 border-t border-border bg-slate-50 dark:bg-slate-900/50 text-xs text-muted-foreground flex justify-between items-center">
+                    <span>Showing {filteredStock.length > 0 ? `1–${filteredStock.length}` : '0'} of {filteredStock.length} items</span>
+                  </div>
+                );
+              })()}
             </Card>
 
             {data.movement_items && (
@@ -1042,27 +1121,65 @@ function ReportsPageInner({
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
-                      {data.movement_items.length > 0 ? (
-                        data.movement_items.map((t: any, idx: number) => (
-                          <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
-                            <td className="px-4 py-3 font-medium text-foreground">{t.MedicineName}</td>
-                            <td className="px-4 py-3 text-right text-muted-foreground">{t.StartingStock}</td>
-                            <td className="px-4 py-3 text-right text-emerald-600">+{t.PurchasedQty}</td>
-                            <td className="px-4 py-3 text-right text-blue-600">-{t.SoldQty}</td>
-                            <td className="px-4 py-3 text-right text-purple-600">{t.AdjustedQty > 0 ? `+${t.AdjustedQty}` : t.AdjustedQty}</td>
-                            <td className="px-4 py-3 text-right text-rose-600">-{t.ExpiredQty}</td>
-                            <td className="px-4 py-3 text-right font-medium">{t.ClosingStock}</td>
-                          </tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
-                            No movement found for the selected period.
-                          </td>
-                        </tr>
-                      )}
+                      {(() => {
+                        let sumStart = 0;
+                        let sumPurchased = 0;
+                        let sumSold = 0;
+                        let sumAdjusted = 0;
+                        let sumExpired = 0;
+                        let sumClose = 0;
+
+                        const rows = data.movement_items.map((t: any, idx: number) => {
+                          const calculatedCloseStock = (t.StartingStock || 0) + (t.PurchasedQty || 0) - (t.SoldQty || 0) + (t.AdjustedQty || 0) - (t.ExpiredQty || 0);
+                          
+                          sumStart += (t.StartingStock || 0);
+                          sumPurchased += (t.PurchasedQty || 0);
+                          sumSold += (t.SoldQty || 0);
+                          sumAdjusted += (t.AdjustedQty || 0);
+                          sumExpired += (t.ExpiredQty || 0);
+                          sumClose += calculatedCloseStock;
+
+                          return (
+                            <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
+                              <td className="px-4 py-3 font-medium text-foreground text-left">{t.MedicineName}</td>
+                              <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">{t.StartingStock || 0}</td>
+                              <td className="px-4 py-3 text-right tabular-nums text-emerald-600">+{t.PurchasedQty || 0}</td>
+                              <td className="px-4 py-3 text-right tabular-nums text-blue-600">-{t.SoldQty || 0}</td>
+                              <td className="px-4 py-3 text-right tabular-nums text-purple-600">{(t.AdjustedQty || 0) > 0 ? `+${t.AdjustedQty}` : (t.AdjustedQty || 0)}</td>
+                              <td className="px-4 py-3 text-right tabular-nums text-rose-600">-{t.ExpiredQty || 0}</td>
+                              <td className="px-4 py-3 text-right tabular-nums font-medium">{calculatedCloseStock}</td>
+                            </tr>
+                          );
+                        });
+
+                        return (
+                          <>
+                            {rows.length > 0 ? rows : (
+                              <tr>
+                                <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
+                                  No movement found for the selected period.
+                                </td>
+                              </tr>
+                            )}
+                            {rows.length > 0 && (
+                              <tr className="bg-slate-100 dark:bg-slate-800/80 border-t-2 border-slate-200 dark:border-slate-700 sticky bottom-0 z-10">
+                                <td className="px-4 py-3 text-right font-bold text-foreground uppercase text-xs tracking-wider">Totals:</td>
+                                <td className="px-4 py-3 text-right font-bold tabular-nums text-muted-foreground">{sumStart}</td>
+                                <td className="px-4 py-3 text-right font-bold tabular-nums text-emerald-600">+{sumPurchased}</td>
+                                <td className="px-4 py-3 text-right font-bold tabular-nums text-blue-600">-{sumSold}</td>
+                                <td className="px-4 py-3 text-right font-bold tabular-nums text-purple-600">{sumAdjusted > 0 ? `+${sumAdjusted}` : sumAdjusted}</td>
+                                <td className="px-4 py-3 text-right font-bold tabular-nums text-rose-600">-{sumExpired}</td>
+                                <td className="px-4 py-3 text-right font-bold tabular-nums text-foreground">{sumClose}</td>
+                              </tr>
+                            )}
+                          </>
+                        );
+                      })()}
                     </tbody>
                   </table>
+                </div>
+                <div className="p-4 border-t border-border bg-slate-50 dark:bg-slate-900/50 text-xs text-muted-foreground flex justify-between items-center">
+                  <span>Showing {data.movement_items.length > 0 ? `1–${data.movement_items.length}` : '0'} of {data.movement_items.length} items</span>
                 </div>
               </Card>
             )}

@@ -1444,14 +1444,15 @@ def export_inventory_report_pdf(req: dict = Body(...), db: Session = Depends(get
     elements = []
     styles = getSampleStyleSheet()
     
-    elements.append(Paragraph(f"Inventory Report", styles['Title']))
-    elements.append(Spacer(1, 12))
+    elements.extend(build_premium_header("Inventory Report", f"As of: {ed}"))
     
-    elements.append(Paragraph(f"Total Items In Stock: {report_data.summary.TotalItemsInStock}", styles['Normal']))
-    elements.append(Paragraph(f"Total Cost Value: {report_data.summary.TotalCostValue}", styles['Normal']))
-    elements.append(Paragraph(f"Low Stock Count: {report_data.summary.LowStockCount}", styles['Normal']))
-    elements.append(Paragraph(f"Out of Stock Count: {report_data.summary.OutOfStockCount}", styles['Normal']))
-    elements.append(Spacer(1, 20))
+    kpi_data = [
+        ("Total Items", str(report_data.summary.TotalItemsInStock), "#6366F1"),
+        ("Cost Value", f"Rs. {report_data.summary.TotalCostValue}", "#3B82F6"),
+        ("Low Stock", str(report_data.summary.LowStockCount), "#F59E0B"),
+        ("Out of Stock", str(report_data.summary.OutOfStockCount), "#EF4444"),
+    ]
+    elements.extend(build_kpi_table(kpi_data))
     
     embed_chart_in_pdf(elements, req.chart_image)
     
@@ -1469,11 +1470,23 @@ def export_inventory_report_pdf(req: dict = Body(...), db: Session = Depends(get
         
     t = Table(data, repeatRows=1)
     t.setStyle(TableStyle([
-        ('BACKGROUND', (0,0), (-1,0), colors.grey),
-        ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
+        ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#1E293B')),
+        ('TEXTCOLOR', (0,0), (-1,0), colors.HexColor('#FFFFFF')),
         ('ALIGN', (0,0), (-1,-1), 'CENTER'),
         ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
-        ('GRID', (0,0), (-1,-1), 1, colors.black)
+        ('FONTSIZE', (0,0), (-1,0), 12),
+        ('BOTTOMPADDING', (0,0), (-1,0), 14),
+        ('TOPPADDING', (0,0), (-1,0), 14),
+        
+        ('ROWBACKGROUNDS', (0,1), (-1,-1), [colors.HexColor('#FFFFFF'), colors.HexColor('#F1F5F9')]),
+        ('FONTNAME', (0,1), (-1,-1), 'Helvetica'),
+        ('FONTSIZE', (0,1), (-1,-1), 10),
+        ('BOTTOMPADDING', (0,1), (-1,-1), 10),
+        ('TOPPADDING', (0,1), (-1,-1), 10),
+        
+        ('LINEBELOW', (0,0), (-1,0), 2, colors.HexColor('#3B82F6')), 
+        ('INNERGRID', (0,0), (-1,-1), 0.5, colors.HexColor('#E2E8F0')),
+        ('BOX', (0,0), (-1,-1), 1.5, colors.HexColor('#94A3B8')),
     ]))
     elements.append(t)
     if len(report_data.stock_items) > 200:
