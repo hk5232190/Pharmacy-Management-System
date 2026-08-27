@@ -484,3 +484,110 @@ NoneType: None
 2026-08-15 14:12:56,425 - apscheduler.scheduler - INFO - Scheduler started
 2026-08-15 14:17:02,986 - pms - INFO - Starting Pharmacy Management System backend...
 2026-08-15 14:17:03,013 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-15 14:22:18,986 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-15 14:22:19,013 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-15 15:33:01,849 - pms - ERROR - PMSException caught: Session expired. Please log in again. (status: 401) | Path: /api/v1/auth/me
+2026-08-15 17:32:45,267 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-15 17:32:45,365 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-15 17:33:51,418 - pms - ERROR - PMSException caught: Session expired. Please log in again. (status: 401) | Path: /api/v1/auth/me
+2026-08-15 17:56:25,485 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-15 17:56:25,545 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-15 17:59:41,799 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-15 17:59:41,817 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-15 22:09:31,631 - pms - ERROR - PMSException caught: Session expired. Please log in again. (status: 401) | Path: /api/v1/auth/me
+2026-08-15 22:55:18,761 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-15 22:55:18,798 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-15 23:33:01,297 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-15 23:33:01,326 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-15 23:48:06,486 - pms - INFO - AUDIT: User admin successfully deleted medicine 11 (Panadol).
+2026-08-15 23:48:14,904 - pms - INFO - AUDIT: User admin successfully deleted medicine 10 (Gaviscon).
+2026-08-15 23:48:23,982 - pms - INFO - AUDIT: User admin successfully deleted medicine 9 (Calpol).
+2026-08-15 23:48:32,877 - pms - INFO - AUDIT: User admin successfully deleted medicine 8 (Betnovate).
+2026-08-15 23:48:42,862 - pms - INFO - AUDIT: User admin successfully deleted medicine 7 (Amoxil).
+2026-08-15 23:48:51,337 - pms - INFO - AUDIT: User admin successfully deleted medicine 2 (Amoxil 500mg).
+2026-08-15 23:56:02,598 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-15 23:56:02,619 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-16 00:01:28,722 - pms - INFO - Safe Data Reset | SUCCESS | User: admin | Snapshot: pre_reset_snapshot_20260816_000128.sqlite
+2026-08-16 00:02:22,191 - pms - INFO - AUDIT: User admin imported 5 categories. Skipped: 0. Errors: 0
+2026-08-16 00:02:31,876 - pms - INFO - AUDIT: User admin imported 5 companies. Skipped: 0. Errors: 0
+2026-08-16 00:02:46,858 - pms - INFO - AUDIT: User admin imported 5 suppliers. Skipped: 0. Errors: 0
+2026-08-16 00:02:57,694 - pms - INFO - AUDIT: User admin imported 5 customers. Skipped: 0. Errors: 0
+2026-08-16 00:06:21,540 - pms - ERROR - Unhandled Exception caught: (sqlite3.IntegrityError) UNIQUE constraint failed: medicines.Barcode
+[SQL: INSERT INTO medicines ("BrandName", "GenericName", "CategoryId", "CompanyId", "RackNumber", "ReorderLevel", "RequiresPrescription", "Unit", "DosageForm", "Strength", "Barcode", "DefaultCostPrice", "DefaultSellingPrice", "IsActive") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING "MedicineId"]
+[parameters: ('Amoxil 500mg', 'Amoxicillin', 1, 5, 'A-04', 10, 1, 'Box', None, None, '8.901E+12', 0.0, 0.0, 1)]
+(Background on this error at: https://sqlalche.me/e/20/gkpj) | Path: /api/v1/medicines/import
+NoneType: None
+2026-08-16 00:06:37,249 - pms - ERROR - Unhandled Exception caught: (sqlite3.IntegrityError) UNIQUE constraint failed: medicines.Barcode
+[SQL: INSERT INTO medicines ("BrandName", "GenericName", "CategoryId", "CompanyId", "RackNumber", "ReorderLevel", "RequiresPrescription", "Unit", "DosageForm", "Strength", "Barcode", "DefaultCostPrice", "DefaultSellingPrice", "IsActive") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING "MedicineId"]
+[parameters: ('Amoxil 500mg', 'Amoxicillin', 1, 5, 'A-04', 10, 1, 'Box', None, None, '8.901E+12', 0.0, 0.0, 1)]
+(Background on this error at: https://sqlalche.me/e/20/gkpj) | Path: /api/v1/medicines/import
+NoneType: None
+2026-08-16 00:06:58,417 - pms - INFO - AUDIT: User admin successfully deleted medicine 11 (Panadol).
+2026-08-16 00:07:09,606 - pms - INFO - AUDIT: User admin successfully deleted medicine 7 (Amoxil).
+2026-08-16 00:07:15,606 - pms - INFO - AUDIT: User admin successfully deleted medicine 2 (Amoxil 500mg).
+2026-08-16 00:07:21,618 - pms - INFO - AUDIT: User admin successfully deleted medicine 8 (Betnovate).
+2026-08-16 00:07:31,331 - pms - INFO - AUDIT: User admin successfully deleted medicine 4 (Calpol).
+2026-08-16 00:07:39,855 - pms - INFO - AUDIT: User admin successfully deleted medicine 10 (Gaviscon).
+2026-08-16 00:33:38,180 - pms - ERROR - Unhandled Exception caught: (sqlite3.IntegrityError) UNIQUE constraint failed: medicines.Barcode
+[SQL: INSERT INTO medicines ("BrandName", "GenericName", "CategoryId", "CompanyId", "RackNumber", "ReorderLevel", "RequiresPrescription", "Unit", "DosageForm", "Strength", "Barcode", "DefaultCostPrice", "DefaultSellingPrice", "IsActive") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING "MedicineId"]
+[parameters: ('Panadol', 'Paracetamol', 2, 5, 'A-01', 20, 1, 'Box', None, None, '8901000000011', 0.0, 0.0, 1)]
+(Background on this error at: https://sqlalche.me/e/20/gkpj) | Path: /api/v1/medicines/import
+NoneType: None
+2026-08-16 00:33:43,513 - pms - ERROR - Unhandled Exception caught: (sqlite3.IntegrityError) UNIQUE constraint failed: medicines.Barcode
+[SQL: INSERT INTO medicines ("BrandName", "GenericName", "CategoryId", "CompanyId", "RackNumber", "ReorderLevel", "RequiresPrescription", "Unit", "DosageForm", "Strength", "Barcode", "DefaultCostPrice", "DefaultSellingPrice", "IsActive") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING "MedicineId"]
+[parameters: ('Amoxil 500mg', 'Amoxicillin', 1, 5, 'A-04', 10, 1, 'Box', None, None, '8.901E+12', 0.0, 0.0, 1)]
+(Background on this error at: https://sqlalche.me/e/20/gkpj) | Path: /api/v1/medicines/import
+NoneType: None
+2026-08-16 00:34:17,640 - pms - ERROR - Unhandled Exception caught: (sqlite3.IntegrityError) UNIQUE constraint failed: medicines.Barcode
+[SQL: INSERT INTO medicines ("BrandName", "GenericName", "CategoryId", "CompanyId", "RackNumber", "ReorderLevel", "RequiresPrescription", "Unit", "DosageForm", "Strength", "Barcode", "DefaultCostPrice", "DefaultSellingPrice", "IsActive") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING "MedicineId"]
+[parameters: ('Panadol', 'Paracetamol', 2, 5, 'A-01', 20, 1, 'Box', None, None, '8901000000011', 0.0, 0.0, 1)]
+(Background on this error at: https://sqlalche.me/e/20/gkpj) | Path: /api/v1/medicines/import
+NoneType: None
+2026-08-16 00:34:28,360 - pms - ERROR - Unhandled Exception caught: (sqlite3.IntegrityError) UNIQUE constraint failed: medicines.Barcode
+[SQL: INSERT INTO medicines ("BrandName", "GenericName", "CategoryId", "CompanyId", "RackNumber", "ReorderLevel", "RequiresPrescription", "Unit", "DosageForm", "Strength", "Barcode", "DefaultCostPrice", "DefaultSellingPrice", "IsActive") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING "MedicineId"]
+[parameters: ('Amoxil 500mg', 'Amoxicillin', 1, 5, 'A-04', 10, 1, 'Box', None, None, '8.901E+12', 0.0, 0.0, 1)]
+(Background on this error at: https://sqlalche.me/e/20/gkpj) | Path: /api/v1/medicines/import
+NoneType: None
+2026-08-16 10:30:47,952 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-16 10:30:48,003 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-24 17:13:28,836 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-24 17:13:28,888 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-25 11:07:47,693 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-25 11:07:47,751 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-26 12:58:35,831 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-26 12:58:35,885 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-26 13:11:17,301 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-26 13:11:17,353 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-26 13:21:29,140 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-26 13:21:29,323 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-26 15:31:24,541 - pms - ERROR - PMSException caught: Session expired. Please log in again. (status: 401) | Path: /api/v1/auth/me
+2026-08-26 16:11:24,006 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-26 16:11:24,067 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-26 16:37:08,369 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-26 16:37:08,412 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-26 17:48:39,045 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-26 17:48:39,113 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-26 17:48:49,712 - pms - ERROR - PMSException caught: Session expired. Please log in again. (status: 401) | Path: /api/v1/auth/me
+2026-08-26 18:50:13,131 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-26 18:50:13,232 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-26 22:11:04,479 - pms - ERROR - PMSException caught: Session expired. Please log in again. (status: 401) | Path: /api/v1/auth/me
+2026-08-26 22:44:46,131 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-26 22:44:46,213 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-26 22:52:05,878 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-26 22:52:05,896 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-26 23:07:22,323 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-26 23:07:22,359 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-26 23:30:23,401 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-26 23:30:23,426 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-27 00:14:00,666 - pms - ERROR - PMSException caught: Session expired. Please log in again. (status: 401) | Path: /api/v1/auth/me
+2026-08-27 00:40:27,539 - pms - ERROR - PMSException caught: Incorrect username or password (status: 401) | Path: /api/v1/auth/login
+2026-08-27 00:48:13,108 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-27 00:48:13,132 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-27 00:55:20,178 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-27 00:55:20,194 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-27 01:04:09,657 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-27 01:04:09,684 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-27 01:11:58,243 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-27 01:11:58,272 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-27 01:17:25,195 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-27 01:17:25,218 - apscheduler.scheduler - INFO - Scheduler started

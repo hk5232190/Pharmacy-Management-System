@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef } from "react";
 import { apiClient } from "@/lib/api-client";
 import { toast } from "react-hot-toast";
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import {
   Pill,
   Package,
@@ -154,6 +156,7 @@ export default function InventoryManagementPage() {
   // Master Lists for Filters
   const [masterCategories, setMasterCategories] = useState<{CategoryId: number, CategoryName: string}[]>([]);
   const [masterCompanies, setMasterCompanies] = useState<{CompanyId: number, CompanyName: string}[]>([]);
+  const [masterSuppliers, setMasterSuppliers] = useState<{SupplierId: number, Name: string}[]>([]);
   
   // Movement Filters
   const [movSearchQuery, setMovSearchQuery] = useState("");
@@ -313,6 +316,10 @@ export default function InventoryManagementPage() {
       const compRes = await apiClient.get("/companies?page_size=0");
       if (compRes.success && compRes.data) {
         setMasterCompanies(compRes.data);
+      }
+      const suppRes = await apiClient.get("/suppliers?page_size=0");
+      if (suppRes.success && suppRes.data) {
+        setMasterSuppliers(suppRes.data);
       }
 
     } catch (error) {
@@ -614,10 +621,45 @@ export default function InventoryManagementPage() {
 
   const exportToCSV = (data: any[], filename: string) => {
     if (!data || data.length === 0) return toast.error("No data to export");
-    const headers = Object.keys(data[0]);
+    
+    const rawHeaders = Object.keys(data[0]);
+    
+    const formattedHeaders = rawHeaders.map(h => {
+      let res = h.replace(/([A-Z])/g, ' $1').trim();
+      if (res === 'Source Id') res = 'Source ID';
+      if (res === 'Batch Code') res = 'Batch No.';
+      return res.toUpperCase();
+    });
+
+    const csvRows = data.map(row => {
+      return rawHeaders.map(header => {
+        let val = row[header];
+        if (val === null || val === undefined) return "-";
+        
+        if (typeof val === 'number') {
+           if (header.toLowerCase().includes('value') || header.toLowerCase().includes('price') || header.toLowerCase().includes('cost')) {
+             return `Rs ${val.toFixed(2)}`;
+           }
+           return val.toString();
+        }
+
+        if (typeof val === 'string') {
+          if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(val)) {
+            const date = new Date(val.endsWith('Z') ? val : val + 'Z');
+            return date.toLocaleString('en-GB', { 
+              day: '2-digit', month: 'short', year: 'numeric', 
+              hour: '2-digit', minute: '2-digit', hour12: true 
+            }).toUpperCase();
+          }
+        }
+        
+        return String(val);
+      });
+    });
+
     const csvContent = [
-      headers.join(","),
-      ...data.map(row => headers.map(fieldName => `"${String(row[fieldName]).replace(/"/g, '""')}"`).join(","))
+      formattedHeaders.join(","),
+      ...csvRows.map(row => row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(","))
     ].join("\n");
 
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
@@ -630,8 +672,62 @@ export default function InventoryManagementPage() {
     document.body.removeChild(link);
   };
 
-  const exportToPDF = () => {
-    window.print();
+  const exportToPDF = (data: any[], filename: string) => {
+    if (!data || data.length === 0) return toast.error("No data to export");
+    const doc = new jsPDF();
+    const headers = Object.keys(data[0]);
+    
+    // Format headers slightly for display
+    const formattedHeaders = headers.map(h => {
+      let res = h.replace(/([A-Z])/g, ' $1').trim();
+      if (res === 'Source Id') res = 'Source ID';
+      if (res === 'Batch Code') res = 'Batch No.';
+      return res.toUpperCase();
+    });
+    
+    const tableRows = data.map(row => {
+      return headers.map(header => {
+        let val = row[header];
+        if (val === null || val === undefined) return "-";
+
+        if (typeof val === 'number') {
+           if (header.toLowerCase().includes('value') || header.toLowerCase().includes('price') || header.toLowerCase().includes('cost')) {
+             return `Rs ${val.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+           }
+           return val.toLocaleString();
+        }
+
+        if (typeof val === 'string') {
+          // Check if it looks like an ISO date (e.g. 2026-08-26T20:05:50)
+          if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(val)) {
+            const date = new Date(val.endsWith('Z') ? val : val + 'Z');
+            return date.toLocaleString('en-GB', { 
+              day: '2-digit', month: 'short', year: 'numeric', 
+              hour: '2-digit', minute: '2-digit', hour12: true 
+            }).toUpperCase();
+          }
+        }
+        
+        return val;
+      });
+    });
+
+    const title = filename.replace(/_/g, ' ').toUpperCase();
+    doc.setFontSize(16);
+    doc.text(`Inventory Report - ${title}`, 14, 20);
+    doc.setFontSize(10);
+    doc.text(`Generated on: ${new Date().toLocaleString('en-GB', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit', hour12:true }).toUpperCase()}`, 14, 28);
+
+    autoTable(doc, {
+      head: [formattedHeaders],
+      body: tableRows,
+      startY: 36,
+      theme: 'grid',
+      headStyles: { fillColor: [59, 130, 246] }, // blue-500
+      styles: { fontSize: 8 },
+    });
+
+    doc.save(`${filename}.pdf`);
   };
 
   // Navigate to Movement History tab and pre-fill batch filter
@@ -711,18 +807,71 @@ export default function InventoryManagementPage() {
           </div>
         )}
 
+        {/* Expiry KPI Cards */}
+        {activeTab === "expiry" && expiryKpi && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <div className="bg-white dark:bg-card border-l-4 border-l-rose-500 rounded-xl p-4 shadow-sm">
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Already Expired</p>
+                  <h3 className="text-2xl font-bold mt-1 text-rose-600 dark:text-rose-400">{expiryKpi.expired_count} batches</h3>
+                </div>
+                <div className="p-2 bg-rose-50 dark:bg-rose-900/20 rounded-lg">
+                  <AlertTriangle className="h-5 w-5 text-rose-500" />
+                </div>
+              </div>
+              <div className="mt-4 pt-3 border-t border-border flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Total Risk Value</span>
+                <span className="font-semibold text-rose-600 dark:text-rose-400">Rs {expiryKpi.expired_value.toLocaleString()}</span>
+              </div>
+            </div>
+
+            <div className="bg-white dark:bg-card border-l-4 border-l-orange-500 rounded-xl p-4 shadow-sm">
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Expiring in ≤ 30 Days</p>
+                  <h3 className="text-2xl font-bold mt-1 text-orange-600 dark:text-orange-400">{expiryKpi.expiring_30d_count} batches</h3>
+                </div>
+                <div className="p-2 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
+                  <CalendarDays className="h-5 w-5 text-orange-500" />
+                </div>
+              </div>
+              <div className="mt-4 pt-3 border-t border-border flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Total Risk Value</span>
+                <span className="font-semibold text-orange-600 dark:text-orange-400">Rs {expiryKpi.expiring_30d_value.toLocaleString()}</span>
+              </div>
+            </div>
+
+            <div className="bg-white dark:bg-card border-l-4 border-l-amber-500 rounded-xl p-4 shadow-sm">
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Expiring in ≤ 90 Days</p>
+                  <h3 className="text-2xl font-bold mt-1 text-amber-600 dark:text-amber-400">{expiryKpi.expiring_90d_count} batches</h3>
+                </div>
+                <div className="p-2 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
+                  <Box className="h-5 w-5 text-amber-500" />
+                </div>
+              </div>
+              <div className="mt-4 pt-3 border-t border-border flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Total Risk Value</span>
+                <span className="font-semibold text-amber-600 dark:text-amber-400">Rs {expiryKpi.expiring_90d_value.toLocaleString()}</span>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Tabs & Actions */}
-        <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 border-b border-border pb-4 mb-6">
-          <div className="flex space-x-1 bg-secondary/50 p-1 rounded-lg">
+        <div className="flex flex-col xl:flex-row justify-between items-start xl:items-end gap-4 border-b border-border mb-6">
+          <div className="flex gap-2 w-full xl:w-auto overflow-x-auto custom-scrollbar">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
-                  "px-4 py-2 rounded-md text-sm font-medium transition-colors",
+                  "px-6 py-2.5 font-medium text-sm rounded-t-lg transition-colors whitespace-nowrap",
                   activeTab === tab.id 
-                    ? "bg-white dark:bg-card text-primary shadow-sm" 
-                    : "text-muted-foreground hover:text-foreground hover:bg-white/50 dark:hover:bg-card/50"
+                    ? "bg-primary text-primary-foreground" 
+                    : "text-muted-foreground hover:bg-secondary/50"
                 )}
               >
                 {tab.label}
@@ -730,7 +879,7 @@ export default function InventoryManagementPage() {
             ))}
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 pb-2">
 
 
             {/* Premium Refresh Button */}
@@ -1040,8 +1189,8 @@ export default function InventoryManagementPage() {
                     pagedAdjHistory.map((adj, index) => (
                       <tr key={adj.AdjustmentId} className="hover:bg-secondary/10 transition-colors">
                         <td className="px-4 py-3 text-center font-medium text-muted-foreground">{(adjCurrentPage - 1) * adjPageSize + index + 1}</td>
-                        <td className="px-4 py-3 text-muted-foreground">
-                          {new Date(adj.AdjustmentDate).toLocaleString('en-GB', { day:'2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute:'2-digit' })}
+                        <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
+                          {new Date(adj.AdjustmentDate).toLocaleString('en-GB', { day:'2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute:'2-digit', hour12: true }).toUpperCase()}
                         </td>
                         <td className="px-4 py-3 font-semibold text-foreground">{adj.MedicineName}</td>
                         <td className="px-4 py-3 font-mono text-xs">{adj.BatchCode}</td>
@@ -1104,58 +1253,6 @@ export default function InventoryManagementPage() {
 
         {activeTab === "expiry" && (
           <div className="flex flex-col gap-4 animate-in fade-in duration-300">
-            {/* KPI Summary Cards */}
-            {expiryKpi && (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-white dark:bg-card border-l-4 border-l-rose-500 rounded-xl p-4 shadow-sm">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Already Expired</p>
-                      <h3 className="text-2xl font-bold mt-1 text-rose-600 dark:text-rose-400">{expiryKpi.expired_count} batches</h3>
-                    </div>
-                    <div className="p-2 bg-rose-50 dark:bg-rose-900/20 rounded-lg">
-                      <AlertTriangle className="h-5 w-5 text-rose-500" />
-                    </div>
-                  </div>
-                  <div className="mt-4 pt-3 border-t border-border flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Total Risk Value</span>
-                    <span className="font-semibold text-rose-600 dark:text-rose-400">Rs {expiryKpi.expired_value.toLocaleString()}</span>
-                  </div>
-                </div>
-
-                <div className="bg-white dark:bg-card border-l-4 border-l-orange-500 rounded-xl p-4 shadow-sm">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Expiring in ≤ 30 Days</p>
-                      <h3 className="text-2xl font-bold mt-1 text-orange-600 dark:text-orange-400">{expiryKpi.expiring_30d_count} batches</h3>
-                    </div>
-                    <div className="p-2 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
-                      <CalendarDays className="h-5 w-5 text-orange-500" />
-                    </div>
-                  </div>
-                  <div className="mt-4 pt-3 border-t border-border flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Total Risk Value</span>
-                    <span className="font-semibold text-orange-600 dark:text-orange-400">Rs {expiryKpi.expiring_30d_value.toLocaleString()}</span>
-                  </div>
-                </div>
-
-                <div className="bg-white dark:bg-card border-l-4 border-l-amber-500 rounded-xl p-4 shadow-sm">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Expiring in ≤ 90 Days</p>
-                      <h3 className="text-2xl font-bold mt-1 text-amber-600 dark:text-amber-400">{expiryKpi.expiring_90d_count} batches</h3>
-                    </div>
-                    <div className="p-2 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
-                      <Box className="h-5 w-5 text-amber-500" />
-                    </div>
-                  </div>
-                  <div className="mt-4 pt-3 border-t border-border flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Total Risk Value</span>
-                    <span className="font-semibold text-amber-600 dark:text-amber-400">Rs {expiryKpi.expiring_90d_value.toLocaleString()}</span>
-                  </div>
-                </div>
-              </div>
-            )}
 
             {/* Main Table Block */}
             <div className="bg-white dark:bg-card rounded-xl border border-border shadow-sm flex flex-col h-[600px]">
@@ -1202,9 +1299,8 @@ export default function InventoryManagementPage() {
                     onChange={(e) => { setExpirySupplierFilter(e.target.value); setExpiryPage(1); }}
                   >
                     <option value="All">All Suppliers</option>
-                    {/* Render static or dynamic list of suppliers; using dynamic from current fetch for now */}
-                    {Array.from(new Set(expiryItems.map(i => i.SupplierName))).filter(s => s !== "Unknown").map(sup => (
-                      <option key={sup} value={sup}>{sup}</option>
+                    {masterSuppliers.map(sup => (
+                      <option key={sup.SupplierId} value={sup.Name}>{sup.Name}</option>
                     ))}
                   </select>
                 </div>
@@ -1213,8 +1309,8 @@ export default function InventoryManagementPage() {
                   <Button onClick={() => exportToCSV(expiryItems, 'expiry_tracking')} variant="outline" size="sm" className="h-9">
                     <FileSpreadsheet className="h-4 w-4 mr-2 text-emerald-500" /> Export CSV
                   </Button>
-                  <Button onClick={exportToPDF} variant="outline" size="sm" className="h-9">
-                    <FileText className="h-4 w-4 mr-2 text-rose-500" /> Print
+                  <Button onClick={() => exportToPDF(expiryItems, 'expiry_tracking')} variant="outline" size="sm" className="h-9">
+                    <FileText className="h-4 w-4 mr-2 text-rose-500" /> Export PDF
                   </Button>
                 </div>
               </div>
@@ -1437,7 +1533,7 @@ export default function InventoryManagementPage() {
                   <Button onClick={() => exportToCSV(filteredMovements, 'stock_movements')} variant="outline" size="sm" className="h-9">
                     <FileSpreadsheet className="h-4 w-4 mr-2 text-emerald-500" /> CSV
                   </Button>
-                  <Button onClick={exportToPDF} variant="outline" size="sm" className="h-9">
+                  <Button onClick={() => exportToPDF(filteredMovements, 'stock_movements')} variant="outline" size="sm" className="h-9">
                     <FileText className="h-4 w-4 mr-2 text-rose-500" /> PDF
                   </Button>
                 </div>
@@ -1468,7 +1564,7 @@ export default function InventoryManagementPage() {
                         <tr key={mov.MovementId || idx} className="hover:bg-secondary/10 transition-colors">
                           <td className="px-4 py-3 text-center font-medium text-muted-foreground">{(safePage - 1) * movPageSize + idx + 1}</td>
                           <td className="px-4 py-3 text-muted-foreground whitespace-nowrap text-xs">
-                            {new Date(mov.Date).toLocaleString('en-GB', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' })}
+                            {new Date(mov.Date).toLocaleString('en-GB', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit', hour12: true }).toUpperCase()}
                           </td>
                           <td className="px-4 py-3 font-semibold text-foreground">{mov.MedicineName}</td>
                           <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{mov.BatchCode}</td>
@@ -1563,7 +1659,7 @@ export default function InventoryManagementPage() {
                 <Button onClick={() => exportToCSV(auditLogs, 'audit_logs')} variant="outline" size="sm" className="h-9">
                   <Download className="h-4 w-4 mr-2" /> CSV
                 </Button>
-                <Button onClick={exportToPDF} variant="outline" size="sm" className="h-9">
+                <Button onClick={() => exportToPDF(auditLogs, 'audit_logs')} variant="outline" size="sm" className="h-9">
                   <Download className="h-4 w-4 mr-2" /> PDF
                 </Button>
               </div>
@@ -1589,7 +1685,7 @@ export default function InventoryManagementPage() {
                       <tr key={log.LogId} className="hover:bg-secondary/10 transition-colors">
                         <td className="px-4 py-3 text-muted-foreground">#{log.LogId}</td>
                         <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
-                          {new Date(log.Timestamp).toLocaleString('en-GB', { day:'2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute:'2-digit', second:'2-digit' })}
+                          {new Date(log.Timestamp).toLocaleString('en-GB', { day:'2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute:'2-digit', second:'2-digit', hour12: true }).toUpperCase()}
                         </td>
                         <td className="px-4 py-3 font-bold text-indigo-600 dark:text-indigo-400">{log.Action}</td>
                         <td className="px-4 py-3 text-foreground break-words max-w-md">{log.Description}</td>

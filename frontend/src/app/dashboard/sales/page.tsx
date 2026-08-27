@@ -76,6 +76,33 @@ export default function POSBillingPage() {
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>("walkin");
   const [salesperson, setSalesperson] = useState("");
 
+  const [isAddCustomerOpen, setIsAddCustomerOpen] = useState(false);
+  const [newCustomer, setNewCustomer] = useState({ Name: '', Phone: '', Address: '' });
+  const [addingCustomer, setAddingCustomer] = useState(false);
+
+  const handleCreateCustomer = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCustomer.Name.trim()) return toast.error("Customer Name is required");
+    setAddingCustomer(true);
+    try {
+      const res = await apiClient.post('/customers', newCustomer);
+      if (res.success) {
+        toast.success("Customer added successfully");
+        setIsAddCustomerOpen(false);
+        setNewCustomer({ Name: '', Phone: '', Address: '' });
+        const custRes = await apiClient.get('/customers');
+        if (custRes.success && custRes.data) {
+          setCustomers(custRes.data);
+          setSelectedCustomerId(res.data.CustomerId.toString());
+        }
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to add customer");
+    } finally {
+      setAddingCustomer(false);
+    }
+  };
+
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<ProductSearchResponse[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -166,7 +193,7 @@ export default function POSBillingPage() {
         setSalesperson(user.FullName || user.Username || "Admin");
       }
 
-      const custRes = await apiClient.get('/customer');
+      const custRes = await apiClient.get('/customers');
       if (custRes.success && custRes.data) {
         setCustomers(custRes.data);
       }
@@ -790,10 +817,27 @@ export default function POSBillingPage() {
         )}
 
         {/* Action Tabs */}
-        <div className="flex gap-2 mb-6 bg-white dark:bg-card p-1.5 rounded-lg border border-border shadow-sm w-fit">
-          <Button onClick={() => setActiveTab('pos')} variant={activeTab === 'pos' ? "default" : "ghost"} size="sm" className={cn("px-4 shadow-none", activeTab === 'pos' ? "bg-blue-600 hover:bg-blue-700 text-white" : "text-muted-foreground hover:text-foreground")}><ShoppingCart className="w-4 h-4 mr-2" /> New Sale (POS)</Button>
-          <Button onClick={() => setActiveTab('history')} variant={activeTab === 'history' ? "default" : "ghost"} size="sm" className={cn("px-4 shadow-none", activeTab === 'history' ? "bg-blue-600 hover:bg-blue-700 text-white" : "text-muted-foreground hover:text-foreground")}><FileText className="w-4 h-4 mr-2" /> Sales History</Button>
-          <Button onClick={() => setActiveTab('return')} variant={activeTab === 'return' ? "default" : "ghost"} size="sm" className={cn("px-4 shadow-none", activeTab === 'return' ? "bg-rose-600 hover:bg-rose-700 text-white" : "text-muted-foreground hover:text-foreground")}><Trash2 className="w-4 h-4 mr-2" /> Sales Return</Button>
+        <div className="flex flex-col xl:flex-row justify-between items-start xl:items-end gap-4 border-b border-border mb-6">
+          <div className="flex gap-2 w-full xl:w-auto overflow-x-auto custom-scrollbar">
+            <button 
+              onClick={() => setActiveTab('pos')} 
+              className={cn("px-6 py-2.5 font-medium text-sm rounded-t-lg transition-colors whitespace-nowrap", activeTab === 'pos' ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary/50")}
+            >
+              New Sale (POS)
+            </button>
+            <button 
+              onClick={() => setActiveTab('history')} 
+              className={cn("px-6 py-2.5 font-medium text-sm rounded-t-lg transition-colors whitespace-nowrap", activeTab === 'history' ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary/50")}
+            >
+              Sales History
+            </button>
+            <button 
+              onClick={() => setActiveTab('return')} 
+              className={cn("px-6 py-2.5 font-medium text-sm rounded-t-lg transition-colors whitespace-nowrap", activeTab === 'return' ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary/50")}
+            >
+              Sales Return
+            </button>
+          </div>
         </div>
 
         {/* POS Grid */}
@@ -836,7 +880,7 @@ export default function POSBillingPage() {
                           <option key={c.CustomerId} value={c.CustomerId}>{c.Name} {c.Phone ? `(${c.Phone})` : ''}</option>
                         ))}
                       </select>
-                      <Button variant="outline" size="icon" className="shrink-0"><Plus className="w-4 h-4" /></Button>
+                      <Button onClick={() => setIsAddCustomerOpen(true)} variant="outline" size="icon" className="shrink-0" title="Add New Customer"><Plus className="w-4 h-4" /></Button>
                     </div>
                   </div>
 
@@ -1565,6 +1609,38 @@ export default function POSBillingPage() {
                 <Printer className="mr-2 w-4 h-4" /> {isPrintingThermal ? "Spooling..." : "Print to Thermal (ESC/POS)"}
               </Button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Customer Modal */}
+      {isAddCustomerOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-card w-full max-w-md rounded-xl shadow-xl overflow-hidden border border-border">
+            <div className="px-6 py-4 border-b border-border bg-slate-50/50 dark:bg-secondary/20 flex justify-between items-center">
+              <h3 className="font-semibold text-lg flex items-center gap-2"><User className="w-5 h-5 text-blue-600" /> Add Customer</h3>
+              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground" onClick={() => setIsAddCustomerOpen(false)}>✕</Button>
+            </div>
+            <form onSubmit={handleCreateCustomer} className="p-6 space-y-4 text-left">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-muted-foreground">Customer Name <span className="text-rose-500">*</span></label>
+                <Input value={newCustomer.Name} onChange={e => setNewCustomer({ ...newCustomer, Name: e.target.value })} placeholder="e.g. John Doe" autoFocus required />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-muted-foreground">Phone Number</label>
+                <Input value={newCustomer.Phone} onChange={e => setNewCustomer({ ...newCustomer, Phone: e.target.value })} placeholder="e.g. 0300-1234567" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-muted-foreground">Address (Optional)</label>
+                <Input value={newCustomer.Address} onChange={e => setNewCustomer({ ...newCustomer, Address: e.target.value })} placeholder="City or Area" />
+              </div>
+              <div className="pt-4 flex justify-end gap-2">
+                <Button type="button" variant="outline" onClick={() => setIsAddCustomerOpen(false)}>Cancel</Button>
+                <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white" disabled={addingCustomer}>
+                  {addingCustomer ? "Saving..." : "Save Customer"}
+                </Button>
+              </div>
+            </form>
           </div>
         </div>
       )}

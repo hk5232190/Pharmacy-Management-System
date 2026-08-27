@@ -96,31 +96,6 @@ export default function MastersLayout({ children }: { children: React.ReactNode 
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-2 border-b border-border pb-px">
-        {TABS.map(tab => {
-          const isActive = pathname.startsWith(tab.href);
-          return (
-            <Link
-              key={tab.name}
-              href={tab.href}
-              className={cn(
-                "flex items-center gap-2 px-6 py-3 rounded-t-xl font-semibold text-[15px] transition-all relative border border-transparent",
-                isActive 
-                  ? "bg-primary text-primary-foreground border-primary shadow-sm" 
-                  : "bg-card text-muted-foreground border-border hover:bg-secondary/80 hover:text-foreground"
-              )}
-            >
-              <tab.icon size={18} className={cn(isActive ? "" : "text-slate-400")} />
-              {tab.name}
-              {isActive && (
-                <div className="absolute -bottom-px left-0 w-full h-[2px] bg-primary"></div>
-              )}
-            </Link>
-          );
-        })}
-      </div>
-
       {/* Summary Cards — live from DB */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <SummaryCard
@@ -158,6 +133,31 @@ export default function MastersLayout({ children }: { children: React.ReactNode 
           title="Customers"
           value={counts.customers.toLocaleString()}
         />
+      </div>
+
+      {/* Tabs */}
+      <div className="flex gap-2 border-b border-border pb-px">
+        {TABS.map(tab => {
+          const isActive = pathname.startsWith(tab.href);
+          return (
+            <Link
+              key={tab.name}
+              href={tab.href}
+              className={cn(
+                "flex items-center gap-2 px-6 py-3 rounded-t-xl font-semibold text-[15px] transition-all relative border border-transparent",
+                isActive 
+                  ? "bg-primary text-primary-foreground border-primary shadow-sm" 
+                  : "bg-card text-muted-foreground border-border hover:bg-secondary/80 hover:text-foreground"
+              )}
+            >
+              <tab.icon size={18} className={cn(isActive ? "" : "text-slate-400")} />
+              {tab.name}
+              {isActive && (
+                <div className="absolute -bottom-px left-0 w-full h-[2px] bg-primary"></div>
+              )}
+            </Link>
+          );
+        })}
       </div>
 
       {/* Main Tab Content */}
