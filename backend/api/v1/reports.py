@@ -1708,32 +1708,60 @@ def export_financial_report_pdf(req: dict = Body(...), db: Session = Depends(get
     elements = []
     styles = getSampleStyleSheet()
     
-    elements.append(Paragraph(f"Financial Report ({sd} to {ed})", styles['Title']))
-    elements.append(Spacer(1, 12))
+    elements.extend(build_premium_header("Profit & Loss Statement", f"Period: {sd} to {ed}"))
     
-    elements.append(Paragraph(f"Total Revenue: {report_data.summary.TotalRevenue}", styles['Normal']))
-    elements.append(Paragraph(f"Total COGS: {report_data.summary.TotalCOGS}", styles['Normal']))
-    elements.append(Paragraph(f"Gross Profit: {report_data.summary.GrossProfit}", styles['Normal']))
-    elements.append(Paragraph(f"Total Expenses: {report_data.summary.TotalExpenses}", styles['Normal']))
-    elements.append(Paragraph(f"Net Profit: {report_data.summary.NetProfit}", styles['Normal']))
-    elements.append(Paragraph(f"Profit Margin: {report_data.summary.ProfitMargin}%", styles['Normal']))
-    elements.append(Spacer(1, 20))
+    kpi_data = [
+        ("Net Revenue", f"Rs. {report_data.summary.TotalRevenue}", "#3B82F6"),
+        ("COGS", f"Rs. {report_data.summary.TotalCOGS}", "#F59E0B"),
+        ("Gross Profit", f"Rs. {report_data.summary.GrossProfit}", "#6366F1"),
+        ("Net Profit", f"Rs. {report_data.summary.NetProfit}", "#10B981" if report_data.summary.NetProfit >= 0 else "#EF4444"),
+    ]
+    elements.extend(build_kpi_table(kpi_data))
     
     embed_chart_in_pdf(elements, req.chart_image)
     
-    data = [['Category', 'Amount', 'Type']]
-    for item in report_data.income_breakdown:
-        data.append([item.Category, str(round(item.Amount, 2)), "Income"])
-    for item in report_data.expense_breakdown:
-        data.append([item.Category, str(round(item.Amount, 2)), "Expense"])
+    data = [['Description', 'Amount (Rs)', 'Section']]
+    
+    data.append(["Gross Sales Revenue", f"+ {round(report_data.summary.GrossSales, 2)}", "1. Revenue (Income)"])
+    data.append(["Less: Sales Returns & Refunds", f"- {round(report_data.summary.SalesReturns, 2)}", "1. Revenue (Income)"])
+    data.append(["Less: Discounts Given", f"- {round(report_data.summary.DiscountsApplied, 2)}", "1. Revenue (Income)"])
+    data.append(["Subtotal: Net Revenue", f"{round(report_data.summary.TotalRevenue, 2)}", "1. Revenue (Income)"])
+
+    data.append(["Direct Cost of Sold Medicines", f"- {round(report_data.summary.TotalCOGS, 2)}", "2. Cost of Goods Sold (COGS)"])
+    data.append(["Subtotal: Gross Profit", f"{round(report_data.summary.GrossProfit, 2)}", "2. Cost of Goods Sold (COGS)"])
+
+    data.append(["Inventory Expiry & Write-Offs", f"- {round(report_data.summary.InventoryLoss, 2)}", "3. Expenses & Losses"])
+    data.append(["Operating Expenses", f"- {round(report_data.summary.TotalExpenses, 2)}", "3. Expenses & Losses"])
+
+    data.append(["NET PROFIT / LOSS", f"{round(report_data.summary.NetProfit, 2)}", "4. Final Summary"])
         
     t = Table(data, repeatRows=1)
     t.setStyle(TableStyle([
-        ('BACKGROUND', (0,0), (-1,0), colors.grey),
-        ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
+        ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#1E293B')),
+        ('TEXTCOLOR', (0,0), (-1,0), colors.HexColor('#FFFFFF')),
         ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+        ('ALIGN', (0,1), (0,-1), 'LEFT'),  # Left align descriptions
+        ('ALIGN', (1,1), (1,-1), 'RIGHT'), # Right align amounts
         ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
-        ('GRID', (0,0), (-1,-1), 1, colors.black)
+        ('FONTSIZE', (0,0), (-1,0), 12),
+        ('BOTTOMPADDING', (0,0), (-1,0), 14),
+        ('TOPPADDING', (0,0), (-1,0), 14),
+        
+        ('ROWBACKGROUNDS', (0,1), (-1,-1), [colors.HexColor('#FFFFFF'), colors.HexColor('#F1F5F9')]),
+        ('FONTNAME', (0,1), (-1,-1), 'Helvetica'),
+        ('FONTSIZE', (0,1), (-1,-1), 10),
+        ('BOTTOMPADDING', (0,1), (-1,-1), 10),
+        ('TOPPADDING', (0,1), (-1,-1), 10),
+        
+        # Bold subtotals and Net Profit
+        ('FONTNAME', (0, 4), (-1, 4), 'Helvetica-Bold'),
+        ('FONTNAME', (0, 6), (-1, 6), 'Helvetica-Bold'),
+        ('FONTNAME', (0, 9), (-1, 9), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 9), (-1, 9), 12),
+        
+        ('LINEBELOW', (0,0), (-1,0), 2, colors.HexColor('#3B82F6')), 
+        ('INNERGRID', (0,0), (-1,-1), 0.5, colors.HexColor('#E2E8F0')),
+        ('BOX', (0,0), (-1,-1), 1.5, colors.HexColor('#94A3B8')),
     ]))
     elements.append(t)
     

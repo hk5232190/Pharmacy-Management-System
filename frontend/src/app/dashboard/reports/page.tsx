@@ -82,10 +82,13 @@ function ReportsPageInner({
 
   const [purchaseSearchTerm, setPurchaseSearchTerm] = useState("");
   const [purchasePaymentFilter, setPurchasePaymentFilter] = useState("All");
+  const [purchaseCurrentPage, setPurchaseCurrentPage] = useState(1);
   const [selectedPurchaseTransaction, setSelectedPurchaseTransaction] = useState<any>(null);
 
   const [inventorySearchTerm, setInventorySearchTerm] = useState("");
   const [inventoryCategoryFilter, setInventoryCategoryFilter] = useState("All");
+  const [inventoryStockPage, setInventoryStockPage] = useState(1);
+  const [inventoryMovementPage, setInventoryMovementPage] = useState(1);
 
   const [medicineSearchTerm, setMedicineSearchTerm] = useState("");
   const [medicineCategoryFilter, setMedicineCategoryFilter] = useState("");
@@ -364,35 +367,35 @@ function ReportsPageInner({
         <Button 
           variant={activeTab === 'sales' ? 'default' : 'ghost'} 
           className="rounded-full"
-          onClick={() => { setData(null); onTabChange('sales'); }}
+          onClick={() => { if (activeTab !== 'sales') { setData(null); onTabChange('sales'); } }}
         >
           <TrendingUp className="w-4 h-4 mr-2" /> Sales Reports
         </Button>
         <Button 
           variant={activeTab === 'purchases' ? 'default' : 'ghost'} 
           className="rounded-full"
-          onClick={() => { setData(null); onTabChange('purchases'); }}
+          onClick={() => { if (activeTab !== 'purchases') { setData(null); onTabChange('purchases'); } }}
         >
           <PackageSearch className="w-4 h-4 mr-2" /> Purchase Reports
         </Button>
         <Button 
           variant={activeTab === 'inventory' ? 'default' : 'ghost'} 
           className="rounded-full"
-          onClick={() => { setData(null); onTabChange('inventory'); }}
+          onClick={() => { if (activeTab !== 'inventory') { setData(null); onTabChange('inventory'); } }}
         >
           <FileSpreadsheet className="w-4 h-4 mr-2" /> Inventory Reports
         </Button>
         <Button 
           variant={activeTab === 'medicine' ? 'default' : 'ghost'} 
           className="rounded-full"
-          onClick={() => { setData(null); onTabChange('medicine'); }}
+          onClick={() => { if (activeTab !== 'medicine') { setData(null); onTabChange('medicine'); } }}
         >
           <Activity className="w-4 h-4 mr-2" /> Medicine Reports
         </Button>
         <Button 
           variant={activeTab === 'financial' ? 'default' : 'ghost'} 
           className="rounded-full bg-amber-50 text-amber-600 hover:bg-amber-100 hover:text-amber-700 dark:bg-amber-950/30 dark:text-amber-500"
-          onClick={() => { setData(null); onTabChange('financial'); }}
+          onClick={() => { if (activeTab !== 'financial') { setData(null); onTabChange('financial'); } }}
         >
           <DollarSign className="w-4 h-4 mr-2" /> Financial Reports
         </Button>
@@ -676,6 +679,7 @@ function ReportsPageInner({
                 <table className="w-full text-sm text-left">
                   <thead className="bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 border-b border-border">
                     <tr>
+                      <th className="px-4 py-3 font-medium w-12">#</th>
                       <th className="px-4 py-3 font-medium">Invoice No.</th>
                       <th className="px-4 py-3 font-medium">Date</th>
                       <th className="px-4 py-3 font-medium">Customer</th>
@@ -706,6 +710,7 @@ function ReportsPageInner({
                           {paginatedTransactions.length > 0 ? (
                             paginatedTransactions.map((t: any, idx: number) => (
                               <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 cursor-pointer" onClick={() => setSelectedInvoice(t)}>
+                                <td className="px-4 py-3 text-muted-foreground">{startIndex + idx + 1}</td>
                                 <td className="px-4 py-3 font-medium text-blue-600">{t.InvoiceNo}</td>
                                 <td className="px-4 py-3">{new Date(t.TransactionDate).toLocaleString()}</td>
                                 <td className="px-4 py-3">{t.CustomerName}</td>
@@ -723,7 +728,7 @@ function ReportsPageInner({
                             ))
                           ) : (
                             <tr>
-                              <td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">
+                              <td colSpan={10} className="px-4 py-8 text-center text-muted-foreground">
                                 No transactions found for the selected filters.
                               </td>
                             </tr>
@@ -731,7 +736,7 @@ function ReportsPageInner({
                           {/* Sticky Footer */}
                           {filteredSalesTransactions.length > 0 && (
                             <tr className="bg-slate-50 dark:bg-slate-900/90 border-t-2 border-border font-semibold sticky bottom-0">
-                              <td colSpan={5} className="px-4 py-3 text-right">Totals (Filtered):</td>
+                              <td colSpan={6} className="px-4 py-3 text-right">Totals (Filtered):</td>
                               <td className="px-4 py-3 text-right tabular-nums text-foreground">Rs {totalGrandTotal.toLocaleString()}</td>
                               <td className="px-4 py-3 text-right tabular-nums text-emerald-600">Rs {totalProfit.toLocaleString()}</td>
                               <td colSpan={2}></td>
@@ -1004,15 +1009,15 @@ function ReportsPageInner({
                     <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                     <Input 
                       placeholder="Search medicine, batch..." 
-                      className="pl-9 h-9 w-full rounded-full"
                       value={inventorySearchTerm}
-                      onChange={(e) => setInventorySearchTerm(e.target.value)}
+                      onChange={(e) => { setInventorySearchTerm(e.target.value); setInventoryStockPage(1); }}
+                      className="pl-9 h-9 bg-white dark:bg-background border-border"
                     />
                   </div>
                   <select 
                     className="h-9 rounded-full border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                     value={inventoryCategoryFilter}
-                    onChange={(e) => setInventoryCategoryFilter(e.target.value)}
+                    onChange={(e) => { setInventoryCategoryFilter(e.target.value); setInventoryStockPage(1); }}
                   >
                     <option value="All">All Categories</option>
                     {Array.from(new Set(data?.stock_items?.map((item: any) => item.Category).filter(Boolean))).map((cat: any) => (
@@ -1025,6 +1030,7 @@ function ReportsPageInner({
                 <table className="w-full text-sm text-left relative">
                   <thead className="bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 border-b border-border sticky top-0 z-10 shadow-sm">
                     <tr>
+                      <th className="px-4 py-3 font-medium text-left w-12">#</th>
                       <th className="px-4 py-3 font-medium text-left">Medicine</th>
                       <th className="px-4 py-3 font-medium text-left">Category</th>
                       <th className="px-4 py-3 font-medium text-left">Batch</th>
@@ -1052,15 +1058,22 @@ function ReportsPageInner({
                       let sumRetail = 0;
                       let sumMargin = 0;
 
-                      const rows = filteredStock.map((t: any, idx: number) => {
+                      filteredStock.forEach((t: any) => {
                         const margin = (t.TotalRetailValue || 0) - (t.TotalCostValue || 0);
                         sumQty += t.Quantity || 0;
                         sumCost += t.TotalCostValue || 0;
                         sumRetail += t.TotalRetailValue || 0;
                         sumMargin += margin;
+                      });
 
+                      const startIndex = (inventoryStockPage - 1) * 10;
+                      const paginatedStock = filteredStock.slice(startIndex, startIndex + 10);
+
+                      const rows = paginatedStock.map((t: any, idx: number) => {
+                        const margin = (t.TotalRetailValue || 0) - (t.TotalCostValue || 0);
                         return (
                           <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
+                            <td className="px-4 py-3 text-muted-foreground">{startIndex + idx + 1}</td>
                             <td className="px-4 py-3 font-medium text-foreground text-left">{t.MedicineName}</td>
                             <td className="px-4 py-3 text-muted-foreground text-left">{t.Category}</td>
                             <td className="px-4 py-3 text-left">{t.BatchCode}</td>
@@ -1085,14 +1098,14 @@ function ReportsPageInner({
                         <>
                           {rows.length > 0 ? rows : (
                             <tr>
-                              <td colSpan={10} className="px-4 py-12 text-center text-muted-foreground">
+                              <td colSpan={11} className="px-4 py-12 text-center text-muted-foreground">
                                 No stock items found matching your filters.
                               </td>
                             </tr>
                           )}
-                          {rows.length > 0 && (
+                          {filteredStock.length > 0 && (
                             <tr className="bg-slate-100 dark:bg-slate-800/80 border-t-2 border-slate-200 dark:border-slate-700 sticky bottom-0 z-10">
-                              <td colSpan={3} className="px-4 py-3 text-right font-bold text-foreground uppercase text-xs tracking-wider">Filtered Totals:</td>
+                              <td colSpan={4} className="px-4 py-3 text-right font-bold text-foreground uppercase text-xs tracking-wider">Filtered Totals:</td>
                               <td className="px-4 py-3 text-right font-bold tabular-nums text-foreground">{sumQty}</td>
                               <td colSpan={2}></td>
                               <td className="px-4 py-3 text-right font-bold tabular-nums text-foreground">Rs {sumCost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
@@ -1108,16 +1121,42 @@ function ReportsPageInner({
                 </table>
               </div>
               {(() => {
-                const filteredStock = data?.stock_items?.filter((t: any) => {
+                const filteredLength = data?.stock_items?.filter((t: any) => {
                   const matchesSearch = !inventorySearchTerm || 
                     t.MedicineName?.toLowerCase().includes(inventorySearchTerm.toLowerCase()) || 
                     t.BatchCode?.toLowerCase().includes(inventorySearchTerm.toLowerCase());
                   const matchesCategory = inventoryCategoryFilter === 'All' || t.Category === inventoryCategoryFilter;
                   return matchesSearch && matchesCategory;
-                }) || [];
+                }).length || 0;
+                
+                if (filteredLength === 0) return null;
+                const totalPages = Math.ceil(filteredLength / 10);
+                const startIdx = (inventoryStockPage - 1) * 10 + 1;
+                const endIdx = Math.min(inventoryStockPage * 10, filteredLength);
+
                 return (
-                  <div className="p-4 border-t border-border bg-slate-50 dark:bg-slate-900/50 text-xs text-muted-foreground flex justify-between items-center">
-                    <span>Showing {filteredStock.length > 0 ? `1–${filteredStock.length}` : '0'} of {filteredStock.length} items</span>
+                  <div className="p-4 border-t border-border flex items-center justify-between text-sm text-muted-foreground bg-white dark:bg-card">
+                    <div>
+                      Showing <span className="font-medium text-foreground">{startIdx}</span> - <span className="font-medium text-foreground">{endIdx}</span> of <span className="font-medium text-foreground">{filteredLength}</span> items
+                    </div>
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        disabled={inventoryStockPage === 1}
+                        onClick={() => setInventoryStockPage(p => Math.max(1, p - 1))}
+                      >
+                        Previous
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        disabled={inventoryStockPage >= totalPages}
+                        onClick={() => setInventoryStockPage(p => Math.min(totalPages, p + 1))}
+                      >
+                        Next
+                      </Button>
+                    </div>
                   </div>
                 );
               })()}
@@ -1132,6 +1171,7 @@ function ReportsPageInner({
                   <table className="w-full text-sm text-left">
                     <thead className="bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 border-b border-border sticky top-0">
                       <tr>
+                        <th className="px-4 py-3 font-medium w-12">#</th>
                         <th className="px-4 py-3 font-medium">Medicine</th>
                         <th className="px-4 py-3 font-medium text-right">Start Stock</th>
                         <th className="px-4 py-3 font-medium text-right text-emerald-600">Purchased</th>
@@ -1150,7 +1190,7 @@ function ReportsPageInner({
                         let sumExpired = 0;
                         let sumClose = 0;
 
-                        const rows = data.movement_items.map((t: any, idx: number) => {
+                        data.movement_items.forEach((t: any) => {
                           const calculatedCloseStock = (t.StartingStock || 0) + (t.PurchasedQty || 0) - (t.SoldQty || 0) + (t.AdjustedQty || 0) - (t.ExpiredQty || 0);
                           
                           sumStart += (t.StartingStock || 0);
@@ -1159,9 +1199,17 @@ function ReportsPageInner({
                           sumAdjusted += (t.AdjustedQty || 0);
                           sumExpired += (t.ExpiredQty || 0);
                           sumClose += calculatedCloseStock;
+                        });
+
+                        const startIndex = (inventoryMovementPage - 1) * 10;
+                        const paginatedMovement = data.movement_items.slice(startIndex, startIndex + 10);
+
+                        const rows = paginatedMovement.map((t: any, idx: number) => {
+                          const calculatedCloseStock = (t.StartingStock || 0) + (t.PurchasedQty || 0) - (t.SoldQty || 0) + (t.AdjustedQty || 0) - (t.ExpiredQty || 0);
 
                           return (
                             <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
+                              <td className="px-4 py-3 text-muted-foreground">{startIndex + idx + 1}</td>
                               <td className="px-4 py-3 font-medium text-foreground text-left">{t.MedicineName}</td>
                               <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">{t.StartingStock || 0}</td>
                               <td className="px-4 py-3 text-right tabular-nums text-emerald-600">+{t.PurchasedQty || 0}</td>
@@ -1177,18 +1225,18 @@ function ReportsPageInner({
                           <>
                             {rows.length > 0 ? rows : (
                               <tr>
-                                <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
+                                <td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">
                                   No movement found for the selected period.
                                 </td>
                               </tr>
                             )}
-                            {rows.length > 0 && (
+                            {data.movement_items.length > 0 && (
                               <tr className="bg-slate-100 dark:bg-slate-800/80 border-t-2 border-slate-200 dark:border-slate-700 sticky bottom-0 z-10">
-                                <td className="px-4 py-3 text-right font-bold text-foreground uppercase text-xs tracking-wider">Totals:</td>
+                                <td colSpan={2} className="px-4 py-3 text-right font-bold text-foreground uppercase text-xs tracking-wider">Totals:</td>
                                 <td className="px-4 py-3 text-right font-bold tabular-nums text-muted-foreground">{sumStart}</td>
                                 <td className="px-4 py-3 text-right font-bold tabular-nums text-emerald-600">+{sumPurchased}</td>
                                 <td className="px-4 py-3 text-right font-bold tabular-nums text-blue-600">-{sumSold}</td>
-                                <td className="px-4 py-3 text-right font-bold tabular-nums text-purple-600">{sumAdjusted > 0 ? `+${sumAdjusted}` : sumAdjusted}</td>
+                                <td className="px-4 py-3 text-right font-bold tabular-nums text-purple-600">{(sumAdjusted > 0 ? `+${sumAdjusted}` : sumAdjusted)}</td>
                                 <td className="px-4 py-3 text-right font-bold tabular-nums text-rose-600">-{sumExpired}</td>
                                 <td className="px-4 py-3 text-right font-bold tabular-nums text-foreground">{sumClose}</td>
                               </tr>
@@ -1199,9 +1247,40 @@ function ReportsPageInner({
                     </tbody>
                   </table>
                 </div>
-                <div className="p-4 border-t border-border bg-slate-50 dark:bg-slate-900/50 text-xs text-muted-foreground flex justify-between items-center">
-                  <span>Showing {data.movement_items.length > 0 ? `1–${data.movement_items.length}` : '0'} of {data.movement_items.length} items</span>
-                </div>
+                {(() => {
+                  const filteredLength = data?.movement_items?.length || 0;
+                  if (filteredLength === 0) return null;
+                  
+                  const totalPages = Math.ceil(filteredLength / 10);
+                  const startIdx = (inventoryMovementPage - 1) * 10 + 1;
+                  const endIdx = Math.min(inventoryMovementPage * 10, filteredLength);
+
+                  return (
+                    <div className="p-4 border-t border-border flex items-center justify-between text-sm text-muted-foreground bg-white dark:bg-card">
+                      <div>
+                        Showing <span className="font-medium text-foreground">{startIdx}</span> - <span className="font-medium text-foreground">{endIdx}</span> of <span className="font-medium text-foreground">{filteredLength}</span> items
+                      </div>
+                      <div className="flex gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          disabled={inventoryMovementPage === 1}
+                          onClick={() => setInventoryMovementPage(p => Math.max(1, p - 1))}
+                        >
+                          Previous
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          disabled={inventoryMovementPage >= totalPages}
+                          onClick={() => setInventoryMovementPage(p => Math.min(totalPages, p + 1))}
+                        >
+                          Next
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })()}
               </Card>
             )}
 
@@ -1384,15 +1463,15 @@ function ReportsPageInner({
                       <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                       <Input 
                         placeholder="Search invoice no. or supplier..." 
-                        className="pl-9 h-9 w-full rounded-full"
                         value={purchaseSearchTerm}
-                        onChange={(e) => setPurchaseSearchTerm(e.target.value)}
+                        onChange={(e) => { setPurchaseSearchTerm(e.target.value); setPurchaseCurrentPage(1); }}
+                        className="pl-9 h-9 bg-white dark:bg-background border-border"
                       />
                     </div>
                     <select 
                       className="h-9 rounded-full border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                       value={purchasePaymentFilter}
-                      onChange={(e) => setPurchasePaymentFilter(e.target.value)}
+                      onChange={(e) => { setPurchasePaymentFilter(e.target.value); setPurchaseCurrentPage(1); }}
                     >
                       <option value="All">All Status</option>
                       <option value="Paid">Paid / Completed</option>
@@ -1405,6 +1484,7 @@ function ReportsPageInner({
                   <table className="w-full text-sm text-left relative">
                     <thead className="bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 border-b border-border sticky top-0 z-10 shadow-sm">
                       <tr>
+                        <th className="px-4 py-3 font-medium text-left w-12">#</th>
                         <th className="px-4 py-3 font-medium">Invoice No.</th>
                         <th className="px-4 py-3 font-medium">Date</th>
                         <th className="px-4 py-3 font-medium">Supplier</th>
@@ -1438,15 +1518,25 @@ function ReportsPageInner({
                         let totalBalance = 0;
                         let totalPaid = 0;
 
-                        const rows = filteredPurchases.map((t: any, idx: number) => {
+                        filteredPurchases.forEach((t: any) => {
                           const isPaid = t.Status === 'Completed' || t.Status === 'Paid';
                           const paid = isPaid ? t.GrandTotal : (t.PaidAmount || 0);
                           const balance = t.GrandTotal - paid;
                           totalBalance += balance;
                           totalPaid += paid;
+                        });
+
+                        const startIndex = (purchaseCurrentPage - 1) * 10;
+                        const paginatedPurchases = filteredPurchases.slice(startIndex, startIndex + 10);
+
+                        const rows = paginatedPurchases.map((t: any, idx: number) => {
+                          const isPaid = t.Status === 'Completed' || t.Status === 'Paid';
+                          const paid = isPaid ? t.GrandTotal : (t.PaidAmount || 0);
+                          const balance = t.GrandTotal - paid;
 
                           return (
                             <tr key={idx} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/80 cursor-pointer transition-colors" onClick={() => setSelectedPurchaseTransaction(t)}>
+                              <td className="px-4 py-3 text-muted-foreground">{startIndex + idx + 1}</td>
                               <td className="px-4 py-3 font-medium text-blue-600">{t.InvoiceNo}</td>
                               <td className="px-4 py-3 whitespace-nowrap">{new Date(t.PurchaseDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
                               <td className="px-4 py-3 font-medium">{t.SupplierName}</td>
@@ -1470,14 +1560,14 @@ function ReportsPageInner({
                           <>
                             {rows.length > 0 ? rows : (
                               <tr>
-                                <td colSpan={9} className="px-4 py-12 text-center text-muted-foreground">
+                                <td colSpan={10} className="px-4 py-12 text-center text-muted-foreground">
                                   No transactions found matching your filters.
                                 </td>
                               </tr>
                             )}
                             {rows.length > 0 && (
                               <tr className="bg-slate-100 dark:bg-slate-800/80 border-t-2 border-slate-200 dark:border-slate-700 sticky bottom-0 z-10">
-                                <td colSpan={3} className="px-4 py-3 text-right font-bold text-foreground uppercase text-xs tracking-wider">Filtered Totals:</td>
+                                <td colSpan={4} className="px-4 py-3 text-right font-bold text-foreground uppercase text-xs tracking-wider">Filtered Totals:</td>
                                 <td className="px-4 py-3 text-right font-bold tabular-nums text-foreground">{totalItems}</td>
                                 <td className="px-4 py-3 text-right font-bold tabular-nums text-foreground">{totalQty}</td>
                                 <td className="px-4 py-3 text-right font-bold tabular-nums text-primary">Rs {totalGrand.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
@@ -1492,6 +1582,52 @@ function ReportsPageInner({
                     </tbody>
                   </table>
                 </div>
+                {(() => {
+                  const filteredLength = data?.transactions?.filter((t: any) => {
+                    const matchesSearch = !purchaseSearchTerm || t.InvoiceNo.toLowerCase().includes(purchaseSearchTerm.toLowerCase()) || 
+                                          (t.SupplierName || '').toLowerCase().includes(purchaseSearchTerm.toLowerCase());
+                    let matchesStatus = true;
+                    if (purchasePaymentFilter === 'Paid') {
+                      matchesStatus = t.Status === 'Completed' || t.Status === 'Paid';
+                    } else if (purchasePaymentFilter === 'Unpaid') {
+                      matchesStatus = t.Status === 'Pending' || t.Status === 'Unpaid' || t.Status === 'Credit';
+                    } else if (purchasePaymentFilter === 'Partial') {
+                      matchesStatus = t.Status === 'Partial';
+                    }
+                    return matchesSearch && matchesStatus;
+                  }).length || 0;
+                  
+                  if (filteredLength === 0) return null;
+                  const totalPages = Math.ceil(filteredLength / 10);
+                  const startIdx = (purchaseCurrentPage - 1) * 10 + 1;
+                  const endIdx = Math.min(purchaseCurrentPage * 10, filteredLength);
+
+                  return (
+                    <div className="p-4 border-t border-border flex items-center justify-between text-sm text-muted-foreground bg-white dark:bg-card">
+                      <div>
+                        Showing <span className="font-medium text-foreground">{startIdx}</span> - <span className="font-medium text-foreground">{endIdx}</span> of <span className="font-medium text-foreground">{filteredLength}</span> invoices
+                      </div>
+                      <div className="flex gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          disabled={purchaseCurrentPage === 1}
+                          onClick={() => setPurchaseCurrentPage(p => Math.max(1, p - 1))}
+                        >
+                          Previous
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          disabled={purchaseCurrentPage >= totalPages}
+                          onClick={() => setPurchaseCurrentPage(p => Math.min(totalPages, p + 1))}
+                        >
+                          Next
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })()}
               </Card>
 
               {/* Purchase Details Modal */}
@@ -1643,6 +1779,7 @@ function ReportsPageInner({
                     <>
                       <thead className="bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 border-b border-border sticky top-0">
                         <tr>
+                          <th className="px-4 py-3 font-medium text-left w-12">#</th>
                           <th className="px-4 py-3 font-medium text-left">Medicine</th>
                           <th className="px-4 py-3 font-medium text-left">Batch</th>
                           <th className="px-4 py-3 font-medium text-left">Supplier</th>
@@ -1656,6 +1793,7 @@ function ReportsPageInner({
                         {data.expiry_items && data.expiry_items.length > 0 ? (
                           data.expiry_items.map((t: any, idx: number) => (
                             <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
+                              <td className="px-4 py-3 text-muted-foreground">{idx + 1}</td>
                               <td className="px-4 py-3 font-medium text-foreground text-left">{t.MedicineName}</td>
                               <td className="px-4 py-3 text-left">{t.BatchCode}</td>
                               <td className="px-4 py-3 text-left">{t.SupplierName || '-'}</td>
@@ -1672,7 +1810,7 @@ function ReportsPageInner({
                             </tr>
                           ))
                         ) : (
-                          <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">No expiry alerts found.</td></tr>
+                          <tr><td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">No expiry alerts found.</td></tr>
                         )}
                       </tbody>
                     </>
@@ -1682,6 +1820,7 @@ function ReportsPageInner({
                     <>
                       <thead className="bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 border-b border-border sticky top-0">
                         <tr>
+                          <th className="px-4 py-3 font-medium text-left w-12">#</th>
                           <th className="px-4 py-3 font-medium text-left">Medicine</th>
                           <th className="px-4 py-3 font-medium text-left">Category</th>
                           <th className="px-4 py-3 font-medium text-left">Supplier</th>
@@ -1695,6 +1834,7 @@ function ReportsPageInner({
                         {data.low_stock_items && data.low_stock_items.length > 0 ? (
                           data.low_stock_items.map((t: any, idx: number) => (
                             <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
+                              <td className="px-4 py-3 text-muted-foreground">{idx + 1}</td>
                               <td className="px-4 py-3 font-medium text-foreground text-left">{t.MedicineName}</td>
                               <td className="px-4 py-3 text-left">{t.Category}</td>
                               <td className="px-4 py-3 text-left">{t.SupplierName || '-'}</td>
@@ -1705,7 +1845,7 @@ function ReportsPageInner({
                             </tr>
                           ))
                         ) : (
-                          <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">No low stock items found.</td></tr>
+                          <tr><td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">No low stock items found.</td></tr>
                         )}
                       </tbody>
                     </>
@@ -1715,6 +1855,7 @@ function ReportsPageInner({
                     <>
                       <thead className="bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 border-b border-border sticky top-0">
                         <tr>
+                          <th className="px-4 py-3 font-medium text-left w-12">#</th>
                           <th className="px-4 py-3 font-medium text-left">Medicine</th>
                           <th className="px-4 py-3 font-medium text-left">Category</th>
                           <th className="px-4 py-3 font-medium text-left">Supplier</th>
@@ -1728,6 +1869,7 @@ function ReportsPageInner({
                         {data.movement_items && data.movement_items.length > 0 ? (
                           data.movement_items.map((t: any, idx: number) => (
                             <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
+                              <td className="px-4 py-3 text-muted-foreground">{idx + 1}</td>
                               <td className="px-4 py-3 font-medium text-foreground text-left">{t.MedicineName}</td>
                               <td className="px-4 py-3 text-left">{t.Category}</td>
                               <td className="px-4 py-3 text-left">{t.SupplierName || '-'}</td>
@@ -1747,7 +1889,7 @@ function ReportsPageInner({
                             </tr>
                           ))
                         ) : (
-                          <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">No movement data found for the selected period.</td></tr>
+                          <tr><td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">No movement data found for the selected period.</td></tr>
                         )}
                       </tbody>
                     </>
@@ -1814,7 +1956,7 @@ function ReportsPageInner({
         return (
           <div className="space-y-6 animate-in fade-in duration-300">
             {/* Summary KPIs */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 print:hidden">
               <KPICard title="Total Net Revenue"           value={`Rs ${data?.summary?.TotalRevenue?.toLocaleString(undefined, {maximumFractionDigits: 2}) || '0'}`} icon={DollarSign} accent="blue" />
               <KPICard title="Cost of Goods Sold (COGS)"   value={`Rs ${data?.summary?.TotalCOGS?.toLocaleString(undefined, {maximumFractionDigits: 2}) || '0'}`}    icon={ShoppingCart} accent="rose" />
               <KPICard 
@@ -1833,7 +1975,7 @@ function ReportsPageInner({
 
 
           {/* Row 2: Charts */}
-          <div className="grid gap-6 lg:grid-cols-2">
+          <div className="grid gap-6 lg:grid-cols-2 print:hidden">
             
             <Card className="p-4 border border-border shadow-sm rounded-xl">
               <h3 className="font-semibold mb-4 text-center">Net Profit Trend</h3>
@@ -1841,7 +1983,16 @@ function ReportsPageInner({
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={data?.trend_data || []} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                    <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} />
+                    <XAxis 
+                      dataKey="label" 
+                      axisLine={false} 
+                      tickLine={false} 
+                      tick={{ fontSize: 12, fill: '#64748b' }} 
+                      tickFormatter={(val) => {
+                        const d = new Date(val);
+                        return !isNaN(d.getTime()) ? d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : val;
+                      }}
+                    />
                     <YAxis yAxisId="left" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} tickFormatter={(val) => `Rs ${val/1000}k`} />
                     <Tooltip content={<CustomTooltip />} />
                     <Legend />
@@ -1864,7 +2015,7 @@ function ReportsPageInner({
                         { name: 'Discounts & Returns', value: (data?.summary?.DiscountsApplied || 0) + (data?.summary?.SalesReturns || 0) }
                       ].filter(d => d.value > 0)}
                       cx="50%"
-                      cy="50%"
+                      cy="45%"
                       innerRadius={60}
                       outerRadius={80}
                       paddingAngle={5}
@@ -1875,7 +2026,30 @@ function ReportsPageInner({
                       ))}
                     </Pie>
                     <Tooltip content={<CustomTooltip />} />
-                    <Legend verticalAlign="bottom" height={36}/>
+                    <Legend 
+                      verticalAlign="bottom" 
+                      content={(props: any) => {
+                        const { payload } = props;
+                        const total = payload?.reduce((acc: number, entry: any) => acc + (entry.payload?.value || 0), 0) || 0;
+                        return (
+                          <ul className="flex flex-col gap-1.5 mt-2">
+                            {payload?.map((entry: any, index: number) => {
+                              const val = entry.payload?.value || 0;
+                              const percent = total > 0 ? ((val / total) * 100).toFixed(1) : 0;
+                              return (
+                                <li key={`item-${index}`} className="flex items-center text-xs">
+                                  <span className="w-3 h-3 rounded-full mr-2 shrink-0" style={{ backgroundColor: entry.color }} />
+                                  <span className="text-muted-foreground min-w-[120px] truncate" title={entry.value}>{entry.value}</span>
+                                  <span className="ml-auto font-medium text-foreground whitespace-nowrap">
+                                    Rs {val.toLocaleString()} <span className="text-muted-foreground ml-1">({percent}%)</span>
+                                  </span>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        );
+                      }}
+                    />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
@@ -1886,54 +2060,82 @@ function ReportsPageInner({
           {/* Row 3: Data Tables */}
           <div className="space-y-6">
             
-            <Card className="border border-border shadow-sm rounded-xl overflow-hidden">
-              <div className="p-4 border-b border-border bg-slate-50 dark:bg-slate-900 flex justify-between items-center">
+            <Card className="border border-border shadow-sm rounded-xl overflow-hidden print:border-none print:shadow-none print:m-0 print:p-0">
+              {/* Print Header */}
+              <div className="hidden print:block text-center mb-6 border-b-2 border-slate-800 pb-4">
+                <h1 className="text-3xl font-black text-slate-900 uppercase tracking-widest">CarePlus Pharmacy</h1>
+                <h2 className="text-xl font-bold text-slate-800 mt-2">Profit & Loss Statement</h2>
+                <p className="text-sm text-slate-600 mt-1">Reporting Period: {timeframe === 'custom' && dateRange ? `${dateRange.start} to ${dateRange.end}` : timeframe.replace('_', ' ').toUpperCase()}</p>
+              </div>
+
+              <div className="p-4 border-b border-border bg-slate-50 dark:bg-slate-900 flex justify-between items-center print:hidden">
                 <h3 className="font-semibold text-lg flex items-center">
                   <FileSpreadsheet className="w-5 h-5 mr-2 text-primary" />
                   Profit & Loss Statement
                 </h3>
                 <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={() => window.print()} className="print:hidden h-9">
+                    <Printer className="w-4 h-4 mr-2" />
+                    Print P&L Statement
+                  </Button>
                 </div>
               </div>
               
               <div className="p-0">
                 <table className="w-full text-sm text-left">
                   <tbody className="divide-y divide-border">
-                    {/* Income Section */}
-                    <tr className="bg-blue-50/30 dark:bg-blue-900/10">
-                      <td colSpan={2} className="px-6 py-3 font-semibold text-blue-700 dark:text-blue-400">Income</td>
+                    {/* 1. Revenue (Income) Section */}
+                    <tr className="bg-slate-50 dark:bg-slate-900/50">
+                      <td colSpan={2} className="px-6 py-2.5 font-bold text-foreground">1. Revenue (Income)</td>
                     </tr>
-                    {data?.income_breakdown?.map((item: any, idx: number) => (
-                      <tr key={`inc-${idx}`} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
-                        <td className="px-6 py-3 text-muted-foreground">{item.Category}</td>
-                        <td className="px-6 py-3 text-right font-medium">Rs {item.Amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-                      </tr>
-                    ))}
-                    <tr className="border-t-2 border-border bg-slate-50 dark:bg-slate-900/50">
-                      <td className="px-6 py-3 font-semibold text-right">Total Net Revenue</td>
-                      <td className="px-6 py-3 text-right font-bold text-blue-600 dark:text-blue-500">Rs {data?.summary?.TotalRevenue?.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                    <tr className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
+                      <td className="px-6 py-2.5 text-muted-foreground pl-10">Gross Sales Revenue</td>
+                      <td className="px-6 py-2.5 text-right font-medium text-emerald-600 dark:text-emerald-400">+ Rs {data?.summary?.GrossSales?.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) || '0.00'}</td>
                     </tr>
-
-                    {/* Expenses Section */}
-                    <tr className="bg-rose-50/30 dark:bg-rose-900/10">
-                      <td colSpan={2} className="px-6 py-3 font-semibold text-rose-700 dark:text-rose-400">Expenses & Losses</td>
+                    <tr className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
+                      <td className="px-6 py-2.5 text-muted-foreground pl-10">Less: Sales Returns & Refunds</td>
+                      <td className="px-6 py-2.5 text-right font-medium text-rose-600 dark:text-rose-400">- Rs {data?.summary?.SalesReturns?.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) || '0.00'}</td>
                     </tr>
-                    {data?.expense_breakdown?.map((item: any, idx: number) => (
-                      <tr key={`exp-${idx}`} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
-                        <td className="px-6 py-3 text-muted-foreground">{item.Category}</td>
-                        <td className="px-6 py-3 text-right font-medium text-rose-600/80 dark:text-rose-400/80">- Rs {item.Amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-                      </tr>
-                    ))}
-                    <tr className="border-t-2 border-border bg-slate-50 dark:bg-slate-900/50">
-                      <td className="px-6 py-3 font-semibold text-right">Total Expenses & Deductions</td>
-                      <td className="px-6 py-3 text-right font-bold text-rose-600 dark:text-rose-500">- Rs {((data?.summary?.TotalCOGS || 0) + (data?.summary?.InventoryLoss || 0) + (data?.summary?.TotalExpenses || 0) + (data?.summary?.DiscountsApplied || 0) + (data?.summary?.SalesReturns || 0)).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                    <tr className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
+                      <td className="px-6 py-2.5 text-muted-foreground pl-10">Less: Discounts Given</td>
+                      <td className="px-6 py-2.5 text-right font-medium text-rose-600 dark:text-rose-400">- Rs {data?.summary?.DiscountsApplied?.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) || '0.00'}</td>
+                    </tr>
+                    <tr className="border-t-2 border-border bg-blue-50/30 dark:bg-blue-900/10">
+                      <td className="px-6 py-3 font-bold text-right text-blue-700 dark:text-blue-400">Subtotal: Net Revenue</td>
+                      <td className="px-6 py-3 text-right font-bold text-blue-700 dark:text-blue-400">Rs {data?.summary?.TotalRevenue?.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) || '0.00'}</td>
                     </tr>
 
-                    {/* Net Profit Section */}
-                    <tr className="bg-emerald-50/30 dark:bg-emerald-900/10 border-t border-border">
-                      <td className="px-6 py-4 font-bold text-lg text-right">NET PROFIT / LOSS</td>
-                      <td className={`px-6 py-4 text-right font-bold text-xl ${data?.summary?.NetProfit >= 0 ? 'text-emerald-600 dark:text-emerald-500' : 'text-rose-600 dark:text-rose-500'}`}>
-                        Rs {data?.summary?.NetProfit?.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                    {/* 2. Cost of Goods Sold (COGS) Section */}
+                    <tr className="bg-slate-50 dark:bg-slate-900/50">
+                      <td colSpan={2} className="px-6 py-2.5 font-bold text-foreground">2. Cost of Goods Sold (COGS)</td>
+                    </tr>
+                    <tr className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
+                      <td className="px-6 py-2.5 text-muted-foreground pl-10">Direct Cost of Sold Medicines</td>
+                      <td className="px-6 py-2.5 text-right font-medium text-rose-600 dark:text-rose-400">- Rs {data?.summary?.TotalCOGS?.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) || '0.00'}</td>
+                    </tr>
+                    <tr className="border-t-2 border-border bg-slate-100 dark:bg-slate-800/50">
+                      <td className="px-6 py-3 font-bold text-right text-foreground">Subtotal: Gross Profit</td>
+                      <td className="px-6 py-3 text-right font-bold text-foreground">Rs {data?.summary?.GrossProfit?.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) || '0.00'}</td>
+                    </tr>
+
+                    {/* 3. Expenses & Operational Losses Section */}
+                    <tr className="bg-slate-50 dark:bg-slate-900/50">
+                      <td colSpan={2} className="px-6 py-2.5 font-bold text-foreground">3. Expenses & Operational Losses</td>
+                    </tr>
+                    <tr className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
+                      <td className="px-6 py-2.5 text-muted-foreground pl-10">Inventory Expiry & Write-Offs</td>
+                      <td className="px-6 py-2.5 text-right font-medium text-rose-600 dark:text-rose-400">- Rs {data?.summary?.InventoryLoss?.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) || '0.00'}</td>
+                    </tr>
+                    <tr className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
+                      <td className="px-6 py-2.5 text-muted-foreground pl-10">Operating Expenses (Rent, Utilities, etc.)</td>
+                      <td className="px-6 py-2.5 text-right font-medium text-rose-600 dark:text-rose-400">- Rs {data?.summary?.TotalExpenses?.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) || '0.00'}</td>
+                    </tr>
+
+                    {/* 4. Final Summary Footer */}
+                    <tr className="border-t-4 border-double border-border bg-slate-100 dark:bg-slate-900/80">
+                      <td className="px-6 py-5 font-black text-lg text-right">NET PROFIT / LOSS</td>
+                      <td className={`px-6 py-5 text-right font-black text-2xl ${data?.summary?.NetProfit >= 0 ? 'text-emerald-600 dark:text-emerald-500' : 'text-rose-600 dark:text-rose-500'}`}>
+                        {data?.summary?.NetProfit >= 0 ? '+ ' : '- '}Rs {Math.abs(data?.summary?.NetProfit || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                       </td>
                     </tr>
                   </tbody>
