@@ -596,3 +596,9 @@ NoneType: None
 2026-08-27 10:37:30,689 - pms - INFO - AUDIT: User admin exported 5 customers to CSV.
 2026-08-27 11:35:13,628 - pms - ERROR - PMSException caught: Session expired. Please log in again. (status: 401) | Path: /api/v1/auth/me
 2026-08-27 13:35:19,627 - pms - ERROR - PMSException caught: Session expired. Please log in again. (status: 401) | Path: /api/v1/auth/me
+2026-08-27 13:40:19,575 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-27 13:40:19,593 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-27 15:35:48,719 - pms - ERROR - PMSException caught: Session expired. Please log in again. (status: 401) | Path: /api/v1/auth/me
+2026-08-27 16:53:58,016 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-27 16:53:58,038 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-27 17:37:19,571 - pms - ERROR - PMSException caught: Session expired. Please log in again. (status: 401) | Path: /api/v1/auth/me

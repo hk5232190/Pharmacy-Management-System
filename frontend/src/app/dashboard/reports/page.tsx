@@ -80,6 +80,10 @@ function ReportsPageInner({
   const [salesCurrentPage, setSalesCurrentPage] = useState(1);
   const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
 
+  const [purchaseSearchTerm, setPurchaseSearchTerm] = useState("");
+  const [purchasePaymentFilter, setPurchasePaymentFilter] = useState("All");
+  const [selectedPurchaseTransaction, setSelectedPurchaseTransaction] = useState<any>(null);
+
   useEffect(() => {
     // Don't fetch if custom is selected but no date range has been applied yet
     if (timeframe === 'custom' && !dateRange) return;
@@ -519,11 +523,11 @@ function ReportsPageInner({
               />
             </div>
 
-            {/* Row 2: Charts (2 side by side) */}
-            <div className="grid gap-6 lg:grid-cols-2">
-              <Card className="p-4 border border-border shadow-sm rounded-xl">
+            {/* Row 2: Charts */}
+            <div className="grid gap-6 lg:grid-cols-3">
+              <Card className="p-4 border border-border shadow-sm rounded-xl flex flex-col">
                 <h3 className="font-semibold mb-4 text-foreground">Sales vs Profit Trend</h3>
-                <div className="h-64">
+                <div className="flex-1 min-h-[250px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={data?.trend_data || []} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
                       <defs>
@@ -556,7 +560,7 @@ function ReportsPageInner({
 
               <Card className="p-4 border border-border shadow-sm rounded-xl flex flex-col">
                 <h3 className="font-semibold mb-4 text-foreground">Sales by Payment Method</h3>
-                <div className="flex-1 flex flex-col items-center justify-center">
+                <div className="flex-1 flex flex-col items-center justify-center min-h-[250px]">
                   <div className="h-32 w-full mb-6">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
@@ -593,6 +597,25 @@ function ReportsPageInner({
                 </div>
               </Card>
 
+              <Card className="p-4 border border-border shadow-sm rounded-xl flex flex-col">
+                <h3 className="font-semibold mb-4 text-foreground truncate" title="Top 5 Best Selling Medicines">Top 5 Best Selling</h3>
+                <div className="flex-1 flex flex-col items-center justify-center w-full min-h-[250px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={data?.top_medicines || []} margin={{ top: 10, right: 10, left: -10, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#64748b' }} dy={10} interval={0} tickFormatter={(val) => val.length > 10 ? `${val.substring(0, 10)}...` : val} />
+                      <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#64748b' }} tickFormatter={(val) => `Rs ${val/1000}k`} dx={-5} />
+                      <Tooltip cursor={{fill: 'rgba(100,116,139,0.1)'}} content={<CustomTooltip />} />
+                      <Bar dataKey="revenue" fill="#8b5cf6" radius={[4, 4, 0, 0]} barSize={32} name="Revenue">
+                        {data?.top_medicines?.map((entry: any, index: number) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[(index + 1) % COLORS.length]} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </Card>
+
             </div>
 
             {/* Row 3: Sales Summary Table */}
@@ -603,26 +626,26 @@ function ReportsPageInner({
                   <div className="relative w-full sm:w-64">
                     <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                     <Input 
-                      placeholder="Search invoice or customer..." 
+                      placeholder="Search invoice/customer" 
                       value={salesSearchTerm}
                       onChange={(e) => { setSalesSearchTerm(e.target.value); setSalesCurrentPage(1); }}
                       className="pl-9 h-9 bg-white dark:bg-background border-border"
                     />
                   </div>
-                  <select 
-                    className="h-9 rounded-md border border-border bg-white dark:bg-background px-3 py-1 text-sm outline-none focus:ring-2 focus:ring-primary"
-                    value={salesPaymentFilter}
-                    onChange={(e) => { setSalesPaymentFilter(e.target.value); setSalesCurrentPage(1); }}
-                  >
-                    <option value="all">All Payments</option>
-                    <option value="cash">Cash</option>
-                    <option value="card">Card</option>
-                    <option value="upi">UPI</option>
-                    <option value="other">Other</option>
-                  </select>
-                  <Button variant="outline" size="sm" onClick={() => window.print()} className="shrink-0 h-9">
-                    <Printer className="w-4 h-4 mr-2" /> Print
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground font-medium hidden sm:inline-block">Payment Type:</span>
+                    <select 
+                      className="h-9 rounded-md border border-border bg-white dark:bg-background px-3 py-1 text-sm outline-none focus:ring-2 focus:ring-primary"
+                      value={salesPaymentFilter}
+                      onChange={(e) => { setSalesPaymentFilter(e.target.value); setSalesCurrentPage(1); }}
+                    >
+                      <option value="all">All Payments</option>
+                      <option value="cash">Cash</option>
+                      <option value="card">Card</option>
+                      <option value="upi">UPI</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
                 </div>
               </div>
               <div className="overflow-x-auto relative">
@@ -952,9 +975,6 @@ function ReportsPageInner({
               <div className="p-4 border-b border-border bg-slate-50 dark:bg-slate-900 flex justify-between items-center">
                 <h3 className="font-semibold text-lg">Current Stock Valuation</h3>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm" onClick={() => window.print()}>
-                    <Printer className="w-4 h-4 mr-2" /> Print
-                  </Button>
                 </div>
               </div>
               <div className="overflow-x-auto max-h-96">
@@ -1054,7 +1074,7 @@ function ReportsPageInner({
 
 
       {data && activeTab === 'purchases' && (() => {
-        const KPICard = ({ title, value, icon: Icon, accent }: { title: string; value: string; icon: any; accent: string }) => {
+        const KPICard = ({ title, value, icon: Icon, accent, subtext }: { title: string; value: string | number | React.ReactNode; icon: any; accent: string; subtext?: React.ReactNode }) => {
           const accentMap: Record<string, { border: string; iconCls: string; text: string; bg: string }> = {
             blue:    { border: "border-l-blue-500",    iconCls: "text-blue-500",    text: "text-blue-600 dark:text-blue-400",       bg: "bg-blue-50 dark:bg-blue-900/20" },
             emerald: { border: "border-l-emerald-500", iconCls: "text-emerald-500", text: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-900/20" },
@@ -1071,34 +1091,72 @@ function ReportsPageInner({
               </div>
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-0.5">{title}</p>
-                <p className={`text-2xl font-extrabold leading-none tabular-nums truncate ${a.text}`}>{value}</p>
+                <div className={`text-2xl font-extrabold leading-none tabular-nums truncate ${a.text}`}>{value}</div>
+                {subtext && <p className="text-xs text-muted-foreground mt-1.5 font-medium truncate">{subtext}</p>}
               </div>
             </div>
           );
         };
 
+        const totalSupplierDue = data?.transactions?.reduce((acc: number, t: any) => 
+          (t.Status === 'Pending' || t.Status === 'Unpaid' || t.Status === 'Credit') ? acc + t.GrandTotal : acc, 0
+        ) || 0;
+
         return (
           <div className="space-y-6 animate-in fade-in duration-300">
             {/* Summary KPIs: 1 Row */}
-            <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
-              <KPICard title="Gross Purchases" value={`Rs ${data?.summary?.TotalGrossPurchases?.toLocaleString() || '0'}`}                         icon={DollarSign}   accent="blue" />
-              <KPICard title="Returns"         value={`Rs ${data?.summary?.TotalReturns?.toLocaleString() || '0'}`}                                icon={TrendingUp}   accent="rose" />
-              <KPICard title="Net Purchases"   value={`Rs ${data?.summary?.NetPurchases?.toLocaleString() || '0'}`}                                icon={ShoppingCart} accent="emerald" />
-              <KPICard title="Total Invoices"  value={data?.summary?.TotalInvoices?.toLocaleString() || '0'}                                       icon={FileText}     accent="indigo" />
-              <KPICard title="Average Purchase" value={`Rs ${data?.summary?.AveragePurchase?.toLocaleString(undefined, {maximumFractionDigits: 2}) || '0'}`} icon={ShoppingCart} accent="purple" />
-              <KPICard title="Highest Purchase" value={`Rs ${data?.summary?.HighestPurchase?.toLocaleString() || '0'}`}                             icon={TrendingUp}   accent="amber" />
+            <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+              <KPICard 
+                title="Net Purchases"   
+                value={`Rs ${data?.summary?.NetPurchases?.toLocaleString() || '0'}`}                                
+                icon={ShoppingCart} 
+                accent="emerald" 
+                subtext={`Gross: Rs ${data?.summary?.TotalGrossPurchases?.toLocaleString() || '0'} | Returns: Rs ${data?.summary?.TotalReturns?.toLocaleString() || '0'}`}
+              />
+              <KPICard 
+                title="Returns"         
+                value={`Rs ${data?.summary?.TotalReturns?.toLocaleString() || '0'}`}                                
+                icon={TrendingUp}   
+                accent="rose" 
+              />
+              <KPICard 
+                title="Supplier Due / Payables"  
+                value={`Rs ${totalSupplierDue.toLocaleString()}`}
+                icon={DollarSign}     
+                accent="blue" 
+                subtext="Total unpaid balance"
+              />
+              <KPICard 
+                title="Invoices & Avg"  
+                value={data?.summary?.TotalInvoices?.toLocaleString() || '0'}                                       
+                icon={FileText}     
+                accent="indigo" 
+                subtext={`Avg Purchase: Rs ${data?.summary?.AveragePurchase?.toLocaleString(undefined, {maximumFractionDigits: 2}) || '0'}`}
+              />
+              <KPICard 
+                title="Highest Purchase" 
+                value={`Rs ${data?.summary?.HighestPurchase?.toLocaleString() || '0'}`}                             
+                icon={TrendingUp}   
+                accent="amber" 
+              />
             </div>
 
             {/* Row 2: Charts (3 side by side) */}
             <div className="grid gap-6 lg:grid-cols-3">
               
-              <Card className="p-4 border border-border shadow-sm rounded-xl">
-                <h3 className="font-semibold mb-4">Purchase Trend</h3>
-                <div className="h-64">
+              <Card className="p-4 border border-border shadow-sm rounded-xl flex flex-col">
+                <h3 className="font-semibold mb-4 text-foreground">Purchase Trend</h3>
+                <div className="flex-1 min-h-[250px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={data?.trend_data || []} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                      <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} />
+                      <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} dy={10} tickFormatter={(val) => {
+                        if (typeof val === 'string' && val.match(/^\d{4}-\d{2}-\d{2}/)) {
+                          const d = new Date(val);
+                          if (!isNaN(d.getTime())) return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+                        }
+                        return val;
+                      }} />
                       <YAxis yAxisId="left" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} tickFormatter={(val) => `Rs ${val/1000}k`} />
                       <Tooltip content={<CustomTooltip />} />
                       <Legend />
@@ -1108,41 +1166,64 @@ function ReportsPageInner({
                 </div>
               </Card>
 
-              <Card className="p-4 border border-border shadow-sm rounded-xl">
-                <h3 className="font-semibold mb-4">Purchases by Supplier</h3>
-                <div className="h-64 flex items-center justify-center">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={data?.suppliers || []}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={60}
-                        outerRadius={80}
-                        paddingAngle={5}
-                        dataKey="value"
-                      >
-                        {data?.suppliers?.map((entry: any, index: number) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip content={<CustomTooltip />} />
-                      <Legend verticalAlign="bottom" height={36}/>
-                    </PieChart>
-                  </ResponsiveContainer>
+              <Card className="p-4 border border-border shadow-sm rounded-xl flex flex-col">
+                <h3 className="font-semibold mb-4 text-foreground">Purchases by Supplier</h3>
+                <div className="flex-1 flex flex-col items-center justify-center min-h-[250px]">
+                  <div className="h-32 w-full mb-6">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={data?.suppliers || []}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={45}
+                          outerRadius={60}
+                          paddingAngle={5}
+                          dataKey="value"
+                          stroke="none"
+                        >
+                          {data?.suppliers?.map((entry: any, index: number) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip content={<CustomTooltip />} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <div className="w-full">
+                    <ul className="flex flex-col gap-2.5 text-sm w-full">
+                      {(() => {
+                        const totalSupplier = data?.suppliers?.reduce((acc: number, curr: any) => acc + curr.value, 0) || 0;
+                        return data?.suppliers?.map((entry: any, index: number) => {
+                          const percent = totalSupplier > 0 ? Math.round((entry.value / totalSupplier) * 100) : 0;
+                          return (
+                            <li key={index} className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <span className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
+                                <span className="text-muted-foreground font-medium truncate max-w-[120px]" title={entry.name}>{entry.name}</span>
+                              </div>
+                              <span className="font-semibold text-foreground whitespace-nowrap">
+                                Rs {entry.value.toLocaleString()} <span className="text-xs text-muted-foreground font-normal ml-1">({percent}%)</span>
+                              </span>
+                            </li>
+                          );
+                        });
+                      })()}
+                    </ul>
+                  </div>
                 </div>
               </Card>
 
-              <Card className="p-4 border border-border shadow-sm rounded-xl">
-                <h3 className="font-semibold mb-4">Top 5 Purchased Medicines</h3>
-                <div className="h-64">
+              <Card className="p-4 border border-border shadow-sm rounded-xl flex flex-col">
+                <h3 className="font-semibold mb-4 text-foreground truncate" title="Top 5 Purchased Medicines">Top 5 Purchased Medicines</h3>
+                <div className="flex-1 flex flex-col items-center justify-center min-h-[250px]">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={data?.top_medicines || []} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                      <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#e2e8f0" />
-                      <XAxis type="number" hide />
-                      <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} width={100} />
-                      <Tooltip content={<CustomTooltip />} />
-                      <Bar dataKey="cost" name="Cost" fill="#8b5cf6" radius={[0, 4, 4, 0]} barSize={20}>
+                    <BarChart data={data?.top_medicines || []} margin={{ top: 10, right: 10, left: -10, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#64748b' }} dy={10} interval={0} tickFormatter={(val) => val.length > 10 ? `${val.substring(0, 10)}...` : val} />
+                      <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#64748b' }} tickFormatter={(val) => `Rs ${val/1000}k`} dx={-5} />
+                      <Tooltip cursor={{fill: 'rgba(100,116,139,0.1)'}} content={<CustomTooltip />} />
+                      <Bar dataKey="cost" name="Cost" radius={[4, 4, 0, 0]} barSize={32}>
                         {data?.top_medicines?.map((entry: any, index: number) => (
                           <Cell key={`cell-${index}`} fill={COLORS[(index + 1) % COLORS.length]} />
                         ))}
@@ -1158,17 +1239,33 @@ function ReportsPageInner({
             <div className="space-y-6">
               
               <Card className="border border-border shadow-sm rounded-xl overflow-hidden">
-                <div className="p-4 border-b border-border bg-slate-50 dark:bg-slate-900 flex justify-between items-center">
+                <div className="p-4 border-b border-border bg-slate-50 dark:bg-slate-900 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                   <h3 className="font-semibold text-lg">Purchase Summary</h3>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={() => window.print()}>
-                      <Printer className="w-4 h-4 mr-2" /> Print
-                    </Button>
+                  <div className="flex gap-2 items-center w-full sm:w-auto flex-wrap">
+                    <div className="relative w-full sm:w-64">
+                      <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                      <Input 
+                        placeholder="Search invoice no. or supplier..." 
+                        className="pl-9 h-9 w-full rounded-full"
+                        value={purchaseSearchTerm}
+                        onChange={(e) => setPurchaseSearchTerm(e.target.value)}
+                      />
+                    </div>
+                    <select 
+                      className="h-9 rounded-full border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                      value={purchasePaymentFilter}
+                      onChange={(e) => setPurchasePaymentFilter(e.target.value)}
+                    >
+                      <option value="All">All Status</option>
+                      <option value="Paid">Paid / Completed</option>
+                      <option value="Partial">Partial</option>
+                      <option value="Unpaid">Unpaid / Pending</option>
+                    </select>
                   </div>
                 </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm text-left">
-                    <thead className="bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 border-b border-border">
+                <div className="overflow-x-auto max-h-[500px]">
+                  <table className="w-full text-sm text-left relative">
+                    <thead className="bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 border-b border-border sticky top-0 z-10 shadow-sm">
                       <tr>
                         <th className="px-4 py-3 font-medium">Invoice No.</th>
                         <th className="px-4 py-3 font-medium">Date</th>
@@ -1176,40 +1273,144 @@ function ReportsPageInner({
                         <th className="px-4 py-3 font-medium text-right">Items</th>
                         <th className="px-4 py-3 font-medium text-right">Qty</th>
                         <th className="px-4 py-3 font-medium text-right">Grand Total</th>
-                        <th className="px-4 py-3 font-medium">Status</th>
+                        <th className="px-4 py-3 font-medium text-right">Paid</th>
+                        <th className="px-4 py-3 font-medium text-right">Balance Due</th>
+                        <th className="px-4 py-3 font-medium text-center">Status</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
-                      {data?.transactions?.length > 0 ? (
-                        data.transactions.map((t: any, idx: number) => (
-                          <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
-                            <td className="px-4 py-3 font-medium text-blue-600">{t.InvoiceNo}</td>
-                            <td className="px-4 py-3">{new Date(t.PurchaseDate).toLocaleString()}</td>
-                            <td className="px-4 py-3">{t.SupplierName}</td>
-                            <td className="px-4 py-3 text-right">{t.MedicinesPurchased}</td>
-                            <td className="px-4 py-3 text-right">{t.TotalQty}</td>
-                            <td className="px-4 py-3 text-right font-medium">Rs {t.GrandTotal.toLocaleString()}</td>
-                            <td className="px-4 py-3">
-                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                t.Status === 'Completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'
-                              }`}>
-                                {t.Status}
-                              </span>
-                            </td>
-                          </tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
-                            No transactions found for the selected period.
-                          </td>
-                        </tr>
-                      )}
+                      {(() => {
+                        const filteredPurchases = data?.transactions?.filter((t: any) => {
+                          const matchesSearch = !purchaseSearchTerm || t.InvoiceNo.toLowerCase().includes(purchaseSearchTerm.toLowerCase()) || 
+                                                (t.SupplierName || '').toLowerCase().includes(purchaseSearchTerm.toLowerCase());
+                          let matchesStatus = true;
+                          if (purchasePaymentFilter === 'Paid') {
+                            matchesStatus = t.Status === 'Completed' || t.Status === 'Paid';
+                          } else if (purchasePaymentFilter === 'Unpaid') {
+                            matchesStatus = t.Status === 'Pending' || t.Status === 'Unpaid' || t.Status === 'Credit';
+                          } else if (purchasePaymentFilter === 'Partial') {
+                            matchesStatus = t.Status === 'Partial';
+                          }
+                          return matchesSearch && matchesStatus;
+                        }) || [];
+
+                        const totalItems = filteredPurchases.reduce((acc: number, t: any) => acc + (t.MedicinesPurchased || 0), 0);
+                        const totalQty = filteredPurchases.reduce((acc: number, t: any) => acc + (t.TotalQty || 0), 0);
+                        const totalGrand = filteredPurchases.reduce((acc: number, t: any) => acc + (t.GrandTotal || 0), 0);
+                        let totalBalance = 0;
+                        let totalPaid = 0;
+
+                        const rows = filteredPurchases.map((t: any, idx: number) => {
+                          const isPaid = t.Status === 'Completed' || t.Status === 'Paid';
+                          const paid = isPaid ? t.GrandTotal : (t.PaidAmount || 0);
+                          const balance = t.GrandTotal - paid;
+                          totalBalance += balance;
+                          totalPaid += paid;
+
+                          return (
+                            <tr key={idx} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/80 cursor-pointer transition-colors" onClick={() => setSelectedPurchaseTransaction(t)}>
+                              <td className="px-4 py-3 font-medium text-blue-600">{t.InvoiceNo}</td>
+                              <td className="px-4 py-3 whitespace-nowrap">{new Date(t.PurchaseDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
+                              <td className="px-4 py-3 font-medium">{t.SupplierName}</td>
+                              <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">{t.MedicinesPurchased}</td>
+                              <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">{t.TotalQty}</td>
+                              <td className="px-4 py-3 text-right font-semibold tabular-nums text-foreground">Rs {t.GrandTotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                              <td className="px-4 py-3 text-right tabular-nums text-emerald-600">Rs {paid.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                              <td className="px-4 py-3 text-right tabular-nums text-rose-600">Rs {balance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                              <td className="px-4 py-3 text-center">
+                                <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
+                                  isPaid ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400'
+                                }`}>
+                                  {t.Status}
+                                </span>
+                              </td>
+                            </tr>
+                          );
+                        });
+
+                        return (
+                          <>
+                            {rows.length > 0 ? rows : (
+                              <tr>
+                                <td colSpan={9} className="px-4 py-12 text-center text-muted-foreground">
+                                  No transactions found matching your filters.
+                                </td>
+                              </tr>
+                            )}
+                            {rows.length > 0 && (
+                              <tr className="bg-slate-100 dark:bg-slate-800/80 border-t-2 border-slate-200 dark:border-slate-700 sticky bottom-0 z-10">
+                                <td colSpan={3} className="px-4 py-3 text-right font-bold text-foreground uppercase text-xs tracking-wider">Filtered Totals:</td>
+                                <td className="px-4 py-3 text-right font-bold tabular-nums text-foreground">{totalItems}</td>
+                                <td className="px-4 py-3 text-right font-bold tabular-nums text-foreground">{totalQty}</td>
+                                <td className="px-4 py-3 text-right font-bold tabular-nums text-primary">Rs {totalGrand.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                                <td className="px-4 py-3 text-right font-bold tabular-nums text-emerald-600">Rs {totalPaid.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                                <td className="px-4 py-3 text-right font-bold tabular-nums text-rose-600">Rs {totalBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                                <td></td>
+                              </tr>
+                            )}
+                          </>
+                        );
+                      })()}
                     </tbody>
                   </table>
                 </div>
               </Card>
 
+              {/* Purchase Details Modal */}
+              <Dialog open={!!selectedPurchaseTransaction} onOpenChange={(open) => !open && setSelectedPurchaseTransaction(null)}>
+                <DialogContent className="max-w-3xl">
+                  <DialogHeader>
+                    <DialogTitle>Purchase Invoice: <span className="text-primary">{selectedPurchaseTransaction?.InvoiceNo}</span></DialogTitle>
+                    <DialogDescription>
+                      Supplier: <span className="font-medium text-foreground">{selectedPurchaseTransaction?.SupplierName}</span> | Date: {selectedPurchaseTransaction ? new Date(selectedPurchaseTransaction.PurchaseDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : ''}
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="py-2">
+                    <div className="bg-slate-50 dark:bg-slate-900 rounded-xl p-4 mb-4 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm border border-border">
+                      <div>
+                        <p className="text-muted-foreground text-xs uppercase tracking-wider mb-1">Status</p>
+                        <p className="font-semibold">{selectedPurchaseTransaction?.Status}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground text-xs uppercase tracking-wider mb-1">Items / Qty</p>
+                        <p className="font-semibold">{selectedPurchaseTransaction?.MedicinesPurchased} / {selectedPurchaseTransaction?.TotalQty}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground text-xs uppercase tracking-wider mb-1">Discount / Tax</p>
+                        <p className="font-semibold">Rs {selectedPurchaseTransaction?.Discount || 0} / Rs {selectedPurchaseTransaction?.Tax || 0}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground text-xs uppercase tracking-wider mb-1">Grand Total</p>
+                        <p className="font-semibold text-primary">Rs {selectedPurchaseTransaction?.GrandTotal?.toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
+                      </div>
+                    </div>
+                    
+                    <h4 className="font-semibold mb-3 flex items-center gap-2">
+                      <PackageSearch className="w-4 h-4 text-primary" /> Item Breakdown
+                    </h4>
+                    <div className="border border-border rounded-lg overflow-hidden shadow-sm">
+                      <table className="w-full text-sm text-left">
+                        <thead className="bg-slate-100 dark:bg-slate-900/50 text-slate-500 border-b border-border">
+                          <tr>
+                            <th className="px-4 py-3 font-medium">Detailed Batch View</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td className="px-4 py-12 text-center text-muted-foreground bg-slate-50/30">
+                              <div className="flex flex-col items-center justify-center gap-2">
+                                <PackageSearch className="w-8 h-8 text-slate-300" />
+                                <p>Detailed batch breakdown is not included in the summary report.</p>
+                                <span className="text-xs">Please check the individual Purchase module for full invoice details.</span>
+                              </div>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
 
           </div>
@@ -1269,10 +1470,6 @@ function ReportsPageInner({
                   </Button>
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm" onClick={() => window.print()}>
-                    <Printer className="w-4 h-4 mr-2" /> Print
-                  </Button>
-
                 </div>
               </div>
 
@@ -1499,9 +1696,6 @@ function ReportsPageInner({
                   Profit & Loss Statement
                 </h3>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm" onClick={() => window.print()}>
-                    <Printer className="w-4 h-4 mr-2" /> Print P&L
-                  </Button>
                 </div>
               </div>
               

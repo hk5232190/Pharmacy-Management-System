@@ -1380,18 +1380,20 @@ def export_purchase_report_pdf(req: dict = Body(...), db: Session = Depends(get_
     elements = []
     styles = getSampleStyleSheet()
     
-    elements.append(Paragraph(f"Purchase Report ({sd} to {ed})", styles['Title']))
-    elements.append(Spacer(1, 12))
+    elements.extend(build_premium_header("Purchase Report", f"Period: {sd} to {ed}"))
     
-    # Summary KPIs
-    elements.append(Paragraph(f"Total Gross Purchases: {report_data.summary.TotalGrossPurchases}", styles['Normal']))
-    elements.append(Paragraph(f"Total Returns: {report_data.summary.TotalReturns}", styles['Normal']))
-    elements.append(Paragraph(f"Net Purchases: {report_data.summary.NetPurchases}", styles['Normal']))
-    elements.append(Paragraph(f"Total Invoices: {report_data.summary.TotalInvoices}", styles['Normal']))
-    elements.append(Spacer(1, 20))
+    kpi_data = [
+        ("Gross Purchases", f"Rs. {report_data.summary.TotalGrossPurchases}", "#3B82F6"),
+        ("Returns", f"Rs. {report_data.summary.TotalReturns}", "#EF4444"),
+        ("Net Purchases", f"Rs. {report_data.summary.NetPurchases}", "#10B981"),
+        ("Invoices", str(report_data.summary.TotalInvoices), "#6366F1"),
+    ]
+    elements.extend(build_kpi_table(kpi_data))
     
+    # Chart
     embed_chart_in_pdf(elements, req.chart_image)
     
+    # Table Data
     data = [['Invoice No', 'Date', 'Supplier', 'Medicines', 'Total Qty', 'Grand Total', 'Status']]
     for t in report_data.transactions:
         data.append([
@@ -1406,11 +1408,23 @@ def export_purchase_report_pdf(req: dict = Body(...), db: Session = Depends(get_
         
     t = Table(data, repeatRows=1)
     t.setStyle(TableStyle([
-        ('BACKGROUND', (0,0), (-1,0), colors.grey),
-        ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
+        ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#1E293B')),
+        ('TEXTCOLOR', (0,0), (-1,0), colors.HexColor('#FFFFFF')),
         ('ALIGN', (0,0), (-1,-1), 'CENTER'),
         ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
-        ('GRID', (0,0), (-1,-1), 1, colors.black)
+        ('FONTSIZE', (0,0), (-1,0), 12),
+        ('BOTTOMPADDING', (0,0), (-1,0), 14),
+        ('TOPPADDING', (0,0), (-1,0), 14),
+        
+        ('ROWBACKGROUNDS', (0,1), (-1,-1), [colors.HexColor('#FFFFFF'), colors.HexColor('#F1F5F9')]),
+        ('FONTNAME', (0,1), (-1,-1), 'Helvetica'),
+        ('FONTSIZE', (0,1), (-1,-1), 10),
+        ('BOTTOMPADDING', (0,1), (-1,-1), 10),
+        ('TOPPADDING', (0,1), (-1,-1), 10),
+        
+        ('LINEBELOW', (0,0), (-1,0), 2, colors.HexColor('#3B82F6')), 
+        ('INNERGRID', (0,0), (-1,-1), 0.5, colors.HexColor('#E2E8F0')),
+        ('BOX', (0,0), (-1,-1), 1.5, colors.HexColor('#94A3B8')),
     ]))
     elements.append(t)
     
