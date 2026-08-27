@@ -267,11 +267,8 @@ export default function ReportsPage() {
             <Button variant="ghost" onClick={() => exportReport('excel')} className="rounded-none border-r border-border hover:bg-emerald-50 text-emerald-700">
               Excel
             </Button>
-            <Button variant="ghost" onClick={() => exportReport('pdf')} className="rounded-none border-r border-border hover:bg-rose-50 text-rose-700">
+            <Button variant="ghost" onClick={() => exportReport('pdf')} className="rounded-none hover:bg-rose-50 text-rose-700">
               PDF
-            </Button>
-            <Button variant="ghost" onClick={() => window.print()} className="rounded-none hover:bg-slate-100">
-              <Printer className="w-4 h-4" />
             </Button>
           </div>
         </div>
@@ -382,134 +379,56 @@ export default function ReportsPage() {
         </div>
       )}
 
-      {data && activeTab === 'sales' && (
-        <div className="space-y-6 animate-in fade-in duration-300">
-          {/* Summary KPIs */}
-          <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
-            <Card className="p-4 border border-blue-100 dark:border-blue-900/50 bg-blue-50/50 dark:bg-blue-950/20 rounded-xl">
-              <div className="text-sm font-medium text-blue-600 dark:text-blue-400 mb-1">Gross Sales</div>
-              <div className="text-2xl font-bold text-foreground">Rs {data?.summary?.TotalGrossSales?.toLocaleString() || '0'}</div>
-            </Card>
-            <Card className="p-4 border border-rose-100 dark:border-rose-900/50 bg-rose-50/50 dark:bg-rose-950/20 rounded-xl">
-              <div className="text-sm font-medium text-rose-600 dark:text-rose-400 mb-1">Returns</div>
-              <div className="text-2xl font-bold text-foreground">Rs {data?.summary?.TotalReturns?.toLocaleString() || '0'}</div>
-            </Card>
-            <Card className="p-4 border border-emerald-100 dark:border-emerald-900/50 bg-emerald-50/50 dark:bg-emerald-950/20 rounded-xl">
-              <div className="text-sm font-medium text-emerald-600 dark:text-emerald-400 mb-1">Net Sales</div>
-              <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-500">Rs {data?.summary?.NetSales?.toLocaleString() || '0'}</div>
-            </Card>
-            <Card className="p-4 border border-purple-100 dark:border-purple-900/50 bg-purple-50/50 dark:bg-purple-950/20 rounded-xl">
-              <div className="text-sm font-medium text-purple-600 dark:text-purple-400 mb-1">COGS</div>
-              <div className="text-2xl font-bold text-foreground">Rs {data?.summary?.TotalCOGS?.toLocaleString() || '0'}</div>
-            </Card>
-            <Card className="p-4 border border-emerald-200 dark:border-emerald-800/50 bg-emerald-100/50 dark:bg-emerald-900/30 rounded-xl">
-              <div className="text-sm font-medium text-emerald-700 dark:text-emerald-300 mb-1">Net Profit</div>
-              <div className="text-2xl font-bold text-emerald-700 dark:text-emerald-400">Rs {data?.summary?.NetProfit?.toLocaleString() || '0'}</div>
-            </Card>
-            <Card className="p-4 border border-amber-100 dark:border-amber-900/50 bg-amber-50/50 dark:bg-amber-950/20 rounded-xl">
-              <div className="text-sm font-medium text-amber-600 dark:text-amber-400 mb-1">Profit Margin</div>
-              <div className="text-2xl font-bold text-amber-600 dark:text-amber-500">{data?.summary?.ProfitMarginPercent?.toFixed(1) || '0.0'}%</div>
-            </Card>
-          </div>
+      {data && activeTab === 'sales' && (() => {
+        const accentMap: Record<string, { border: string; iconCls: string; text: string; bg: string }> = {
+          blue:    { border: "border-l-blue-500",    iconCls: "text-blue-500",    text: "text-blue-600 dark:text-blue-400",       bg: "bg-blue-50 dark:bg-blue-900/20" },
+          rose:    { border: "border-l-rose-500",    iconCls: "text-rose-500",    text: "text-rose-600 dark:text-rose-400",       bg: "bg-rose-50 dark:bg-rose-900/20" },
+          emerald: { border: "border-l-emerald-500", iconCls: "text-emerald-500", text: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-900/20" },
+          purple:  { border: "border-l-purple-500",  iconCls: "text-purple-500",  text: "text-purple-600 dark:text-purple-400",   bg: "bg-purple-50 dark:bg-purple-900/20" },
+          teal:    { border: "border-l-teal-500",    iconCls: "text-teal-500",    text: "text-teal-600 dark:text-teal-400",       bg: "bg-teal-50 dark:bg-teal-900/20" },
+          amber:   { border: "border-l-amber-500",   iconCls: "text-amber-500",   text: "text-amber-600 dark:text-amber-400",     bg: "bg-amber-50 dark:bg-amber-900/20" },
+          indigo:  { border: "border-l-indigo-500",  iconCls: "text-indigo-500",  text: "text-indigo-600 dark:text-indigo-400",   bg: "bg-indigo-50 dark:bg-indigo-900/20" },
+        };
 
-          <div className="grid lg:grid-cols-3 gap-6">
-            
-            {/* Left Column: Data Table & Additional Stats */}
-            <div className="lg:col-span-2 space-y-6">
-              
-              <div className="flex gap-4">
-                 <Card className="flex-1 p-4 flex items-center justify-between border border-border shadow-sm rounded-xl">
-                    <div>
-                      <p className="text-sm text-muted-foreground font-medium">Total Invoices</p>
-                      <h4 className="text-2xl font-bold">{data?.summary?.TotalInvoices?.toLocaleString() || '0'}</h4>
-                    </div>
-                    <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-full">
-                      <FileText className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                    </div>
-                 </Card>
-                 <Card className="flex-1 p-4 flex items-center justify-between border border-border shadow-sm rounded-xl">
-                    <div>
-                      <p className="text-sm text-muted-foreground font-medium">Average Sale</p>
-                      <h4 className="text-2xl font-bold">Rs {data?.summary?.AverageSale?.toLocaleString(undefined, {maximumFractionDigits: 2}) || '0'}</h4>
-                    </div>
-                    <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-full">
-                      <ShoppingCart className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-                    </div>
-                 </Card>
-                 <Card className="flex-1 p-4 flex items-center justify-between border border-border shadow-sm rounded-xl">
-                    <div>
-                      <p className="text-sm text-muted-foreground font-medium">Highest Sale</p>
-                      <h4 className="text-2xl font-bold">Rs {data?.summary?.HighestSale?.toLocaleString() || '0'}</h4>
-                    </div>
-                    <div className="p-3 bg-amber-100 dark:bg-amber-900/30 rounded-full">
-                      <TrendingUp className="w-5 h-5 text-amber-600 dark:text-amber-400" />
-                    </div>
-                 </Card>
+        const KPICard = ({ title, value, icon: Icon, accent }: { title: string; value: string; icon: any; accent: string }) => {
+          const a = accentMap[accent] ?? accentMap.blue;
+          return (
+            <div className={`relative bg-white dark:bg-card rounded-xl border border-border border-l-4 shadow-sm p-4 flex flex-col gap-3 overflow-hidden transition-all hover:shadow-md ${a.border}`}>
+              <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${a.bg}`}>
+                <Icon className={`w-5 h-5 ${a.iconCls}`} />
               </div>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-0.5">{title}</p>
+                <p className={`text-2xl font-extrabold leading-none tabular-nums truncate ${a.text}`}>{value}</p>
+              </div>
+            </div>
+          );
+        };
 
-              <Card className="border border-border shadow-sm rounded-xl overflow-hidden">
-                <div className="p-4 border-b border-border bg-slate-50 dark:bg-slate-900 flex justify-between items-center">
-                  <h3 className="font-semibold text-lg">Sales Summary</h3>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={() => window.print()}>
-                      <Printer className="w-4 h-4 mr-2" /> Print
-                    </Button>
+        return (
+          <div className="space-y-6 animate-in fade-in duration-300">
 
-                  </div>
-                </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm text-left">
-                    <thead className="bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 border-b border-border">
-                      <tr>
-                        <th className="px-4 py-3 font-medium">Invoice No.</th>
-                        <th className="px-4 py-3 font-medium">Date</th>
-                        <th className="px-4 py-3 font-medium">Customer</th>
-                        <th className="px-4 py-3 font-medium text-right">Items</th>
-                        <th className="px-4 py-3 font-medium text-right">Qty</th>
-                        <th className="px-4 py-3 font-medium text-right">Grand Total</th>
-                        <th className="px-4 py-3 font-medium">Payment</th>
-                        <th className="px-4 py-3 font-medium">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border">
-                      {data?.transactions?.length > 0 ? (
-                        data.transactions.map((t: any, idx: number) => (
-                          <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
-                            <td className="px-4 py-3 font-medium text-blue-600">{t.InvoiceNo}</td>
-                            <td className="px-4 py-3">{new Date(t.TransactionDate).toLocaleString()}</td>
-                            <td className="px-4 py-3">{t.CustomerName}</td>
-                            <td className="px-4 py-3 text-right">{t.MedicinesSold}</td>
-                            <td className="px-4 py-3 text-right">{t.TotalQty}</td>
-                            <td className="px-4 py-3 text-right font-medium">Rs {t.GrandTotal.toLocaleString()}</td>
-                            <td className="px-4 py-3">{t.PaymentMethod}</td>
-                            <td className="px-4 py-3">
-                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                t.Status === 'Completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'
-                              }`}>
-                                {t.Status}
-                              </span>
-                            </td>
-                          </tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">
-                            No transactions found for the selected period.
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </Card>
-
+            {/* Row 1: 5 Primary KPIs */}
+            <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+              <KPICard title="Gross Sales"    value={`Rs ${data?.summary?.TotalGrossSales?.toLocaleString() || '0'}`}                         icon={DollarSign}   accent="blue" />
+              <KPICard title="Returns"        value={`Rs ${data?.summary?.TotalReturns?.toLocaleString() || '0'}`}                            icon={TrendingUp}   accent="rose" />
+              <KPICard title="Net Sales"      value={`Rs ${data?.summary?.NetSales?.toLocaleString() || '0'}`}                                icon={TrendingUp}   accent="emerald" />
+              <KPICard title="COGS"           value={`Rs ${data?.summary?.TotalCOGS?.toLocaleString() || '0'}`}                               icon={ShoppingCart} accent="purple" />
+              <KPICard title="Net Profit"     value={`Rs ${data?.summary?.NetProfit?.toLocaleString() || '0'}`}                               icon={TrendingUp}   accent="teal" />
             </div>
 
-            {/* Right Column: Charts */}
-            <div id="report-charts" className="space-y-6">
-              
+            {/* Row 2: 4 Secondary KPIs */}
+            <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+              <KPICard title="Profit Margin"  value={`${data?.summary?.ProfitMarginPercent?.toFixed(1) || '0.0'}%`}                           icon={TrendingUp}   accent="amber" />
+              <KPICard title="Total Invoices" value={data?.summary?.TotalInvoices?.toLocaleString() || '0'}                                   icon={FileText}     accent="indigo" />
+              <KPICard title="Average Sale"   value={`Rs ${data?.summary?.AverageSale?.toLocaleString(undefined, {maximumFractionDigits: 2}) || '0'}`} icon={ShoppingCart} accent="purple" />
+              <KPICard title="Highest Sale"   value={`Rs ${data?.summary?.HighestSale?.toLocaleString() || '0'}`}                             icon={TrendingUp}   accent="amber" />
+            </div>
+
+            {/* Row 3: Charts (3 side by side) */}
+            <div className="grid gap-6 lg:grid-cols-3">
               <Card className="p-4 border border-border shadow-sm rounded-xl">
-                <h3 className="font-semibold mb-4">Sales vs Profit Trend</h3>
+                <h3 className="font-semibold mb-4 text-foreground">Sales vs Profit Trend</h3>
                 <div className="h-64">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={data?.trend_data || []} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
@@ -526,32 +445,24 @@ export default function ReportsPage() {
               </Card>
 
               <Card className="p-4 border border-border shadow-sm rounded-xl">
-                <h3 className="font-semibold mb-4">Sales by Payment Method</h3>
+                <h3 className="font-semibold mb-4 text-foreground">Sales by Payment Method</h3>
                 <div className="h-64 flex items-center justify-center">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
-                      <Pie
-                        data={data?.payment_methods || []}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={60}
-                        outerRadius={80}
-                        paddingAngle={5}
-                        dataKey="value"
-                      >
+                      <Pie data={data?.payment_methods || []} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">
                         {data?.payment_methods?.map((entry: any, index: number) => (
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                       </Pie>
                       <Tooltip content={<CustomTooltip />} />
-                      <Legend verticalAlign="bottom" height={36}/>
+                      <Legend verticalAlign="bottom" height={36} />
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
               </Card>
 
               <Card className="p-4 border border-border shadow-sm rounded-xl">
-                <h3 className="font-semibold mb-4">Top 5 Best Selling Medicines</h3>
+                <h3 className="font-semibold mb-4 text-foreground">Top 5 Best Selling Medicines</h3>
                 <div className="h-64">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={data?.top_medicines || []} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
@@ -568,316 +479,266 @@ export default function ReportsPage() {
                   </ResponsiveContainer>
                 </div>
               </Card>
-
             </div>
 
-          </div>
-        </div>
-      )}
+            {/* Row 4: Sales Summary Table */}
+            <Card className="border border-border shadow-sm rounded-xl overflow-hidden">
+              <div className="p-4 border-b border-border bg-slate-50 dark:bg-slate-900 flex justify-between items-center">
+                <h3 className="font-semibold text-lg">Sales Summary</h3>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={() => window.print()}>
+                    <Printer className="w-4 h-4 mr-2" /> Print
+                  </Button>
+                </div>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm text-left">
+                  <thead className="bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 border-b border-border">
+                    <tr>
+                      <th className="px-4 py-3 font-medium">Invoice No.</th>
+                      <th className="px-4 py-3 font-medium">Date</th>
+                      <th className="px-4 py-3 font-medium">Customer</th>
+                      <th className="px-4 py-3 font-medium text-right">Items</th>
+                      <th className="px-4 py-3 font-medium text-right">Qty</th>
+                      <th className="px-4 py-3 font-medium text-right">Grand Total</th>
+                      <th className="px-4 py-3 font-medium">Payment</th>
+                      <th className="px-4 py-3 font-medium">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {data?.transactions?.length > 0 ? (
+                      data.transactions.map((t: any, idx: number) => (
+                        <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
+                          <td className="px-4 py-3 font-medium text-blue-600">{t.InvoiceNo}</td>
+                          <td className="px-4 py-3">{new Date(t.TransactionDate).toLocaleString()}</td>
+                          <td className="px-4 py-3">{t.CustomerName}</td>
+                          <td className="px-4 py-3 text-right">{t.MedicinesSold}</td>
+                          <td className="px-4 py-3 text-right">{t.TotalQty}</td>
+                          <td className="px-4 py-3 text-right font-medium">Rs {t.GrandTotal.toLocaleString()}</td>
+                          <td className="px-4 py-3">{t.PaymentMethod}</td>
+                          <td className="px-4 py-3">
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${t.Status === 'Completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
+                              {t.Status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">
+                          No transactions found for the selected period.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
 
-      {data && activeTab === 'inventory' && (
-        <div className="space-y-6 animate-in fade-in duration-300">
-          {/* Summary KPIs */}
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-            <Card className="p-4 border border-blue-100 dark:border-blue-900/50 bg-blue-50/50 dark:bg-blue-950/20 rounded-xl">
-              <div className="text-sm font-medium text-blue-600 dark:text-blue-400 mb-1">Total Cost Value</div>
-              <div className="text-2xl font-bold text-foreground">Rs {data?.summary?.TotalCostValue?.toLocaleString(undefined, {maximumFractionDigits: 2}) || '0'}</div>
-            </Card>
-            <Card className="p-4 border border-emerald-100 dark:border-emerald-900/50 bg-emerald-50/50 dark:bg-emerald-950/20 rounded-xl">
-              <div className="text-sm font-medium text-emerald-600 dark:text-emerald-400 mb-1">Potential Retail Value</div>
-              <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-500">Rs {data?.summary?.TotalRetailValue?.toLocaleString(undefined, {maximumFractionDigits: 2}) || '0'}</div>
-            </Card>
-            <Card className="p-4 border border-rose-100 dark:border-rose-900/50 bg-rose-50/50 dark:bg-rose-950/20 rounded-xl">
-              <div className="text-sm font-medium text-rose-600 dark:text-rose-400 mb-1">Expired/Written-Off</div>
-              <div className="text-2xl font-bold text-foreground">Rs {data?.summary?.ExpiredWrittenOffValuation?.toLocaleString(undefined, {maximumFractionDigits: 2}) || '0'}</div>
-            </Card>
-            <Card className="p-4 border border-purple-100 dark:border-purple-900/50 bg-purple-50/50 dark:bg-purple-950/20 rounded-xl">
-              <div className="text-sm font-medium text-purple-600 dark:text-purple-400 mb-1">Total Items in Stock</div>
-              <div className="text-2xl font-bold text-foreground">{data?.summary?.TotalItemsInStock?.toLocaleString() || '0'}</div>
-            </Card>
-            <Card className="p-4 border border-amber-100 dark:border-amber-900/50 bg-amber-50/50 dark:bg-amber-950/20 rounded-xl">
-              <div className="text-sm font-medium text-amber-600 dark:text-amber-400 mb-1">Low/Out of Stock</div>
-              <div className="text-2xl font-bold text-foreground">{data?.summary?.LowStockCount || '0'} / {data?.summary?.OutOfStockCount || '0'}</div>
-            </Card>
           </div>
+        );
+      })()}
 
-          <div className="grid lg:grid-cols-3 gap-6">
+
+      {data && activeTab === 'inventory' && (() => {
+        const KPICard = ({ title, value, icon: Icon, accent }: { title: string; value: string; icon: any; accent: string }) => {
+          const accentMap: Record<string, { border: string; iconCls: string; text: string; bg: string }> = {
+            blue:    { border: "border-l-blue-500",    iconCls: "text-blue-500",    text: "text-blue-600 dark:text-blue-400",       bg: "bg-blue-50 dark:bg-blue-900/20" },
+            emerald: { border: "border-l-emerald-500", iconCls: "text-emerald-500", text: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-900/20" },
+            rose:    { border: "border-l-rose-500",    iconCls: "text-rose-500",    text: "text-rose-600 dark:text-rose-400",       bg: "bg-rose-50 dark:bg-rose-900/20" },
+            purple:  { border: "border-l-purple-500",  iconCls: "text-purple-500",  text: "text-purple-600 dark:text-purple-400",   bg: "bg-purple-50 dark:bg-purple-900/20" },
+            amber:   { border: "border-l-amber-500",   iconCls: "text-amber-500",   text: "text-amber-600 dark:text-amber-400",     bg: "bg-amber-50 dark:bg-amber-900/20" },
+          };
+          const a = accentMap[accent] ?? accentMap.blue;
+          return (
+            <div className={`relative bg-white dark:bg-card rounded-xl border border-border border-l-4 shadow-sm p-4 flex flex-col gap-3 overflow-hidden transition-all hover:shadow-md ${a.border}`}>
+              <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${a.bg}`}>
+                <Icon className={`w-5 h-5 ${a.iconCls}`} />
+              </div>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-0.5">{title}</p>
+                <p className={`text-2xl font-extrabold leading-none tabular-nums truncate ${a.text}`}>{value}</p>
+              </div>
+            </div>
+          );
+        };
+
+        return (
+          <div className="space-y-6 animate-in fade-in duration-300">
+            {/* Summary KPIs */}
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+              <KPICard title="Total Cost Value"       value={`Rs ${data?.summary?.TotalCostValue?.toLocaleString(undefined, {maximumFractionDigits: 2}) || '0'}`}           icon={DollarSign}   accent="blue" />
+              <KPICard title="Potential Retail Value" value={`Rs ${data?.summary?.TotalRetailValue?.toLocaleString(undefined, {maximumFractionDigits: 2}) || '0'}`}         icon={TrendingUp}   accent="emerald" />
+              <KPICard title="Expired/Written-Off"    value={`Rs ${data?.summary?.ExpiredWrittenOffValuation?.toLocaleString(undefined, {maximumFractionDigits: 2}) || '0'}`} icon={TrendingUp}   accent="rose" />
+              <KPICard title="Total Items in Stock"   value={data?.summary?.TotalItemsInStock?.toLocaleString() || '0'}                                                     icon={FileText}     accent="purple" />
+              <KPICard title="Low/Out of Stock"       value={`${data?.summary?.LowStockCount || '0'} / ${data?.summary?.OutOfStockCount || '0'}`}                           icon={FileText}     accent="amber" />
+            </div>
+
+
+          {/* Row 2: Charts */}
+          <div className="grid gap-6 lg:grid-cols-2">
             
-            {/* Left Column: Data Table */}
-            <div className="lg:col-span-2 space-y-6">
-              
+            <Card className="p-4 border border-border shadow-sm rounded-xl">
+              <h3 className="font-semibold mb-4">Valuation by Category</h3>
+              <div className="h-64 flex items-center justify-center">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={data?.category_valuation || []}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={80}
+                      paddingAngle={5}
+                      dataKey="value"
+                    >
+                      {data?.category_valuation?.map((entry: any, index: number) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend verticalAlign="bottom" height={36}/>
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </Card>
+
+            {data.movement_summary && (
+              <Card className="p-4 border border-border shadow-sm rounded-xl">
+                <h3 className="font-semibold mb-4">Movement Summary</h3>
+                <div className="h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart 
+                      data={[
+                        { name: 'Purchased', value: data.movement_summary.PurchasedQty },
+                        { name: 'Sold', value: data.movement_summary.SoldQty },
+                        { name: 'Adjusted', value: data.movement_summary.ManualAdjustmentsQty },
+                        { name: 'Expired', value: data.movement_summary.ExpiredWrittenOffQty }
+                      ]} 
+                      layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#e2e8f0" />
+                      <XAxis type="number" hide />
+                      <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} width={80} />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Bar dataKey="value" name="Quantity" radius={[0, 4, 4, 0]} barSize={20}>
+                        {
+                          [
+                            { name: 'Purchased', value: data.movement_summary.PurchasedQty },
+                            { name: 'Sold', value: data.movement_summary.SoldQty },
+                            { name: 'Adjusted', value: data.movement_summary.ManualAdjustmentsQty },
+                            { name: 'Expired', value: data.movement_summary.ExpiredWrittenOffQty }
+                          ].map((entry: any, index: number) => (
+                            <Cell key={`cell-${index}`} fill={
+                              entry.name === 'Purchased' ? '#10b981' : 
+                              entry.name === 'Sold' ? '#3b82f6' : 
+                              entry.name === 'Adjusted' ? '#8b5cf6' : 
+                              '#f43f5e'
+                            } />
+                          ))
+                        }
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </Card>
+            )}
+
+          </div>
+
+          {/* Row 3: Data Tables */}
+          <div className="space-y-6">
+            
+            <Card className="border border-border shadow-sm rounded-xl overflow-hidden">
+              <div className="p-4 border-b border-border bg-slate-50 dark:bg-slate-900 flex justify-between items-center">
+                <h3 className="font-semibold text-lg">Current Stock Valuation</h3>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={() => window.print()}>
+                    <Printer className="w-4 h-4 mr-2" /> Print
+                  </Button>
+                </div>
+              </div>
+              <div className="overflow-x-auto max-h-96">
+                <table className="w-full text-sm text-left">
+                  <thead className="bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 border-b border-border sticky top-0">
+                    <tr>
+                      <th className="px-4 py-3 font-medium">Medicine</th>
+                      <th className="px-4 py-3 font-medium">Batch</th>
+                      <th className="px-4 py-3 font-medium text-right">Qty</th>
+                      <th className="px-4 py-3 font-medium text-right">Cost</th>
+                      <th className="px-4 py-3 font-medium text-right">Retail</th>
+                      <th className="px-4 py-3 font-medium text-right">Total Cost</th>
+                      <th className="px-4 py-3 font-medium text-right">Total Retail</th>
+                      <th className="px-4 py-3 font-medium">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {data.stock_items && data.stock_items.length > 0 ? (
+                      data.stock_items.map((t: any, idx: number) => (
+                        <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
+                          <td className="px-4 py-3 font-medium text-foreground">{t.MedicineName}</td>
+                          <td className="px-4 py-3">{t.BatchCode}</td>
+                          <td className="px-4 py-3 text-right">{t.Quantity}</td>
+                          <td className="px-4 py-3 text-right">Rs {t.CostPrice}</td>
+                          <td className="px-4 py-3 text-right">Rs {t.SellingPrice}</td>
+                          <td className="px-4 py-3 text-right font-medium">Rs {t.TotalCostValue.toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
+                          <td className="px-4 py-3 text-right font-medium text-emerald-600">Rs {t.TotalRetailValue.toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
+                          <td className="px-4 py-3">
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              t.Status === 'Active' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'
+                            }`}>
+                              {t.Status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">
+                          No stock found.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+
+            {data.movement_items && (
               <Card className="border border-border shadow-sm rounded-xl overflow-hidden">
                 <div className="p-4 border-b border-border bg-slate-50 dark:bg-slate-900 flex justify-between items-center">
-                  <h3 className="font-semibold text-lg">Current Stock Valuation</h3>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={() => window.print()}>
-                      <Printer className="w-4 h-4 mr-2" /> Print
-                    </Button>
-
-                  </div>
+                  <h3 className="font-semibold text-lg">Stock Movement Details (Period)</h3>
                 </div>
                 <div className="overflow-x-auto max-h-96">
                   <table className="w-full text-sm text-left">
                     <thead className="bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 border-b border-border sticky top-0">
                       <tr>
                         <th className="px-4 py-3 font-medium">Medicine</th>
-                        <th className="px-4 py-3 font-medium">Batch</th>
-                        <th className="px-4 py-3 font-medium text-right">Qty</th>
-                        <th className="px-4 py-3 font-medium text-right">Cost</th>
-                        <th className="px-4 py-3 font-medium text-right">Retail</th>
-                        <th className="px-4 py-3 font-medium text-right">Total Cost</th>
-                        <th className="px-4 py-3 font-medium text-right">Total Retail</th>
-                        <th className="px-4 py-3 font-medium">Status</th>
+                        <th className="px-4 py-3 font-medium text-right">Start Stock</th>
+                        <th className="px-4 py-3 font-medium text-right text-emerald-600">Purchased</th>
+                        <th className="px-4 py-3 font-medium text-right text-blue-600">Sold</th>
+                        <th className="px-4 py-3 font-medium text-right text-purple-600">Adjusted</th>
+                        <th className="px-4 py-3 font-medium text-right text-rose-600">Expired</th>
+                        <th className="px-4 py-3 font-medium text-right">Close Stock</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
-                      {data.stock_items && data.stock_items.length > 0 ? (
-                        data.stock_items.map((t: any, idx: number) => (
+                      {data.movement_items.length > 0 ? (
+                        data.movement_items.map((t: any, idx: number) => (
                           <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
                             <td className="px-4 py-3 font-medium text-foreground">{t.MedicineName}</td>
-                            <td className="px-4 py-3">{t.BatchCode}</td>
-                            <td className="px-4 py-3 text-right">{t.Quantity}</td>
-                            <td className="px-4 py-3 text-right">Rs {t.CostPrice}</td>
-                            <td className="px-4 py-3 text-right">Rs {t.SellingPrice}</td>
-                            <td className="px-4 py-3 text-right font-medium">Rs {t.TotalCostValue.toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
-                            <td className="px-4 py-3 text-right font-medium text-emerald-600">Rs {t.TotalRetailValue.toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
-                            <td className="px-4 py-3">
-                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                t.Status === 'Active' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'
-                              }`}>
-                                {t.Status}
-                              </span>
-                            </td>
-                          </tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">
-                            No stock found.
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </Card>
-
-              {data.movement_items && (
-                <Card className="border border-border shadow-sm rounded-xl overflow-hidden">
-                  <div className="p-4 border-b border-border bg-slate-50 dark:bg-slate-900 flex justify-between items-center">
-                    <h3 className="font-semibold text-lg">Stock Movement Details (Period)</h3>
-                  </div>
-                  <div className="overflow-x-auto max-h-96">
-                    <table className="w-full text-sm text-left">
-                      <thead className="bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 border-b border-border sticky top-0">
-                        <tr>
-                          <th className="px-4 py-3 font-medium">Medicine</th>
-                          <th className="px-4 py-3 font-medium text-right">Start Stock</th>
-                          <th className="px-4 py-3 font-medium text-right text-emerald-600">Purchased</th>
-                          <th className="px-4 py-3 font-medium text-right text-blue-600">Sold</th>
-                          <th className="px-4 py-3 font-medium text-right text-purple-600">Adjusted</th>
-                          <th className="px-4 py-3 font-medium text-right text-rose-600">Expired</th>
-                          <th className="px-4 py-3 font-medium text-right">Close Stock</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-border">
-                        {data.movement_items.length > 0 ? (
-                          data.movement_items.map((t: any, idx: number) => (
-                            <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
-                              <td className="px-4 py-3 font-medium text-foreground">{t.MedicineName}</td>
-                              <td className="px-4 py-3 text-right text-muted-foreground">{t.StartingStock}</td>
-                              <td className="px-4 py-3 text-right text-emerald-600">+{t.PurchasedQty}</td>
-                              <td className="px-4 py-3 text-right text-blue-600">-{t.SoldQty}</td>
-                              <td className="px-4 py-3 text-right text-purple-600">{t.AdjustedQty > 0 ? `+${t.AdjustedQty}` : t.AdjustedQty}</td>
-                              <td className="px-4 py-3 text-right text-rose-600">-{t.ExpiredQty}</td>
-                              <td className="px-4 py-3 text-right font-medium">{t.ClosingStock}</td>
-                            </tr>
-                          ))
-                        ) : (
-                          <tr>
-                            <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
-                              No movement found for the selected period.
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                </Card>
-              )}
-
-            </div>
-
-            {/* Right Column: Charts */}
-            <div id="report-charts" className="space-y-6">
-              
-              <Card className="p-4 border border-border shadow-sm rounded-xl">
-                <h3 className="font-semibold mb-4">Valuation by Category</h3>
-                <div className="h-64 flex items-center justify-center">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={data?.category_valuation || []}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={60}
-                        outerRadius={80}
-                        paddingAngle={5}
-                        dataKey="value"
-                      >
-                        {data?.category_valuation?.map((entry: any, index: number) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip content={<CustomTooltip />} />
-                      <Legend verticalAlign="bottom" height={36}/>
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-              </Card>
-
-              {data.movement_summary && (
-                <Card className="p-4 border border-border shadow-sm rounded-xl">
-                  <h3 className="font-semibold mb-4">Movement Summary</h3>
-                  <div className="h-64">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart 
-                        data={[
-                          { name: 'Purchased', value: data.movement_summary.PurchasedQty },
-                          { name: 'Sold', value: data.movement_summary.SoldQty },
-                          { name: 'Adjusted', value: data.movement_summary.ManualAdjustmentsQty },
-                          { name: 'Expired', value: data.movement_summary.ExpiredWrittenOffQty }
-                        ]} 
-                        layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#e2e8f0" />
-                        <XAxis type="number" hide />
-                        <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} width={80} />
-                        <Tooltip content={<CustomTooltip />} />
-                        <Bar dataKey="value" name="Quantity" radius={[0, 4, 4, 0]} barSize={20}>
-                          {
-                            [
-                              { name: 'Purchased', value: data.movement_summary.PurchasedQty },
-                              { name: 'Sold', value: data.movement_summary.SoldQty },
-                              { name: 'Adjusted', value: data.movement_summary.ManualAdjustmentsQty },
-                              { name: 'Expired', value: data.movement_summary.ExpiredWrittenOffQty }
-                            ].map((entry: any, index: number) => (
-                              <Cell key={`cell-${index}`} fill={
-                                entry.name === 'Purchased' ? '#10b981' : 
-                                entry.name === 'Sold' ? '#3b82f6' : 
-                                entry.name === 'Adjusted' ? '#8b5cf6' : 
-                                '#f43f5e'
-                              } />
-                            ))
-                          }
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </Card>
-              )}
-
-            </div>
-
-          </div>
-        </div>
-      )}
-
-
-      {data && activeTab === 'purchases' && (
-        <div className="space-y-6 animate-in fade-in duration-300">
-          {/* Summary KPIs */}
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <Card className="p-4 border border-blue-100 dark:border-blue-900/50 bg-blue-50/50 dark:bg-blue-950/20 rounded-xl">
-              <div className="text-sm font-medium text-blue-600 dark:text-blue-400 mb-1">Gross Purchases</div>
-              <div className="text-2xl font-bold text-foreground">Rs {data?.summary?.TotalGrossPurchases?.toLocaleString() || '0'}</div>
-            </Card>
-            <Card className="p-4 border border-rose-100 dark:border-rose-900/50 bg-rose-50/50 dark:bg-rose-950/20 rounded-xl">
-              <div className="text-sm font-medium text-rose-600 dark:text-rose-400 mb-1">Returns</div>
-              <div className="text-2xl font-bold text-foreground">Rs {data?.summary?.TotalReturns?.toLocaleString() || '0'}</div>
-            </Card>
-            <Card className="p-4 border border-emerald-100 dark:border-emerald-900/50 bg-emerald-50/50 dark:bg-emerald-950/20 rounded-xl">
-              <div className="text-sm font-medium text-emerald-600 dark:text-emerald-400 mb-1">Net Purchases</div>
-              <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-500">Rs {data?.summary?.NetPurchases?.toLocaleString() || '0'}</div>
-            </Card>
-            <Card className="p-4 border border-purple-100 dark:border-purple-900/50 bg-purple-50/50 dark:bg-purple-950/20 rounded-xl">
-              <div className="text-sm font-medium text-purple-600 dark:text-purple-400 mb-1">Total Invoices</div>
-              <div className="text-2xl font-bold text-foreground">{data?.summary?.TotalInvoices?.toLocaleString() || '0'}</div>
-            </Card>
-          </div>
-
-          <div className="grid lg:grid-cols-3 gap-6">
-            
-            {/* Left Column: Data Table & Additional Stats */}
-            <div className="lg:col-span-2 space-y-6">
-              
-              <div className="flex gap-4">
-                 <Card className="flex-1 p-4 flex items-center justify-between border border-border shadow-sm rounded-xl">
-                    <div>
-                      <p className="text-sm text-muted-foreground font-medium">Average Purchase</p>
-                      <h4 className="text-2xl font-bold">Rs {data?.summary?.AveragePurchase?.toLocaleString(undefined, {maximumFractionDigits: 2}) || '0'}</h4>
-                    </div>
-                    <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-full">
-                      <ShoppingCart className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-                    </div>
-                 </Card>
-                 <Card className="flex-1 p-4 flex items-center justify-between border border-border shadow-sm rounded-xl">
-                    <div>
-                      <p className="text-sm text-muted-foreground font-medium">Highest Purchase</p>
-                      <h4 className="text-2xl font-bold">Rs {data?.summary?.HighestPurchase?.toLocaleString() || '0'}</h4>
-                    </div>
-                    <div className="p-3 bg-amber-100 dark:bg-amber-900/30 rounded-full">
-                      <TrendingUp className="w-5 h-5 text-amber-600 dark:text-amber-400" />
-                    </div>
-                 </Card>
-              </div>
-
-              <Card className="border border-border shadow-sm rounded-xl overflow-hidden">
-                <div className="p-4 border-b border-border bg-slate-50 dark:bg-slate-900 flex justify-between items-center">
-                  <h3 className="font-semibold text-lg">Purchase Summary</h3>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={() => window.print()}>
-                      <Printer className="w-4 h-4 mr-2" /> Print
-                    </Button>
-
-                  </div>
-                </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm text-left">
-                    <thead className="bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 border-b border-border">
-                      <tr>
-                        <th className="px-4 py-3 font-medium">Invoice No.</th>
-                        <th className="px-4 py-3 font-medium">Date</th>
-                        <th className="px-4 py-3 font-medium">Supplier</th>
-                        <th className="px-4 py-3 font-medium text-right">Items</th>
-                        <th className="px-4 py-3 font-medium text-right">Qty</th>
-                        <th className="px-4 py-3 font-medium text-right">Grand Total</th>
-                        <th className="px-4 py-3 font-medium">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border">
-                      {data?.transactions?.length > 0 ? (
-                        data.transactions.map((t: any, idx: number) => (
-                          <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
-                            <td className="px-4 py-3 font-medium text-blue-600">{t.InvoiceNo}</td>
-                            <td className="px-4 py-3">{new Date(t.PurchaseDate).toLocaleString()}</td>
-                            <td className="px-4 py-3">{t.SupplierName}</td>
-                            <td className="px-4 py-3 text-right">{t.MedicinesPurchased}</td>
-                            <td className="px-4 py-3 text-right">{t.TotalQty}</td>
-                            <td className="px-4 py-3 text-right font-medium">Rs {t.GrandTotal.toLocaleString()}</td>
-                            <td className="px-4 py-3">
-                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                t.Status === 'Completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'
-                              }`}>
-                                {t.Status}
-                              </span>
-                            </td>
+                            <td className="px-4 py-3 text-right text-muted-foreground">{t.StartingStock}</td>
+                            <td className="px-4 py-3 text-right text-emerald-600">+{t.PurchasedQty}</td>
+                            <td className="px-4 py-3 text-right text-blue-600">-{t.SoldQty}</td>
+                            <td className="px-4 py-3 text-right text-purple-600">{t.AdjustedQty > 0 ? `+${t.AdjustedQty}` : t.AdjustedQty}</td>
+                            <td className="px-4 py-3 text-right text-rose-600">-{t.ExpiredQty}</td>
+                            <td className="px-4 py-3 text-right font-medium">{t.ClosingStock}</td>
                           </tr>
                         ))
                       ) : (
                         <tr>
                           <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
-                            No transactions found for the selected period.
+                            No movement found for the selected period.
                           </td>
                         </tr>
                       )}
@@ -885,11 +746,52 @@ export default function ReportsPage() {
                   </table>
                 </div>
               </Card>
+            )}
 
+          </div>
+        </div>
+        );
+      })()}
+
+
+      {data && activeTab === 'purchases' && (() => {
+        const KPICard = ({ title, value, icon: Icon, accent }: { title: string; value: string; icon: any; accent: string }) => {
+          const accentMap: Record<string, { border: string; iconCls: string; text: string; bg: string }> = {
+            blue:    { border: "border-l-blue-500",    iconCls: "text-blue-500",    text: "text-blue-600 dark:text-blue-400",       bg: "bg-blue-50 dark:bg-blue-900/20" },
+            emerald: { border: "border-l-emerald-500", iconCls: "text-emerald-500", text: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-900/20" },
+            rose:    { border: "border-l-rose-500",    iconCls: "text-rose-500",    text: "text-rose-600 dark:text-rose-400",       bg: "bg-rose-50 dark:bg-rose-900/20" },
+            purple:  { border: "border-l-purple-500",  iconCls: "text-purple-500",  text: "text-purple-600 dark:text-purple-400",   bg: "bg-purple-50 dark:bg-purple-900/20" },
+            amber:   { border: "border-l-amber-500",   iconCls: "text-amber-500",   text: "text-amber-600 dark:text-amber-400",     bg: "bg-amber-50 dark:bg-amber-900/20" },
+            indigo:  { border: "border-l-indigo-500",  iconCls: "text-indigo-500",  text: "text-indigo-600 dark:text-indigo-400",   bg: "bg-indigo-50 dark:bg-indigo-900/20" },
+          };
+          const a = accentMap[accent] ?? accentMap.blue;
+          return (
+            <div className={`relative bg-white dark:bg-card rounded-xl border border-border border-l-4 shadow-sm p-4 flex flex-col gap-3 overflow-hidden transition-all hover:shadow-md ${a.border}`}>
+              <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${a.bg}`}>
+                <Icon className={`w-5 h-5 ${a.iconCls}`} />
+              </div>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-0.5">{title}</p>
+                <p className={`text-2xl font-extrabold leading-none tabular-nums truncate ${a.text}`}>{value}</p>
+              </div>
+            </div>
+          );
+        };
+
+        return (
+          <div className="space-y-6 animate-in fade-in duration-300">
+            {/* Summary KPIs: 1 Row */}
+            <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
+              <KPICard title="Gross Purchases" value={`Rs ${data?.summary?.TotalGrossPurchases?.toLocaleString() || '0'}`}                         icon={DollarSign}   accent="blue" />
+              <KPICard title="Returns"         value={`Rs ${data?.summary?.TotalReturns?.toLocaleString() || '0'}`}                                icon={TrendingUp}   accent="rose" />
+              <KPICard title="Net Purchases"   value={`Rs ${data?.summary?.NetPurchases?.toLocaleString() || '0'}`}                                icon={ShoppingCart} accent="emerald" />
+              <KPICard title="Total Invoices"  value={data?.summary?.TotalInvoices?.toLocaleString() || '0'}                                       icon={FileText}     accent="indigo" />
+              <KPICard title="Average Purchase" value={`Rs ${data?.summary?.AveragePurchase?.toLocaleString(undefined, {maximumFractionDigits: 2}) || '0'}`} icon={ShoppingCart} accent="purple" />
+              <KPICard title="Highest Purchase" value={`Rs ${data?.summary?.HighestPurchase?.toLocaleString() || '0'}`}                             icon={TrendingUp}   accent="amber" />
             </div>
 
-            {/* Right Column: Charts */}
-            <div id="report-charts" className="space-y-6">
+            {/* Row 2: Charts (3 side by side) */}
+            <div className="grid gap-6 lg:grid-cols-3">
               
               <Card className="p-4 border border-border shadow-sm rounded-xl">
                 <h3 className="font-semibold mb-4">Purchase Trend</h3>
@@ -953,35 +855,105 @@ export default function ReportsPage() {
 
             </div>
 
-          </div>
-        </div>
-      )}
+            {/* Row 3: Data Table */}
+            <div className="space-y-6">
+              
+              <Card className="border border-border shadow-sm rounded-xl overflow-hidden">
+                <div className="p-4 border-b border-border bg-slate-50 dark:bg-slate-900 flex justify-between items-center">
+                  <h3 className="font-semibold text-lg">Purchase Summary</h3>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" onClick={() => window.print()}>
+                      <Printer className="w-4 h-4 mr-2" /> Print
+                    </Button>
+                  </div>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm text-left">
+                    <thead className="bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 border-b border-border">
+                      <tr>
+                        <th className="px-4 py-3 font-medium">Invoice No.</th>
+                        <th className="px-4 py-3 font-medium">Date</th>
+                        <th className="px-4 py-3 font-medium">Supplier</th>
+                        <th className="px-4 py-3 font-medium text-right">Items</th>
+                        <th className="px-4 py-3 font-medium text-right">Qty</th>
+                        <th className="px-4 py-3 font-medium text-right">Grand Total</th>
+                        <th className="px-4 py-3 font-medium">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border">
+                      {data?.transactions?.length > 0 ? (
+                        data.transactions.map((t: any, idx: number) => (
+                          <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
+                            <td className="px-4 py-3 font-medium text-blue-600">{t.InvoiceNo}</td>
+                            <td className="px-4 py-3">{new Date(t.PurchaseDate).toLocaleString()}</td>
+                            <td className="px-4 py-3">{t.SupplierName}</td>
+                            <td className="px-4 py-3 text-right">{t.MedicinesPurchased}</td>
+                            <td className="px-4 py-3 text-right">{t.TotalQty}</td>
+                            <td className="px-4 py-3 text-right font-medium">Rs {t.GrandTotal.toLocaleString()}</td>
+                            <td className="px-4 py-3">
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                t.Status === 'Completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'
+                              }`}>
+                                {t.Status}
+                              </span>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
+                            No transactions found for the selected period.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </Card>
 
-      {data && activeTab === 'medicine' && (
-        <div className="space-y-6 animate-in fade-in duration-300">
-          {/* Summary KPIs */}
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-            <Card className="p-4 border border-rose-100 dark:border-rose-900/50 bg-rose-50/50 dark:bg-rose-950/20 rounded-xl">
-              <div className="text-sm font-medium text-rose-600 dark:text-rose-400 mb-1">Total Expired Batches</div>
-              <div className="text-2xl font-bold text-foreground">{data?.summary?.TotalExpiredBatches || 0}</div>
-            </Card>
-            <Card className="p-4 border border-amber-100 dark:border-amber-900/50 bg-amber-50/50 dark:bg-amber-950/20 rounded-xl">
-              <div className="text-sm font-medium text-amber-600 dark:text-amber-400 mb-1">Expiring Soon (90d)</div>
-              <div className="text-2xl font-bold text-foreground">{data?.summary?.ExpiringSoonBatches || 0}</div>
-            </Card>
-            <Card className="p-4 border border-orange-100 dark:border-orange-900/50 bg-orange-50/50 dark:bg-orange-950/20 rounded-xl">
-              <div className="text-sm font-medium text-orange-600 dark:text-orange-400 mb-1">Low Stock Medicines</div>
-              <div className="text-2xl font-bold text-foreground">{data?.summary?.LowStockMedicines || 0}</div>
-            </Card>
-            <Card className="p-4 border border-emerald-100 dark:border-emerald-900/50 bg-emerald-50/50 dark:bg-emerald-950/20 rounded-xl">
-              <div className="text-sm font-medium text-emerald-600 dark:text-emerald-400 mb-1">Fast Moving</div>
-              <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-500">{data?.summary?.FastMovingCount || 0}</div>
-            </Card>
-            <Card className="p-4 border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 rounded-xl">
-              <div className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">Dead Stock</div>
-              <div className="text-2xl font-bold text-slate-700 dark:text-slate-300">{data?.summary?.DeadStockCount || 0}</div>
-            </Card>
+            </div>
+
           </div>
+        );
+      })()}
+
+      {data && activeTab === 'medicine' && (() => {
+        const KPICard = ({ title, value, icon: Icon, accent }: { title: string; value: string | number; icon: any; accent: string }) => {
+          const accentMap: Record<string, { border: string; iconCls: string; text: string; bg: string }> = {
+            blue:    { border: "border-l-blue-500",    iconCls: "text-blue-500",    text: "text-blue-600 dark:text-blue-400",       bg: "bg-blue-50 dark:bg-blue-900/20" },
+            emerald: { border: "border-l-emerald-500", iconCls: "text-emerald-500", text: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-900/20" },
+            rose:    { border: "border-l-rose-500",    iconCls: "text-rose-500",    text: "text-rose-600 dark:text-rose-400",       bg: "bg-rose-50 dark:bg-rose-900/20" },
+            purple:  { border: "border-l-purple-500",  iconCls: "text-purple-500",  text: "text-purple-600 dark:text-purple-400",   bg: "bg-purple-50 dark:bg-purple-900/20" },
+            amber:   { border: "border-l-amber-500",   iconCls: "text-amber-500",   text: "text-amber-600 dark:text-amber-400",     bg: "bg-amber-50 dark:bg-amber-900/20" },
+            indigo:  { border: "border-l-indigo-500",  iconCls: "text-indigo-500",  text: "text-indigo-600 dark:text-indigo-400",   bg: "bg-indigo-50 dark:bg-indigo-900/20" },
+            orange:  { border: "border-l-orange-500",  iconCls: "text-orange-500",  text: "text-orange-600 dark:text-orange-400",   bg: "bg-orange-50 dark:bg-orange-900/20" },
+            slate:   { border: "border-l-slate-500",   iconCls: "text-slate-500",   text: "text-slate-700 dark:text-slate-300",     bg: "bg-slate-100 dark:bg-slate-800" },
+          };
+          const a = accentMap[accent] ?? accentMap.blue;
+          return (
+            <div className={`relative bg-white dark:bg-card rounded-xl border border-border border-l-4 shadow-sm p-4 flex flex-col gap-3 overflow-hidden transition-all hover:shadow-md ${a.border}`}>
+              <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${a.bg}`}>
+                <Icon className={`w-5 h-5 ${a.iconCls}`} />
+              </div>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-0.5">{title}</p>
+                <div className={`text-2xl font-extrabold leading-none tabular-nums truncate ${a.text}`}>{value}</div>
+              </div>
+            </div>
+          );
+        };
+
+        return (
+          <div className="space-y-6 animate-in fade-in duration-300">
+            {/* Summary KPIs */}
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+              <KPICard title="Total Expired Batches" value={data?.summary?.TotalExpiredBatches || 0} icon={AlertTriangle} accent="rose" />
+              <KPICard title="Expiring Soon (90d)"   value={data?.summary?.ExpiringSoonBatches || 0} icon={AlertTriangle} accent="amber" />
+              <KPICard title="Low Stock Medicines"   value={data?.summary?.LowStockMedicines || 0}   icon={PackageMinus}  accent="orange" />
+              <KPICard title="Fast Moving"           value={data?.summary?.FastMovingCount || 0}     icon={Activity}      accent="emerald" />
+              <KPICard title="Dead Stock"            value={data?.summary?.DeadStockCount || 0}      icon={FileText}      accent="slate" />
+            </div>
+
 
           <div className="grid grid-cols-1 gap-6">
             <Card className="border border-border shadow-sm rounded-xl overflow-hidden">
@@ -1119,149 +1091,170 @@ export default function ReportsPage() {
             </Card>
           </div>
         </div>
-      )}
+        );
+      })()}
 
-      {data && activeTab === 'financial' && (
-        <div className="space-y-6 animate-in fade-in duration-300">
-          {/* Summary KPIs */}
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <Card className="p-4 border border-blue-100 dark:border-blue-900/50 bg-blue-50/50 dark:bg-blue-950/20 rounded-xl">
-              <div className="text-sm font-medium text-blue-600 dark:text-blue-400 mb-1">Total Net Revenue</div>
-              <div className="text-2xl font-bold text-foreground">Rs {data?.summary?.TotalRevenue?.toLocaleString(undefined, {maximumFractionDigits: 2}) || '0'}</div>
-            </Card>
-            <Card className="p-4 border border-rose-100 dark:border-rose-900/50 bg-rose-50/50 dark:bg-rose-950/20 rounded-xl">
-              <div className="text-sm font-medium text-rose-600 dark:text-rose-400 mb-1">Cost of Goods Sold (COGS)</div>
-              <div className="text-2xl font-bold text-foreground">Rs {data?.summary?.TotalCOGS?.toLocaleString(undefined, {maximumFractionDigits: 2}) || '0'}</div>
-            </Card>
-            <Card className="p-4 border border-emerald-100 dark:border-emerald-900/50 bg-emerald-50/50 dark:bg-emerald-950/20 rounded-xl">
-              <div className="text-sm font-medium text-emerald-600 dark:text-emerald-400 mb-1">Net Profit</div>
-              <div className={`text-2xl font-bold ${data?.summary?.NetProfit >= 0 ? 'text-emerald-600 dark:text-emerald-500' : 'text-rose-600 dark:text-rose-500'}`}>
-                Rs {data?.summary?.NetProfit?.toLocaleString(undefined, {maximumFractionDigits: 2}) || '0'}
+      {data && activeTab === 'financial' && (() => {
+        const KPICard = ({ title, value, icon: Icon, accent }: { title: string; value: string | React.ReactNode; icon: any; accent: string }) => {
+          const accentMap: Record<string, { border: string; iconCls: string; text: string; bg: string }> = {
+            blue:    { border: "border-l-blue-500",    iconCls: "text-blue-500",    text: "text-blue-600 dark:text-blue-400",       bg: "bg-blue-50 dark:bg-blue-900/20" },
+            emerald: { border: "border-l-emerald-500", iconCls: "text-emerald-500", text: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-900/20" },
+            rose:    { border: "border-l-rose-500",    iconCls: "text-rose-500",    text: "text-rose-600 dark:text-rose-400",       bg: "bg-rose-50 dark:bg-rose-900/20" },
+            purple:  { border: "border-l-purple-500",  iconCls: "text-purple-500",  text: "text-purple-600 dark:text-purple-400",   bg: "bg-purple-50 dark:bg-purple-900/20" },
+            amber:   { border: "border-l-amber-500",   iconCls: "text-amber-500",   text: "text-amber-600 dark:text-amber-400",     bg: "bg-amber-50 dark:bg-amber-900/20" },
+            indigo:  { border: "border-l-indigo-500",  iconCls: "text-indigo-500",  text: "text-indigo-600 dark:text-indigo-400",   bg: "bg-indigo-50 dark:bg-indigo-900/20" },
+          };
+          const a = accentMap[accent] ?? accentMap.blue;
+          return (
+            <div className={`relative bg-white dark:bg-card rounded-xl border border-border border-l-4 shadow-sm p-4 flex flex-col gap-3 overflow-hidden transition-all hover:shadow-md ${a.border}`}>
+              <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${a.bg}`}>
+                <Icon className={`w-5 h-5 ${a.iconCls}`} />
+              </div>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-0.5">{title}</p>
+                <div className={`text-2xl font-extrabold leading-none tabular-nums truncate ${a.text}`}>{value}</div>
+              </div>
+            </div>
+          );
+        };
+
+        return (
+          <div className="space-y-6 animate-in fade-in duration-300">
+            {/* Summary KPIs */}
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <KPICard title="Total Net Revenue"           value={`Rs ${data?.summary?.TotalRevenue?.toLocaleString(undefined, {maximumFractionDigits: 2}) || '0'}`} icon={DollarSign} accent="blue" />
+              <KPICard title="Cost of Goods Sold (COGS)"   value={`Rs ${data?.summary?.TotalCOGS?.toLocaleString(undefined, {maximumFractionDigits: 2}) || '0'}`}    icon={ShoppingCart} accent="rose" />
+              <KPICard 
+                title="Net Profit"                  
+                value={<span className={data?.summary?.NetProfit >= 0 ? "text-emerald-600 dark:text-emerald-500" : "text-rose-600 dark:text-rose-500"}>{`Rs ${data?.summary?.NetProfit?.toLocaleString(undefined, {maximumFractionDigits: 2}) || '0'}`}</span>} 
+                icon={TrendingUp} 
+                accent="emerald" 
+              />
+              <KPICard 
+                title="Profit Margin"               
+                value={<span className={data?.summary?.ProfitMargin >= 0 ? "text-emerald-600 dark:text-emerald-500" : "text-rose-600 dark:text-rose-500"}>{`${data?.summary?.ProfitMargin?.toLocaleString(undefined, {maximumFractionDigits: 2}) || '0'}%`}</span>}
+                icon={TrendingUp} 
+                accent="purple" 
+              />
+            </div>
+
+
+          {/* Row 2: Charts */}
+          <div className="grid gap-6 lg:grid-cols-2">
+            
+            <Card className="p-4 border border-border shadow-sm rounded-xl">
+              <h3 className="font-semibold mb-4 text-center">Net Profit Trend</h3>
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={data?.trend_data || []} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                    <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} />
+                    <YAxis yAxisId="left" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} tickFormatter={(val) => `Rs ${val/1000}k`} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend />
+                    <Line yAxisId="left" type="monotone" name="Net Profit" dataKey="profit" stroke="#10b981" strokeWidth={3} dot={{ r: 4, fill: "#10b981", strokeWidth: 2, stroke: "#fff" }} activeDot={{ r: 6 }} />
+                  </LineChart>
+                </ResponsiveContainer>
               </div>
             </Card>
-            <Card className="p-4 border border-purple-100 dark:border-purple-900/50 bg-purple-50/50 dark:bg-purple-950/20 rounded-xl">
-              <div className="text-sm font-medium text-purple-600 dark:text-purple-400 mb-1">Profit Margin</div>
-              <div className={`text-2xl font-bold ${data?.summary?.ProfitMargin >= 0 ? 'text-emerald-600 dark:text-emerald-500' : 'text-rose-600 dark:text-rose-500'}`}>
-                {data?.summary?.ProfitMargin?.toLocaleString(undefined, {maximumFractionDigits: 2}) || '0'}%
+
+            <Card className="p-4 border border-border shadow-sm rounded-xl">
+              <h3 className="font-semibold mb-4 text-center">Revenue vs COGS vs Deductions</h3>
+              <div className="h-64 flex items-center justify-center">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={[
+                        { name: 'Gross Profit', value: Math.max(0, data?.summary?.GrossProfit || 0) },
+                        { name: 'COGS', value: data?.summary?.TotalCOGS || 0 },
+                        { name: 'Inventory Loss', value: data?.summary?.InventoryLoss || 0 },
+                        { name: 'Discounts & Returns', value: (data?.summary?.DiscountsApplied || 0) + (data?.summary?.SalesReturns || 0) }
+                      ].filter(d => d.value > 0)}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={80}
+                      paddingAngle={5}
+                      dataKey="value"
+                    >
+                      {[0, 1, 2, 3].map((entry: any, index: number) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend verticalAlign="bottom" height={36}/>
+                  </PieChart>
+                </ResponsiveContainer>
               </div>
             </Card>
+
           </div>
 
-          <div className="grid lg:grid-cols-3 gap-6">
+          {/* Row 3: Data Tables */}
+          <div className="space-y-6">
             
-            {/* Left Column: P&L Statement */}
-            <div className="lg:col-span-2 space-y-6">
-              <Card className="border border-border shadow-sm rounded-xl overflow-hidden">
-                <div className="p-4 border-b border-border bg-slate-50 dark:bg-slate-900 flex justify-between items-center">
-                  <h3 className="font-semibold text-lg flex items-center">
-                    <FileSpreadsheet className="w-5 h-5 mr-2 text-primary" />
-                    Profit & Loss Statement
-                  </h3>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={() => window.print()}>
-                      <Printer className="w-4 h-4 mr-2" /> Print P&L
-                    </Button>
-                  </div>
+            <Card className="border border-border shadow-sm rounded-xl overflow-hidden">
+              <div className="p-4 border-b border-border bg-slate-50 dark:bg-slate-900 flex justify-between items-center">
+                <h3 className="font-semibold text-lg flex items-center">
+                  <FileSpreadsheet className="w-5 h-5 mr-2 text-primary" />
+                  Profit & Loss Statement
+                </h3>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={() => window.print()}>
+                    <Printer className="w-4 h-4 mr-2" /> Print P&L
+                  </Button>
                 </div>
-                
-                <div className="p-0">
-                  <table className="w-full text-sm text-left">
-                    <tbody className="divide-y divide-border">
-                      {/* Income Section */}
-                      <tr className="bg-blue-50/30 dark:bg-blue-900/10">
-                        <td colSpan={2} className="px-6 py-3 font-semibold text-blue-700 dark:text-blue-400">Income</td>
+              </div>
+              
+              <div className="p-0">
+                <table className="w-full text-sm text-left">
+                  <tbody className="divide-y divide-border">
+                    {/* Income Section */}
+                    <tr className="bg-blue-50/30 dark:bg-blue-900/10">
+                      <td colSpan={2} className="px-6 py-3 font-semibold text-blue-700 dark:text-blue-400">Income</td>
+                    </tr>
+                    {data?.income_breakdown?.map((item: any, idx: number) => (
+                      <tr key={`inc-${idx}`} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
+                        <td className="px-6 py-3 text-muted-foreground">{item.Category}</td>
+                        <td className="px-6 py-3 text-right font-medium">Rs {item.Amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
                       </tr>
-                      {data?.income_breakdown?.map((item: any, idx: number) => (
-                        <tr key={`inc-${idx}`} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
-                          <td className="px-6 py-3 text-muted-foreground">{item.Category}</td>
-                          <td className="px-6 py-3 text-right font-medium">Rs {item.Amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-                        </tr>
-                      ))}
-                      <tr className="border-t-2 border-border bg-slate-50 dark:bg-slate-900/50">
-                        <td className="px-6 py-3 font-semibold text-right">Total Net Revenue</td>
-                        <td className="px-6 py-3 text-right font-bold text-blue-600 dark:text-blue-500">Rs {data?.summary?.TotalRevenue?.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-                      </tr>
+                    ))}
+                    <tr className="border-t-2 border-border bg-slate-50 dark:bg-slate-900/50">
+                      <td className="px-6 py-3 font-semibold text-right">Total Net Revenue</td>
+                      <td className="px-6 py-3 text-right font-bold text-blue-600 dark:text-blue-500">Rs {data?.summary?.TotalRevenue?.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                    </tr>
 
-                      {/* Expenses Section */}
-                      <tr className="bg-rose-50/30 dark:bg-rose-900/10">
-                        <td colSpan={2} className="px-6 py-3 font-semibold text-rose-700 dark:text-rose-400">Expenses & Losses</td>
+                    {/* Expenses Section */}
+                    <tr className="bg-rose-50/30 dark:bg-rose-900/10">
+                      <td colSpan={2} className="px-6 py-3 font-semibold text-rose-700 dark:text-rose-400">Expenses & Losses</td>
+                    </tr>
+                    {data?.expense_breakdown?.map((item: any, idx: number) => (
+                      <tr key={`exp-${idx}`} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
+                        <td className="px-6 py-3 text-muted-foreground">{item.Category}</td>
+                        <td className="px-6 py-3 text-right font-medium text-rose-600/80 dark:text-rose-400/80">- Rs {item.Amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
                       </tr>
-                      {data?.expense_breakdown?.map((item: any, idx: number) => (
-                        <tr key={`exp-${idx}`} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
-                          <td className="px-6 py-3 text-muted-foreground">{item.Category}</td>
-                          <td className="px-6 py-3 text-right font-medium text-rose-600/80 dark:text-rose-400/80">- Rs {item.Amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-                        </tr>
-                      ))}
-                      <tr className="border-t-2 border-border bg-slate-50 dark:bg-slate-900/50">
-                        <td className="px-6 py-3 font-semibold text-right">Total Expenses & Deductions</td>
-                        <td className="px-6 py-3 text-right font-bold text-rose-600 dark:text-rose-500">- Rs {((data?.summary?.TotalCOGS || 0) + (data?.summary?.InventoryLoss || 0) + (data?.summary?.TotalExpenses || 0) + (data?.summary?.DiscountsApplied || 0) + (data?.summary?.SalesReturns || 0)).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-                      </tr>
+                    ))}
+                    <tr className="border-t-2 border-border bg-slate-50 dark:bg-slate-900/50">
+                      <td className="px-6 py-3 font-semibold text-right">Total Expenses & Deductions</td>
+                      <td className="px-6 py-3 text-right font-bold text-rose-600 dark:text-rose-500">- Rs {((data?.summary?.TotalCOGS || 0) + (data?.summary?.InventoryLoss || 0) + (data?.summary?.TotalExpenses || 0) + (data?.summary?.DiscountsApplied || 0) + (data?.summary?.SalesReturns || 0)).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                    </tr>
 
-                      {/* Net Profit Section */}
-                      <tr className="bg-emerald-50/30 dark:bg-emerald-900/10 border-t border-border">
-                        <td className="px-6 py-4 font-bold text-lg text-right">NET PROFIT / LOSS</td>
-                        <td className={`px-6 py-4 text-right font-bold text-xl ${data?.summary?.NetProfit >= 0 ? 'text-emerald-600 dark:text-emerald-500' : 'text-rose-600 dark:text-rose-500'}`}>
-                          Rs {data?.summary?.NetProfit?.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </Card>
-            </div>
-
-            {/* Right Column: Charts */}
-            <div id="report-charts" className="space-y-6">
-              <Card className="p-4 border border-border shadow-sm rounded-xl">
-                <h3 className="font-semibold mb-4 text-center">Net Profit Trend</h3>
-                <div className="h-64">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={data?.trend_data || []} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                      <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} />
-                      <YAxis yAxisId="left" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} tickFormatter={(val) => `Rs ${val/1000}k`} />
-                      <Tooltip content={<CustomTooltip />} />
-                      <Legend />
-                      <Line yAxisId="left" type="monotone" name="Net Profit" dataKey="profit" stroke="#10b981" strokeWidth={3} dot={{ r: 4, fill: "#10b981", strokeWidth: 2, stroke: "#fff" }} activeDot={{ r: 6 }} />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              </Card>
-
-              <Card className="p-4 border border-border shadow-sm rounded-xl">
-                <h3 className="font-semibold mb-4 text-center">Revenue vs COGS vs Deductions</h3>
-                <div className="h-64 flex items-center justify-center">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={[
-                          { name: 'Gross Profit', value: Math.max(0, data?.summary?.GrossProfit || 0) },
-                          { name: 'COGS', value: data?.summary?.TotalCOGS || 0 },
-                          { name: 'Inventory Loss', value: data?.summary?.InventoryLoss || 0 },
-                          { name: 'Discounts & Returns', value: (data?.summary?.DiscountsApplied || 0) + (data?.summary?.SalesReturns || 0) }
-                        ].filter(d => d.value > 0)}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={60}
-                        outerRadius={80}
-                        paddingAngle={5}
-                        dataKey="value"
-                      >
-                        {[0, 1, 2, 3].map((entry: any, index: number) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip content={<CustomTooltip />} />
-                      <Legend verticalAlign="bottom" height={36}/>
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-              </Card>
-            </div>
+                    {/* Net Profit Section */}
+                    <tr className="bg-emerald-50/30 dark:bg-emerald-900/10 border-t border-border">
+                      <td className="px-6 py-4 font-bold text-lg text-right">NET PROFIT / LOSS</td>
+                      <td className={`px-6 py-4 text-right font-bold text-xl ${data?.summary?.NetProfit >= 0 ? 'text-emerald-600 dark:text-emerald-500' : 'text-rose-600 dark:text-rose-500'}`}>
+                        Rs {data?.summary?.NetProfit?.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </Card>
 
           </div>
         </div>
-      )}
+        );
+      })()}
 
     </div>
   );

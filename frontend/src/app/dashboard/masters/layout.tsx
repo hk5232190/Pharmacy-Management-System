@@ -23,6 +23,54 @@ interface MastersCounts {
   customers: number;
 }
 
+// ── KPI Card — matches Inventory Management design ─────────────────────────
+const accentMap: Record<string, { border: string; icon: string; text: string; bg: string }> = {
+  blue:    { border: "border-l-blue-500",    icon: "text-blue-500",    text: "text-blue-600 dark:text-blue-400",       bg: "bg-blue-50 dark:bg-blue-900/20" },
+  emerald: { border: "border-l-emerald-500", icon: "text-emerald-500", text: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-900/20" },
+  purple:  { border: "border-l-purple-500",  icon: "text-purple-500",  text: "text-purple-600 dark:text-purple-400",   bg: "bg-purple-50 dark:bg-purple-900/20" },
+  orange:  { border: "border-l-orange-500",  icon: "text-orange-500",  text: "text-orange-600 dark:text-orange-400",   bg: "bg-orange-50 dark:bg-orange-900/20" },
+  cyan:    { border: "border-l-cyan-500",    icon: "text-cyan-500",    text: "text-cyan-600 dark:text-cyan-400",       bg: "bg-cyan-50 dark:bg-cyan-900/20" },
+};
+
+function MastersKPICard({
+  icon: Icon,
+  title,
+  value,
+  accent,
+  href,
+}: {
+  icon: any;
+  title: string;
+  value: string;
+  accent: string;
+  href?: string;
+}) {
+  const a = accentMap[accent] ?? accentMap.blue;
+
+  const card = (
+    <div
+      className={cn(
+        "relative bg-white dark:bg-card rounded-xl border border-border border-l-4 shadow-sm p-4 flex flex-col gap-3 overflow-hidden transition-all hover:shadow-md",
+        a.border,
+        href && "cursor-pointer hover:scale-[1.02] active:scale-95"
+      )}
+    >
+      {/* Icon block */}
+      <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center shrink-0", a.bg)}>
+        <Icon size={22} className={a.icon} />
+      </div>
+      {/* Metric */}
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-0.5">{title}</p>
+        <p className={cn("text-2xl font-extrabold leading-none tabular-nums", a.text)}>{value}</p>
+      </div>
+    </div>
+  );
+
+  return href ? <Link href={href} className="block">{card}</Link> : card;
+}
+// ──────────────────────────────────────────────────────────────────────────
+
 export default function MastersLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [counts, setCounts] = useState<MastersCounts>({
@@ -82,12 +130,14 @@ export default function MastersLayout({ children }: { children: React.ReactNode 
 
   return (
     <div className="p-6 md:p-8 space-y-6">
-      
+
       {/* Page Header */}
       <div>
         <h1 className="text-3xl font-bold text-foreground">Masters</h1>
-        <p className="text-muted-foreground mt-1 text-[15px]">Create and maintain all reference data used throughout the pharmacy system.</p>
-        
+        <p className="text-muted-foreground mt-1 text-[15px]">
+          Create and maintain all reference data used throughout the pharmacy system.
+        </p>
+
         {/* Breadcrumbs */}
         <div className="flex items-center text-sm text-slate-500 mt-4">
           <Link href="/dashboard" className="hover:text-primary transition-colors">Dashboard</Link>
@@ -96,42 +146,42 @@ export default function MastersLayout({ children }: { children: React.ReactNode 
         </div>
       </div>
 
-      {/* Summary Cards — live from DB */}
+      {/* KPI Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <SummaryCard
+        <MastersKPICard
           icon={Pill}
-          iconBg="bg-blue-100 dark:bg-blue-900/30"
-          iconColor="text-blue-600 dark:text-blue-400"
           title="Total Medicines"
           value={counts.medicines.toLocaleString()}
+          accent="blue"
+          href="/dashboard/masters/medicines"
         />
-        <SummaryCard
+        <MastersKPICard
           icon={Grid2X2}
-          iconBg="bg-emerald-100 dark:bg-emerald-900/30"
-          iconColor="text-emerald-600 dark:text-emerald-400"
           title="Categories"
           value={counts.categories.toLocaleString()}
+          accent="emerald"
+          href="/dashboard/masters/categories"
         />
-        <SummaryCard
+        <MastersKPICard
           icon={Building2}
-          iconBg="bg-purple-100 dark:bg-purple-900/30"
-          iconColor="text-purple-600 dark:text-purple-400"
           title="Companies"
           value={counts.companies.toLocaleString()}
+          accent="purple"
+          href="/dashboard/masters/companies"
         />
-        <SummaryCard
+        <MastersKPICard
           icon={Truck}
-          iconBg="bg-orange-100 dark:bg-orange-900/30"
-          iconColor="text-orange-600 dark:text-orange-400"
           title="Suppliers"
           value={counts.suppliers.toLocaleString()}
+          accent="orange"
+          href="/dashboard/masters/suppliers"
         />
-        <SummaryCard
+        <MastersKPICard
           icon={Users}
-          iconBg="bg-cyan-100 dark:bg-cyan-900/30"
-          iconColor="text-cyan-600 dark:text-cyan-400"
           title="Customers"
           value={counts.customers.toLocaleString()}
+          accent="cyan"
+          href="/dashboard/masters/customers"
         />
       </div>
 
@@ -145,8 +195,8 @@ export default function MastersLayout({ children }: { children: React.ReactNode 
               href={tab.href}
               className={cn(
                 "flex items-center gap-2 px-6 py-3 rounded-t-xl font-semibold text-[15px] transition-all relative border border-transparent",
-                isActive 
-                  ? "bg-primary text-primary-foreground border-primary shadow-sm" 
+                isActive
+                  ? "bg-primary text-primary-foreground border-primary shadow-sm"
                   : "bg-card text-muted-foreground border-border hover:bg-secondary/80 hover:text-foreground"
               )}
             >
@@ -165,26 +215,6 @@ export default function MastersLayout({ children }: { children: React.ReactNode 
         {children}
       </div>
 
-    </div>
-  );
-}
-
-function SummaryCard({ icon: Icon, iconBg, iconColor, title, value }: {
-  icon: any;
-  iconBg: string;
-  iconColor: string;
-  title: string;
-  value: string;
-}) {
-  return (
-    <div className="bg-card border border-border rounded-xl p-5 shadow-sm flex items-center gap-4">
-      <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center shrink-0", iconBg, iconColor)}>
-        <Icon size={24} />
-      </div>
-      <div>
-        <div className="text-sm font-semibold text-muted-foreground">{title}</div>
-        <div className="text-2xl font-bold text-foreground mt-0.5">{value}</div>
-      </div>
     </div>
   );
 }

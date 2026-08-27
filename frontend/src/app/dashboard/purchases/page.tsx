@@ -576,55 +576,57 @@ export default function PurchasesPage() {
         </div>
 
         {/* Stats Cards — only visible on History tab */}
-        {activeTab === "history" && (
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
-          <div className="bg-white dark:bg-card p-4 rounded-xl shadow-sm border border-border flex items-center gap-4">
-            <div className="h-12 w-12 rounded-lg bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center text-blue-600 dark:text-blue-400">
-              <ShoppingCart size={24} />
+        {activeTab === "history" && (() => {
+          const todayTotal = purchaseHistory
+            .filter(p => new Date(p.PurchaseDate).toDateString() === new Date().toDateString())
+            .reduce((acc, curr) => acc + curr.GrandTotal, 0);
+          const allTimeTotal = purchaseHistory.reduce((acc, curr) => acc + curr.GrandTotal, 0);
+          const processedReturns = summaryData?.total_returns_count ?? returnsHistory.length;
+          const balanceDue = summaryData?.total_balance_due ?? purchaseHistory.reduce((acc, curr) => acc + Math.max(0, curr.GrandTotal - curr.PaidAmount), 0);
+          const totalInvoices = summaryData?.total_invoices_count ?? purchaseHistory.length;
+
+          const cards = [
+            { title: "Today's Purchases",    value: `Rs ${fmt(Math.max(0, todayTotal))}`, icon: ShoppingCart, accent: "blue" },
+            { title: "Total Purchase Amount", value: `Rs ${fmt(Math.max(0, allTimeTotal))}`, icon: DollarSign,  accent: "emerald" },
+            { title: "Processed Returns",     value: String(processedReturns),             icon: Undo2,        accent: "orange" },
+            { title: "Total Balance Due",     value: `Rs ${fmt(balanceDue)}`,              icon: CreditCard,   accent: "rose" },
+            { title: "Total Invoices",        value: String(totalInvoices),                icon: FileText,     accent: "teal" },
+          ];
+
+          const accentMap: Record<string, { border: string; iconCls: string; text: string; bg: string }> = {
+            blue:    { border: "border-l-blue-500",    iconCls: "text-blue-500",    text: "text-blue-600 dark:text-blue-400",       bg: "bg-blue-50 dark:bg-blue-900/20" },
+            emerald: { border: "border-l-emerald-500", iconCls: "text-emerald-500", text: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-900/20" },
+            orange:  { border: "border-l-orange-500",  iconCls: "text-orange-500",  text: "text-orange-600 dark:text-orange-400",   bg: "bg-orange-50 dark:bg-orange-900/20" },
+            rose:    { border: "border-l-rose-500",    iconCls: "text-rose-500",    text: "text-rose-600 dark:text-rose-400",       bg: "bg-rose-50 dark:bg-rose-900/20" },
+            teal:    { border: "border-l-teal-500",    iconCls: "text-teal-500",    text: "text-teal-600 dark:text-teal-400",       bg: "bg-teal-50 dark:bg-teal-900/20" },
+          };
+
+          return (
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+              {cards.map(({ title, value, icon: Icon, accent }) => {
+                const a = accentMap[accent];
+                return (
+                  <div
+                    key={title}
+                    className={cn(
+                      "relative bg-white dark:bg-card rounded-xl border border-border border-l-4 shadow-sm p-4 flex flex-col gap-3 overflow-hidden transition-all hover:shadow-md",
+                      a.border
+                    )}
+                  >
+                    <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center shrink-0", a.bg)}>
+                      <Icon size={22} className={a.iconCls} />
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-0.5">{title}</p>
+                      <p className={cn("text-2xl font-extrabold leading-none tabular-nums truncate", a.text)}>{value}</p>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-            <div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Today's Purchases</p>
-              <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">₨ {fmt(Math.max(0, purchaseHistory.filter(p => new Date(p.PurchaseDate).toDateString() === new Date().toDateString()).reduce((acc, curr) => acc + curr.GrandTotal, 0)))}</h3>
-            </div>
-          </div>
-          <div className="bg-white dark:bg-card p-4 rounded-xl shadow-sm border border-border flex items-center gap-4">
-            <div className="h-12 w-12 rounded-lg bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
-              <DollarSign size={24} />
-            </div>
-            <div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Total Purchase Amount</p>
-              <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">₨ {fmt(Math.max(0, purchaseHistory.reduce((acc, curr) => acc + curr.GrandTotal, 0)))}</h3>
-            </div>
-          </div>
-          <div className="bg-white dark:bg-card p-4 rounded-xl shadow-sm border border-border flex items-center gap-4">
-            <div className="h-12 w-12 rounded-lg bg-orange-100 dark:bg-orange-900/40 flex items-center justify-center text-orange-600 dark:text-orange-400">
-              <Undo2 size={24} />
-            </div>
-            <div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Processed Returns</p>
-              <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">{summaryData?.total_returns_count || returnsHistory.length}</h3>
-            </div>
-          </div>
-          <div className="bg-white dark:bg-card p-4 rounded-xl shadow-sm border border-border flex items-center gap-4">
-            <div className="h-12 w-12 rounded-lg bg-rose-100 dark:bg-rose-900/40 flex items-center justify-center text-rose-600 dark:text-rose-400">
-              <CreditCard size={24} />
-            </div>
-            <div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Total Balance Due</p>
-              <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">₨ {fmt(summaryData?.total_balance_due || purchaseHistory.reduce((acc, curr) => acc + Math.max(0, curr.GrandTotal - curr.PaidAmount), 0))}</h3>
-            </div>
-          </div>
-          <div className="bg-white dark:bg-card p-4 rounded-xl shadow-sm border border-border flex items-center gap-4">
-            <div className="h-12 w-12 rounded-lg bg-teal-100 dark:bg-teal-900/40 flex items-center justify-center text-teal-600 dark:text-teal-400">
-              <FileText size={24} />
-            </div>
-            <div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Total Invoices</p>
-              <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">{summaryData?.total_invoices_count || purchaseHistory.length}</h3>
-            </div>
-          </div>
-        </div>
-        )}
+          );
+        })()}
+
 
         {/* Tabs */}
         <div className="flex gap-2 border-b border-border mb-6">

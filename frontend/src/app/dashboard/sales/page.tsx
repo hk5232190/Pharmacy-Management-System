@@ -793,28 +793,50 @@ export default function POSBillingPage() {
           </div>
         </div>
 
-        {/* KPIs (Placeholders for 6.1 Layout) — hidden on Sales Return tab */}
-        {activeTab !== 'return' && (
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-          {[
-            { label: "Today's Sales", val: `Rs ${formatNumber(kpis.todaysSales)}`, icon: ShoppingCart, color: "text-blue-500", bg: "bg-blue-50 dark:bg-blue-900/20" },
-            { label: "Total Revenue", val: `Rs ${formatNumber(kpis.totalRevenue)}`, icon: FileText, color: "text-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-900/20" },
-            { label: "Total Invoices", val: kpis.totalInvoices.toString(), icon: FileText, color: "text-indigo-500", bg: "bg-indigo-50 dark:bg-indigo-900/20" },
-            { label: "Items Sold Today", val: kpis.itemsSoldToday.toString(), icon: ShoppingCart, color: "text-amber-500", bg: "bg-amber-50 dark:bg-amber-900/20" },
-            { label: "Pending Payments", val: `Rs ${formatNumber(kpis.pendingPayments)}`, icon: FileText, color: "text-rose-500", bg: "bg-rose-50 dark:bg-rose-900/20" },
-          ].map((k, i) => (
-            <div key={i} className="bg-white dark:bg-card rounded-xl border border-border p-4 flex items-center gap-4 shadow-sm">
-              <div className={cn("p-3 rounded-xl", k.bg, k.color)}>
-                <k.icon className="w-5 h-5" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground font-medium">{k.label}</p>
-                <h4 className="text-lg font-bold text-foreground">{k.val}</h4>
-              </div>
+        {/* KPI Cards — hidden on Sales Return tab */}
+        {activeTab !== 'return' && (() => {
+          const salesCards = [
+            { label: "Today's Sales",   val: `Rs ${formatNumber(kpis.todaysSales)}`,     icon: ShoppingCart, accent: "blue" },
+            { label: "Total Revenue",   val: `Rs ${formatNumber(kpis.totalRevenue)}`,     icon: FileText,     accent: "emerald" },
+            { label: "Total Invoices",  val: kpis.totalInvoices.toString(),               icon: FileText,     accent: "indigo" },
+            { label: "Items Sold Today",val: kpis.itemsSoldToday.toString(),              icon: ShoppingCart, accent: "amber" },
+            { label: "Pending Payments",val: `Rs ${formatNumber(kpis.pendingPayments)}`,  icon: FileText,     accent: "rose" },
+          ];
+
+          const accentMap: Record<string, { border: string; iconCls: string; text: string; bg: string }> = {
+            blue:    { border: "border-l-blue-500",    iconCls: "text-blue-500",    text: "text-blue-600 dark:text-blue-400",       bg: "bg-blue-50 dark:bg-blue-900/20" },
+            emerald: { border: "border-l-emerald-500", iconCls: "text-emerald-500", text: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-900/20" },
+            indigo:  { border: "border-l-indigo-500",  iconCls: "text-indigo-500",  text: "text-indigo-600 dark:text-indigo-400",   bg: "bg-indigo-50 dark:bg-indigo-900/20" },
+            amber:   { border: "border-l-amber-500",   iconCls: "text-amber-500",   text: "text-amber-600 dark:text-amber-400",     bg: "bg-amber-50 dark:bg-amber-900/20" },
+            rose:    { border: "border-l-rose-500",    iconCls: "text-rose-500",    text: "text-rose-600 dark:text-rose-400",       bg: "bg-rose-50 dark:bg-rose-900/20" },
+          };
+
+          return (
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+              {salesCards.map(({ label, val, icon: Icon, accent }) => {
+                const a = accentMap[accent];
+                return (
+                  <div
+                    key={label}
+                    className={cn(
+                      "relative bg-white dark:bg-card rounded-xl border border-border border-l-4 shadow-sm p-4 flex flex-col gap-3 overflow-hidden transition-all hover:shadow-md",
+                      a.border
+                    )}
+                  >
+                    <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center shrink-0", a.bg)}>
+                      <Icon className={cn("w-5 h-5", a.iconCls)} />
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-0.5">{label}</p>
+                      <p className={cn("text-2xl font-extrabold leading-none tabular-nums truncate", a.text)}>{val}</p>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          ))}
-        </div>
-        )}
+          );
+        })()}
+
 
         {/* Action Tabs */}
         <div className="flex flex-col xl:flex-row justify-between items-start xl:items-end gap-4 border-b border-border mb-6">

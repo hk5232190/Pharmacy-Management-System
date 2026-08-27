@@ -2,14 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { apiClient } from "@/lib/api-client";
-// Charts section removed
 import WidgetsSection from "./widgets-section";
 import DashboardFilter from "./dashboard-filter";
 import { toast } from "sonner";
 import { useSystemPreferences } from "@/contexts/SystemPreferencesContext";
+import { cn } from "@/lib/utils";
 import {
   DollarSign,
   PackageSearch,
@@ -28,6 +27,53 @@ import {
   Wallet,
   RefreshCw
 } from "lucide-react";
+
+// ─── KPI Card (matches Inventory Management design) ────────────────────────
+const accentMap: Record<string, { border: string; icon: string; text: string; bg: string }> = {
+  blue:    { border: "border-l-blue-500",    icon: "text-blue-500",    text: "text-blue-600 dark:text-blue-400",       bg: "bg-blue-50 dark:bg-blue-900/20" },
+  purple:  { border: "border-l-purple-500",  icon: "text-purple-500",  text: "text-purple-600 dark:text-purple-400",   bg: "bg-purple-50 dark:bg-purple-900/20" },
+  emerald: { border: "border-l-emerald-500", icon: "text-emerald-500", text: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-900/20" },
+  rose:    { border: "border-l-rose-500",    icon: "text-rose-500",    text: "text-rose-600 dark:text-rose-400",       bg: "bg-rose-50 dark:bg-rose-900/20" },
+  orange:  { border: "border-l-orange-500",  icon: "text-orange-500",  text: "text-orange-600 dark:text-orange-400",   bg: "bg-orange-50 dark:bg-orange-900/20" },
+  amber:   { border: "border-l-amber-500",   icon: "text-amber-500",   text: "text-amber-600 dark:text-amber-400",     bg: "bg-amber-50 dark:bg-amber-900/20" },
+  teal:    { border: "border-l-teal-500",    icon: "text-teal-500",    text: "text-teal-600 dark:text-teal-400",       bg: "bg-teal-50 dark:bg-teal-900/20" },
+  indigo:  { border: "border-l-indigo-500",  icon: "text-indigo-500",  text: "text-indigo-600 dark:text-indigo-400",   bg: "bg-indigo-50 dark:bg-indigo-900/20" },
+};
+
+function DashKPICard({
+  title,
+  value,
+  icon,
+  accent = "blue",
+  onClick,
+}: {
+  title: string;
+  value: string | number;
+  icon: React.ReactNode;
+  accent?: string;
+  onClick?: () => void;
+}) {
+  const a = accentMap[accent] ?? accentMap.blue;
+  return (
+    <div
+      onClick={onClick}
+      className={cn(
+        "relative bg-white dark:bg-card rounded-xl border border-border border-l-4 shadow-sm p-4 flex flex-col gap-3 overflow-hidden transition-all hover:shadow-md",
+        a.border,
+        onClick && "cursor-pointer hover:scale-[1.02] active:scale-95"
+      )}
+    >
+      <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center shrink-0", a.bg)}>
+        <span className={a.icon}>{icon}</span>
+      </div>
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-0.5">{title}</p>
+        <p className={cn("text-2xl font-extrabold leading-none tabular-nums truncate", a.text)}>{value}</p>
+      </div>
+    </div>
+  );
+}
+// ───────────────────────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -138,140 +184,83 @@ export default function DashboardPage() {
             setDateRange={setDateRange}
           />
         </div>
-        {/* KPI Cards: 2 rows × 5 cols — single grid ensures equal row heights */}
-        <div className="grid gap-4 grid-cols-2 lg:grid-cols-5 auto-rows-fr">
-          {/* ── Row 1 ── */}
-          <Card 
+
+        {/* KPI Cards — Row 1: Period-filtered metrics */}
+        <div className="grid gap-4 grid-cols-2 lg:grid-cols-5">
+          <DashKPICard
+            title={`${getTimeframeLabel()} Sales`}
+            value={`Rs ${formatNumber(data.today_sales)}`}
+            icon={<DollarSign className="h-6 w-6" />}
+            accent="blue"
             onClick={() => router.push('/dashboard/sales')}
-            className="p-5 border border-border shadow-sm bg-white dark:bg-card rounded-2xl hover:shadow-md transition-all cursor-pointer hover:border-blue-200 dark:hover:border-blue-900 hover:scale-[1.02] active:scale-95"
-          >
-            <div className="flex flex-row items-center justify-between pb-2">
-              <h3 className="text-base font-bold text-[#111827] dark:text-gray-200">{getTimeframeLabel()} Sales</h3>
-              <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-full">
-                <DollarSign className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-              </div>
-            </div>
-            <div className="text-3xl font-extrabold text-[#111827] dark:text-white tracking-tight mt-1 truncate">Rs {formatNumber(data.today_sales)}</div>
-          </Card>
-
-          <Card 
+          />
+          <DashKPICard
+            title={`${getTimeframeLabel()} Purchases`}
+            value={`Rs ${formatNumber(data.today_purchases)}`}
+            icon={<PackageSearch className="h-6 w-6" />}
+            accent="purple"
             onClick={() => router.push('/dashboard/purchases')}
-            className="p-5 border border-border shadow-sm bg-white dark:bg-card rounded-2xl hover:shadow-md transition-all cursor-pointer hover:border-purple-200 dark:hover:border-purple-900 hover:scale-[1.02] active:scale-95"
-          >
-            <div className="flex flex-row items-center justify-between pb-2">
-              <h3 className="text-base font-bold text-[#111827] dark:text-gray-200">{getTimeframeLabel()} Purchases</h3>
-              <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-full">
-                <PackageSearch className="h-4 w-4 text-purple-600 dark:text-purple-400" />
-              </div>
-            </div>
-            <div className="text-3xl font-extrabold text-[#111827] dark:text-white tracking-tight mt-1 truncate">Rs {formatNumber(data.today_purchases)}</div>
-          </Card>
-
-          <Card 
+          />
+          <DashKPICard
+            title={`${getTimeframeLabel()} Profit`}
+            value={`Rs ${formatNumber(data.today_profit)}`}
+            icon={<TrendingUp className="h-6 w-6" />}
+            accent="emerald"
             onClick={() => router.push('/dashboard/reports')}
-            className="p-5 border border-border shadow-sm bg-white dark:bg-card rounded-2xl hover:shadow-md transition-all cursor-pointer hover:scale-[1.02] active:scale-95"
-          >
-            <div className="flex flex-row items-center justify-between pb-2">
-              <h3 className="text-base font-bold text-emerald-900 dark:text-emerald-200">{getTimeframeLabel()} Profit</h3>
-              <div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-full">
-                <TrendingUp className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-              </div>
-            </div>
-            <div className="text-3xl font-extrabold text-emerald-700 dark:text-emerald-400 tracking-tight mt-1 truncate">Rs {formatNumber(data.today_profit)}</div>
-          </Card>
-
-          <Card 
+          />
+          <DashKPICard
+            title="Expired Medicines"
+            value={data.expired_medicines}
+            icon={<Skull className="h-6 w-6" />}
+            accent="rose"
             onClick={() => router.push('/dashboard/inventory?tab=expiry')}
-            className="p-5 border border-border shadow-sm bg-white dark:bg-card rounded-2xl hover:shadow-md transition-all cursor-pointer hover:border-rose-200 dark:hover:border-rose-900 hover:scale-[1.02] active:scale-95"
-          >
-            <div className="flex flex-row items-center justify-between pb-2">
-              <h3 className="text-base font-bold text-rose-900 dark:text-rose-200">Expired Medicines</h3>
-              <div className="p-2 bg-rose-100 dark:bg-rose-900/30 rounded-full">
-                <Skull className="h-4 w-4 text-rose-500" />
-              </div>
-            </div>
-            <div className="text-3xl font-extrabold text-rose-800 dark:text-rose-400 tracking-tight mt-1 truncate">{data.expired_medicines}</div>
-          </Card>
-
-          <Card 
+          />
+          <DashKPICard
+            title="Net Profit (All Time)"
+            value={`Rs ${formatNumber(data.net_profit)}`}
+            icon={<TrendingUp className="h-6 w-6" />}
+            accent="teal"
             onClick={() => router.push('/dashboard/reports')}
-            className="p-5 border-0 shadow-sm bg-gradient-to-br from-emerald-500 to-teal-600 text-white rounded-2xl hover:shadow-md transition-all cursor-pointer hover:scale-[1.02] active:scale-95"
-          >
-            <div className="flex flex-row items-center justify-between pb-2">
-              <h3 className="text-base font-bold text-emerald-50">Net Profit (All Time)</h3>
-              <div className="p-2 bg-white/20 rounded-full backdrop-blur-sm">
-                <TrendingUp className="h-4 w-4 text-white" />
-              </div>
-            </div>
-            <div className="text-3xl font-extrabold text-white tracking-tight mt-1 truncate">Rs {formatNumber(data.net_profit)}</div>
-            <p className="text-xs text-emerald-100 mt-1 font-medium opacity-80">Based on COGS</p>
-          </Card>
+          />
+        </div>
 
-          {/* ── Row 2 ── */}
-          <Card 
+        {/* KPI Cards — Row 2: Stock & All-Time */}
+        <div className="grid gap-4 grid-cols-2 lg:grid-cols-5">
+          <DashKPICard
+            title="Low Stock"
+            value={data.low_stock_count}
+            icon={<AlertTriangle className="h-6 w-6" />}
+            accent="orange"
             onClick={() => router.push('/dashboard/inventory?tab=current&status=Low%20Stock')}
-            className="p-5 border-0 shadow-sm bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-950/40 dark:to-amber-950/40 rounded-2xl border border-orange-100 dark:border-orange-900/50 hover:shadow-md transition-all cursor-pointer hover:scale-[1.02] active:scale-95"
-          >
-            <div className="flex flex-row items-center justify-between pb-2">
-              <h3 className="text-base font-bold text-orange-900 dark:text-orange-200">Low Stock</h3>
-              <div className="p-2 bg-orange-100 dark:bg-orange-900/30 rounded-full">
-                <AlertTriangle className="h-4 w-4 text-orange-600 dark:text-orange-400" />
-              </div>
-            </div>
-            <div className="text-3xl font-extrabold text-orange-800 dark:text-orange-400 tracking-tight mt-1 truncate">{data.low_stock_count}</div>
-          </Card>
-
-          <Card 
+          />
+          <DashKPICard
+            title="Out of Stock"
+            value={data.out_of_stock_count}
+            icon={<AlertCircle className="h-6 w-6" />}
+            accent="rose"
             onClick={() => router.push('/dashboard/inventory?tab=current&status=Out%20of%20Stock')}
-            className="p-5 border-0 shadow-sm bg-gradient-to-br from-rose-50 to-red-50 dark:from-rose-950/40 dark:to-red-950/40 rounded-2xl border border-rose-100 dark:border-rose-900/50 hover:shadow-md transition-all cursor-pointer hover:scale-[1.02] active:scale-95"
-          >
-            <div className="flex flex-row items-center justify-between pb-2">
-              <h3 className="text-base font-bold text-rose-900 dark:text-rose-200">Out of Stock</h3>
-              <div className="p-2 bg-rose-100 dark:bg-rose-900/30 rounded-full">
-                <AlertCircle className="h-4 w-4 text-rose-600 dark:text-rose-400" />
-              </div>
-            </div>
-            <div className="text-3xl font-extrabold text-rose-800 dark:text-rose-400 tracking-tight mt-1 truncate">{data.out_of_stock_count}</div>
-          </Card>
-
-          <Card 
+          />
+          <DashKPICard
+            title="Expiring Soon"
+            value={data.expiring_soon_count}
+            icon={<Clock className="h-6 w-6" />}
+            accent="amber"
             onClick={() => router.push('/dashboard/inventory?tab=expiry')}
-            className="p-5 border-0 shadow-sm bg-gradient-to-br from-yellow-50 to-amber-50 dark:from-yellow-950/40 dark:to-amber-950/40 rounded-2xl border border-yellow-200 dark:border-yellow-900/50 hover:shadow-md transition-all cursor-pointer hover:scale-[1.02] active:scale-95"
-          >
-            <div className="flex flex-row items-center justify-between pb-2">
-              <h3 className="text-base font-bold text-amber-900 dark:text-amber-200">Expiring Soon</h3>
-              <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-full">
-                <Clock className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-              </div>
-            </div>
-            <div className="text-3xl font-extrabold text-amber-800 dark:text-amber-400 tracking-tight mt-1 truncate">{data.expiring_soon_count}</div>
-          </Card>
-
-          <Card 
+          />
+          <DashKPICard
+            title="Total Sales (All Time)"
+            value={`Rs ${formatNumber(data.total_sales)}`}
+            icon={<DollarSign className="h-6 w-6" />}
+            accent="blue"
             onClick={() => router.push('/dashboard/reports')}
-            className="p-5 border border-border shadow-sm bg-white dark:bg-card rounded-2xl hover:shadow-md transition-all cursor-pointer hover:border-blue-200 dark:hover:border-blue-900 hover:scale-[1.02] active:scale-95"
-          >
-            <div className="flex flex-row items-center justify-between pb-2">
-              <h3 className="text-base font-bold text-[#111827] dark:text-gray-200">Total Sales (All Time)</h3>
-              <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-full">
-                <DollarSign className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-              </div>
-            </div>
-            <div className="text-3xl font-extrabold text-[#111827] dark:text-white tracking-tight mt-1 truncate">Rs {formatNumber(data.total_sales)}</div>
-          </Card>
-
-          <Card 
+          />
+          <DashKPICard
+            title="Total Purchases (All Time)"
+            value={`Rs ${formatNumber(data.total_purchases)}`}
+            icon={<Download className="h-6 w-6" />}
+            accent="indigo"
             onClick={() => router.push('/dashboard/reports')}
-            className="p-5 border border-border shadow-sm bg-white dark:bg-card rounded-2xl hover:shadow-md transition-all cursor-pointer hover:border-purple-200 dark:hover:border-purple-900 hover:scale-[1.02] active:scale-95"
-          >
-            <div className="flex flex-row items-center justify-between pb-2">
-              <h3 className="text-base font-bold text-[#111827] dark:text-gray-200">Total Purchases (All Time)</h3>
-              <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-full">
-                <Download className="h-4 w-4 text-purple-600 dark:text-purple-400" />
-              </div>
-            </div>
-            <div className="text-3xl font-extrabold text-[#111827] dark:text-white tracking-tight mt-1 truncate">Rs {formatNumber(data.total_purchases)}</div>
-          </Card>
+          />
         </div>
       </div>
 
@@ -279,3 +268,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+
