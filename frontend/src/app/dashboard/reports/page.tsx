@@ -87,6 +87,19 @@ function ReportsPageInner({
   const [inventorySearchTerm, setInventorySearchTerm] = useState("");
   const [inventoryCategoryFilter, setInventoryCategoryFilter] = useState("All");
 
+  const [medicineSearchTerm, setMedicineSearchTerm] = useState("");
+  const [medicineCategoryFilter, setMedicineCategoryFilter] = useState("");
+  const [medicineCurrentPage, setMedicineCurrentPage] = useState(1);
+  const [medicinePageSize, setMedicinePageSize] = useState(10);
+  
+  const [categories, setCategories] = useState<any[]>([]);
+
+  useEffect(() => {
+    apiClient.get('/categories?page_size=0').then((res: any) => {
+      if (res && res.data) setCategories(res.data);
+    }).catch(console.error);
+  }, []);
+
   useEffect(() => {
     // Don't fetch if custom is selected but no date range has been applied yet
     if (timeframe === 'custom' && !dateRange) return;
@@ -102,7 +115,7 @@ function ReportsPageInner({
     } else if (activeTab === "financial") {
       fetchFinancialReports();
     }
-  }, [timeframe, dateRange, activeTab]);
+  }, [timeframe, dateRange, activeTab, activeMedicineTab, medicineSearchTerm, medicineCategoryFilter, medicineCurrentPage, medicinePageSize]);
 
   const fetchSalesReports = async () => {
     setLoading(true);
@@ -150,7 +163,10 @@ function ReportsPageInner({
     setLoading(true);
     setData(null);
     try {
-      let url = `/reports/medicine?timeframe=${timeframe}`;
+      let url = `/reports/medicine?timeframe=${timeframe}&report_type=${activeMedicineTab}&page=${medicineCurrentPage}&page_size=${medicinePageSize}`;
+      if (medicineSearchTerm) url += `&search=${encodeURIComponent(medicineSearchTerm)}`;
+      if (medicineCategoryFilter && medicineCategoryFilter !== 'All') url += `&category_id=${medicineCategoryFilter}`;
+
       if (timeframe === 'custom' && dateRange) {
         url += `&start_date=${dateRange.start}&end_date=${dateRange.end}`;
       }
@@ -383,7 +399,12 @@ function ReportsPageInner({
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col xl:flex-row items-center gap-4 bg-card p-4 rounded-xl shadow-sm border border-border w-full justify-between print:hidden">
+      <div 
+        className={cn(
+          "flex flex-col xl:flex-row items-center gap-4 bg-card p-4 rounded-xl shadow-sm border border-border w-full justify-between print:hidden transition-all duration-300",
+          activeTab === 'medicine' && activeMedicineTab === 'low_stock' && "opacity-50 pointer-events-none grayscale"
+        )}
+      >
         <div className="flex items-center gap-2 text-foreground font-semibold">
           <Calendar className="w-5 h-5 text-primary" />
           Date Range
@@ -1574,19 +1595,44 @@ function ReportsPageInner({
 
           <div className="grid grid-cols-1 gap-6">
             <Card className="border border-border shadow-sm rounded-xl overflow-hidden">
-              <div className="p-4 border-b border-border bg-slate-50 dark:bg-slate-900 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+              <div className="p-4 border-b border-border bg-slate-50 dark:bg-slate-900 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
                 <div className="flex space-x-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
-                  <Button variant={activeMedicineTab === 'expiry' ? 'default' : 'ghost'} size="sm" onClick={() => onMedicineTabChange('expiry')}>
+                  <Button variant={activeMedicineTab === 'expiry' ? 'default' : 'ghost'} size="sm" onClick={() => { onMedicineTabChange('expiry'); setMedicineCurrentPage(1); }}>
                     <AlertTriangle className="w-4 h-4 mr-2" /> Expiry Alerts
                   </Button>
-                  <Button variant={activeMedicineTab === 'low_stock' ? 'default' : 'ghost'} size="sm" onClick={() => onMedicineTabChange('low_stock')}>
+                  <Button variant={activeMedicineTab === 'low_stock' ? 'default' : 'ghost'} size="sm" onClick={() => { onMedicineTabChange('low_stock'); setMedicineCurrentPage(1); }}>
                     <PackageMinus className="w-4 h-4 mr-2" /> Low Stock
                   </Button>
-                  <Button variant={activeMedicineTab === 'moving' ? 'default' : 'ghost'} size="sm" onClick={() => onMedicineTabChange('moving')}>
+                  <Button variant={activeMedicineTab === 'moving' ? 'default' : 'ghost'} size="sm" onClick={() => { onMedicineTabChange('moving'); setMedicineCurrentPage(1); }}>
                     <Activity className="w-4 h-4 mr-2" /> Performance (Moving)
                   </Button>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center w-full lg:w-auto">
+                  <div className="relative w-full sm:w-64">
+                    <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                    <Input 
+                      placeholder="Search medicine or batch..." 
+                      className="pl-9 h-9 w-full rounded-full"
+                      value={medicineSearchTerm}
+                      onChange={(e) => {
+                        setMedicineSearchTerm(e.target.value);
+                        setMedicineCurrentPage(1);
+                      }}
+                    />
+                  </div>
+                  <select 
+                    className="h-9 rounded-full border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    value={medicineCategoryFilter}
+                    onChange={(e) => {
+                      setMedicineCategoryFilter(e.target.value);
+                      setMedicineCurrentPage(1);
+                    }}
+                  >
+                    <option value="">All Categories</option>
+                    {categories?.map((cat: any) => (
+                      <option key={cat.CategoryId} value={cat.CategoryId}>{cat.CategoryName}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
@@ -1597,24 +1643,26 @@ function ReportsPageInner({
                     <>
                       <thead className="bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 border-b border-border sticky top-0">
                         <tr>
-                          <th className="px-4 py-3 font-medium">Medicine</th>
-                          <th className="px-4 py-3 font-medium">Batch</th>
+                          <th className="px-4 py-3 font-medium text-left">Medicine</th>
+                          <th className="px-4 py-3 font-medium text-left">Batch</th>
+                          <th className="px-4 py-3 font-medium text-left">Supplier</th>
                           <th className="px-4 py-3 font-medium text-right">Qty</th>
-                          <th className="px-4 py-3 font-medium">Expiry Date</th>
+                          <th className="px-4 py-3 font-medium text-right">Expiry Date</th>
                           <th className="px-4 py-3 font-medium text-right">Days Left</th>
-                          <th className="px-4 py-3 font-medium">Status</th>
+                          <th className="px-4 py-3 font-medium text-left">Status</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-border">
                         {data.expiry_items && data.expiry_items.length > 0 ? (
                           data.expiry_items.map((t: any, idx: number) => (
                             <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
-                              <td className="px-4 py-3 font-medium text-foreground">{t.MedicineName}</td>
-                              <td className="px-4 py-3">{t.BatchCode}</td>
+                              <td className="px-4 py-3 font-medium text-foreground text-left">{t.MedicineName}</td>
+                              <td className="px-4 py-3 text-left">{t.BatchCode}</td>
+                              <td className="px-4 py-3 text-left">{t.SupplierName || '-'}</td>
                               <td className="px-4 py-3 text-right">{t.Quantity}</td>
-                              <td className="px-4 py-3">{new Date(t.ExpiryDate).toLocaleDateString()}</td>
+                              <td className="px-4 py-3 text-right">{new Date(t.ExpiryDate).toLocaleDateString()}</td>
                               <td className="px-4 py-3 text-right font-medium">{t.DaysToExpiry}</td>
-                              <td className="px-4 py-3">
+                              <td className="px-4 py-3 text-left">
                                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                                   t.Status === 'Expired' ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700'
                                 }`}>
@@ -1624,7 +1672,7 @@ function ReportsPageInner({
                             </tr>
                           ))
                         ) : (
-                          <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">No expiry alerts found.</td></tr>
+                          <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">No expiry alerts found.</td></tr>
                         )}
                       </tbody>
                     </>
@@ -1634,8 +1682,9 @@ function ReportsPageInner({
                     <>
                       <thead className="bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 border-b border-border sticky top-0">
                         <tr>
-                          <th className="px-4 py-3 font-medium">Medicine</th>
-                          <th className="px-4 py-3 font-medium">Category</th>
+                          <th className="px-4 py-3 font-medium text-left">Medicine</th>
+                          <th className="px-4 py-3 font-medium text-left">Category</th>
+                          <th className="px-4 py-3 font-medium text-left">Supplier</th>
                           <th className="px-4 py-3 font-medium text-right text-rose-600">Current Stock</th>
                           <th className="px-4 py-3 font-medium text-right">Reorder Level</th>
                           <th className="px-4 py-3 font-medium text-right">Deficit</th>
@@ -1646,8 +1695,9 @@ function ReportsPageInner({
                         {data.low_stock_items && data.low_stock_items.length > 0 ? (
                           data.low_stock_items.map((t: any, idx: number) => (
                             <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
-                              <td className="px-4 py-3 font-medium text-foreground">{t.MedicineName}</td>
-                              <td className="px-4 py-3">{t.Category}</td>
+                              <td className="px-4 py-3 font-medium text-foreground text-left">{t.MedicineName}</td>
+                              <td className="px-4 py-3 text-left">{t.Category}</td>
+                              <td className="px-4 py-3 text-left">{t.SupplierName || '-'}</td>
                               <td className="px-4 py-3 text-right font-bold text-rose-600">{t.CurrentStock}</td>
                               <td className="px-4 py-3 text-right">{t.ReorderLevel}</td>
                               <td className="px-4 py-3 text-right">{t.Deficit}</td>
@@ -1655,7 +1705,7 @@ function ReportsPageInner({
                             </tr>
                           ))
                         ) : (
-                          <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">No low stock items found.</td></tr>
+                          <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">No low stock items found.</td></tr>
                         )}
                       </tbody>
                     </>
@@ -1665,22 +1715,26 @@ function ReportsPageInner({
                     <>
                       <thead className="bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 border-b border-border sticky top-0">
                         <tr>
-                          <th className="px-4 py-3 font-medium">Medicine</th>
+                          <th className="px-4 py-3 font-medium text-left">Medicine</th>
+                          <th className="px-4 py-3 font-medium text-left">Category</th>
+                          <th className="px-4 py-3 font-medium text-left">Supplier</th>
                           <th className="px-4 py-3 font-medium text-right">Sold Quantity</th>
                           <th className="px-4 py-3 font-medium text-right">Velocity (Units/Day)</th>
                           <th className="px-4 py-3 font-medium text-right">Revenue</th>
-                          <th className="px-4 py-3 font-medium">Classification</th>
+                          <th className="px-4 py-3 font-medium text-left">Classification</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-border">
                         {data.movement_items && data.movement_items.length > 0 ? (
                           data.movement_items.map((t: any, idx: number) => (
                             <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
-                              <td className="px-4 py-3 font-medium text-foreground">{t.MedicineName}</td>
+                              <td className="px-4 py-3 font-medium text-foreground text-left">{t.MedicineName}</td>
+                              <td className="px-4 py-3 text-left">{t.Category}</td>
+                              <td className="px-4 py-3 text-left">{t.SupplierName || '-'}</td>
                               <td className="px-4 py-3 text-right font-medium">{t.SoldQuantity}</td>
                               <td className="px-4 py-3 text-right">{t.SalesVelocity}</td>
                               <td className="px-4 py-3 text-right text-muted-foreground">Rs {t.Revenue.toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
-                              <td className="px-4 py-3">
+                              <td className="px-4 py-3 text-left">
                                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                                   t.Classification === 'Fast Moving' ? 'bg-emerald-100 text-emerald-700' : 
                                   t.Classification === 'Slow Moving' ? 'bg-amber-100 text-amber-700' : 
@@ -1693,7 +1747,7 @@ function ReportsPageInner({
                             </tr>
                           ))
                         ) : (
-                          <tr><td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">No movement data found for the selected period.</td></tr>
+                          <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">No movement data found for the selected period.</td></tr>
                         )}
                       </tbody>
                     </>
@@ -1701,6 +1755,32 @@ function ReportsPageInner({
 
                 </table>
               </div>
+
+              {data.pagination && (
+                <div className="flex items-center justify-between px-4 py-3 border-t border-border bg-slate-50 dark:bg-slate-900/50">
+                  <div className="text-sm text-muted-foreground">
+                    Showing <span className="font-medium">{(data.pagination.page - 1) * data.pagination.page_size + 1}</span> to <span className="font-medium">{Math.min(data.pagination.page * data.pagination.page_size, data.pagination.total)}</span> of <span className="font-medium">{data.pagination.total}</span> entries
+                  </div>
+                  <div className="flex gap-1">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setMedicineCurrentPage(p => Math.max(1, p - 1))}
+                      disabled={data.pagination.page === 1}
+                    >
+                      Previous
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setMedicineCurrentPage(p => p + 1)}
+                      disabled={data.pagination.page * data.pagination.page_size >= data.pagination.total}
+                    >
+                      Next
+                    </Button>
+                  </div>
+                </div>
+              )}
             </Card>
           </div>
         </div>

@@ -26,7 +26,7 @@ from schemas.reports import (
     SalesReportResponse, SalesReportSummary, SalesTransaction, SalesTrendPoint, PaymentMethodStats, TopMedicineStats,
     PurchaseReportResponse, PurchaseReportSummary, PurchaseTransaction, PurchaseTrendPoint, SupplierStats, TopPurchasedMedicineStats,
     InventoryReportResponse, InventoryReportSummary, InventoryMovementSummary, InventoryStockItem, StockValueByCategory, MedicineMovementItem,
-    MedicineReportResponse, MedicineReportSummary, MedicineExpiryItem, MedicineLowStockItem, MedicineMovementAnalyticsItem
+    MedicineReportResponse, MedicineReportSummary, MedicineExpiryItem, MedicineLowStockItem, MedicineMovementAnalyticsItem, PaginationMetadata
 )
 
 
@@ -655,16 +655,51 @@ def export_inventory_report_csv(
     return response
 
 
-def fetch_medicine_report_data(db: Session, start_date: date, end_date: date):
+def fetch_medicine_report_data(
+    db: Session, 
+    start_date: date, 
+    end_date: date,
+    report_type: str = None,
+    search: str = None,
+    category_id: int = None,
+    page: int = 1,
+    page_size: int = 10
+):
+    from sqlalchemy import select
     today = date.today()
     
-    # 1. Expiry Items (excluding qty 0)
+    # --- 1. Expiry Items (Batch-level) ---
     expiry_items = []
     total_expired = 0
     expiring_soon = 0
     
-    active_batches = db.query(models.StockBatch, models.Medicine).join(models.Medicine, models.StockBatch.MedicineId == models.Medicine.MedicineId).filter(models.StockBatch.Quantity > 0).all()
-    for batch, medicine in active_batches:
+    q_expiry = db.query(
+        models.StockBatch, 
+        models.Medicine, 
+        models.Supplier.Name.label('supplier_name')
+    ).join(models.Medicine, models.StockBatch.MedicineId == models.Medicine.MedicineId)\
+     .outerjoin(
+        models.PurchaseItem, 
+        (models.PurchaseItem.MedicineId == models.StockBatch.MedicineId) & 
+        (models.PurchaseItem.BatchCode == models.StockBatch.BatchCode)
+     ).outerjoin(models.Purchase, models.PurchaseItem.PurchaseId == models.Purchase.PurchaseId)\
+     .outerjoin(models.Supplier, models.Purchase.SupplierId == models.Supplier.SupplierId)\
+     .filter(models.StockBatch.Quantity > 0)
+     
+    if category_id:
+        q_expiry = q_expiry.filter(models.Medicine.CategoryId == category_id)
+    if search:
+        q_expiry = q_expiry.filter(
+            (models.Medicine.BrandName.ilike(f"%{search}%")) | 
+            (models.StockBatch.BatchCode.ilike(f"%{search}%"))
+        )
+        
+    seen_batches = set()
+    for batch, medicine, supplier_name in q_expiry.all():
+        if batch.BatchId in seen_batches:
+            continue
+        seen_batches.add(batch.BatchId)
+        
         if not batch.ExpiryDate: continue
         days_to_expiry = (batch.ExpiryDate - today).days
         status = ''
@@ -680,6 +715,10 @@ def fetch_medicine_report_data(db: Session, start_date: date, end_date: date):
         else:
             status = 'Safe'
             
+        if report_type == 'expiry' and start_date and end_date:
+            if batch.ExpiryDate < start_date or batch.ExpiryDate > end_date:
+                continue
+
         if status != 'Safe':
             expiry_items.append(MedicineExpiryItem(
                 MedicineName=medicine.BrandName,
@@ -687,17 +726,37 @@ def fetch_medicine_report_data(db: Session, start_date: date, end_date: date):
                 Quantity=batch.Quantity,
                 ExpiryDate=batch.ExpiryDate,
                 DaysToExpiry=days_to_expiry,
-                Status=status
+                Status=status,
+                SupplierName=supplier_name
             ))
             
     expiry_items.sort(key=lambda x: x.DaysToExpiry)
+
+    # --- 2. Medicine-level (Low Stock & Performance) ---
+    subq = select(models.Supplier.Name).select_from(models.PurchaseItem)\
+        .join(models.Purchase)\
+        .join(models.Supplier)\
+        .where(models.PurchaseItem.MedicineId == models.Medicine.MedicineId)\
+        .order_by(models.Purchase.PurchaseDate.desc())\
+        .limit(1).scalar_subquery()
+
+    q_meds = db.query(
+        models.Medicine,
+        models.Category,
+        subq.label('supplier_name')
+    ).outerjoin(models.Category, models.Medicine.CategoryId == models.Category.CategoryId)
+
+    if category_id:
+        q_meds = q_meds.filter(models.Medicine.CategoryId == category_id)
+    if search:
+        q_meds = q_meds.filter(models.Medicine.BrandName.ilike(f"%{search}%"))
+        
+    medicines_data = q_meds.all()
     
-    # 2. Low Stock Items & Active Medicines
+    # 2a. Low Stock
     low_stock_items = []
-    medicines = db.query(models.Medicine).all()
     active_medicines = set()
-    
-    for med in medicines:
+    for med, cat, supplier_name in medicines_data:
         current_stock = sum(b.Quantity for b in med.batches if b.Quantity > 0)
         if current_stock > 0:
             active_medicines.add(med.MedicineId)
@@ -708,17 +767,18 @@ def fetch_medicine_report_data(db: Session, start_date: date, end_date: date):
             suggested = max((reorder_level * 2) - current_stock, 0)
             low_stock_items.append(MedicineLowStockItem(
                 MedicineName=med.BrandName,
-                Category=med.category.Name if med.category and hasattr(med.category, 'Name') else 'Uncategorized',
+                Category=cat.CategoryName if cat else 'Uncategorized',
                 CurrentStock=current_stock,
                 ReorderLevel=reorder_level,
                 Deficit=deficit,
-                SuggestedReorderQty=suggested
+                SuggestedReorderQty=suggested,
+                SupplierName=supplier_name
             ))
             
     low_stock_items.sort(key=lambda x: x.Deficit, reverse=True)
-    
-    # 3. Moving Items (Sales Velocity & Dead Stock)
-    days_in_range = (end_date - start_date).days
+
+    # 2b. Moving Items
+    days_in_range = (end_date - start_date).days if (start_date and end_date) else 30
     if days_in_range <= 0: days_in_range = 1
     
     movement_items = []
@@ -726,48 +786,52 @@ def fetch_medicine_report_data(db: Session, start_date: date, end_date: date):
     slow_count = 0
     dead_count = 0
     
-    # Get sales grouped by medicine for the date range
-    sales_data = db.query(
+    q_sales = db.query(
         models.StockBatch.MedicineId.label('medicine_id'),
         func.sum(models.SaleItem.Quantity).label('sold_qty'),
         func.sum(models.SaleItem.TotalPrice).label('revenue')
-    ).select_from(models.SaleItem).join(models.Sale).join(models.StockBatch).filter(
-        func.date(models.Sale.TransactionDate) >= start_date,
-        func.date(models.Sale.TransactionDate) <= end_date
-    ).group_by(models.StockBatch.MedicineId).all()
+    ).select_from(models.SaleItem).join(models.Sale).join(models.StockBatch)
     
+    if start_date and end_date:
+        q_sales = q_sales.filter(
+            func.date(models.Sale.TransactionDate) >= start_date,
+            func.date(models.Sale.TransactionDate) <= end_date
+        )
+    
+    sales_data = q_sales.group_by(models.StockBatch.MedicineId).all()
     sales_map = {item.medicine_id: {'sold_qty': item.sold_qty, 'revenue': item.revenue} for item in sales_data}
     
-    for med in medicines:
+    for med, cat, supplier_name in medicines_data:
         stats = sales_map.get(med.MedicineId, {'sold_qty': 0, 'revenue': 0})
         sold_qty = stats['sold_qty'] or 0
         revenue = stats['revenue'] or 0
         
-        velocity = sold_qty / days_in_range
+        velocity = float(sold_qty) / days_in_range
         
         classification = 'Normal'
         if sold_qty == 0 and med.MedicineId in active_medicines and days_in_range >= 60:
             classification = 'Dead Stock'
             dead_count += 1
-        elif velocity >= 2.0:  # Fast Moving Threshold
+        elif velocity >= 2.0:
             classification = 'Fast Moving'
             fast_count += 1
-        elif velocity < 0.5 and med.MedicineId in active_medicines: # Slow Moving Threshold
+        elif velocity < 0.5 and med.MedicineId in active_medicines:
             classification = 'Slow Moving'
             slow_count += 1
             
         if classification != 'Normal':
             movement_items.append(MedicineMovementAnalyticsItem(
                 MedicineName=med.BrandName,
-                Category=med.category.Name if med.category and hasattr(med.category, 'Name') else 'Uncategorized',
+                Category=cat.CategoryName if cat else 'Uncategorized',
                 SoldQuantity=sold_qty,
                 SalesVelocity=round(velocity, 2),
                 Revenue=float(revenue),
-                Classification=classification
+                Classification=classification,
+                SupplierName=supplier_name
             ))
-        
+            
     movement_items.sort(key=lambda x: x.SalesVelocity, reverse=True)
-    
+
     summary = MedicineReportSummary(
         TotalExpiredBatches=total_expired,
         ExpiringSoonBatches=expiring_soon,
@@ -776,50 +840,87 @@ def fetch_medicine_report_data(db: Session, start_date: date, end_date: date):
         SlowMovingCount=slow_count,
         DeadStockCount=dead_count
     )
-    
+
+    # --- Pagination ---
+    target_list = []
+    if report_type == 'expiry':
+        target_list = expiry_items
+    elif report_type == 'low_stock':
+        target_list = low_stock_items
+    elif report_type == 'moving':
+        target_list = movement_items
+    else:
+        # Default behavior: return all without pagination
+        return MedicineReportResponse(
+            summary=summary,
+            expiry_items=expiry_items,
+            low_stock_items=low_stock_items,
+            movement_items=movement_items,
+            pagination=None
+        )
+
+    total = len(target_list)
+    if page_size > 0:
+        start_idx = (page - 1) * page_size
+        end_idx = start_idx + page_size
+        paginated_list = target_list[start_idx:end_idx]
+    else:
+        paginated_list = target_list
+
+    pagination_meta = PaginationMetadata(total=total, page=page, page_size=page_size)
+
     return MedicineReportResponse(
         summary=summary,
-        expiry_items=expiry_items,
-        low_stock_items=low_stock_items,
-        movement_items=movement_items
+        expiry_items=paginated_list if report_type == 'expiry' else [],
+        low_stock_items=paginated_list if report_type == 'low_stock' else [],
+        movement_items=paginated_list if report_type == 'moving' else [],
+        pagination=pagination_meta
     )
 
 @router.get("/medicine", response_model=MedicineReportResponse)
 def get_medicine_reports(
+    report_type: str = Query(None, description="Type of report: expiry, low_stock, or moving"),
+    search: str = Query(None),
+    category_id: int = Query(None),
+    page: int = Query(1),
+    page_size: int = Query(10),
     timeframe: str = Query("last_30_days", description="Timeframe for moving items analysis"),
     start_date: str = Query(None),
     end_date: str = Query(None),
     db: Session = Depends(get_db)
 ):
     sd, ed = get_reports_date_range(timeframe, start_date, end_date)
-    return fetch_medicine_report_data(db, sd, ed)
+    return fetch_medicine_report_data(db, sd, ed, report_type, search, category_id, page, page_size)
 
 @router.get("/medicine/export/csv")
 def export_medicine_report_csv(
     report_type: str = Query(..., description="Type of report: expiry, low_stock, or moving"),
+    search: str = Query(None),
+    category_id: int = Query(None),
     timeframe: str = Query("last_30_days"),
     start_date: str = Query(None),
     end_date: str = Query(None),
     db: Session = Depends(get_db)
 ):
     sd, ed = get_reports_date_range(timeframe, start_date, end_date)
-    data = fetch_medicine_report_data(db, sd, ed)
+    # Use page_size=0 to fetch all matches without pagination
+    data = fetch_medicine_report_data(db, sd, ed, report_type, search, category_id, 1, 0)
     
     output = io.StringIO()
     writer = csv.writer(output)
     
     if report_type == "expiry":
-        writer.writerow(["Medicine Name", "Batch Code", "Quantity", "Expiry Date", "Days to Expiry", "Status"])
+        writer.writerow(["Medicine Name", "Batch Code", "Quantity", "Expiry Date", "Days to Expiry", "Supplier", "Status"])
         for item in data.expiry_items:
-            writer.writerow([item.MedicineName, item.BatchCode, item.Quantity, item.ExpiryDate.strftime("%Y-%m-%d"), item.DaysToExpiry, item.Status])
+            writer.writerow([item.MedicineName, item.BatchCode, item.Quantity, item.ExpiryDate.strftime("%Y-%m-%d"), item.DaysToExpiry, item.SupplierName or "", item.Status])
     elif report_type == "low_stock":
-        writer.writerow(["Medicine Name", "Category", "Current Stock", "Reorder Level", "Deficit", "Suggested Reorder Qty"])
+        writer.writerow(["Medicine Name", "Category", "Supplier", "Current Stock", "Reorder Level", "Deficit", "Suggested Reorder Qty"])
         for item in data.low_stock_items:
-            writer.writerow([item.MedicineName, item.Category, item.CurrentStock, item.ReorderLevel, item.Deficit, item.SuggestedReorderQty])
+            writer.writerow([item.MedicineName, item.Category, item.SupplierName or "", item.CurrentStock, item.ReorderLevel, item.Deficit, item.SuggestedReorderQty])
     elif report_type == "moving":
-        writer.writerow(["Medicine Name", "Category", "Sold Quantity", "Sales Velocity (units/day)", "Revenue", "Classification"])
+        writer.writerow(["Medicine Name", "Category", "Supplier", "Sold Quantity", "Sales Velocity (units/day)", "Revenue", "Classification"])
         for item in data.movement_items:
-            writer.writerow([item.MedicineName, item.Category, item.SoldQuantity, item.SalesVelocity, item.Revenue, item.Classification])
+            writer.writerow([item.MedicineName, item.Category, item.SupplierName or "", item.SoldQuantity, item.SalesVelocity, item.Revenue, item.Classification])
     else:
         return Response(status_code=400, content="Invalid report type")
         
@@ -1501,40 +1602,95 @@ def export_inventory_report_pdf(req: dict = Body(...), db: Session = Depends(get
 def export_medicine_report_pdf(req: dict = Body(...), db: Session = Depends(get_db)):
     req = PDFExportRequest(**req)
     sd, ed = get_reports_date_range(req.timeframe, req.start_date, req.end_date)
-    report_data = fetch_medicine_report_data(db, sd, ed)
+    # Using page_size=0 to ensure we have all data without limit
+    report_data = fetch_medicine_report_data(db, sd, ed, req.report_type, None, None, 1, 0)
     
     output = io.BytesIO()
     doc = SimpleDocTemplate(output, pagesize=A4)
     elements = []
     styles = getSampleStyleSheet()
     
-    elements.append(Paragraph(f"Medicine {req.report_type.capitalize()} Report", styles['Title']))
-    elements.append(Spacer(1, 12))
+    title_map = {
+        'expiry': 'Medicine Expiry Alerts',
+        'low_stock': 'Medicine Low Stock Report',
+        'moving': 'Medicine Performance Report'
+    }
+    
+    elements.extend(build_premium_header(title_map.get(req.report_type, "Medicine Report"), f"Period: {sd} to {ed}" if req.report_type == 'moving' else f"Snapshot As Of: {ed}"))
+    
+    kpi_data = [
+        ("Total Expired Batches", str(report_data.summary.TotalExpiredBatches), "#EF4444"),
+        ("Expiring Soon (90d)", str(report_data.summary.ExpiringSoonBatches), "#F59E0B"),
+        ("Low Stock", str(report_data.summary.LowStockMedicines), "#6366F1"),
+        ("Fast Moving", str(report_data.summary.FastMovingCount), "#10B981"),
+    ]
+    elements.extend(build_kpi_table(kpi_data))
     
     embed_chart_in_pdf(elements, req.chart_image)
     
     if req.report_type == 'expiry':
-        data = [['Med ID', 'Brand Name', 'Batch', 'Stock Qty', 'Expiry Date', 'Days', 'Risk']]
+        data = [['Medicine', 'Batch', 'Supplier', 'Qty', 'Expiry Date', 'Days', 'Status']]
         for t in report_data.expiry_items[:200]:
-            data.append([str(t.MedicineId), t.MedicineName[:15], getattr(t, 'BatchNumber', 'N/A'), str(getattr(t, 'StockQuantity', 0)), getattr(t, 'ExpiryDate', '').strftime("%Y-%m-%d") if getattr(t, 'ExpiryDate', None) else 'N/A', str(getattr(t, 'DaysToExpiry', 0)), getattr(t, 'RiskLevel', 'Unknown')])
+            data.append([
+                t.MedicineName[:15],
+                t.BatchCode,
+                t.SupplierName[:15] if getattr(t, 'SupplierName', None) else '-',
+                str(t.Quantity),
+                t.ExpiryDate.strftime("%Y-%m-%d") if getattr(t, 'ExpiryDate', None) else 'N/A',
+                str(t.DaysToExpiry),
+                t.Status
+            ])
     elif req.report_type == 'low_stock':
-        data = [['Med ID', 'Brand Name', 'Current Stock', 'Min Level', 'Reorder Qty', 'Status']]
+        data = [['Medicine', 'Category', 'Supplier', 'Stock', 'Reorder Level', 'Deficit', 'Suggested']]
         for t in report_data.low_stock_items[:200]:
-            data.append([str(getattr(t, 'MedicineId', 'N/A')), t.MedicineName[:15], str(getattr(t, 'CurrentStock', 0)), str(getattr(t, 'ReorderLevel', 0)), str(getattr(t, 'SuggestedReorderQty', 0)), 'Low Stock'])
+            data.append([
+                t.MedicineName[:15],
+                t.Category[:10],
+                t.SupplierName[:15] if getattr(t, 'SupplierName', None) else '-',
+                str(getattr(t, 'CurrentStock', 0)),
+                str(getattr(t, 'ReorderLevel', 0)),
+                str(getattr(t, 'Deficit', 0)),
+                str(getattr(t, 'SuggestedReorderQty', 0))
+            ])
     else:
-        data = [['Med ID', 'Brand Name', 'Qty Sold', 'Revenue', 'Avg Daily', 'Stock', 'Class']]
+        data = [['Medicine', 'Category', 'Supplier', 'Qty Sold', 'Velocity/Day', 'Revenue', 'Classification']]
         for t in report_data.movement_items[:200]:
-            data.append([str(getattr(t, 'MedicineId', 'N/A')), t.MedicineName[:15], str(getattr(t, 'SoldQuantity', 0)), str(round(getattr(t, 'Revenue', 0.0), 2)), str(round(getattr(t, 'SalesVelocity', 0.0), 2)), '0', getattr(t, 'Classification', 'Unknown')])
+            data.append([
+                t.MedicineName[:15],
+                t.Category[:10],
+                t.SupplierName[:15] if getattr(t, 'SupplierName', None) else '-',
+                str(getattr(t, 'SoldQuantity', 0)),
+                str(round(getattr(t, 'SalesVelocity', 0.0), 2)),
+                str(round(getattr(t, 'Revenue', 0.0), 2)),
+                getattr(t, 'Classification', 'Unknown')
+            ])
             
     t = Table(data, repeatRows=1)
     t.setStyle(TableStyle([
-        ('BACKGROUND', (0,0), (-1,0), colors.grey),
-        ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
+        ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#1E293B')),
+        ('TEXTCOLOR', (0,0), (-1,0), colors.HexColor('#FFFFFF')),
         ('ALIGN', (0,0), (-1,-1), 'CENTER'),
         ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
-        ('GRID', (0,0), (-1,-1), 1, colors.black)
+        ('FONTSIZE', (0,0), (-1,0), 12),
+        ('BOTTOMPADDING', (0,0), (-1,0), 14),
+        ('TOPPADDING', (0,0), (-1,0), 14),
+        
+        ('ROWBACKGROUNDS', (0,1), (-1,-1), [colors.HexColor('#FFFFFF'), colors.HexColor('#F1F5F9')]),
+        ('FONTNAME', (0,1), (-1,-1), 'Helvetica'),
+        ('FONTSIZE', (0,1), (-1,-1), 10),
+        ('BOTTOMPADDING', (0,1), (-1,-1), 10),
+        ('TOPPADDING', (0,1), (-1,-1), 10),
+        
+        ('LINEBELOW', (0,0), (-1,0), 2, colors.HexColor('#3B82F6')), 
+        ('INNERGRID', (0,0), (-1,-1), 0.5, colors.HexColor('#E2E8F0')),
+        ('BOX', (0,0), (-1,-1), 1.5, colors.HexColor('#94A3B8')),
     ]))
     elements.append(t)
+    
+    if (req.report_type == 'expiry' and len(report_data.expiry_items) > 200) or \
+       (req.report_type == 'low_stock' and len(report_data.low_stock_items) > 200) or \
+       (req.report_type == 'moving' and len(report_data.movement_items) > 200):
+        elements.append(Paragraph("(Showing first 200 records. Export to CSV for full list.)", styles['Normal']))
     
     doc.build(elements)
     response = Response(content=output.getvalue(), media_type="application/pdf")

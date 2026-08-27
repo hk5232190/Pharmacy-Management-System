@@ -141,6 +141,7 @@ class MedicineExpiryItem(BaseModel):
     ExpiryDate: datetime
     DaysToExpiry: int
     Status: str
+    SupplierName: Optional[str] = None
 
 class MedicineLowStockItem(BaseModel):
     MedicineName: str
@@ -149,6 +150,7 @@ class MedicineLowStockItem(BaseModel):
     ReorderLevel: int
     Deficit: int
     SuggestedReorderQty: int
+    SupplierName: Optional[str] = None
 
 class MedicineMovementAnalyticsItem(BaseModel):
     MedicineName: str
@@ -157,6 +159,7 @@ class MedicineMovementAnalyticsItem(BaseModel):
     SalesVelocity: float
     Revenue: float
     Classification: str
+    SupplierName: Optional[str] = None
 
 class MedicineReportSummary(BaseModel):
     TotalExpiredBatches: int
@@ -166,11 +169,17 @@ class MedicineReportSummary(BaseModel):
     SlowMovingCount: int
     DeadStockCount: int
 
+class PaginationMetadata(BaseModel):
+    total: int
+    page: int
+    page_size: int
+
 class MedicineReportResponse(BaseModel):
     summary: MedicineReportSummary
-    expiry_items: List[MedicineExpiryItem]
-    low_stock_items: List[MedicineLowStockItem]
+    expiry_items: Optional[List[MedicineExpiryItem]] = None
+    low_stock_items: Optional[List[MedicineLowStockItem]] = None
     movement_items: Optional[List[MedicineMovementAnalyticsItem]] = None
+    pagination: Optional[PaginationMetadata] = None
 
 # Financial Reports Schemas
 class FinancialBreakdownItem(BaseModel):
