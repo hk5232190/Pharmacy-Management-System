@@ -3,7 +3,8 @@
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ChevronRight, Pill, Grid2X2, Building2, Truck, Users } from "lucide-react";
+import { ChevronRight, Pill, Grid2X2, Building2, Truck, Users, RefreshCcw, Check } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { apiClient } from "@/lib/api-client";
 
@@ -81,6 +82,23 @@ export default function MastersLayout({ children }: { children: React.ReactNode 
     customers: 0,
   });
 
+  const [refreshState, setRefreshState] = useState<"idle" | "loading" | "done">("idle");
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const handleRefresh = async () => {
+    if (refreshState === "loading") return;
+    setRefreshState("loading");
+    await fetchCounts();
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent("refresh-masters-tab"));
+    }
+    setRefreshKey(k => k + 1);
+    setTimeout(() => {
+      setRefreshState("done");
+      setTimeout(() => setRefreshState("idle"), 1500);
+    }, 400);
+  };
+
   useEffect(() => {
     fetchCounts();
   }, []);
@@ -104,23 +122,23 @@ export default function MastersLayout({ children }: { children: React.ReactNode 
       setCounts({
         medicines:
           medsRes.status === "fulfilled" && medsRes.value?.success
-            ? (medsRes.value.data?.length ?? medsRes.value.data?.total ?? 0)
+            ? (medsRes.value.total ?? medsRes.value.data?.length ?? 0)
             : 0,
         categories:
           catsRes.status === "fulfilled" && catsRes.value?.success
-            ? (catsRes.value.data?.length ?? 0)
+            ? (catsRes.value.total ?? catsRes.value.data?.length ?? 0)
             : 0,
         companies:
           comsRes.status === "fulfilled" && comsRes.value?.success
-            ? (comsRes.value.data?.length ?? 0)
+            ? (comsRes.value.total ?? comsRes.value.data?.length ?? 0)
             : 0,
         suppliers:
           suppRes.status === "fulfilled" && suppRes.value?.success
-            ? (suppRes.value.data?.length ?? 0)
+            ? (suppRes.value.total ?? suppRes.value.data?.length ?? 0)
             : 0,
         customers:
           custRes.status === "fulfilled" && custRes.value?.success
-            ? (custRes.value.data?.length ?? 0)
+            ? (custRes.value.total ?? custRes.value.data?.length ?? 0)
             : 0,
       });
     } catch {
@@ -132,18 +150,38 @@ export default function MastersLayout({ children }: { children: React.ReactNode 
     <div className="p-6 md:p-8 space-y-6">
 
       {/* Page Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">Masters</h1>
-        <p className="text-muted-foreground mt-1 text-[15px]">
-          Create and maintain all reference data used throughout the pharmacy system.
-        </p>
-
-        {/* Breadcrumbs */}
-        <div className="flex items-center text-sm text-slate-500 mt-4">
-          <Link href="/dashboard" className="hover:text-primary transition-colors">Dashboard</Link>
-          <ChevronRight className="w-4 h-4 mx-1" />
-          <span className="text-foreground font-medium">Masters</span>
+      <div className="flex flex-col md:flex-row justify-between items-start gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Masters</h1>
+          <p className="text-muted-foreground mt-1 text-[15px]">
+            Create and maintain all reference data used throughout the pharmacy system.
+          </p>
+          
+          {/* Breadcrumbs */}
+          <div className="flex items-center text-sm text-slate-500 mt-4">
+            <Link href="/dashboard" className="hover:text-primary transition-colors">Dashboard</Link>
+            <ChevronRight className="w-4 h-4 mx-1" />
+            <span className="text-foreground font-medium">Masters</span>
+          </div>
         </div>
+
+        <Button
+          variant="outline"
+          className={cn(
+            "h-9 gap-2 transition-all duration-300 rounded-full",
+            refreshState === "loading" && "border-primary/40 text-primary",
+            refreshState === "done" && "border-emerald-400 text-emerald-600 dark:text-emerald-400 bg-emerald-50/60 dark:bg-emerald-900/20"
+          )}
+          onClick={handleRefresh}
+          disabled={refreshState === "loading"}
+        >
+          {refreshState === "done" ? (
+            <Check className="h-4 w-4 animate-in zoom-in-50 duration-200" />
+          ) : (
+            <RefreshCcw className={cn("h-4 w-4 transition-transform", refreshState === "loading" && "animate-spin")} />
+          )}
+          {refreshState === "loading" ? "Refreshing..." : refreshState === "done" ? "Updated!" : "Refresh"}
+        </Button>
       </div>
 
       {/* KPI Summary Cards */}
@@ -211,7 +249,7 @@ export default function MastersLayout({ children }: { children: React.ReactNode 
       </div>
 
       {/* Main Tab Content */}
-      <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
+      <div key={refreshKey} className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
         {children}
       </div>
 

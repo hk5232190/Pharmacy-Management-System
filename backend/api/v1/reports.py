@@ -1232,17 +1232,19 @@ def export_financial_report_excel(
 
 def get_premium_styles():
     styles = getSampleStyleSheet()
-    styles.add(ParagraphStyle(name='PremiumTitle', parent=styles['Heading1'], fontName='Helvetica-Bold', fontSize=24, textColor=colors.HexColor('#0F172A'), alignment=TA_CENTER, spaceAfter=20))
-    styles.add(ParagraphStyle(name='PremiumSubtitle', parent=styles['Normal'], fontName='Helvetica', fontSize=12, textColor=colors.HexColor('#64748B'), alignment=TA_CENTER, spaceAfter=30))
-    styles.add(ParagraphStyle(name='HeaderLabel', parent=styles['Normal'], fontName='Helvetica-Bold', fontSize=10, textColor=colors.HexColor('#94A3B8')))
-    styles.add(ParagraphStyle(name='HeaderValue', parent=styles['Normal'], fontName='Helvetica-Bold', fontSize=16, textColor=colors.HexColor('#0F172A')))
+    styles.add(ParagraphStyle(name='PremiumTitle', parent=styles['Heading1'], fontName='Helvetica-Bold', fontSize=28, textColor=colors.HexColor('#1E293B'), alignment=TA_CENTER, spaceAfter=8))
+    styles.add(ParagraphStyle(name='PremiumSubtitle', parent=styles['Normal'], fontName='Helvetica', fontSize=12, textColor=colors.HexColor('#64748B'), alignment=TA_CENTER, spaceAfter=20))
+    styles.add(ParagraphStyle(name='HeaderLabel', parent=styles['Normal'], fontName='Helvetica-Bold', fontSize=11, textColor=colors.HexColor('#475569')))
+    styles.add(ParagraphStyle(name='HeaderValue', parent=styles['Normal'], fontName='Helvetica-Bold', fontSize=18, textColor=colors.HexColor('#0F172A')))
     return styles
 
 def build_premium_header(title_text, subtitle_text):
     styles = get_premium_styles()
     return [
+        Spacer(1, 20),
         Paragraph(title_text, styles['PremiumTitle']),
         Paragraph(subtitle_text, styles['PremiumSubtitle']),
+        Spacer(1, 10),
     ]
 
 def build_kpi_table(kpi_data):
@@ -1254,7 +1256,7 @@ def build_kpi_table(kpi_data):
     for label, value, color in kpi_data:
         cell_data = [
             Paragraph(label, styles['HeaderLabel']),
-            Spacer(1, 5),
+            Spacer(1, 8),
             Paragraph(str(value), ParagraphStyle(name='Temp', parent=styles['HeaderValue'], textColor=colors.HexColor(color)))
         ]
         table_data[0].append(cell_data)
@@ -1264,10 +1266,10 @@ def build_kpi_table(kpi_data):
         ('ALIGN', (0,0), (-1,-1), 'CENTER'),
         ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
         ('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#F8FAFC')),
-        ('BOX', (0,0), (-1,-1), 1, colors.HexColor('#E2E8F0')),
+        ('BOX', (0,0), (-1,-1), 1.5, colors.HexColor('#94A3B8')),
         ('INNERGRID', (0,0), (-1,-1), 1, colors.HexColor('#E2E8F0')),
-        ('TOPPADDING', (0,0), (-1,-1), 15),
-        ('BOTTOMPADDING', (0,0), (-1,-1), 15),
+        ('TOPPADDING', (0,0), (-1,-1), 18),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 18),
     ]))
     return [kpi_table, Spacer(1, 30)]
 
@@ -1342,17 +1344,23 @@ def export_sales_report_pdf(req: dict = Body(...), db: Session = Depends(get_db)
         
     t = Table(data, repeatRows=1)
     t.setStyle(TableStyle([
-        ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#0F172A')),
-        ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
+        ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#1E293B')),
+        ('TEXTCOLOR', (0,0), (-1,0), colors.HexColor('#FFFFFF')),
         ('ALIGN', (0,0), (-1,-1), 'CENTER'),
         ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0,0), (-1,0), 11),
-        ('BOTTOMPADDING', (0,0), (-1,0), 12),
-        ('TOPPADDING', (0,0), (-1,0), 12),
-        ('ROWBACKGROUNDS', (0,1), (-1,-1), [colors.HexColor('#FFFFFF'), colors.HexColor('#F8FAFC')]),
-        ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#E2E8F0')),
+        ('FONTSIZE', (0,0), (-1,0), 12),
+        ('BOTTOMPADDING', (0,0), (-1,0), 14),
+        ('TOPPADDING', (0,0), (-1,0), 14),
+        
+        ('ROWBACKGROUNDS', (0,1), (-1,-1), [colors.HexColor('#FFFFFF'), colors.HexColor('#F1F5F9')]),
         ('FONTNAME', (0,1), (-1,-1), 'Helvetica'),
         ('FONTSIZE', (0,1), (-1,-1), 10),
+        ('BOTTOMPADDING', (0,1), (-1,-1), 10),
+        ('TOPPADDING', (0,1), (-1,-1), 10),
+        
+        ('LINEBELOW', (0,0), (-1,0), 2, colors.HexColor('#3B82F6')), 
+        ('INNERGRID', (0,0), (-1,-1), 0.5, colors.HexColor('#E2E8F0')),
+        ('BOX', (0,0), (-1,-1), 1.5, colors.HexColor('#94A3B8')),
     ]))
     elements.append(t)
     

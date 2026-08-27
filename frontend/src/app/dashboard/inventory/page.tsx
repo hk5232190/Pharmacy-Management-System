@@ -120,6 +120,24 @@ interface AuditLogEntry {
 }
 
 export default function InventoryManagementPage() {
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [refreshState, setRefreshState] = useState<"idle" | "loading" | "done">("idle");
+  const [activeTab, setActiveTab] = useState("current");
+  
+  const handleRefresh = () => {
+    if (refreshState === "loading") return;
+    setRefreshState("loading");
+    setRefreshKey(k => k + 1);
+    setTimeout(() => {
+      setRefreshState("done");
+      setTimeout(() => setRefreshState("idle"), 1500);
+    }, 400);
+  };
+
+  return <InventoryManagementPageInner key={refreshKey} refreshState={refreshState} onRefresh={handleRefresh} activeTab={activeTab} onTabChange={setActiveTab} />;
+}
+
+function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTabChange }: { onRefresh: () => void, refreshState: "idle" | "loading" | "done", activeTab: string, onTabChange: (tab: string) => void }) {
   const { profile } = useProfile();
   const router = useRouter();
   const [summary, setSummary] = useState<InventorySummary>({
@@ -145,7 +163,7 @@ export default function InventoryManagementPage() {
   const [movementList, setMovementList] = useState<StockMovement[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("current");
+  // (activeTab is now managed by the wrapper so it survives a refresh reset)
   
   // Filters
   const [searchQuery, setSearchQuery] = useState("");
@@ -184,7 +202,7 @@ export default function InventoryManagementPage() {
   const exportRef = useRef<HTMLDivElement>(null);
 
   // Premium refresh state: 'idle' | 'loading' | 'done'
-  const [refreshState, setRefreshState] = useState<"idle" | "loading" | "done">("idle");
+  // (refreshState is now managed by the wrapper)
 
   // Movement pagination
   const [movPageSize] = useState(20);
@@ -360,14 +378,7 @@ export default function InventoryManagementPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [expiryTimeframe, expiryPage, expirySearch, expirySupplierFilter, activeTab]);
 
-  // Premium refresh handler — shows spinner then checkmark briefly
-  const handleRefresh = async () => {
-    if (refreshState === "loading") return;
-    setRefreshState("loading");
-    await fetchData();
-    setRefreshState("done");
-    setTimeout(() => setRefreshState("idle"), 1500);
-  };
+  // (handleRefresh is now managed by the wrapper and passed as onRefresh prop)
 
   // Export current stock list to CSV
   const exportStockCSV = () => {
@@ -787,11 +798,30 @@ export default function InventoryManagementPage() {
       <div className="flex-1 overflow-auto custom-scrollbar p-6 print-content">
         
         {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-foreground">Inventory Management</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Monitor stock levels, manage inventory movements, track medicine expiry, and maintain accurate stock records.
-          </p>
+        <div className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Inventory Management</h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              Monitor stock levels, manage inventory movements, track medicine expiry, and maintain accurate stock records.
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            className={cn(
+              "h-9 gap-2 transition-all duration-300 rounded-full",
+              refreshState === "loading" && "border-primary/40 text-primary",
+              refreshState === "done" && "border-emerald-400 text-emerald-600 dark:text-emerald-400 bg-emerald-50/60 dark:bg-emerald-900/20"
+            )}
+            onClick={onRefresh}
+            disabled={refreshState === "loading"}
+          >
+            {refreshState === "done" ? (
+              <Check className="h-4 w-4 animate-in zoom-in-50 duration-200" />
+            ) : (
+              <RefreshCcw className={cn("h-4 w-4 transition-transform", refreshState === "loading" && "animate-spin")} />
+            )}
+            {refreshState === "loading" ? "Refreshing..." : refreshState === "done" ? "Updated!" : "Refresh"}
+          </Button>
         </div>
 
         {/* KPI Cards */}
@@ -866,7 +896,7 @@ export default function InventoryManagementPage() {
             {tabs.map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => onTabChange(tab.id)}
                 className={cn(
                   "px-6 py-2.5 font-medium text-sm rounded-t-lg transition-colors whitespace-nowrap",
                   activeTab === tab.id 
@@ -879,28 +909,6 @@ export default function InventoryManagementPage() {
             ))}
           </div>
 
-          <div className="flex items-center gap-2 pb-2">
-
-
-            {/* Premium Refresh Button */}
-            <Button
-              variant="outline"
-              className={cn(
-                "h-9 gap-2 transition-all duration-300",
-                refreshState === "loading" && "border-primary/40 text-primary",
-                refreshState === "done" && "border-emerald-400 text-emerald-600 dark:text-emerald-400 bg-emerald-50/60 dark:bg-emerald-900/20"
-              )}
-              onClick={handleRefresh}
-              disabled={refreshState === "loading"}
-            >
-              {refreshState === "done" ? (
-                <Check className="h-4 w-4 animate-in zoom-in-50 duration-200" />
-              ) : (
-                <RefreshCcw className={cn("h-4 w-4 transition-transform", refreshState === "loading" && "animate-spin")} />
-              )}
-              {refreshState === "loading" ? "Refreshing..." : refreshState === "done" ? "Updated!" : "Refresh"}
-            </Button>
-          </div>
         </div>
 
         {/* Current Stock Tab Content */}

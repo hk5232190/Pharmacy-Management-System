@@ -96,6 +96,13 @@ export default function CustomersPage() {
     return () => clearTimeout(timer);
   }, [search, filterStatus, page, pageSize]);
 
+  useEffect(() => {
+    const handleMastersRefresh = () => fetchCustomers();
+    window.addEventListener("refresh-masters-tab", handleMastersRefresh);
+    return () => window.removeEventListener("refresh-masters-tab", handleMastersRefresh);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, filterStatus, page, pageSize]);
+
   const handleToggleStatus = async (id: number) => {
     try {
       const res = await fetch(`http://127.0.0.1:8000/api/v1/customers/${id}/status`, { method: "PUT" });

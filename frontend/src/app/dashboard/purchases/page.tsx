@@ -4,7 +4,9 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { 
   ShoppingCart, DollarSign, Undo2, Users, FileText, 
   Search, Plus, Save, Printer, Eye, X, Trash2, Calendar,
-  ArrowDownToLine, CreditCard, ChevronLeft, ChevronRight
+  ArrowDownToLine, CreditCard, ChevronLeft, ChevronRight,
+  RefreshCcw,
+  Check
 } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -69,10 +71,29 @@ interface PurchaseHistory {
   items: HistoryItem[];
 }
 
-export default function PurchasesPage() {
+export default function PurchaseManagementPageWrapper() {
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [refreshState, setRefreshState] = useState<"idle" | "loading" | "done">("idle");
+  
+  const handleRefresh = () => {
+    if (refreshState === "loading") return;
+    setRefreshState("loading");
+    setRefreshKey(k => k + 1);
+    setTimeout(() => {
+      setRefreshState("done");
+      setTimeout(() => setRefreshState("idle"), 1500);
+    }, 400);
+  };
+
+  const [activeTab, setActiveTab] = useState<"invoice" | "history" | "returns">("invoice");
+
+  return <PurchaseManagementPage key={refreshKey} refreshState={refreshState} onRefresh={handleRefresh} activeTab={activeTab} onTabChange={setActiveTab} />;
+}
+
+function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChange }: { onRefresh: () => void, refreshState: "idle" | "loading" | "done", activeTab: "invoice" | "history" | "returns", onTabChange: (tab: "invoice" | "history" | "returns") => void }) {
   const { formatNumber } = useSystemPreferences();
   // --- Tabs ---
-  const [activeTab, setActiveTab] = useState<"invoice" | "history" | "returns">("invoice");
+  // (activeTab is now managed by the wrapper so it survives a refresh reset)
 
   // --- States for Invoice Tab ---
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
@@ -568,11 +589,30 @@ export default function PurchasesPage() {
       <div className="flex-1 overflow-auto custom-scrollbar p-6">
         
         {/* Title */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Purchase Management</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Purchase medicines, manage supplier invoices, receive stock, process purchase returns, and maintain complete purchase records.
-          </p>
+        <div className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Purchase Management</h1>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+              Purchase medicines, manage supplier invoices, receive stock, process purchase returns, and maintain complete purchase records.
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            className={cn(
+              "h-9 gap-2 transition-all duration-300 rounded-full",
+              refreshState === "loading" && "border-primary/40 text-primary",
+              refreshState === "done" && "border-emerald-400 text-emerald-600 dark:text-emerald-400 bg-emerald-50/60 dark:bg-emerald-900/20"
+            )}
+            onClick={onRefresh}
+            disabled={refreshState === "loading"}
+          >
+            {refreshState === "done" ? (
+              <Check className="h-4 w-4 animate-in zoom-in-50 duration-200" />
+            ) : (
+              <RefreshCcw className={cn("h-4 w-4 transition-transform", refreshState === "loading" && "animate-spin")} />
+            )}
+            {refreshState === "loading" ? "Refreshing..." : refreshState === "done" ? "Updated!" : "Refresh"}
+          </Button>
         </div>
 
         {/* Stats Cards — only visible on History tab */}
@@ -630,20 +670,17 @@ export default function PurchasesPage() {
 
         {/* Tabs */}
         <div className="flex gap-2 border-b border-border mb-6">
-          <button 
-            onClick={() => setActiveTab("invoice")}
+          <button              onClick={() => onTabChange("invoice")}
             className={cn("px-6 py-2.5 font-medium text-sm rounded-t-lg transition-colors", activeTab === "invoice" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary/50")}
           >
             Purchase Invoice
           </button>
-          <button 
-            onClick={() => setActiveTab("history")}
+          <button              onClick={() => onTabChange("history")}
             className={cn("px-6 py-2.5 font-medium text-sm rounded-t-lg transition-colors", activeTab === "history" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary/50")}
           >
             Purchase History
           </button>
-          <button 
-            onClick={() => setActiveTab("returns")}
+          <button              onClick={() => onTabChange("returns")}
             className={cn("px-6 py-2.5 font-medium text-sm rounded-t-lg transition-colors", activeTab === "returns" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary/50")}
           >
             Purchase Returns

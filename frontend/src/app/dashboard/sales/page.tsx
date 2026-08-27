@@ -21,7 +21,9 @@ import {
   CreditCard,
   Smartphone,
   Banknote,
-  CircleDollarSign
+  CircleDollarSign,
+  RefreshCcw,
+  Check
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -66,9 +68,28 @@ interface CartItem {
   RequiresPrescription: boolean;
 }
 
-export default function POSBillingPage() {
-  const { formatNumber } = useSystemPreferences();
+export default function POSBillingPageWrapper() {
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [refreshState, setRefreshState] = useState<"idle" | "loading" | "done">("idle");
+  
+  const handleRefresh = () => {
+    if (refreshState === "loading") return;
+    setRefreshState("loading");
+    setRefreshKey(k => k + 1);
+    setTimeout(() => {
+      setRefreshState("done");
+      setTimeout(() => setRefreshState("idle"), 1500);
+    }, 400);
+  };
+
   const [activeTab, setActiveTab] = useState<'pos' | 'history' | 'return'>('pos');
+
+  return <POSBillingPage key={refreshKey} refreshState={refreshState} onRefresh={handleRefresh} activeTab={activeTab} onTabChange={setActiveTab} />;
+}
+
+function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { onRefresh: () => void, refreshState: "idle" | "loading" | "done", activeTab: "pos" | "history" | "return", onTabChange: (tab: "pos" | "history" | "return") => void }) {
+  const { formatNumber } = useSystemPreferences();
+  // (activeTab is now managed by the wrapper so it survives a refresh reset)
   const [loadingInit, setLoadingInit] = useState(true);
   const [invoiceNo, setInvoiceNo] = useState("");
   const [taxRate, setTaxRate] = useState(0);
@@ -791,6 +812,23 @@ export default function POSBillingPage() {
             <h1 className="text-2xl font-bold text-foreground">Sales & POS Billing</h1>
             <p className="text-sm text-muted-foreground mt-1">Process medicine sales, generate invoices, accept payments.</p>
           </div>
+          <Button
+            variant="outline"
+            className={cn(
+              "h-9 gap-2 transition-all duration-300 rounded-full",
+              refreshState === "loading" && "border-primary/40 text-primary",
+              refreshState === "done" && "border-emerald-400 text-emerald-600 dark:text-emerald-400 bg-emerald-50/60 dark:bg-emerald-900/20"
+            )}
+            onClick={onRefresh}
+            disabled={refreshState === "loading"}
+          >
+            {refreshState === "done" ? (
+              <Check className="h-4 w-4 animate-in zoom-in-50 duration-200" />
+            ) : (
+              <RefreshCcw className={cn("h-4 w-4 transition-transform", refreshState === "loading" && "animate-spin")} />
+            )}
+            {refreshState === "loading" ? "Refreshing..." : refreshState === "done" ? "Updated!" : "Refresh"}
+          </Button>
         </div>
 
         {/* KPI Cards — hidden on Sales Return tab */}
@@ -842,19 +880,19 @@ export default function POSBillingPage() {
         <div className="flex flex-col xl:flex-row justify-between items-start xl:items-end gap-4 border-b border-border mb-6">
           <div className="flex gap-2 w-full xl:w-auto overflow-x-auto custom-scrollbar">
             <button 
-              onClick={() => setActiveTab('pos')} 
+              onClick={() => onTabChange("pos")} 
               className={cn("px-6 py-2.5 font-medium text-sm rounded-t-lg transition-colors whitespace-nowrap", activeTab === 'pos' ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary/50")}
             >
               New Sale (POS)
             </button>
             <button 
-              onClick={() => setActiveTab('history')} 
+              onClick={() => onTabChange("history")} 
               className={cn("px-6 py-2.5 font-medium text-sm rounded-t-lg transition-colors whitespace-nowrap", activeTab === 'history' ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary/50")}
             >
               Sales History
             </button>
             <button 
-              onClick={() => setActiveTab('return')} 
+              onClick={() => onTabChange("return")} 
               className={cn("px-6 py-2.5 font-medium text-sm rounded-t-lg transition-colors whitespace-nowrap", activeTab === 'return' ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary/50")}
             >
               Sales Return

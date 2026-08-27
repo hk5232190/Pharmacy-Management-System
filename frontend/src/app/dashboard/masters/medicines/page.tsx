@@ -117,6 +117,13 @@ export default function MedicinesPage() {
     return () => clearTimeout(timer);
   }, [search, filterCategory, filterCompany, page, pageSize]);
 
+  useEffect(() => {
+    const handleMastersRefresh = () => fetchMedicines();
+    window.addEventListener("refresh-masters-tab", handleMastersRefresh);
+    return () => window.removeEventListener("refresh-masters-tab", handleMastersRefresh);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, filterCategory, filterCompany, page, pageSize]);
+
   // Reset page to 1 when filters change
   useEffect(() => {
     setPage(1);

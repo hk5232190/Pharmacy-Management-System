@@ -98,6 +98,13 @@ export default function SuppliersPage() {
     return () => clearTimeout(timer);
   }, [search, filterStatus, page, pageSize]);
 
+  useEffect(() => {
+    const handleMastersRefresh = () => fetchSuppliers();
+    window.addEventListener("refresh-masters-tab", handleMastersRefresh);
+    return () => window.removeEventListener("refresh-masters-tab", handleMastersRefresh);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, filterStatus, page, pageSize]);
+
   const handleToggleStatus = async (id: number) => {
     try {
       const data = await apiClient.put(`/suppliers/${id}/status`);

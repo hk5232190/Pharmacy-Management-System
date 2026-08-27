@@ -1,12 +1,26 @@
 "use client";
 
-import { ReactNode } from "react";
+import { ReactNode, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Building2, ReceiptText, Package, Settings as SettingsIcon, Paintbrush, ShieldCheck, Info, Printer, Database, Shield } from "lucide-react";
+import { Building2, ReceiptText, Package, Settings as SettingsIcon, Paintbrush, ShieldCheck, Info, Printer, Database, Shield, RefreshCcw, Check } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export default function SettingsLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const [refreshState, setRefreshState] = useState<"idle" | "loading" | "done">("idle");
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const handleRefresh = async () => {
+    if (refreshState === "loading") return;
+    setRefreshState("loading");
+    setRefreshKey(k => k + 1);
+    setTimeout(() => {
+      setRefreshState("done");
+      setTimeout(() => setRefreshState("idle"), 1500);
+    }, 600);
+  };
 
   const navigation = [
     { name: "Pharmacy Information", href: "/dashboard/settings/profile", icon: Building2, description: "Basic information about your pharmacy" },
@@ -23,9 +37,29 @@ export default function SettingsLayout({ children }: { children: ReactNode }) {
   return (
     <div className="flex flex-col h-full overflow-hidden bg-slate-50 dark:bg-slate-950">
       <div className="flex flex-col p-6 pb-2 border-b">
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Settings</h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Configure your pharmacy, personalize the application, and manage system preferences.</p>
-        
+        <div className="flex justify-between items-start gap-4">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Settings</h1>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Configure your pharmacy, personalize the application, and manage system preferences.</p>
+          </div>
+          <Button
+            variant="outline"
+            className={cn(
+              "h-9 gap-2 transition-all duration-300 rounded-full",
+              refreshState === "loading" && "border-primary/40 text-primary",
+              refreshState === "done" && "border-emerald-400 text-emerald-600 dark:text-emerald-400 bg-emerald-50/60 dark:bg-emerald-900/20"
+            )}
+            onClick={handleRefresh}
+            disabled={refreshState === "loading"}
+          >
+            {refreshState === "done" ? (
+              <Check className="h-4 w-4 animate-in zoom-in-50 duration-200" />
+            ) : (
+              <RefreshCcw className={cn("h-4 w-4 transition-transform", refreshState === "loading" && "animate-spin")} />
+            )}
+            {refreshState === "loading" ? "Refreshing..." : refreshState === "done" ? "Updated!" : "Refresh"}
+          </Button>
+        </div>
         <div className="flex items-center space-x-2 text-sm text-slate-500 mt-4">
           <Link href="/dashboard" className="hover:text-blue-600 transition-colors">Dashboard</Link>
           <span>›</span>
@@ -65,7 +99,7 @@ export default function SettingsLayout({ children }: { children: ReactNode }) {
         </aside>
 
         {/* Main Content Area */}
-        <main className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-950 p-6">
+        <main key={refreshKey} className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-950 p-6">
           {children}
         </main>
       </div>

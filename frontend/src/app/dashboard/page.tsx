@@ -25,7 +25,8 @@ import {
   TrendingUp,
   Download,
   Wallet,
-  RefreshCw
+  RefreshCcw,
+  Check
 } from "lucide-react";
 
 // ─── KPI Card (matches Inventory Management design) ────────────────────────
@@ -75,17 +76,32 @@ function DashKPICard({
 }
 // ───────────────────────────────────────────────────────────────────────────
 
-export default function DashboardPage() {
+export default function DashboardPageWrapper() {
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [refreshState, setRefreshState] = useState<"idle" | "loading" | "done">("idle");
+  
+  const handleRefresh = () => {
+    if (refreshState === "loading") return;
+    setRefreshState("loading");
+    setRefreshKey(k => k + 1);
+    setTimeout(() => {
+      setRefreshState("done");
+      setTimeout(() => setRefreshState("idle"), 1500);
+    }, 400);
+  };
+
+  return <DashboardPageInner key={refreshKey} refreshState={refreshState} onRefresh={handleRefresh} />;
+}
+
+function DashboardPageInner({ onRefresh, refreshState }: { onRefresh: () => void, refreshState: "idle" | "loading" | "done" }) {
   const router = useRouter();
   const { formatNumber } = useSystemPreferences();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<any>(null);
 
-  // Global Filter State
   const [timeframe, setTimeframe] = useState("today");
   const [dateRange, setDateRange] = useState<{ start: string, end: string } | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const getTimeframeLabel = () => {
     switch (timeframe) {
@@ -105,10 +121,8 @@ export default function DashboardPage() {
   }, [timeframe, dateRange]);
 
   const fetchSummary = async (showRefreshSpinner = false) => {
-    if (showRefreshSpinner) setIsRefreshing(true);
-    else setLoading(true);
+    setLoading(true);
 
-    const startTime = Date.now();
     try {
       let url = `/dashboard/summary?timeframe=${timeframe}`;
       if (timeframe === 'custom' && dateRange) {
@@ -119,21 +133,11 @@ export default function DashboardPage() {
         toast.error(res.error || "Failed to load dashboard data");
       } else {
         setData(res);
-        if (showRefreshSpinner) {
-          toast.success("Dashboard successfully refreshed");
-        }
       }
     } catch (err: any) {
       toast.error(err.message || "Error fetching dashboard summary");
     } finally {
-      if (showRefreshSpinner) {
-        const elapsed = Date.now() - startTime;
-        if (elapsed < 600) {
-          await new Promise(resolve => setTimeout(resolve, 600 - elapsed));
-        }
-      }
       setLoading(false);
-      setIsRefreshing(false);
     }
   };
 
@@ -159,17 +163,21 @@ export default function DashboardPage() {
         </div>
         <div className="flex items-center space-x-4">
           <Button
-            onClick={() => {
-              if (isRefreshing) return;
-              fetchSummary(true);
-              setRefreshTrigger(prev => prev + 1);
-            }}
             variant="outline"
-            disabled={isRefreshing}
-            className="rounded-full shadow-sm bg-white hover:bg-slate-50 dark:bg-card dark:hover:bg-slate-900 border-border active:scale-95 transition-all duration-200"
+            className={cn(
+              "h-9 gap-2 transition-all duration-300 rounded-full",
+              refreshState === "loading" && "border-primary/40 text-primary",
+              refreshState === "done" && "border-emerald-400 text-emerald-600 dark:text-emerald-400 bg-emerald-50/60 dark:bg-emerald-900/20"
+            )}
+            onClick={onRefresh}
+            disabled={refreshState === "loading"}
           >
-            <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? 'animate-spin text-blue-500' : 'text-slate-500 dark:text-slate-400'}`} />
-            {isRefreshing ? 'Refreshing...' : 'Refresh Dashboard'}
+            {refreshState === "done" ? (
+              <Check className="h-4 w-4 animate-in zoom-in-50 duration-200" />
+            ) : (
+              <RefreshCcw className={cn("h-4 w-4 transition-transform", refreshState === "loading" && "animate-spin")} />
+            )}
+            {refreshState === "loading" ? "Refreshing..." : refreshState === "done" ? "Updated!" : "Refresh"}
           </Button>
         </div>
       </div>
