@@ -1007,21 +1007,7 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
                   )}
                 </div>
 
-                {/* Popular Suggestions */}
-                <div className="mt-4">
-                  <p className="text-xs font-medium text-muted-foreground mb-2">Popular Suggestions</p>
-                  <div className="flex flex-wrap gap-2">
-                    {["Paracetamol 500mg", "Amoxicillin 250mg", "Cetirizine 10mg", "Ibuprofen 400mg", "Omeprazole 20mg"].map(pill => (
-                      <button
-                        key={pill}
-                        onClick={() => handleSearch(pill)}
-                        className="px-3 py-1.5 bg-secondary/50 hover:bg-secondary text-muted-foreground hover:text-foreground text-xs rounded-full border border-border transition-colors whitespace-nowrap"
-                      >
-                        {pill}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+
               </div>
 
               <div className="bg-white dark:bg-card rounded-xl border border-border shadow-sm flex-1 flex flex-col overflow-hidden relative z-10 min-h-[400px]">

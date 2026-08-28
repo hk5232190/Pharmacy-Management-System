@@ -3,7 +3,7 @@
 import { ReactNode, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Building2, ReceiptText, Package, Settings as SettingsIcon, Paintbrush, ShieldCheck, Info, Printer, Database, Shield, RefreshCcw, Check } from "lucide-react";
+import { Building2, ReceiptText, Package, Settings as SettingsIcon, Paintbrush, ShieldCheck, Info, Printer, Shield, RefreshCcw, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -28,7 +28,6 @@ export default function SettingsLayout({ children }: { children: ReactNode }) {
     { name: "Inventory & Medicine Settings", href: "/dashboard/settings/inventory", icon: Package, description: "Manage stock, thresholds and alerts" },
     { name: "Printer & Receipt Settings", href: "/dashboard/settings/printer", icon: Printer, description: "Configure hardware and printing" },
     { name: "Appearance & System Preferences", href: "/dashboard/settings/appearance", icon: Paintbrush, description: "Customize theme and application behavior" },
-    { name: "Backup & Data Management", href: "/dashboard/settings/backup", icon: Database, description: "Manage backups and data integrity" },
     { name: "Security & Maintenance", href: "/dashboard/settings/security", icon: Shield, description: "Security configurations and maintenance" },
     { name: "License Information", href: "/dashboard/settings/license", icon: ShieldCheck, description: "View and manage license details" },
     { name: "About Software", href: "/dashboard/settings/about", icon: Info, description: "Application and system information" },

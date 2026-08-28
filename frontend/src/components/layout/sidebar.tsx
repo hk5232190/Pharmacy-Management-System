@@ -68,7 +68,7 @@ const NAV_ITEMS = [
   {
     title: "Backup & Restore",
     icon: Database,
-    href: "/dashboard/settings/backup",
+    href: "/dashboard/backup",
   },
   {
     title: "Settings",
