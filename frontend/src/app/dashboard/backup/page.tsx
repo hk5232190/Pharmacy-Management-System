@@ -5,8 +5,17 @@ import {
   RefreshCw, Settings, Calendar, Database, HardDrive, HeartPulse, 
   ShieldCheck, Clock, DownloadCloud, RotateCcw, History, Edit2, 
   FolderOpen, Info, CheckCircle2, Search, Filter, 
-  ArrowRight, Loader2, Trash2, XCircle, PauseCircle, Check, RefreshCcw
+  ArrowRight, Loader2, Trash2, XCircle, PauseCircle, Check, RefreshCcw,
+  Eye, EyeOff
 } from "lucide-react";
+import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -92,6 +101,15 @@ function BackupRestorePageInner({
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [historySearchQuery, setHistorySearchQuery] = useState("");
+  const [historyTypeFilter, setHistoryTypeFilter] = useState("All");
+  const [historyStatusFilter, setHistoryStatusFilter] = useState("All");
+  const [historyPage, setHistoryPage] = useState(1);
+  const historyPageSize = 10;
+  
+  const [showAdminPassword, setShowAdminPassword] = useState(false);
+  const [showRestoreModal, setShowRestoreModal] = useState(false);
+  const [selectedBackupId, setSelectedBackupId] = useState<number | null>(null);
+
   const [expandedBackupId, setExpandedBackupId] = useState<number | null>(null);
   const [hoveredBackupId, setHoveredBackupId] = useState<number | null>(null);
 
@@ -696,7 +714,7 @@ function BackupRestorePageInner({
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
         {/* ── Main Content ────────────────────────────────────────────────── */}
-        <div className="md:col-span-2 space-y-6">
+        <div className={cn("space-y-6", activeTab === "history" ? "md:col-span-3" : "md:col-span-2")}>
           {/* Manual Backup Tab */}
           {activeTab === "manual" && (
             <Card className="shadow-sm border-border/60 overflow-hidden">
@@ -836,6 +854,7 @@ function BackupRestorePageInner({
 
           {/* Restore Tab */}
           {activeTab === "restore" && (
+            <>
             <Card className="border-red-100 dark:border-red-900/30">
               <CardHeader>
                 <CardTitle className="text-red-600 dark:text-red-400">Restore Database</CardTitle>
@@ -850,7 +869,7 @@ function BackupRestorePageInner({
                     <div className="flex space-x-2">
                       <Input 
                         id="restoreFilePath" 
-                        placeholder="e.g. ./backups/Backup_2026_08_06.sqlite" 
+                        placeholder="e.g. ./backups/Backup_2026_08_28_162415.zip" 
                         value={restoreFilePath} 
                         onChange={(e) => setRestoreFilePath(e.target.value)} 
                       />
@@ -865,13 +884,23 @@ function BackupRestorePageInner({
                   
                   <div className="space-y-2 border-t pt-4">
                     <Label htmlFor="adminPassword">Admin Password Verification</Label>
-                    <Input 
-                      id="adminPassword" 
-                      type="password"
-                      placeholder="Enter your admin password" 
-                      value={adminPassword} 
-                      onChange={(e) => setAdminPassword(e.target.value)} 
-                    />
+                    <div className="relative">
+                      <Input 
+                        id="adminPassword" 
+                        type={showAdminPassword ? "text" : "password"}
+                        placeholder="Enter your admin password" 
+                        value={adminPassword} 
+                        onChange={(e) => setAdminPassword(e.target.value)}
+                        className="pr-10" 
+                      />
+                      <button 
+                        type="button" 
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                        onClick={() => setShowAdminPassword(!showAdminPassword)}
+                      >
+                        {showAdminPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
                     <p className="text-xs text-muted-foreground mt-1">
                       Restoring a backup is a sensitive operation and requires re-authentication.
                     </p>
@@ -901,7 +930,17 @@ function BackupRestorePageInner({
               </CardContent>
               <CardFooter className="flex justify-center border-t p-4">
                 <Button 
-                  onClick={handleRestoreBackup} 
+                  onClick={() => {
+                    if (!restoreFilePath) {
+                      toast.error("Please provide a backup file path");
+                      return;
+                    }
+                    if (!adminPassword) {
+                      toast.error("Please provide your admin password to authorize the restore");
+                      return;
+                    }
+                    setShowRestoreModal(true);
+                  }} 
                   disabled={isRestoring || !restoreFilePath}
                   className="w-48 bg-red-600 hover:bg-red-700 text-white"
                 >
@@ -910,89 +949,214 @@ function BackupRestorePageInner({
                 </Button>
               </CardFooter>
             </Card>
+            
+            {/* Restore Confirmation Modal */}
+            <Dialog open={showRestoreModal} onOpenChange={setShowRestoreModal}>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle className="text-red-600 flex items-center">
+                    <ShieldCheck className="mr-2 h-5 w-5" />
+                    Confirm Database Restore
+                  </DialogTitle>
+                  <DialogDescription className="pt-2">
+                    <div className="mb-2 text-slate-700 dark:text-slate-300 font-medium">
+                      You are about to restore the database from:
+                    </div>
+                    <div className="bg-slate-100 dark:bg-slate-900 p-2 rounded text-xs break-all mb-4">
+                      {restoreFilePath}
+                    </div>
+                    <div className="bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-300 p-3 rounded-lg border border-red-200 dark:border-red-800 text-sm">
+                      <span className="font-bold uppercase tracking-wider text-[11px] block mb-1">Critical Warning</span>
+                      This action will <strong>completely overwrite</strong> your current database. A safety backup will be created automatically, but any unsaved changes may be lost.
+                    </div>
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooter className="mt-4 gap-2 sm:gap-0">
+                  <Button variant="outline" onClick={() => setShowRestoreModal(false)} disabled={isRestoring}>
+                    Cancel
+                  </Button>
+                  <Button 
+                    onClick={() => {
+                      setShowRestoreModal(false);
+                      handleRestoreBackup();
+                    }} 
+                    className="bg-red-600 hover:bg-red-700 text-white"
+                    disabled={isRestoring}
+                  >
+                    Confirm Restore
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </>
           )}
 
           {/* History Tab */}
           {activeTab === "history" && (
-            <Card>
+            <Card className="w-full">
               <CardHeader className="flex flex-col md:flex-row md:items-center justify-between pb-4">
                 <div>
                   <CardTitle>Full Backup History</CardTitle>
                   <CardDescription>A complete log of all manual and automatic backups across the entire lifespan of the system.</CardDescription>
                 </div>
-                <div className="relative mt-4 md:mt-0">
-                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input 
-                    className="pl-9 w-full md:w-[250px]" 
-                    placeholder="Search backups..." 
-                    value={historySearchQuery}
-                    onChange={(e) => setHistorySearchQuery(e.target.value)}
-                  />
-                </div>
               </CardHeader>
-              <CardContent>
-                <div className="overflow-x-auto rounded-md border">
+              
+              {/* Filters Toolbar */}
+              <div className="flex flex-col sm:flex-row justify-between items-center bg-slate-50 dark:bg-slate-900/30 p-4 border-b border-t gap-4">
+                <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
+                  {["All", "Manual", "Automatic"].map(type => (
+                    <Button 
+                      key={type} 
+                      variant={historyTypeFilter === type ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => { setHistoryTypeFilter(type); setHistoryPage(1); }}
+                      className="rounded-full text-xs h-8"
+                    >
+                      {type}
+                    </Button>
+                  ))}
+                </div>
+                
+                <div className="flex items-center gap-3 w-full sm:w-auto">
+                  <select 
+                    className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    value={historyStatusFilter}
+                    onChange={(e) => { setHistoryStatusFilter(e.target.value); setHistoryPage(1); }}
+                  >
+                    <option value="All">All Statuses</option>
+                    <option value="Success">Success</option>
+                    <option value="Failed">Failed</option>
+                  </select>
+                  
+                  <div className="relative w-full sm:w-[250px]">
+                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input 
+                      className="pl-9 h-9 w-full" 
+                      placeholder="Search by name or date..." 
+                      value={historySearchQuery}
+                      onChange={(e) => { setHistorySearchQuery(e.target.value); setHistoryPage(1); }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <CardContent className="p-0">
+                <div className="overflow-x-auto">
                   <table className="w-full text-sm text-left text-muted-foreground">
-                    <thead className="text-xs text-slate-700 uppercase bg-slate-50 dark:bg-slate-900/50 dark:text-slate-300">
+                    <thead className="text-xs text-slate-700 uppercase bg-slate-50 dark:bg-slate-900/50 dark:text-slate-300 border-b">
                       <tr>
-                        <th className="px-4 py-3">Date</th>
-                        <th className="px-4 py-3">Name</th>
-                        <th className="px-4 py-3">Size</th>
-                        <th className="px-4 py-3">Type</th>
-                        <th className="px-4 py-3">Status</th>
-                        <th className="px-4 py-3 text-right">Actions</th>
+                        <th className="px-4 py-3 font-semibold w-12">#</th>
+                        <th className="px-4 py-3 font-semibold">Date</th>
+                        <th className="px-4 py-3 font-semibold">Name</th>
+                        <th className="px-4 py-3 font-semibold">Type</th>
+                        <th className="px-4 py-3 font-semibold">Status</th>
+                        <th className="px-4 py-3 font-semibold text-right">Size</th>
+                        <th className="px-4 py-3 font-semibold text-center w-[120px]">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {backupHistory.filter(b => b.BackupName.toLowerCase().includes(historySearchQuery.toLowerCase())).map((backup) => (
-                        <tr key={backup.BackupId} className="border-b dark:border-slate-800 last:border-0 hover:bg-slate-50 dark:hover:bg-slate-900/30 transition-colors">
-                          <td className="px-4 py-3 font-medium text-slate-900 dark:text-white whitespace-nowrap">
-                            {format(new Date(backup.CreatedAt + "Z"), "dd MMM yyyy, hh:mm a")}
-                          </td>
-                          <td className="px-4 py-3 font-medium text-slate-900 dark:text-white">{backup.BackupName}</td>
-                          <td className="px-4 py-3 whitespace-nowrap">{formatBytes(backup.SizeBytes)}</td>
-                          <td className="px-4 py-3 whitespace-nowrap">{backup.BackupType}</td>
-                          <td className="px-4 py-3 whitespace-nowrap">
-                            <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${backup.Status === "Success" ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"}`}>
-                              {backup.Status}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3 whitespace-nowrap text-right">
-                            <div className="flex items-center justify-end space-x-1">
-                              {backup.Status === "Success" && (
-                                <Button 
-                                  variant="ghost" 
-                                  size="sm" 
-                                  className="h-8 px-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20"
-                                  onClick={() => {
-                                    setRestoreFilePath(`${backup.BackupLocation}/${backup.BackupName}`.replace(/\\/g, '/'));
-                                    onTabChange("restore");
-                                  }}
-                                  title="Restore"
-                                >
-                                  <RotateCcw className="h-4 w-4" />
-                                </Button>
-                              )}
-                              <Button variant="ghost" size="sm" className="h-8 px-2 text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20" onClick={() => handleVerifyBackup(backup.BackupId)} title="Verify">
-                                <CheckCircle2 className="h-4 w-4" />
-                              </Button>
-                              <Button variant="ghost" size="sm" className="h-8 px-2 text-slate-600 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800" onClick={() => handleOpenFolder(backup.BackupId)} title="Open Folder">
-                                <FolderOpen className="h-4 w-4" />
-                              </Button>
-                              <Button variant="ghost" size="sm" className="h-8 px-2 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20" onClick={() => handleDeleteBackup(backup.BackupId)} title="Delete">
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                      {backupHistory.filter(b => b.BackupName.toLowerCase().includes(historySearchQuery.toLowerCase())).length === 0 && (
-                        <tr>
-                          <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">
-                            No backup history found.
-                          </td>
-                        </tr>
-                      )}
+                      {(() => {
+                        const filteredHistory = backupHistory.filter(b => {
+                          const matchesSearch = b.BackupName.toLowerCase().includes(historySearchQuery.toLowerCase()) || format(new Date(b.CreatedAt + "Z"), "dd MMM yyyy").toLowerCase().includes(historySearchQuery.toLowerCase());
+                          const matchesType = historyTypeFilter === "All" || b.BackupType === historyTypeFilter;
+                          const matchesStatus = historyStatusFilter === "All" || b.Status === historyStatusFilter;
+                          return matchesSearch && matchesType && matchesStatus;
+                        });
+                        
+                        const totalItems = filteredHistory.length;
+                        const totalPages = Math.ceil(totalItems / historyPageSize);
+                        const paginatedHistory = filteredHistory.slice((historyPage - 1) * historyPageSize, historyPage * historyPageSize);
+
+                        if (totalItems === 0) {
+                          return (
+                            <tr>
+                              <td colSpan={7} className="px-4 py-12 text-center text-muted-foreground">
+                                No backup history found matching your filters.
+                              </td>
+                            </tr>
+                          );
+                        }
+
+                        return (
+                          <>
+                            {paginatedHistory.map((backup, index) => (
+                              <tr key={backup.BackupId} className="border-b dark:border-slate-800 last:border-0 hover:bg-slate-50 dark:hover:bg-slate-900/30 transition-colors">
+                                <td className="px-4 py-3 text-slate-500">{(historyPage - 1) * historyPageSize + index + 1}</td>
+                                <td className="px-4 py-3 font-medium text-slate-900 dark:text-white whitespace-nowrap">
+                                  {format(new Date(backup.CreatedAt + "Z"), "dd MMM yyyy, hh:mm a")}
+                                </td>
+                                <td className="px-4 py-3 font-medium text-slate-900 dark:text-white">{backup.BackupName}</td>
+                                <td className="px-4 py-3 whitespace-nowrap">{backup.BackupType}</td>
+                                <td className="px-4 py-3 whitespace-nowrap">
+                                  <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${backup.Status === "Success" ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"}`}>
+                                    {backup.Status}
+                                  </span>
+                                </td>
+                                <td className="px-4 py-3 whitespace-nowrap text-right">{formatBytes(backup.SizeBytes)}</td>
+                                <td className="px-4 py-3 whitespace-nowrap">
+                                  <div className="flex items-center justify-center space-x-1">
+                                    {backup.Status === "Success" && (
+                                      <Button 
+                                        variant="ghost" 
+                                        size="sm" 
+                                        className="h-8 px-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                                        onClick={() => {
+                                          setRestoreFilePath(`${backup.BackupLocation}/${backup.BackupName}`.replace(/\\/g, '/'));
+                                          onTabChange("restore");
+                                        }}
+                                        title="Restore"
+                                      >
+                                        <RotateCcw className="h-4 w-4" />
+                                      </Button>
+                                    )}
+                                    <Button variant="ghost" size="sm" className="h-8 px-2 text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20" onClick={() => handleVerifyBackup(backup.BackupId)} title="Verify">
+                                      <CheckCircle2 className="h-4 w-4" />
+                                    </Button>
+                                    <Button variant="ghost" size="sm" className="h-8 px-2 text-slate-600 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800" onClick={() => handleOpenFolder(backup.BackupId)} title="Open Folder">
+                                      <FolderOpen className="h-4 w-4" />
+                                    </Button>
+                                    <Button variant="ghost" size="sm" className="h-8 px-2 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20" onClick={() => handleDeleteBackup(backup.BackupId)} title="Delete">
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))}
+                            {/* Pagination */}
+                            {totalItems > 0 && (
+                              <tr className="bg-transparent border-t">
+                                <td colSpan={7} className="px-4 py-4">
+                                  <div className="flex items-center justify-between w-full">
+                                    <div className="text-sm text-slate-500 dark:text-slate-400">
+                                      Showing <span className="font-semibold text-slate-900 dark:text-slate-100">{(historyPage - 1) * historyPageSize + 1}</span> - <span className="font-semibold text-slate-900 dark:text-slate-100">{Math.min(historyPage * historyPageSize, totalItems)}</span> of <span className="font-semibold text-slate-900 dark:text-slate-100">{totalItems}</span> backups
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                      <Button 
+                                        variant="outline" 
+                                        size="sm" 
+                                        onClick={() => setHistoryPage(p => Math.max(1, p - 1))}
+                                        disabled={historyPage === 1}
+                                        className="h-8 text-xs font-medium"
+                                      >
+                                        Previous
+                                      </Button>
+                                      <Button 
+                                        variant="outline" 
+                                        size="sm" 
+                                        onClick={() => setHistoryPage(p => Math.min(totalPages, p + 1))}
+                                        disabled={historyPage === totalPages}
+                                        className="h-8 text-xs font-medium"
+                                      >
+                                        Next
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </td>
+                              </tr>
+                            )}
+                          </>
+                        );
+                      })()}
                     </tbody>
                   </table>
                 </div>
@@ -1112,54 +1276,68 @@ function BackupRestorePageInner({
         </div>
 
         {/* ── Available Backups Sidebar ────────────────────────────────────── */}
-        <div className="space-y-6">
-          <Card className="h-full shadow-sm border-border/60">
-            <CardHeader className="pb-3 border-b border-border/40 bg-slate-50/50 dark:bg-slate-900/20">
-              <div className="flex justify-between items-center">
-                <CardTitle className="text-lg font-bold flex items-center">
-                  <History className="h-5 w-5 mr-2 text-indigo-500" />
-                  Available Backups
-                </CardTitle>
-                <div className="flex space-x-1">
-                  <div className="relative group">
-                    <Search className="absolute left-2.5 top-2 h-4 w-4 text-muted-foreground opacity-50 group-focus-within:opacity-100 transition-opacity" />
-                    <Input 
-                      className="h-8 w-[180px] pl-8 text-xs bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 rounded-full" 
-                      placeholder="Search backups..." 
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                    />
+        {activeTab !== "history" && (
+          <div className="space-y-6">
+            <Card className="h-full shadow-sm border-border/60">
+              <CardHeader className="pb-3 border-b border-border/40 bg-slate-50/50 dark:bg-slate-900/20">
+                <div className="flex justify-between items-center">
+                  <CardTitle className="text-lg font-bold flex items-center">
+                    <History className="h-5 w-5 mr-2 text-indigo-500" />
+                    Available Backups
+                  </CardTitle>
+                  <div className="flex space-x-1">
+                    <div className="relative group">
+                      <Search className="absolute left-2.5 top-2 h-4 w-4 text-muted-foreground opacity-50 group-focus-within:opacity-100 transition-opacity" />
+                      <Input 
+                        className="h-8 w-[180px] pl-8 text-xs bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 rounded-full" 
+                        placeholder="Search backups..." 
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-3 px-3 py-4">
-              {isLoadingHistory ? (
-                <div className="text-center py-10 text-muted-foreground flex flex-col items-center">
-                  <Loader2 className="h-8 w-8 animate-spin mb-3 text-blue-500" />
-                  <span className="text-sm font-medium">Loading history...</span>
-                </div>
-              ) : backupHistory.filter(b => b.BackupName.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 ? (
-                <div className="text-center py-12 flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900/20 rounded-xl border border-dashed border-slate-200 dark:border-slate-800 m-2">
-                  <div className="bg-slate-100 dark:bg-slate-800 p-3 rounded-full mb-3">
-                    <Database className="h-6 w-6 text-slate-400" />
+              </CardHeader>
+              <CardContent className="space-y-3 px-3 py-4">
+                {isLoadingHistory ? (
+                  <div className="text-center py-10 text-muted-foreground flex flex-col items-center">
+                    <Loader2 className="h-8 w-8 animate-spin mb-3 text-blue-500" />
+                    <span className="text-sm font-medium">Loading history...</span>
                   </div>
-                  <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300">No backups found</h4>
-                  <p className="text-xs text-muted-foreground mt-1 max-w-[200px]">Create a manual backup to get started.</p>
-                </div>
-              ) : (
-                backupHistory.filter(b => b.BackupName.toLowerCase().includes(searchQuery.toLowerCase())).map((backup) => (
-                  <div
-                    key={backup.BackupId}
-                    className="relative group border rounded-lg p-3 hover:border-blue-400 dark:hover:border-blue-500 transition-all cursor-default bg-white dark:bg-card"
-                    onMouseEnter={() => setHoveredBackupId(backup.BackupId)}
-                    onMouseLeave={() => setHoveredBackupId(null)}
-                  >
-                    {/* Info row */}
-                    <div className="flex items-start gap-2.5">
-                      <div className="bg-blue-50 dark:bg-blue-900/20 p-1.5 rounded-md shrink-0 mt-0.5">
-                        <Database className="h-4 w-4 text-blue-600" />
-                      </div>
+                ) : backupHistory.filter(b => b.BackupName.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 ? (
+                  <div className="text-center py-12 flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900/20 rounded-xl border border-dashed border-slate-200 dark:border-slate-800 m-2">
+                    <div className="bg-slate-100 dark:bg-slate-800 p-3 rounded-full mb-3">
+                      <Database className="h-6 w-6 text-slate-400" />
+                    </div>
+                    <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300">No backups found</h4>
+                    <p className="text-xs text-muted-foreground mt-1 max-w-[200px]">Create a manual backup to get started.</p>
+                  </div>
+                ) : (
+                  backupHistory.filter(b => b.BackupName.toLowerCase().includes(searchQuery.toLowerCase())).map((backup) => (
+                    <div
+                      key={backup.BackupId}
+                      className={cn(
+                        "relative group border rounded-lg p-3 transition-all cursor-pointer",
+                        selectedBackupId === backup.BackupId 
+                          ? "border-blue-500 bg-blue-50/20 dark:bg-blue-900/10 shadow-sm"
+                          : "hover:border-blue-400 dark:hover:border-blue-500 bg-white dark:bg-card"
+                      )}
+                      onMouseEnter={() => setHoveredBackupId(backup.BackupId)}
+                      onMouseLeave={() => setHoveredBackupId(null)}
+                      onClick={() => {
+                        setSelectedBackupId(backup.BackupId);
+                        const ext = backup.IsCompressed === false ? ".sqlite" : ".zip";
+                        setRestoreFilePath(`${backup.BackupLocation}/${backup.BackupName}${ext}`.replace(/\\/g, '/'));
+                      }}
+                    >
+                      {/* Info row */}
+                      <div className="flex items-start gap-2.5 pointer-events-none">
+                        <div className={cn(
+                          "p-1.5 rounded-md shrink-0 mt-0.5",
+                          selectedBackupId === backup.BackupId ? "bg-blue-100 dark:bg-blue-900/40" : "bg-blue-50 dark:bg-blue-900/20"
+                        )}>
+                          <Database className="h-4 w-4 text-blue-600" />
+                        </div>
                       <div className="min-w-0 flex-1">
                         <h4 className="font-semibold text-sm truncate" title={backup.BackupName}>{backup.BackupName}</h4>
                         <p className="text-[11px] text-muted-foreground mt-0.5">
@@ -1220,6 +1398,7 @@ function BackupRestorePageInner({
             </CardContent>
           </Card>
         </div>
+        )}
       </div>
       </>
       )}

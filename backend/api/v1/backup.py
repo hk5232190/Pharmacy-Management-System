@@ -25,7 +25,7 @@ import tempfile
 import subprocess
 import sys
 
-router = APIRouter(prefix="/backup", tags=["backup"])
+router = APIRouter(tags=["backup"])
 
 def get_db_path():
     # SQLALCHEMY_DATABASE_URL is like "sqlite:///./pharma_db.sqlite"
@@ -45,7 +45,7 @@ def browse_folder():
 
 @router.get("/browse-file")
 def browse_file():
-    script = "import tkinter.filedialog, tkinter; root = tkinter.Tk(); root.withdraw(); root.attributes('-topmost', True); print(tkinter.filedialog.askopenfilename(filetypes=[('SQLite/Zip Backup', '*.sqlite *.zip')]))"
+    script = "import tkinter.filedialog, tkinter; root = tkinter.Tk(); root.withdraw(); root.attributes('-topmost', True); print(tkinter.filedialog.askopenfilename(filetypes=[('SQLite/Zip Backup', '*.sqlite *.zip *.db')]))"
     try:
         result = subprocess.run([sys.executable, "-c", script], capture_output=True, text=True, timeout=30)
         path = result.stdout.strip()
