@@ -744,7 +744,7 @@ function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTa
   // Navigate to Movement History tab and pre-fill batch filter
   const goToHistoryForBatch = (batchCode: string) => {
     setMovBatchFilter(batchCode);
-    setActiveTab("history");
+    onTabChange("history");
   };
 
   // Open document preview modal for a movement reference

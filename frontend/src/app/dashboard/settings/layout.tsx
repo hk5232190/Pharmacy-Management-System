@@ -3,7 +3,7 @@
 import { ReactNode, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Building2, ReceiptText, Package, Settings as SettingsIcon, Paintbrush, ShieldCheck, Info, Printer, Shield, RefreshCcw, Check } from "lucide-react";
+import { Building2, ReceiptText, Package, Settings as SettingsIcon, Paintbrush, ShieldCheck, Info, Printer, Shield, RefreshCcw, Check, Database } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -23,14 +23,15 @@ export default function SettingsLayout({ children }: { children: ReactNode }) {
   };
 
   const navigation = [
-    { name: "Pharmacy Information", href: "/dashboard/settings/profile", icon: Building2, description: "Basic information about your pharmacy" },
-    { name: "Billing & POS Settings", href: "/dashboard/settings/billing", icon: ReceiptText, description: "Configure invoice, receipt and POS behavior" },
-    { name: "Inventory & Medicine Settings", href: "/dashboard/settings/inventory", icon: Package, description: "Manage stock, thresholds and alerts" },
-    { name: "Printer & Receipt Settings", href: "/dashboard/settings/printer", icon: Printer, description: "Configure hardware and printing" },
-    { name: "Appearance & System Preferences", href: "/dashboard/settings/appearance", icon: Paintbrush, description: "Customize theme and application behavior" },
-    { name: "Security & Maintenance", href: "/dashboard/settings/security", icon: Shield, description: "Security configurations and maintenance" },
-    { name: "License Information", href: "/dashboard/settings/license", icon: ShieldCheck, description: "View and manage license details" },
-    { name: "About Software", href: "/dashboard/settings/about", icon: Info, description: "Application and system information" },
+    { name: "Pharmacy Information", href: "/dashboard/settings/profile", icon: Building2 },
+    { name: "Billing & POS Settings", href: "/dashboard/settings/billing", icon: ReceiptText },
+    { name: "Inventory & Medicine Settings", href: "/dashboard/settings/inventory", icon: Package },
+    { name: "Printer & Receipt Settings", href: "/dashboard/settings/printer", icon: Printer },
+    { name: "Appearance & System Preferences", href: "/dashboard/settings/appearance", icon: Paintbrush },
+    { name: "Security & Maintenance", href: "/dashboard/settings/security", icon: Shield },
+    { name: "Backup & Data Management", href: "/dashboard/settings/backup", icon: Database },
+    { name: "License Information", href: "/dashboard/settings/license", icon: ShieldCheck },
+    { name: "About Software", href: "/dashboard/settings/about", icon: Info },
   ];
 
   return (
@@ -70,27 +71,22 @@ export default function SettingsLayout({ children }: { children: ReactNode }) {
         {/* Settings Sidebar */}
         <aside className="w-80 border-r bg-white dark:bg-slate-950 overflow-y-auto hidden md:block">
           <nav className="p-4 space-y-2">
-            {navigation.map((item) => {
+          {navigation.map((item) => {
               const isActive = pathname.startsWith(item.href);
               return (
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`flex items-start p-3 rounded-lg transition-all ${
+                  className={`flex items-center p-3 rounded-lg transition-all ${
                     isActive 
                       ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border border-blue-100 dark:border-blue-800 shadow-sm" 
                       : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-900 border border-transparent"
                   }`}
                 >
-                  <item.icon className={`w-5 h-5 mt-0.5 shrink-0 ${isActive ? "text-blue-600 dark:text-blue-400" : "text-slate-500"}`} />
-                  <div className="ml-3">
-                    <p className={`text-sm font-semibold ${isActive ? "text-blue-700 dark:text-blue-400" : "text-slate-700 dark:text-slate-200"}`}>
-                      {item.name}
-                    </p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
-                      {item.description}
-                    </p>
-                  </div>
+                  <item.icon className={`w-4 h-4 shrink-0 ${isActive ? "text-blue-600 dark:text-blue-400" : "text-slate-500"}`} />
+                  <p className={`ml-3 text-sm font-semibold ${isActive ? "text-blue-700 dark:text-blue-400" : "text-slate-700 dark:text-slate-200"}`}>
+                    {item.name}
+                  </p>
                 </Link>
               );
             })}

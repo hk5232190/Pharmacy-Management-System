@@ -119,12 +119,13 @@ def fetch_sales_report_data(
     total_returns = sum(float(s.GrandTotal or 0.0) for s in returned_sales)
     net_sales = total_gross_sales - total_returns
 
-    # Calculate COGS dynamically
+    # Calculate COGS dynamically — pre-fetch all relevant batches to avoid N+1 queries
+    all_batch_ids = list({item.BatchId for sale in completed_sales for item in sale.items})
+    batch_map = {b.BatchId: b for b in db.query(models.StockBatch).filter(models.StockBatch.BatchId.in_(all_batch_ids)).all()} if all_batch_ids else {}
     total_cogs = 0
     for sale in completed_sales:
         for item in sale.items:
-            # item.BatchId -> get batch
-            batch = db.query(models.StockBatch).filter(models.StockBatch.BatchId == item.BatchId).first()
+            batch = batch_map.get(item.BatchId)
             if batch:
                 total_cogs += (item.Quantity * float(batch.CostPrice or 0.0))
 
@@ -148,7 +149,7 @@ def fetch_sales_report_data(
 
     transactions = []
     for s in completed_sales:
-        customer_name = s.customer.FirstName + " " + s.customer.LastName if s.customer else "Walk-in"
+        customer_name = s.customer.Name if s.customer else "Walk-in"
         total_qty = sum(i.Quantity for i in s.items)
         transactions.append(SalesTransaction(
             InvoiceNo=s.InvoiceNumber or str(s.SalesId),
@@ -182,7 +183,10 @@ def fetch_sales_report_data(
         period = s.TransactionDate.strftime(fmt)
         if period in trend_dict:
             trend_dict[period]["sales"] += float(s.GrandTotal or 0.0)
-            sale_cogs = sum((i.Quantity * float(db.query(models.StockBatch).filter(models.StockBatch.BatchId == i.BatchId).first().CostPrice if db.query(models.StockBatch).filter(models.StockBatch.BatchId == i.BatchId).first() else 0.0)) for i in s.items)
+            sale_cogs = sum(
+                i.Quantity * float(batch_map[i.BatchId].CostPrice or 0.0)
+                for i in s.items if i.BatchId in batch_map
+            )
             trend_dict[period]["cogs"] += sale_cogs
 
     trend_data = []
@@ -199,11 +203,11 @@ def fetch_sales_report_data(
         pm_dict[pm] = pm_dict.get(pm, 0) + float(s.GrandTotal or 0.0)
     payment_methods = [PaymentMethodStats(name=k, value=v) for k, v in pm_dict.items()]
 
-    # Top Medicines
+    # Top Medicines — reuse the already-fetched batch_map
     med_dict = {}
     for s in completed_sales:
         for i in s.items:
-            batch = db.query(models.StockBatch).filter(models.StockBatch.BatchId == i.BatchId).first()
+            batch = batch_map.get(i.BatchId)
             if batch and batch.medicine:
                 name = batch.medicine.BrandName
                 if name not in med_dict:
@@ -353,11 +357,13 @@ def fetch_purchase_report_data(
         supp_dict[s_name] = supp_dict.get(s_name, 0) + float(p.GrandTotal or 0.0)
     suppliers = [SupplierStats(name=k, value=v) for k, v in supp_dict.items()]
 
-    # Top Medicines
+    # Top Medicines — pre-fetch all medicines in one query to avoid N+1
+    all_med_ids = list({i.MedicineId for p in completed_purchases for i in p.items if i.MedicineId})
+    medicine_map = {m.MedicineId: m for m in db.query(models.Medicine).filter(models.Medicine.MedicineId.in_(all_med_ids)).all()} if all_med_ids else {}
     med_dict = {}
     for p in completed_purchases:
         for i in p.items:
-            med = db.query(models.Medicine).filter(models.Medicine.MedicineId == i.MedicineId).first()
+            med = medicine_map.get(i.MedicineId)
             name = med.BrandName if med else "Unknown"
             if name not in med_dict:
                 med_dict[name] = {"qty": 0, "cost": 0.0}

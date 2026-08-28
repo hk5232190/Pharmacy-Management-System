@@ -64,6 +64,8 @@ function ReportsPageInner({
   onMedicineTabChange: (tab: string) => void
 }) {
   const [loading, setLoading] = useState(true);
+  // Per-tab data cache: avoid blanking screen on tab switch
+  const [dataCache, setDataCache] = useState<Record<string, any>>({});
   const [data, setData] = useState<any>(null);
   
   // Filters
@@ -120,9 +122,26 @@ function ReportsPageInner({
     }
   }, [timeframe, dateRange, activeTab, activeMedicineTab, medicineSearchTerm, medicineCategoryFilter, medicineCurrentPage, medicinePageSize]);
 
+  // Helper: build a cache key from current filter state
+  const getCacheKey = (tab: string) => {
+    const base = `${tab}__${timeframe}__${dateRange?.start ?? ''}__${dateRange?.end ?? ''}`;
+    if (tab === 'medicine') return `${base}__${activeMedicineTab}__${medicineSearchTerm}__${medicineCategoryFilter}__${medicineCurrentPage}__${medicinePageSize}`;
+    return base;
+  };
+
+  // Helper: set data and update cache simultaneously
+  const setDataAndCache = (tab: string, result: any) => {
+    const key = getCacheKey(tab);
+    setDataCache(prev => ({ ...prev, [key]: result }));
+    setData(result);
+  };
+
   const fetchSalesReports = async () => {
+    const cacheKey = getCacheKey('sales');
+    const cached = dataCache[cacheKey];
+    // Show cached data immediately, skip spinner on re-visit
+    if (cached) { setData(cached); setLoading(false); return; }
     setLoading(true);
-    setData(null);
     try {
       let url = `/reports/sales?timeframe=${timeframe}`;
       if (timeframe === 'custom' && dateRange) {
@@ -132,7 +151,7 @@ function ReportsPageInner({
       if (res.success === false) {
         toast.error(res.error || "Failed to load sales report");
       } else {
-        setData(res);
+        setDataAndCache('sales', res);
       }
     } catch (err: any) {
       toast.error(err.message || "Error fetching reports");
@@ -142,8 +161,10 @@ function ReportsPageInner({
   };
 
   const fetchFinancialReports = async () => {
+    const cacheKey = getCacheKey('financial');
+    const cached = dataCache[cacheKey];
+    if (cached) { setData(cached); setLoading(false); return; }
     setLoading(true);
-    setData(null);
     try {
       let url = `/reports/financial?timeframe=${timeframe}`;
       if (timeframe === 'custom' && dateRange) {
@@ -153,7 +174,7 @@ function ReportsPageInner({
       if (res.success === false) {
         toast.error(res.error || "Failed to load financial report");
       } else {
-        setData(res);
+        setDataAndCache('financial', res);
       }
     } catch (err: any) {
       toast.error(err.message || "Error fetching reports");
@@ -163,8 +184,10 @@ function ReportsPageInner({
   };
 
   const fetchMedicineReports = async () => {
+    const cacheKey = getCacheKey('medicine');
+    const cached = dataCache[cacheKey];
+    if (cached) { setData(cached); setLoading(false); return; }
     setLoading(true);
-    setData(null);
     try {
       let url = `/reports/medicine?timeframe=${timeframe}&report_type=${activeMedicineTab}&page=${medicineCurrentPage}&page_size=${medicinePageSize}`;
       if (medicineSearchTerm) url += `&search=${encodeURIComponent(medicineSearchTerm)}`;
@@ -177,7 +200,7 @@ function ReportsPageInner({
       if (res.success === false) {
         toast.error(res.error || "Failed to load medicine report");
       } else {
-        setData(res);
+        setDataAndCache('medicine', res);
       }
     } catch (err: any) {
       toast.error(err.message || "Error fetching reports");
@@ -187,8 +210,10 @@ function ReportsPageInner({
   };
 
   const fetchInventoryReports = async () => {
+    const cacheKey = getCacheKey('inventory');
+    const cached = dataCache[cacheKey];
+    if (cached) { setData(cached); setLoading(false); return; }
     setLoading(true);
-    setData(null);
     try {
       let url = `/reports/inventory?timeframe=${timeframe}`;
       if (timeframe === 'custom' && dateRange) {
@@ -198,7 +223,7 @@ function ReportsPageInner({
       if (res.success === false) {
         toast.error(res.error || "Failed to load inventory report");
       } else {
-        setData(res);
+        setDataAndCache('inventory', res);
       }
     } catch (err: any) {
       toast.error(err.message || "Error fetching reports");
@@ -208,8 +233,10 @@ function ReportsPageInner({
   };
 
   const fetchPurchaseReports = async () => {
+    const cacheKey = getCacheKey('purchases');
+    const cached = dataCache[cacheKey];
+    if (cached) { setData(cached); setLoading(false); return; }
     setLoading(true);
-    setData(null);
     try {
       let url = `/reports/purchases?timeframe=${timeframe}`;
       if (timeframe === 'custom' && dateRange) {
@@ -219,7 +246,7 @@ function ReportsPageInner({
       if (res.success === false) {
         toast.error(res.error || "Failed to load purchase report");
       } else {
-        setData(res);
+        setDataAndCache('purchases', res);
       }
     } catch (err: any) {
       toast.error(err.message || "Error fetching reports");
@@ -229,6 +256,8 @@ function ReportsPageInner({
   };
 
   const handleTimeframeChange = (tf: string) => {
+    // Clear cache so new timeframe always fetches fresh data
+    setDataCache({});
     if (tf === 'custom') {
       setShowCustom(true);
       setTimeframe(tf);
@@ -243,6 +272,8 @@ function ReportsPageInner({
 
   const handleApplyCustom = () => {
     if (startDate && endDate) {
+      // Clear cache so custom range always fetches fresh
+      setDataCache({});
       setDateRange({ start: startDate, end: endDate });
     }
   };
