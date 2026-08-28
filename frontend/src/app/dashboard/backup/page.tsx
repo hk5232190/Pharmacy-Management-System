@@ -660,56 +660,58 @@ function BackupRestorePageInner({
         </KPICard>
       </div>
 
-      {/* ── Premium Animated Tabs ──────────────────────────────────────────── */}
-      <div className="flex items-center justify-start p-1.5 mt-6 mb-4 bg-slate-100/80 dark:bg-slate-800/50 rounded-xl w-max border border-slate-200/50 dark:border-slate-700/50">
-        <button
-          onClick={() => onTabChange("manual")}
-          className={cn(
-            "flex items-center px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200",
-            activeTab === "manual" 
-              ? "bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-sm ring-1 ring-slate-200 dark:ring-slate-800" 
-              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50"
-          )}
-        >
-          <DownloadCloud className="mr-2 h-4 w-4" />
-          Manual Backup
-        </button>
-        <button
-          onClick={() => onTabChange("restore")}
-          className={cn(
-            "flex items-center px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200",
-            activeTab === "restore" 
-              ? "bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-sm ring-1 ring-slate-200 dark:ring-slate-800" 
-              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50"
-          )}
-        >
-          <RotateCcw className="mr-2 h-4 w-4" />
-          Restore Backup
-        </button>
-        <button
-          onClick={() => onTabChange("history")}
-          className={cn(
-            "flex items-center px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200",
-            activeTab === "history" 
-              ? "bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-sm ring-1 ring-slate-200 dark:ring-slate-800" 
-              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50"
-          )}
-        >
-          <History className="mr-2 h-4 w-4" />
-          Backup History
-        </button>
-        <button
-          onClick={() => onTabChange("settings")}
-          className={cn(
-            "flex items-center px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200",
-            activeTab === "settings" 
-              ? "bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-sm ring-1 ring-slate-200 dark:ring-slate-800" 
-              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50"
-          )}
-        >
-          <Settings className="mr-2 h-4 w-4" />
-          Backup Settings
-        </button>
+      {/* ── Action Tabs ──────────────────────────────────────────── */}
+      <div className="flex flex-col xl:flex-row justify-between items-start xl:items-end gap-4 border-b border-border mb-6 mt-10">
+        <div className="flex gap-2 w-full xl:w-auto overflow-x-auto custom-scrollbar">
+          <button
+            onClick={() => onTabChange("manual")}
+            className={cn(
+              "flex items-center px-6 py-2.5 font-medium text-sm rounded-t-lg transition-colors whitespace-nowrap",
+              activeTab === "manual" 
+                ? "bg-primary text-primary-foreground" 
+                : "text-muted-foreground hover:bg-secondary/50"
+            )}
+          >
+            <DownloadCloud className="mr-2 h-4 w-4" />
+            Manual Backup
+          </button>
+          <button
+            onClick={() => onTabChange("restore")}
+            className={cn(
+              "flex items-center px-6 py-2.5 font-medium text-sm rounded-t-lg transition-colors whitespace-nowrap",
+              activeTab === "restore" 
+                ? "bg-primary text-primary-foreground" 
+                : "text-muted-foreground hover:bg-secondary/50"
+            )}
+          >
+            <RotateCcw className="mr-2 h-4 w-4" />
+            Restore Backup
+          </button>
+          <button
+            onClick={() => onTabChange("history")}
+            className={cn(
+              "flex items-center px-6 py-2.5 font-medium text-sm rounded-t-lg transition-colors whitespace-nowrap",
+              activeTab === "history" 
+                ? "bg-primary text-primary-foreground" 
+                : "text-muted-foreground hover:bg-secondary/50"
+            )}
+          >
+            <History className="mr-2 h-4 w-4" />
+            Backup History
+          </button>
+          <button
+            onClick={() => onTabChange("settings")}
+            className={cn(
+              "flex items-center px-6 py-2.5 font-medium text-sm rounded-t-lg transition-colors whitespace-nowrap",
+              activeTab === "settings" 
+                ? "bg-primary text-primary-foreground" 
+                : "text-muted-foreground hover:bg-secondary/50"
+            )}
+          >
+            <Settings className="mr-2 h-4 w-4" />
+            Backup Settings
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">

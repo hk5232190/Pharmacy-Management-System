@@ -362,43 +362,68 @@ function ReportsPageInner({
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex space-x-2 border-b border-border pb-2 overflow-x-auto print:hidden">
-        <Button 
-          variant={activeTab === 'sales' ? 'default' : 'ghost'} 
-          className="rounded-full"
+      {/* ── Tabs ───────────────────────────────────────────────────────────── */}
+      <div className="flex items-center justify-start p-1.5 mb-6 bg-slate-100/80 dark:bg-slate-800/50 rounded-xl w-max max-w-full border border-slate-200/50 dark:border-slate-700/50 overflow-x-auto custom-scrollbar print:hidden">
+        <button
           onClick={() => { if (activeTab !== 'sales') { setData(null); onTabChange('sales'); } }}
+          className={cn(
+            "flex items-center px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 whitespace-nowrap",
+            activeTab === "sales" 
+              ? "bg-blue-600 dark:bg-white text-white dark:text-slate-900 shadow-md ring-1 ring-blue-700/50 dark:ring-slate-800/50" 
+              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50"
+          )}
         >
-          <TrendingUp className="w-4 h-4 mr-2" /> Sales Reports
-        </Button>
-        <Button 
-          variant={activeTab === 'purchases' ? 'default' : 'ghost'} 
-          className="rounded-full"
+          <TrendingUp className="mr-2 h-4 w-4" />
+          Sales Reports
+        </button>
+        <button
           onClick={() => { if (activeTab !== 'purchases') { setData(null); onTabChange('purchases'); } }}
+          className={cn(
+            "flex items-center px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 whitespace-nowrap",
+            activeTab === "purchases" 
+              ? "bg-blue-600 dark:bg-white text-white dark:text-slate-900 shadow-md ring-1 ring-blue-700/50 dark:ring-slate-800/50" 
+              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50"
+          )}
         >
-          <PackageSearch className="w-4 h-4 mr-2" /> Purchase Reports
-        </Button>
-        <Button 
-          variant={activeTab === 'inventory' ? 'default' : 'ghost'} 
-          className="rounded-full"
+          <PackageSearch className="mr-2 h-4 w-4" />
+          Purchase Reports
+        </button>
+        <button
           onClick={() => { if (activeTab !== 'inventory') { setData(null); onTabChange('inventory'); } }}
+          className={cn(
+            "flex items-center px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 whitespace-nowrap",
+            activeTab === "inventory" 
+              ? "bg-blue-600 dark:bg-white text-white dark:text-slate-900 shadow-md ring-1 ring-blue-700/50 dark:ring-slate-800/50" 
+              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50"
+          )}
         >
-          <FileSpreadsheet className="w-4 h-4 mr-2" /> Inventory Reports
-        </Button>
-        <Button 
-          variant={activeTab === 'medicine' ? 'default' : 'ghost'} 
-          className="rounded-full"
+          <FileSpreadsheet className="mr-2 h-4 w-4" />
+          Inventory Reports
+        </button>
+        <button
           onClick={() => { if (activeTab !== 'medicine') { setData(null); onTabChange('medicine'); } }}
+          className={cn(
+            "flex items-center px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 whitespace-nowrap",
+            activeTab === "medicine" 
+              ? "bg-blue-600 dark:bg-white text-white dark:text-slate-900 shadow-md ring-1 ring-blue-700/50 dark:ring-slate-800/50" 
+              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50"
+          )}
         >
-          <Activity className="w-4 h-4 mr-2" /> Medicine Reports
-        </Button>
-        <Button 
-          variant={activeTab === 'financial' ? 'default' : 'ghost'} 
-          className="rounded-full bg-amber-50 text-amber-600 hover:bg-amber-100 hover:text-amber-700 dark:bg-amber-950/30 dark:text-amber-500"
+          <Activity className="mr-2 h-4 w-4" />
+          Medicine Reports
+        </button>
+        <button
           onClick={() => { if (activeTab !== 'financial') { setData(null); onTabChange('financial'); } }}
+          className={cn(
+            "flex items-center px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 whitespace-nowrap ml-1",
+            activeTab === "financial" 
+              ? "bg-amber-50 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300 shadow-md ring-1 ring-amber-200/50 dark:ring-amber-500/30" 
+              : "text-amber-600 dark:text-amber-500 hover:bg-amber-100 dark:hover:bg-amber-950/40 hover:text-amber-800 dark:hover:text-amber-400"
+          )}
         >
-          <DollarSign className="w-4 h-4 mr-2" /> Financial Reports
-        </Button>
+          <DollarSign className="mr-2 h-4 w-4" />
+          Financial Reports
+        </button>
       </div>
 
       {/* Filters */}
