@@ -4,8 +4,8 @@ import { useState, useEffect } from "react";
 import { 
   RefreshCw, Settings, Calendar, Database, HardDrive, HeartPulse, 
   ShieldCheck, Clock, DownloadCloud, RotateCcw, History, Edit2, 
-  FolderOpen, Info, CheckCircle2, Search, Filter, Shield, 
-  CloudRain, ArrowRight, Loader2, Trash2
+  FolderOpen, Info, CheckCircle2, Search, Filter, 
+  ArrowRight, Loader2, Trash2, XCircle, PauseCircle, Check, RefreshCcw
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,19 +14,86 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+
+// Accent colour map for KPI Cards
+const accentMap: Record<string, { border: string; icon: string; text: string; bg: string }> = {
+  blue:    { border: "border-l-blue-500",    icon: "text-blue-500",    text: "text-blue-600 dark:text-blue-400",    bg: "bg-blue-50 dark:bg-blue-900/20" },
+  emerald: { border: "border-l-emerald-500", icon: "text-emerald-500", text: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-900/20" },
+  purple:  { border: "border-l-purple-500",  icon: "text-purple-500",  text: "text-purple-600 dark:text-purple-400",  bg: "bg-purple-50 dark:bg-purple-900/20" },
+  orange:  { border: "border-l-orange-500",  icon: "text-orange-500",  text: "text-orange-600 dark:text-orange-400",  bg: "bg-orange-50 dark:bg-orange-900/20" },
+  amber:   { border: "border-l-amber-500",   icon: "text-amber-500",   text: "text-amber-600 dark:text-amber-400",   bg: "bg-amber-50 dark:bg-amber-900/20" },
+  indigo:  { border: "border-l-indigo-500",  icon: "text-indigo-500",  text: "text-indigo-600 dark:text-indigo-400",  bg: "bg-indigo-50 dark:bg-indigo-900/20" },
+  rose:    { border: "border-l-rose-500",    icon: "text-rose-500",    text: "text-rose-600 dark:text-rose-400",    bg: "bg-rose-50 dark:bg-rose-900/20" },
+  slate:   { border: "border-l-slate-400",   icon: "text-slate-400",   text: "text-slate-500 dark:text-slate-400",   bg: "bg-slate-100 dark:bg-slate-800/40" },
+};
+
+function KPICard({ title, value, icon, accent = "blue", children }: { title: string; value: React.ReactNode; icon: React.ReactNode; accent?: string; children?: React.ReactNode }) {
+  const a = accentMap[accent] ?? accentMap.blue;
+  return (
+    <div className={cn(
+      "relative bg-white dark:bg-card rounded-xl border border-border border-l-4 shadow-sm p-3.5 flex flex-col gap-2 overflow-hidden transition-shadow hover:shadow-md",
+      a.border
+    )}>
+      <div className={cn("w-9 h-9 rounded-lg flex items-center justify-center shrink-0 mb-1", a.bg)}>
+        <span className={cn(a.icon, "[&>svg]:h-5 [&>svg]:w-5")}>{icon}</span>
+      </div>
+      <div className="flex flex-col">
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">{title}</p>
+        <div className={cn("text-xl md:text-2xl font-extrabold leading-none tabular-nums tracking-tight", a.text)}>{value}</div>
+        {children && <div className="mt-2.5 pt-2.5 border-t border-border/40">{children}</div>}
+      </div>
+    </div>
+  );
+}
 
 export default function BackupRestorePage() {
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [refreshState, setRefreshState] = useState<"idle" | "loading" | "done">("idle");
   const [activeTab, setActiveTab] = useState("manual");
+
+  const handleRefresh = () => {
+    if (refreshState === "loading") return;
+    setRefreshState("loading");
+    setRefreshKey(k => k + 1);
+    setTimeout(() => {
+      setRefreshState("done");
+      setTimeout(() => setRefreshState("idle"), 1500);
+    }, 400);
+  };
+
+  return <BackupRestorePageInner 
+    key={refreshKey} 
+    refreshState={refreshState} 
+    onRefresh={handleRefresh} 
+    activeTab={activeTab} 
+    onTabChange={setActiveTab}
+  />;
+}
+
+function BackupRestorePageInner({
+  onRefresh,
+  refreshState,
+  activeTab,
+  onTabChange
+}: {
+  onRefresh: () => void;
+  refreshState: "idle" | "loading" | "done";
+  activeTab: string;
+  onTabChange: (tab: string) => void;
+}) {
   const [backupName, setBackupName] = useState("");
   const [backupLocation, setBackupLocation] = useState("./backups");
   const [compress, setCompress] = useState(true);
   
   const [isBackingUp, setIsBackingUp] = useState(false);
+  const [backupProgress, setBackupProgress] = useState(0); // 0–100 for animation
   const [backupHistory, setBackupHistory] = useState<any[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [historySearchQuery, setHistorySearchQuery] = useState("");
   const [expandedBackupId, setExpandedBackupId] = useState<number | null>(null);
+  const [hoveredBackupId, setHoveredBackupId] = useState<number | null>(null);
 
   const [verificationReport, setVerificationReport] = useState<any>(null);
   const [isVerifyModalOpen, setIsVerifyModalOpen] = useState(false);
@@ -52,14 +119,30 @@ export default function BackupRestorePage() {
   const [dbHealth, setDbHealth] = useState<any>(null);
   const [isCheckingHealth, setIsCheckingHealth] = useState(false);
   const [adminPassword, setAdminPassword] = useState("");
+  const [diskSpace, setDiskSpace] = useState<string | null>(null);
+  const [isLoadingModule, setIsLoadingModule] = useState(true);
 
-  // Initialize backup name
+  // Initialize
   useEffect(() => {
     generateBackupName();
-    fetchHistory();
-    fetchSettings();
-    fetchDbInfo();
+    const loadAll = async () => {
+      setIsLoadingModule(true);
+      await Promise.all([
+        fetchHistory(),
+        fetchSettings(),
+        fetchDbInfo(),
+        autoCheckHealth()
+      ]);
+      setIsLoadingModule(false);
+    };
+    loadAll();
   }, []);
+
+  // Re-fetch disk space whenever backup location changes
+  useEffect(() => {
+    const timer = setTimeout(() => fetchDiskSpace(backupLocation), 500);
+    return () => clearTimeout(timer);
+  }, [backupLocation]);
 
   const generateBackupName = () => {
     const now = new Date();
@@ -114,6 +197,34 @@ export default function BackupRestorePage() {
     }
   };
 
+  /** Silent auto-health-check on mount — no toast, just sets state */
+  const autoCheckHealth = async () => {
+    try {
+      const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
+      const res = await fetch("http://127.0.0.1:8000/api/v1/backup/db-health", {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setDbHealth(data);
+      }
+    } catch {
+      // Silently fail — user can click "Check Now" manually
+    }
+  };
+
+  const fetchDiskSpace = async (path: string) => {
+    try {
+      const res = await fetch(`http://127.0.0.1:8000/api/v1/backup/disk-space?path=${encodeURIComponent(path)}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.free_readable) setDiskSpace(data.free_readable);
+      }
+    } catch {
+      setDiskSpace(null);
+    }
+  };
+
   const handleCheckHealth = async () => {
     setIsCheckingHealth(true);
     try {
@@ -165,6 +276,16 @@ export default function BackupRestorePage() {
     }
 
     setIsBackingUp(true);
+    setBackupProgress(0);
+
+    // Simulate a smooth progress animation (real work happens in backend)
+    const interval = setInterval(() => {
+      setBackupProgress(prev => {
+        if (prev >= 90) { clearInterval(interval); return 90; }
+        return prev + Math.random() * 8;
+      });
+    }, 400);
+
     try {
       const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
       const res = await fetch("http://127.0.0.1:8000/api/v1/backup/manual", {
@@ -182,17 +303,25 @@ export default function BackupRestorePage() {
 
       const data = await res.json();
 
+      clearInterval(interval);
+      setBackupProgress(100);
+
       if (res.ok) {
         toast.success("Backup created successfully!");
-        generateBackupName(); // Generate a new name for the next backup
-        fetchHistory(); // Refresh history
+        generateBackupName();
+        fetchHistory();
+        fetchDbInfo();
       } else {
         toast.error(data.detail || "Failed to create backup");
       }
     } catch (error) {
+      clearInterval(interval);
       toast.error("An error occurred while communicating with the server.");
     } finally {
-      setIsBackingUp(false);
+      setTimeout(() => {
+        setIsBackingUp(false);
+        setBackupProgress(0);
+      }, 600);
     }
   };
 
@@ -229,8 +358,6 @@ export default function BackupRestorePage() {
       if (res.ok) {
         setRestoreStatus("Restore successful. Reloading...");
         toast.success(data.message || "Database restored successfully!");
-        
-        // Force reload the frontend to fetch fresh data
         setTimeout(() => {
           window.location.reload();
         }, 1500);
@@ -353,224 +480,361 @@ export default function BackupRestorePage() {
     return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
   };
 
+  // ─── Derived state for smart KPI cards ───────────────────────────────────
+  const hasEverBacked = !!dbInfo?.last_backup_date;
+  const lastBackupAccent = hasEverBacked ? "blue" : "slate";
+  const lastBackupValue = hasEverBacked
+    ? format(new Date(dbInfo.last_backup_date + "Z"), "MMM dd, yyyy")
+    : "Never";
+
+  const autoEnabled = settings.IsAutoBackupEnabled;
+  const nextScheduledValue = autoEnabled ? "Tomorrow" : "Paused";
+  const nextScheduledAccent = autoEnabled ? "indigo" : "slate";
+
+  const dbStatusAccent =
+    dbHealth?.status === "Healthy" ? "emerald" :
+    dbHealth?.status === "Corrupted" ? "rose" :
+    dbHealth ? "orange" : "slate";
+
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
       <div className="flex items-center justify-between space-y-2">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Backup & Restore</h2>
+          <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Backup &amp; Restore</h2>
           <p className="text-muted-foreground">Protect your pharmacy data by creating secure backups, restoring previous versions, and managing backup history.</p>
         </div>
         <div className="flex items-center space-x-2">
-          <Button variant="outline" onClick={fetchHistory}>
-            <RefreshCw className="mr-2 h-4 w-4" />
-            Refresh
+          <Button
+            variant="outline"
+            className={cn(
+              "h-9 gap-2 transition-all duration-300 rounded-full",
+              refreshState === "loading" && "border-primary/40 text-primary",
+              refreshState === "done" && "border-emerald-400 text-emerald-600 dark:text-emerald-400 bg-emerald-50/60 dark:bg-emerald-900/20"
+            )}
+            onClick={onRefresh}
+            disabled={refreshState === "loading"}
+          >
+            {refreshState === "done" ? (
+              <Check className="h-4 w-4 animate-in zoom-in-50 duration-200" />
+            ) : (
+              <RefreshCcw className={cn("h-4 w-4 transition-transform", refreshState === "loading" && "animate-spin")} />
+            )}
+            {refreshState === "loading" ? "Refreshing..." : refreshState === "done" ? "Updated!" : "Refresh"}
           </Button>
-          <Button variant="outline">
+          <Button variant="outline" onClick={() => onTabChange("settings")}>
             <Settings className="mr-2 h-4 w-4" />
             Backup Settings
           </Button>
         </div>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Last Backup</CardTitle>
-            <Calendar className="h-8 w-8 text-blue-500 bg-blue-50 dark:bg-blue-900/20 p-1.5 rounded-lg" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-xl font-bold">
-              {dbInfo?.last_backup_date ? format(new Date(dbInfo.last_backup_date + "Z"), "MMM dd, yyyy") : "Never"}
-            </div>
-            <p className="text-xs text-green-500 flex items-center mt-1">
-              <CheckCircle2 className="h-3 w-3 mr-1" /> Successful
+      {isLoadingModule ? (
+        <div className="flex flex-col items-center justify-center py-32 space-y-4">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+          <p className="text-muted-foreground">Loading backup data...</p>
+        </div>
+      ) : (
+        <>
+          {/* ── KPI Cards ─────────────────────────────────────────────────────── */}
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
+        {/* Last Backup */}
+        <KPICard
+          title="Last Backup"
+          value={lastBackupValue}
+          icon={<Calendar className="h-6 w-6" />}
+          accent={lastBackupAccent}
+        >
+          {hasEverBacked ? (
+            <p className="text-xs text-emerald-600 dark:text-emerald-400 flex items-center font-medium">
+              <CheckCircle2 className="h-3.5 w-3.5 mr-1" /> Successful
             </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Backups</CardTitle>
-            <Database className="h-8 w-8 text-purple-500 bg-purple-50 dark:bg-purple-900/20 p-1.5 rounded-lg" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-xl font-bold">{dbInfo?.total_backups || 0}</div>
-            <p className="text-xs text-muted-foreground mt-1 flex items-center">
-              Available in history
+          ) : (
+            <p className="text-xs text-slate-400 flex items-center">
+              <XCircle className="h-3.5 w-3.5 mr-1" /> No backups yet
             </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Database Storage</CardTitle>
-            <HardDrive className="h-8 w-8 text-blue-500 bg-blue-50 dark:bg-blue-900/20 p-1.5 rounded-lg" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-xl font-bold">
-              {formatBytes(dbInfo?.size_bytes || 0)}
-            </div>
-            <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full mt-2">
-              <div className="bg-blue-500 h-1.5 rounded-full w-[5%]"></div>
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">Current Active Database</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Automatic Backup</CardTitle>
-            <HeartPulse className="h-8 w-8 text-green-500 bg-green-50 dark:bg-green-900/20 p-1.5 rounded-lg" />
-          </CardHeader>
-          <CardContent>
-            <div className={`text-xl font-bold ${settings.IsAutoBackupEnabled ? "text-green-500" : "text-slate-500"}`}>
-              {settings.IsAutoBackupEnabled ? "Enabled" : "Disabled"}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {settings.IsAutoBackupEnabled ? `${settings.BackupFrequency} at ${settings.BackupTime}` : "Turn on in settings"}
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Database Status</CardTitle>
-            <ShieldCheck className={`h-8 w-8 p-1.5 rounded-lg ${dbHealth?.status === 'Healthy' ? 'text-green-500 bg-green-50 dark:bg-green-900/20' : dbHealth?.status === 'Corrupted' ? 'text-red-500 bg-red-50 dark:bg-red-900/20' : 'text-orange-500 bg-orange-50 dark:bg-orange-900/20'}`} />
-          </CardHeader>
-          <CardContent>
-            <div className={`text-xl font-bold ${dbHealth?.status === 'Healthy' ? 'text-green-500' : dbHealth?.status === 'Corrupted' ? 'text-red-500' : 'text-orange-500'}`}>
+          )}
+        </KPICard>
+
+        {/* Total Backups */}
+        <KPICard
+          title="Total Backups"
+          value={dbInfo?.total_backups || 0}
+          icon={<Database className="h-6 w-6" />}
+          accent="purple"
+        >
+          <p className="text-xs text-muted-foreground flex items-center">
+            Available in history
+          </p>
+        </KPICard>
+
+        {/* Database Storage */}
+        <KPICard
+          title="Database Storage"
+          value={formatBytes(dbInfo?.size_bytes || 0)}
+          icon={<HardDrive className="h-6 w-6" />}
+          accent="blue"
+        >
+          <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full mb-1.5">
+            <div className="bg-blue-500 h-1.5 rounded-full w-[5%]"></div>
+          </div>
+          <p className="text-xs text-muted-foreground">Current Active Database</p>
+        </KPICard>
+
+        {/* Automatic Backup */}
+        <KPICard
+          title="Automatic Backup"
+          value={
+            <span className={autoEnabled ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500"}>
+              {autoEnabled ? "Enabled" : "Disabled"}
+            </span>
+          }
+          icon={<HeartPulse className="h-6 w-6" />}
+          accent={autoEnabled ? "emerald" : "slate"}
+        >
+          <p className="text-xs text-muted-foreground">
+            {autoEnabled ? `${settings.BackupFrequency} at ${settings.BackupTime}` : "Turn on in settings"}
+          </p>
+        </KPICard>
+
+        {/* Database Status — auto-checked on mount */}
+        <KPICard
+          title="Database Status"
+          value={
+            <span className={
+              dbHealth?.status === "Healthy" ? "text-emerald-600 dark:text-emerald-400" :
+              dbHealth?.status === "Corrupted" ? "text-rose-600 dark:text-rose-400" :
+              dbHealth ? "text-orange-600 dark:text-orange-400" :
+              "text-slate-400"
+            }>
               {dbHealth?.status || "Unknown"}
-            </div>
-            <p className={`text-xs flex items-center mt-1 ${dbHealth?.status === 'Healthy' ? 'text-green-500' : 'text-muted-foreground'}`}>
-              {dbHealth?.status === 'Healthy' ? <><CheckCircle2 className="h-3 w-3 mr-1" /> Protected</> : <Button variant="link" className="p-0 h-auto text-xs" onClick={handleCheckHealth}>{isCheckingHealth ? "Checking..." : "Check Now"}</Button>}
+            </span>
+          }
+          icon={<ShieldCheck className="h-6 w-6" />}
+          accent={dbStatusAccent}
+        >
+          <p className={`text-xs flex items-center font-medium ${dbHealth?.status === "Healthy" ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"}`}>
+            {dbHealth?.status === "Healthy" ? (
+              <><CheckCircle2 className="h-3.5 w-3.5 mr-1" /> Protected</>
+            ) : (
+              <Button variant="link" className="p-0 h-auto text-xs" onClick={handleCheckHealth}>
+                {isCheckingHealth ? <><Loader2 className="h-3 w-3 animate-spin mr-1" />Checking...</> : "Check Now"}
+              </Button>
+            )}
+          </p>
+        </KPICard>
+
+        {/* Next Scheduled — Paused if auto-backup is off */}
+        <KPICard
+          title="Next Scheduled"
+          value={nextScheduledValue}
+          icon={autoEnabled ? <Clock className="h-6 w-6" /> : <PauseCircle className="h-6 w-6" />}
+          accent={nextScheduledAccent}
+        >
+          {autoEnabled ? (
+            <p className="text-xs text-indigo-600 dark:text-indigo-400 flex items-center font-medium">
+              <Clock className="h-3.5 w-3.5 mr-1" /> {settings.BackupFrequency} at {settings.BackupTime}
             </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Next Scheduled</CardTitle>
-            <Clock className="h-8 w-8 text-indigo-500 bg-indigo-50 dark:bg-indigo-900/20 p-1.5 rounded-lg" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-xl font-bold">Tomorrow</div>
-            <p className="text-xs text-blue-500 flex items-center mt-1">
-              <Clock className="h-3 w-3 mr-1" /> In 11h 17m
+          ) : (
+            <p className="text-xs text-slate-400 flex items-center">
+              <PauseCircle className="h-3.5 w-3.5 mr-1" /> Auto-backup is off
             </p>
-          </CardContent>
-        </Card>
+          )}
+        </KPICard>
       </div>
 
-      {/* Tabs */}
-      <div className="flex items-center space-x-2 border-b pb-2 mt-6">
-        <Button variant={activeTab === "manual" ? "default" : "ghost"} onClick={() => setActiveTab("manual")} className={activeTab === "manual" ? "bg-blue-600 hover:bg-blue-700" : ""}>
+      {/* ── Premium Animated Tabs ──────────────────────────────────────────── */}
+      <div className="flex items-center justify-start p-1.5 mt-6 mb-4 bg-slate-100/80 dark:bg-slate-800/50 rounded-xl w-max border border-slate-200/50 dark:border-slate-700/50">
+        <button
+          onClick={() => onTabChange("manual")}
+          className={cn(
+            "flex items-center px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200",
+            activeTab === "manual" 
+              ? "bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-sm ring-1 ring-slate-200 dark:ring-slate-800" 
+              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50"
+          )}
+        >
           <DownloadCloud className="mr-2 h-4 w-4" />
           Manual Backup
-        </Button>
-        <Button variant={activeTab === "restore" ? "default" : "ghost"} onClick={() => setActiveTab("restore")}>
+        </button>
+        <button
+          onClick={() => onTabChange("restore")}
+          className={cn(
+            "flex items-center px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200",
+            activeTab === "restore" 
+              ? "bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-sm ring-1 ring-slate-200 dark:ring-slate-800" 
+              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50"
+          )}
+        >
           <RotateCcw className="mr-2 h-4 w-4" />
           Restore Backup
-        </Button>
-        <Button variant={activeTab === "history" ? "default" : "ghost"} onClick={() => setActiveTab("history")}>
+        </button>
+        <button
+          onClick={() => onTabChange("history")}
+          className={cn(
+            "flex items-center px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200",
+            activeTab === "history" 
+              ? "bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-sm ring-1 ring-slate-200 dark:ring-slate-800" 
+              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50"
+          )}
+        >
           <History className="mr-2 h-4 w-4" />
           Backup History
-        </Button>
-        <Button variant={activeTab === "settings" ? "default" : "ghost"} onClick={() => setActiveTab("settings")}>
+        </button>
+        <button
+          onClick={() => onTabChange("settings")}
+          className={cn(
+            "flex items-center px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200",
+            activeTab === "settings" 
+              ? "bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-sm ring-1 ring-slate-200 dark:ring-slate-800" 
+              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50"
+          )}
+        >
           <Settings className="mr-2 h-4 w-4" />
           Backup Settings
-        </Button>
+        </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
-        {/* Main Content Area */}
+        {/* ── Main Content ────────────────────────────────────────────────── */}
         <div className="md:col-span-2 space-y-6">
+          {/* Manual Backup Tab */}
           {activeTab === "manual" && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Create Manual Backup</CardTitle>
+            <Card className="shadow-sm border-border/60 overflow-hidden">
+              <CardHeader className="bg-slate-50/50 dark:bg-slate-900/20 border-b pb-4">
+                <CardTitle className="text-lg flex items-center">
+                  <DownloadCloud className="h-5 w-5 mr-2 text-blue-500" />
+                  Create Manual Backup
+                </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Left Column in Form */}
-                  <div className="space-y-4">
+              <CardContent className="space-y-6 pt-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  {/* Left Column: Form */}
+                  <div className="space-y-5">
                     <div className="space-y-2">
-                      <Label htmlFor="backupName">Backup Name</Label>
-                      <div className="relative">
-                        <Input id="backupName" value={backupName} onChange={(e) => setBackupName(e.target.value)} />
-                        <Edit2 className="absolute right-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                      <Label htmlFor="backupName" className="font-semibold text-slate-700 dark:text-slate-300">Backup Name</Label>
+                      <div className="relative group">
+                        <Input 
+                          id="backupName" 
+                          value={backupName} 
+                          onChange={(e) => setBackupName(e.target.value)} 
+                          className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 transition-colors focus:bg-white"
+                        />
+                        <Edit2 className="absolute right-3 top-2.5 h-4 w-4 text-muted-foreground opacity-50 group-hover:opacity-100 transition-opacity" />
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="backupLocation">Backup Location</Label>
+                      <Label htmlFor="backupLocation" className="font-semibold text-slate-700 dark:text-slate-300">Backup Location</Label>
                       <div className="flex space-x-2">
-                        <Input id="backupLocation" value={backupLocation} onChange={(e) => setBackupLocation(e.target.value)} />
-                        <Button variant="outline" onClick={handleBrowseFolder} type="button">
-                          <FolderOpen className="mr-2 h-4 w-4"/> Browse
+                        <Input 
+                          id="backupLocation" 
+                          value={backupLocation} 
+                          onChange={(e) => setBackupLocation(e.target.value)} 
+                          className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 font-mono text-sm"
+                        />
+                        <Button variant="outline" onClick={handleBrowseFolder} type="button" className="shrink-0 hover:bg-slate-100 dark:hover:bg-slate-800">
+                          <FolderOpen className="mr-2 h-4 w-4 text-blue-500"/> Browse
                         </Button>
                       </div>
+                      {/* Disk Space Display */}
+                      {diskSpace ? (
+                        <p className="text-xs text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                          <HardDrive className="h-3.5 w-3.5" />
+                          <span><strong>{diskSpace}</strong> free on selected drive</span>
+                        </p>
+                      ) : (
+                        <p className="text-xs text-muted-foreground">Fetching available disk space...</p>
+                      )}
                     </div>
-                    <div className="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 p-3 rounded-md flex items-start text-sm">
-                      <Info className="h-5 w-5 mr-2 shrink-0 mt-0.5" />
-                      <p>Ensure the selected location has enough free space for the backup.</p>
+                    <div className="bg-blue-50/80 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/50 text-blue-700 dark:text-blue-300 p-3.5 rounded-lg flex items-start text-sm shadow-sm">
+                      <Info className="h-5 w-5 mr-2.5 shrink-0 mt-0.5 text-blue-500" />
+                      <p className="leading-relaxed">Ensure the selected location has enough free space to comfortably store the new backup file.</p>
                     </div>
                   </div>
 
-                  {/* Right Column in Form */}
-                  <div className="space-y-6">
+                  {/* Right Column: Info & Options */}
+                  <div className="space-y-6 bg-slate-50 dark:bg-slate-900/30 p-5 rounded-xl border border-slate-100 dark:border-slate-800">
                     <div>
-                      <h4 className="text-sm font-semibold mb-3">Backup Information</h4>
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
+                      <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200 mb-4 flex items-center">
+                        <Database className="h-4 w-4 mr-2 text-purple-500" />
+                        System Information
+                      </h4>
+                      <div className="space-y-3 text-sm">
+                        <div className="flex justify-between items-center py-1 border-b border-border/40">
                           <span className="text-muted-foreground">Database Engine</span>
-                          <span className="font-medium">SQLite</span>
+                          <span className="font-semibold bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-xs">SQLite</span>
                         </div>
-                        <div className="flex justify-between">
+                        <div className="flex justify-between items-center py-1 border-b border-border/40">
                           <span className="text-muted-foreground">App Version</span>
-                          <span className="font-medium">1.0.0.0</span>
+                          <span className="font-semibold">1.0.0.0</span>
                         </div>
-                        <div className="flex justify-between">
+                        <div className="flex justify-between items-center py-1">
                           <span className="text-muted-foreground">SQLite Version</span>
-                          <span className="font-medium">{dbInfo?.version || "Unknown"}</span>
+                          <span className="font-mono text-xs font-semibold bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-blue-600 dark:text-blue-400">
+                            {dbInfo?.version
+                              ? dbInfo.version
+                              : <span className="text-muted-foreground italic">Loading...</span>}
+                          </span>
                         </div>
                       </div>
                     </div>
 
-                    <div>
-                      <h4 className="text-sm font-semibold mb-3">Backup Options</h4>
-                      <div className="space-y-3">
-                        <div className="flex items-center space-x-2">
-                          <Checkbox id="includeDb" checked disabled />
-                          <Label htmlFor="includeDb" className="text-sm font-normal cursor-not-allowed">Include Database</Label>
+                    <div className="pt-2">
+                      <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200 mb-3 flex items-center">
+                        <Settings className="h-4 w-4 mr-2 text-slate-500" />
+                        Backup Options
+                      </h4>
+                      <div className="space-y-3 bg-white dark:bg-slate-950 p-3 rounded-lg border border-slate-100 dark:border-slate-800">
+                        <div className="flex items-center space-x-2.5">
+                          <Checkbox id="includeDb" checked disabled className="opacity-70" />
+                          <Label htmlFor="includeDb" className="text-sm font-medium cursor-not-allowed text-muted-foreground">Include Database (Required)</Label>
                         </div>
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center space-x-2.5">
                           <Checkbox id="compress" checked={compress} onCheckedChange={(c) => setCompress(c as boolean)} />
-                          <Label htmlFor="compress" className="text-sm font-normal cursor-pointer">Compress Backup File (.zip)</Label>
+                          <Label htmlFor="compress" className="text-sm font-medium cursor-pointer">Compress Backup File (.zip)</Label>
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
 
+                {/* Progress bar shown while backing up */}
                 {isBackingUp && (
-                  <div className="border rounded-md p-4 bg-slate-50 dark:bg-slate-900 mt-4">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-sm font-medium">Backup Progress</span>
+                  <div className="border rounded-md p-4 bg-slate-50 dark:bg-slate-900 mt-4 space-y-2">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm font-medium flex items-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+                        {compress ? "Compressing & creating backup..." : "Creating backup..."}
+                      </span>
+                      <span className="text-xs text-muted-foreground">{Math.round(backupProgress)}%</span>
                     </div>
-                    <div className="flex items-center space-x-3 text-sm text-muted-foreground">
-                      <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
-                      <span>Executing SQLite online backup engine... Generating SHA-256 checksum...</span>
+                    <div className="w-full bg-slate-200 dark:bg-slate-700 h-2 rounded-full overflow-hidden">
+                      <div
+                        className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${backupProgress}%` }}
+                      />
                     </div>
+                    <p className="text-xs text-muted-foreground">Executing SQLite online backup engine… Generating SHA-256 checksum…</p>
                   </div>
                 )}
               </CardContent>
-              <CardFooter className="flex justify-center border-t p-4">
+              <CardFooter className="flex justify-center border-t border-border/40 p-5 bg-slate-50/50 dark:bg-slate-900/20">
                 <Button 
+                  size="lg" 
                   onClick={handleCreateBackup} 
-                  disabled={isBackingUp}
-                  className="w-48 bg-blue-600 hover:bg-blue-700 text-white"
+                  disabled={isBackingUp || !backupName}
+                  className="w-full max-w-md bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-300 font-semibold text-base py-6 rounded-xl"
                 >
-                  <DownloadCloud className="mr-2 h-4 w-4" />
-                  {isBackingUp ? "Creating Backup..." : "Create Backup"}
+                  {isBackingUp ? (
+                    <><Loader2 className="mr-3 h-5 w-5 animate-spin" /> Creating Backup...</>
+                  ) : (
+                    <><DownloadCloud className="mr-3 h-5 w-5" /> Create Secure Backup</>
+                  )}
                 </Button>
               </CardFooter>
             </Card>
           )}
+
+          {/* Restore Tab */}
           {activeTab === "restore" && (
             <Card className="border-red-100 dark:border-red-900/30">
               <CardHeader>
@@ -648,6 +912,7 @@ export default function BackupRestorePage() {
             </Card>
           )}
 
+          {/* History Tab */}
           {activeTab === "history" && (
             <Card>
               <CardHeader className="flex flex-col md:flex-row md:items-center justify-between pb-4">
@@ -701,7 +966,7 @@ export default function BackupRestorePage() {
                                   className="h-8 px-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20"
                                   onClick={() => {
                                     setRestoreFilePath(`${backup.BackupLocation}/${backup.BackupName}`.replace(/\\/g, '/'));
-                                    setActiveTab("restore");
+                                    onTabChange("restore");
                                   }}
                                   title="Restore"
                                 >
@@ -735,6 +1000,7 @@ export default function BackupRestorePage() {
             </Card>
           )}
 
+          {/* Settings Tab */}
           {activeTab === "settings" && (
             <Card>
               <CardHeader>
@@ -831,7 +1097,6 @@ export default function BackupRestorePage() {
                   </div>
                   <p className="text-xs text-muted-foreground ml-6">A 24-hour cooldown prevents spam if the app restarts multiple times.</p>
                 </div>
-
               </CardContent>
               <CardFooter className="flex justify-end border-t p-4 bg-slate-50 dark:bg-slate-900/50 rounded-b-xl">
                 <Button 
@@ -844,138 +1109,122 @@ export default function BackupRestorePage() {
               </CardFooter>
             </Card>
           )}
-
-          {/* Promotional Footer Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-8">
-            <div className="flex items-start space-x-3 p-4 border rounded-xl bg-white dark:bg-slate-950">
-              <div className="bg-green-50 dark:bg-green-900/20 p-2 rounded-lg"><Shield className="h-6 w-6 text-green-600" /></div>
-              <div>
-                <h4 className="text-sm font-semibold">Your Data is Protected</h4>
-                <p className="text-xs text-muted-foreground mt-1">Regular backups ensure your pharmacy data is safe.</p>
-              </div>
-            </div>
-            <div className="flex items-start space-x-3 p-4 border rounded-xl bg-white dark:bg-slate-950">
-              <div className="bg-blue-50 dark:bg-blue-900/20 p-2 rounded-lg"><RotateCcw className="h-6 w-6 text-blue-600" /></div>
-              <div>
-                <h4 className="text-sm font-semibold">Restore with Confidence</h4>
-                <p className="text-xs text-muted-foreground mt-1">Restore your data from any previous backup easily.</p>
-              </div>
-            </div>
-            <div className="flex items-start space-x-3 p-4 border rounded-xl bg-white dark:bg-slate-950">
-              <div className="bg-cyan-50 dark:bg-cyan-900/20 p-2 rounded-lg"><CloudRain className="h-6 w-6 text-cyan-600" /></div>
-              <div>
-                <h4 className="text-sm font-semibold">Automatic Backups</h4>
-                <p className="text-xs text-muted-foreground mt-1">Run in the background to keep data always protected.</p>
-              </div>
-            </div>
-            <div className="flex items-start space-x-3 p-4 border rounded-xl bg-white dark:bg-slate-950">
-              <div className="bg-green-50 dark:bg-green-900/20 p-2 rounded-lg"><Database className="h-6 w-6 text-green-600" /></div>
-              <div>
-                <h4 className="text-sm font-semibold">Verify & Ensure Integrity</h4>
-                <p className="text-xs text-muted-foreground mt-1">SHA-256 checksums verify backups are complete.</p>
-              </div>
-            </div>
-          </div>
         </div>
 
-        {/* Sidebar */}
+        {/* ── Available Backups Sidebar ────────────────────────────────────── */}
         <div className="space-y-6">
-          <Card className="h-full">
-            <CardHeader className="pb-3 border-b mb-3">
+          <Card className="h-full shadow-sm border-border/60">
+            <CardHeader className="pb-3 border-b border-border/40 bg-slate-50/50 dark:bg-slate-900/20">
               <div className="flex justify-between items-center">
-                <CardTitle className="text-lg">Available Backups</CardTitle>
+                <CardTitle className="text-lg font-bold flex items-center">
+                  <History className="h-5 w-5 mr-2 text-indigo-500" />
+                  Available Backups
+                </CardTitle>
                 <div className="flex space-x-1">
-                  <div className="relative">
-                    <Search className="absolute left-2 top-2 h-4 w-4 text-muted-foreground" />
+                  <div className="relative group">
+                    <Search className="absolute left-2.5 top-2 h-4 w-4 text-muted-foreground opacity-50 group-focus-within:opacity-100 transition-opacity" />
                     <Input 
-                      className="h-8 w-[140px] pl-8 text-xs" 
+                      className="h-8 w-[180px] pl-8 text-xs bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 rounded-full" 
                       placeholder="Search backups..." 
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                     />
                   </div>
-                  <Button variant="ghost" size="icon" className="h-8 w-8"><Filter className="h-4 w-4" /></Button>
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-3 px-3 py-4">
               {isLoadingHistory ? (
-                <div className="text-center py-8 text-muted-foreground"><Loader2 className="h-6 w-6 animate-spin mx-auto mb-2" /> Loading...</div>
+                <div className="text-center py-10 text-muted-foreground flex flex-col items-center">
+                  <Loader2 className="h-8 w-8 animate-spin mb-3 text-blue-500" />
+                  <span className="text-sm font-medium">Loading history...</span>
+                </div>
               ) : backupHistory.filter(b => b.BackupName.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">No backups found.</div>
+                <div className="text-center py-12 flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900/20 rounded-xl border border-dashed border-slate-200 dark:border-slate-800 m-2">
+                  <div className="bg-slate-100 dark:bg-slate-800 p-3 rounded-full mb-3">
+                    <Database className="h-6 w-6 text-slate-400" />
+                  </div>
+                  <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300">No backups found</h4>
+                  <p className="text-xs text-muted-foreground mt-1 max-w-[200px]">Create a manual backup to get started.</p>
+                </div>
               ) : (
                 backupHistory.filter(b => b.BackupName.toLowerCase().includes(searchQuery.toLowerCase())).map((backup) => (
-                  <div key={backup.BackupId} className="border rounded-lg p-3 hover:border-blue-500 transition-colors">
-                    <div className="flex justify-between items-start">
-                      <div className="flex items-start space-x-3">
-                        <div className="bg-blue-50 dark:bg-blue-900/20 p-2 rounded-md">
-                          <Database className="h-5 w-5 text-blue-600" />
-                        </div>
-                        <div>
-                          <h4 className="font-semibold text-sm line-clamp-1" title={backup.BackupName}>{backup.BackupName}</h4>
-                          <p className="text-xs text-muted-foreground mt-0.5">
-                            {format(new Date(backup.CreatedAt + "Z"), "dd MMM yyyy hh:mm a")} • {formatBytes(backup.SizeBytes)}
-                          </p>
-                          <p className="text-xs text-muted-foreground flex items-center mt-1">
-                            {backup.BackupType} Backup
-                          </p>
+                  <div
+                    key={backup.BackupId}
+                    className="relative group border rounded-lg p-3 hover:border-blue-400 dark:hover:border-blue-500 transition-all cursor-default bg-white dark:bg-card"
+                    onMouseEnter={() => setHoveredBackupId(backup.BackupId)}
+                    onMouseLeave={() => setHoveredBackupId(null)}
+                  >
+                    {/* Info row */}
+                    <div className="flex items-start gap-2.5">
+                      <div className="bg-blue-50 dark:bg-blue-900/20 p-1.5 rounded-md shrink-0 mt-0.5">
+                        <Database className="h-4 w-4 text-blue-600" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h4 className="font-semibold text-sm truncate" title={backup.BackupName}>{backup.BackupName}</h4>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">
+                          {format(new Date(backup.CreatedAt + "Z"), "dd MMM yyyy · hh:mm a")}
+                        </p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-[11px] text-muted-foreground">{formatBytes(backup.SizeBytes)}</span>
+                          <span className="text-muted-foreground/40">·</span>
+                          <span className="text-[11px] text-muted-foreground">{backup.BackupType}</span>
+                          {backup.Status === "Success" && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 ml-auto shrink-0" />}
                         </div>
                       </div>
-                      {backup.Status === "Success" && <CheckCircle2 className="h-5 w-5 text-green-500 shrink-0" />}
                     </div>
-                    <div className="flex space-x-2 mt-3">
-                      <Button 
-                        size="sm" 
-                        className="bg-blue-600 hover:bg-blue-700 text-white flex-1 h-8"
-                        onClick={() => {
-                          setRestoreFilePath(`${backup.BackupLocation}/${backup.BackupName}`.replace(/\\/g, '/'));
-                          setActiveTab("restore");
-                        }}
+
+                    {/* Hover quick-action buttons */}
+                    <div className={cn(
+                      "flex gap-1.5 mt-2.5 transition-all duration-150",
+                      hoveredBackupId === backup.BackupId ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-1 pointer-events-none"
+                    )}>
+                      {backup.Status === "Success" && (
+                        <Button
+                          size="sm"
+                          className="h-7 text-[11px] flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                          onClick={() => {
+                            setRestoreFilePath(`${backup.BackupLocation}/${backup.BackupName}`.replace(/\\/g, '/'));
+                            onTabChange("restore");
+                          }}
+                        >
+                          <RotateCcw className="h-3 w-3 mr-1" /> Restore
+                        </Button>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-[11px] px-2"
+                        title="Open Folder"
+                        onClick={() => handleOpenFolder(backup.BackupId)}
                       >
-                        Restore
+                        <FolderOpen className="h-3 w-3" />
                       </Button>
-                      <Button size="sm" variant="outline" className="flex-1 h-8 text-green-600 border-green-200 hover:bg-green-50 dark:hover:bg-green-950" onClick={() => handleVerifyBackup(backup.BackupId)}>
-                        <CheckCircle2 className="h-3.5 w-3.5 mr-1" /> Verify
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        variant="outline" 
-                        className="flex-1 h-8"
-                        onClick={() => setExpandedBackupId(expandedBackupId === backup.BackupId ? null : backup.BackupId)}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-[11px] px-2 text-red-600 border-red-200 hover:bg-red-50 dark:hover:bg-red-950"
+                        title="Delete"
+                        onClick={() => handleDeleteBackup(backup.BackupId)}
                       >
-                         Details
+                        <Trash2 className="h-3 w-3" />
                       </Button>
                     </div>
-                    {expandedBackupId === backup.BackupId && (
-                      <div className="mt-3 text-xs bg-slate-50 dark:bg-slate-900 rounded-md p-3 border border-slate-100 dark:border-slate-800 space-y-2 break-all">
-                        <div className="grid grid-cols-[80px_1fr] gap-1">
-                          <span className="text-muted-foreground font-medium">Status:</span>
-                          <span className={backup.Status === "Success" ? "text-green-600 font-medium" : "text-red-600 font-medium"}>{backup.Status}</span>
-                        </div>
-                        <div className="grid grid-cols-[80px_1fr] gap-1">
-                          <span className="text-muted-foreground font-medium">Location:</span>
-                          <span className="font-mono text-[10px] text-slate-700 dark:text-slate-300">{backup.BackupLocation}</span>
-                        </div>
-                        {backup.ChecksumSHA256 && (
-                          <div className="grid grid-cols-[80px_1fr] gap-1">
-                            <span className="text-muted-foreground font-medium">SHA-256:</span>
-                            <span className="font-mono text-[10px] text-slate-700 dark:text-slate-300">{backup.ChecksumSHA256}</span>
-                          </div>
-                        )}
-                      </div>
-                    )}
                   </div>
                 ))
               )}
 
-              <Button variant="ghost" className="w-full text-blue-600 text-sm mt-4" onClick={() => setActiveTab("history")}>
+              <Button variant="ghost" className="w-full text-blue-600 text-sm mt-2" onClick={() => onTabChange("history")}>
                 View All Backups <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </CardContent>
           </Card>
         </div>
       </div>
+      </>
+      )}
 
+      {/* ── Verify Modal ─────────────────────────────────────────────────── */}
       {isVerifyModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
           <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-6 rounded-xl shadow-xl w-full max-w-lg">
@@ -1011,7 +1260,7 @@ export default function BackupRestorePage() {
                    <div className="h-5 w-5 rounded-full bg-red-100 flex items-center justify-center text-red-500 font-bold text-xs">X</div>}
                 </div>
                 <div>
-                  <h4 className="text-sm font-semibold">Stage 2: AES-256 Decryption & B-Tree Integrity</h4>
+                  <h4 className="text-sm font-semibold">Stage 2: AES-256 Decryption &amp; B-Tree Integrity</h4>
                   <p className="text-xs text-muted-foreground mt-1">
                     {verificationReport?.report?.integrity?.message || "Decrypting using HWID key and running PRAGMA integrity_check..."}
                   </p>
