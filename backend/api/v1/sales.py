@@ -23,22 +23,25 @@ def init_sale(
     current_user = Depends(get_current_user)
 ):
     try:
-        # Generate a temporary invoice number based on current count
-        # E.g. INV-2608-0001
-        current_year_month = datetime.now().strftime("%y%m")
-        count = db.query(Sale).filter(Sale.InvoiceNumber.like(f"INV-{current_year_month}-%")).count()
-        next_seq = count + 1
-        invoice_no = f"INV-{current_year_month}-{next_seq:04d}"
-
         billing_settings = db.query(BillingSettings).first()
         
+        # Default fallback values
+        invoice_no = f"INV-{datetime.now().strftime('%y%m')}-0001"
         default_tax_rate = 0.0
         max_discount = 0.0
         discount_enabled = False
         require_admin_pin = False
         admin_discount_threshold = 0.0
+        default_payment = "Cash"
+        auto_print = False
+        show_shortcuts = True
         
         if billing_settings:
+            # Generate Invoice Number from settings
+            prefix = billing_settings.InvoicePrefix or "INV-"
+            next_num = billing_settings.NextInvoiceNumber or 1
+            invoice_no = f"{prefix}{next_num}"
+            
             if billing_settings.TaxEnabled:
                 default_tax_rate = float(billing_settings.DefaultTaxRate)
             discount_enabled = bool(billing_settings.DiscountEnabled)
@@ -46,6 +49,10 @@ def init_sale(
                 max_discount = float(billing_settings.MaxDiscountPercentage)
             require_admin_pin = bool(billing_settings.RequireAdminPinForDiscount)
             admin_discount_threshold = float(billing_settings.AdminDiscountThreshold)
+            
+            default_payment = billing_settings.DefaultPaymentMethod or "Cash"
+            auto_print = bool(billing_settings.AutoPrintReceipt)
+            show_shortcuts = bool(billing_settings.ShowKeyboardShortcuts)
 
         data = SaleInitResponse(
             InvoiceNumber=invoice_no,
@@ -53,7 +60,10 @@ def init_sale(
             MaxDiscountPercentage=max_discount,
             DiscountEnabled=discount_enabled,
             RequireAdminPinForDiscount=require_admin_pin,
-            AdminDiscountThreshold=admin_discount_threshold
+            AdminDiscountThreshold=admin_discount_threshold,
+            DefaultPaymentMethod=default_payment,
+            AutoPrintReceipt=auto_print,
+            ShowKeyboardShortcuts=show_shortcuts
         )
         return {"success": True, "data": data}
     except Exception as e:
@@ -130,9 +140,16 @@ def complete_sale(
         current_date = dt.date.today()
 
         # Create Sale Record
-        current_year_month = datetime.now().strftime("%y%m")
-        count = db.query(Sale).filter(Sale.InvoiceNumber.like(f"INV-{current_year_month}-%")).count()
-        invoice_no = f"INV-{current_year_month}-{(count + 1):04d}"
+        billing_settings = db.query(BillingSettings).with_for_update().first()
+        if billing_settings:
+            prefix = billing_settings.InvoicePrefix or "INV-"
+            next_num = billing_settings.NextInvoiceNumber or 1
+            invoice_no = f"{prefix}{next_num}"
+            billing_settings.NextInvoiceNumber = next_num + 1
+        else:
+            current_year_month = datetime.now().strftime("%y%m")
+            count = db.query(Sale).filter(Sale.InvoiceNumber.like(f"INV-{current_year_month}-%")).count()
+            invoice_no = f"INV-{current_year_month}-{(count + 1):04d}"
 
         new_sale = Sale(
             CustomerId=sale_data.CustomerId,

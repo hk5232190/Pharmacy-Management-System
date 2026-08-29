@@ -9,6 +9,9 @@ class SaleInitResponse(BaseModel):
     DiscountEnabled: bool = False
     RequireAdminPinForDiscount: bool = False
     AdminDiscountThreshold: float = 0.0
+    DefaultPaymentMethod: str = "Cash"
+    AutoPrintReceipt: bool = False
+    ShowKeyboardShortcuts: bool = True
 
 class ProductSearchBatch(BaseModel):
     BatchId: int
