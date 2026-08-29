@@ -26,6 +26,7 @@ class Token(BaseModel):
 class UserProfile(BaseModel):
     id: int
     username: str
+    email: Optional[str] = None
     is_active: bool
     full_name: Optional[str] = None
     phone_number: Optional[str] = None
@@ -33,6 +34,7 @@ class UserProfile(BaseModel):
 
 class UserProfileUpdate(BaseModel):
     FullName: Optional[str] = None
+    Email: Optional[str] = None
     PhoneNumber: Optional[str] = None
 
 class ChangePasswordRequest(BaseModel):
@@ -71,6 +73,7 @@ def read_users_me(current_user: User = Depends(get_current_user)):
     return UserProfile(
         id=current_user.UserId,
         username=current_user.Username,
+        email=current_user.Email,
         is_active=current_user.IsActive,
         full_name=current_user.FullName,
         phone_number=current_user.PhoneNumber,
@@ -84,6 +87,7 @@ def update_user_profile(
     current_user: User = Depends(get_current_user)
 ):
     current_user.FullName = profile_data.FullName
+    current_user.Email = profile_data.Email
     current_user.PhoneNumber = profile_data.PhoneNumber
     db.commit()
     

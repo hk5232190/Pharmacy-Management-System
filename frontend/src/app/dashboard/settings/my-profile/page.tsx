@@ -11,10 +11,24 @@ import { useAuth } from "@/contexts/AuthContext";
 import Cropper from "react-easy-crop";
 import getCroppedImg from "@/lib/cropImage";
 
+function getInitials(name: string): string {
+  if (!name) return "U";
+  const parts = name.trim().split(" ");
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+  return name.substring(0, 2).toUpperCase();
+}
+
 export default function MyProfileSettingsPage() {
   const { user, refreshUser } = useAuth();
   const [fullName, setFullName] = useState("");
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
+  
+  // Validation errors
+  const [errors, setErrors] = useState<{ email?: string, phone?: string }>({});
   
   const [isLoading, setIsLoading] = useState(true);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
@@ -39,6 +53,8 @@ export default function MyProfileSettingsPage() {
   useEffect(() => {
     if (user.id !== 0) {
       setFullName(user.full_name || "");
+      setUsername(user.username || "");
+      setEmail(user.email || "");
       setPhoneNumber(user.phone_number || "");
       setIsLoading(false);
     }
@@ -51,9 +67,48 @@ export default function MyProfileSettingsPage() {
     };
   };
 
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let val = e.target.value.replace(/\D/g, ''); // Remove non-digits
+    if (val.length > 11) val = val.slice(0, 11); // Max 11 digits
+    
+    // Apply mask: 03XX-XXXXXXX
+    if (val.length > 4) {
+      val = val.slice(0, 4) + '-' + val.slice(4);
+    }
+    setPhoneNumber(val);
+    
+    // Clear error if valid
+    if (val === "" || /^03\d{2}-\d{7}$/.test(val)) {
+      setErrors(prev => ({ ...prev, phone: undefined }));
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors: { email?: string, phone?: string } = {};
+    let isValid = true;
+
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      newErrors.email = "Invalid email format (e.g. user@example.com).";
+      isValid = false;
+    }
+    
+    if (phoneNumber && !/^03\d{2}-\d{7}$/.test(phoneNumber)) {
+      newErrors.phone = "Invalid phone format (must be 03XX-XXXXXXX).";
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
+
   const handleSaveProfileText = async () => {
     if (!fullName.trim()) {
       toast.error("Full Name cannot be empty.");
+      return;
+    }
+    
+    if (!validateForm()) {
+      toast.error("Please fix the validation errors.");
       return;
     }
     
@@ -62,7 +117,7 @@ export default function MyProfileSettingsPage() {
       const res = await fetch("http://127.0.0.1:8000/api/v1/auth/me", {
         method: "PUT",
         headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-        body: JSON.stringify({ FullName: fullName, PhoneNumber: phoneNumber })
+        body: JSON.stringify({ FullName: fullName, Email: email || null, PhoneNumber: phoneNumber || null })
       });
       if (res.ok) {
         toast.success("Profile information updated successfully.");
@@ -169,49 +224,85 @@ export default function MyProfileSettingsPage() {
   return (
     <>
       <div className="grid grid-cols-1 gap-6 pb-20 max-w-4xl mx-auto">
-        <Card className="border-indigo-100 dark:border-indigo-900 shadow-sm h-full">
-          <CardHeader className="pb-4 border-b bg-indigo-50/50 dark:bg-indigo-900/10">
-            <CardTitle className="text-lg font-bold flex items-center gap-2 text-indigo-700 dark:text-indigo-400">
-              <UserIcon className="w-5 h-5" /> My Profile
+        <Card className="border-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none overflow-hidden ring-1 ring-slate-200/60 dark:ring-slate-800 h-full transition-all duration-500 hover:shadow-[0_8px_30px_rgb(99,102,241,0.08)] rounded-2xl">
+          <CardHeader className="pb-5 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-r from-indigo-50/80 to-transparent dark:from-transparent dark:to-transparent">
+            <CardTitle className="text-xl font-bold flex items-center gap-2.5 text-indigo-700 dark:text-indigo-400">
+              <UserIcon className="w-5 h-5 drop-shadow-sm" /> My Profile
             </CardTitle>
-            <CardDescription>Manage your personal details and profile photo.</CardDescription>
+            <CardDescription className="text-slate-500">Manage your personal details and profile photo.</CardDescription>
           </CardHeader>
-          <CardContent className="p-6 space-y-8">
+          <CardContent className="p-7 space-y-8">
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Row 1 */}
               <div className="space-y-3">
                 <Label className="text-sm font-semibold">Full Name</Label>
                 <Input 
                   value={fullName}
                   onChange={e => setFullName(e.target.value)}
-                  placeholder="e.g. Muhammad Ali"
+                  placeholder="e.g. Imran Khan"
+                  className="rounded-xl bg-slate-50/50 dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 focus-visible:ring-indigo-500/30 focus-visible:border-indigo-500 transition-all shadow-sm"
                 />
               </div>
               
               <div className="space-y-3">
-                <Label className="text-sm font-semibold">Phone Number</Label>
+                <Label className="text-sm font-semibold">Username</Label>
+                <Input 
+                  value={username}
+                  disabled
+                  className="rounded-xl bg-slate-50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 cursor-not-allowed text-slate-500 shadow-sm"
+                  placeholder="admin"
+                />
+                <p className="text-[11px] text-slate-500">Username cannot be changed.</p>
+              </div>
+
+              {/* Row 2 */}
+              <div className="space-y-3">
+                <Label className="text-sm font-semibold flex justify-between">
+                  Email Address
+                  {errors.email && <span className="text-red-500 text-[11px] font-normal">{errors.email}</span>}
+                </Label>
+                <Input 
+                  value={email}
+                  onChange={e => {
+                    setEmail(e.target.value);
+                    if (errors.email) setErrors(prev => ({ ...prev, email: undefined }));
+                  }}
+                  className={`rounded-xl bg-slate-50/50 dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 focus-visible:ring-indigo-500/30 focus-visible:border-indigo-500 transition-all shadow-sm ${errors.email ? "border-red-500 focus-visible:ring-red-500/30" : ""}`}
+                  placeholder="e.g. user@example.com"
+                />
+              </div>
+
+              <div className="space-y-3">
+                <Label className="text-sm font-semibold flex justify-between">
+                  Phone Number
+                  {errors.phone && <span className="text-red-500 text-[11px] font-normal">{errors.phone}</span>}
+                </Label>
                 <Input 
                   value={phoneNumber}
-                  onChange={e => setPhoneNumber(e.target.value)}
-                  placeholder="e.g. +92 300 1234567"
+                  onChange={handlePhoneChange}
+                  className={`rounded-xl bg-slate-50/50 dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 focus-visible:ring-indigo-500/30 focus-visible:border-indigo-500 transition-all shadow-sm ${errors.phone ? "border-red-500 focus-visible:ring-red-500/30" : ""}`}
+                  placeholder="03XX-XXXXXXX"
                 />
               </div>
             </div>
 
-            <div className="border-t border-slate-100 dark:border-slate-800 pt-6 space-y-4">
+            <div className="border-t border-slate-100 dark:border-slate-800 pt-6 space-y-4 mt-4">
               <Label className="text-sm font-semibold block">Profile Photo</Label>
               <div className="flex flex-col xl:flex-row gap-6 items-start">
                 
                 {/* Photo Preview */}
-                <div className="w-32 h-32 shrink-0 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-full flex items-center justify-center bg-slate-50 dark:bg-slate-900 overflow-hidden relative group">
+                <div className="w-36 h-36 shrink-0 border-2 border-dashed border-indigo-200 dark:border-slate-700 rounded-full flex items-center justify-center bg-gradient-to-br from-indigo-50/50 to-white dark:from-transparent dark:to-transparent overflow-hidden relative group transition-colors hover:border-indigo-400 dark:hover:border-slate-500 shadow-sm">
                   {(photoPreview || user.profile_photo_path) ? (
                     <img 
                       src={photoPreview || `http://127.0.0.1:8000${user.profile_photo_path}?t=${timestamp}`} 
                       alt="Profile Preview" 
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                   ) : (
-                    <UserIcon className="w-12 h-12 text-slate-300 dark:text-slate-700" />
+                    <span className="text-4xl font-bold text-slate-400 dark:text-slate-500 tracking-wider">
+                      {getInitials(user.full_name || user.username || "")}
+                    </span>
                   )}
                 </div>
 
@@ -224,38 +315,43 @@ export default function MyProfileSettingsPage() {
                     onChange={handleFileChange}
                   />
                   
-                  <div className="flex flex-wrap gap-2">
-                    <Button variant="outline" onClick={() => photoInputRef.current?.click()} className="text-sm">
-                      <Upload className="w-4 h-4 mr-2" /> {user.profile_photo_path ? 'Replace Photo' : 'Select Photo'}
+                  <div className="flex flex-wrap gap-2.5">
+                    <Button variant="outline" onClick={() => photoInputRef.current?.click()} className="text-sm rounded-xl border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all">
+                      <Upload className="w-4 h-4 mr-2 text-indigo-500" /> {user.profile_photo_path ? 'Replace Photo' : 'Select Photo'}
                     </Button>
                     
                     {photoFile && (
-                      <Button variant="default" onClick={uploadPhoto} className="text-sm bg-indigo-600 hover:bg-indigo-700">
+                      <Button variant="default" onClick={uploadPhoto} className="text-sm rounded-xl bg-indigo-600 hover:bg-indigo-700 shadow-md shadow-indigo-600/20 transition-all">
                         <Save className="w-4 h-4 mr-2" /> Upload
                       </Button>
                     )}
 
                     {(user.profile_photo_path || photoFile) && (
-                      <Button variant="destructive" onClick={() => photoFile ? (setPhotoFile(null), setPhotoPreview(null)) : removePhoto()} className="text-sm">
+                      <Button variant="destructive" onClick={() => photoFile ? (setPhotoFile(null), setPhotoPreview(null)) : removePhoto()} className="text-sm rounded-xl shadow-sm transition-all hover:shadow-red-500/20">
                         <ImageOff className="w-4 h-4 mr-2" /> Remove
                       </Button>
                     )}
                   </div>
-                  <p className="text-xs text-slate-500">Supported formats: PNG, JPG, WEBP. Max size: 5MB.</p>
+                  <p className="text-[13px] text-slate-500 font-medium bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-100 dark:border-slate-800 inline-block">
+                    Supported formats: PNG, JPG, WEBP. Max size: 5MB.
+                  </p>
                 </div>
               </div>
             </div>
             
-            <div className="border-t border-slate-100 dark:border-slate-800 pt-6 flex justify-end gap-3">
+            <div className="border-t border-slate-100 dark:border-slate-800/80 pt-6 flex justify-end gap-3 mt-4">
               <Button variant="ghost" onClick={() => {
                 setFullName(user.full_name || "");
+                setUsername(user.username || "");
+                setEmail(user.email || "");
                 setPhoneNumber(user.phone_number || "");
+                setErrors({});
                 setPhotoFile(null);
                 setPhotoPreview(null);
-              }}>
+              }} className="rounded-full px-6 transition-colors">
                 Cancel Changes
               </Button>
-              <Button onClick={handleSaveProfileText} disabled={isSavingProfile} className="bg-indigo-600 hover:bg-indigo-700 min-w-[120px]">
+              <Button onClick={handleSaveProfileText} disabled={isSavingProfile} className="bg-indigo-600 hover:bg-indigo-700 min-w-[140px] rounded-full shadow-lg shadow-indigo-600/25 hover:shadow-indigo-600/40 hover:-translate-y-0.5 transition-all duration-300">
                 {isSavingProfile ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />} Save Changes
               </Button>
             </div>

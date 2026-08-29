@@ -104,9 +104,9 @@ export function Sidebar() {
   };
 
   return (
-    <aside className="w-64 bg-slate-900 text-slate-300 flex flex-col h-full overflow-hidden shrink-0 border-r border-slate-800">
+    <aside className="w-64 bg-[#0B1120] text-slate-300 flex flex-col h-full overflow-hidden shrink-0 border-r border-white/5">
       {/* Brand Logo Header */}
-      <div className="min-h-[64px] py-3 flex items-center px-6 bg-white dark:bg-slate-950 border-b border-border shadow-sm shrink-0">
+      <div className="min-h-[64px] py-3 flex items-center px-6 bg-transparent border-b border-white/5 shrink-0">
         <div className="flex items-center gap-3 w-full">
           {profile.LogoPath ? (
             <div className="h-8 w-8 flex items-center justify-center shrink-0">
@@ -118,7 +118,7 @@ export function Sidebar() {
             </div>
           )}
           <div className="flex-1">
-            <h1 className="font-bold text-[17px] leading-tight text-slate-900 dark:text-white break-words">
+            <h1 className="font-bold text-[17px] leading-tight text-white break-words">
               {profile.PharmacyName || "Pharmacy"}
             </h1>
             <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wider mt-0.5">Management System</p>
@@ -130,7 +130,8 @@ export function Sidebar() {
       <div className="flex-1 overflow-y-auto py-4 custom-scrollbar">
         <nav className="space-y-1 px-3">
           {NAV_ITEMS.map((item) => {
-            const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
+            const isActive = pathname === item.href;
+            const isSectionActive = item.href !== "/dashboard" && pathname.startsWith(item.href);
             const hasSubItems = item.subItems && item.subItems.length > 0;
             const isOpen = openStates[item.title];
 
@@ -140,14 +141,14 @@ export function Sidebar() {
                   <button
                     onClick={() => toggleOpen(item.title)}
                     className={cn(
-                      "w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-colors group",
-                      isActive 
+                      "w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 group",
+                      isSectionActive 
                         ? "text-white" 
-                        : "text-slate-400 hover:text-white hover:bg-slate-800/50"
+                        : "text-slate-400 hover:text-slate-200 hover:bg-white/5"
                     )}
                   >
                     <div className="flex items-center gap-3">
-                      <item.icon className={cn("w-5 h-5", isActive ? "text-primary-foreground" : "text-slate-500 group-hover:text-slate-300")} />
+                      <item.icon className={cn("w-5 h-5", isSectionActive ? "text-white" : "text-slate-500 group-hover:text-slate-400")} />
                       {item.title}
                     </div>
                     {isOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
@@ -156,13 +157,13 @@ export function Sidebar() {
                   <Link
                     href={item.href}
                     className={cn(
-                      "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors group",
+                      "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 group",
                       isActive 
-                        ? "bg-primary text-primary-foreground" 
-                        : "text-slate-400 hover:text-white hover:bg-slate-800/50"
+                        ? "bg-slate-200 text-slate-900 shadow-sm" 
+                        : "text-slate-400 hover:text-slate-200 hover:bg-white/5"
                     )}
                   >
-                    <item.icon className={cn("w-5 h-5", isActive ? "text-primary-foreground" : "text-slate-500 group-hover:text-slate-300")} />
+                    <item.icon className={cn("w-5 h-5", isActive ? "text-slate-900" : "text-slate-500 group-hover:text-slate-400")} />
                     {item.title}
                   </Link>
                 )}
@@ -179,11 +180,11 @@ export function Sidebar() {
                           className={cn(
                             "flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium transition-colors ml-4",
                             isSubActive 
-                              ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20" 
-                              : "text-slate-400 hover:text-white hover:bg-slate-800/50"
+                              ? "bg-slate-200 text-slate-900 shadow-sm" 
+                              : "text-slate-400 hover:text-slate-200 hover:bg-white/5"
                           )}
                         >
-                          <subItem.icon className={cn("w-4 h-4", isSubActive ? "text-primary-foreground/80" : "text-slate-500")} />
+                          <subItem.icon className={cn("w-4 h-4", isSubActive ? "text-slate-900" : "text-slate-500")} />
                           {subItem.title}
                         </Link>
                       );
@@ -197,7 +198,7 @@ export function Sidebar() {
       </div>
 
       {/* Footer */}
-      <div className="p-4 shrink-0 border-t border-slate-800 mt-auto">
+      <div className="p-4 shrink-0 border-t border-white/5 mt-auto">
         <button 
           onClick={handleLogout}
           className="flex items-center justify-start gap-3 w-full py-2.5 px-4 rounded-xl text-sm font-semibold transition-all duration-300 bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white border border-red-500/20 hover:shadow-[0_0_15px_rgba(239,68,68,0.3)] hover:-translate-y-0.5"

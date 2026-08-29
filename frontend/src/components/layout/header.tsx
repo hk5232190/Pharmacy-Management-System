@@ -38,6 +38,15 @@ function getGreeting(): string {
   return "Good Night";
 }
 
+function getInitials(name: string): string {
+  if (!name) return "U";
+  const parts = name.trim().split(" ");
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+  return name.substring(0, 2).toUpperCase();
+}
+
 export function Header() {
   const router = useRouter();
   const { profile } = useProfile();
@@ -209,7 +218,7 @@ export function Header() {
               {user.profile_photo_path ? (
                 <img src={`http://127.0.0.1:8000${user.profile_photo_path}`} alt="Profile" className="w-full h-full object-cover" />
               ) : (
-                <User size={16} />
+                <span className="text-xs font-bold tracking-wider">{getInitials(user.full_name || user.username || "")}</span>
               )}
             </div>
             <div className="hidden md:flex items-center gap-1.5">

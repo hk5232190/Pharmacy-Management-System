@@ -8,6 +8,7 @@ class User(Base):
 
     UserId = Column(Integer, primary_key=True, autoincrement=True)
     Username = Column(String(50), unique=True, nullable=False)
+    Email = Column(String(100), nullable=True)
     PasswordHash = Column(String(256), nullable=False)
     Salt = Column(String(128), nullable=False)
     FullName = Column(String(100), nullable=True)

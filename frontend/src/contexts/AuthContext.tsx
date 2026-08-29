@@ -5,15 +5,17 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 export interface UserProfile {
   id: number;
   username: string;
+  email: string | null;
+  full_name: string | null;
+  phone_number: string | null;
+  profile_photo_path: string | null;
   is_active: boolean;
-  full_name?: string | null;
-  phone_number?: string | null;
-  profile_photo_path?: string | null;
 }
 
 const DEFAULT_USER: UserProfile = {
   id: 0,
   username: "Admin",
+  email: null,
   is_active: true,
   full_name: "Admin",
   phone_number: "",

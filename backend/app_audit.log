@@ -780,3 +780,18 @@ NoneType: None
 2026-08-29 13:20:24,009 - pms - INFO - AUDIT: User admin updated their profile information.
 2026-08-29 13:20:36,111 - pms - INFO - AUDIT: User admin updated their profile information.
 2026-08-29 13:20:42,899 - pms - INFO - AUDIT: User admin updated their profile information.
+2026-08-29 13:21:49,414 - pms - INFO - AUDIT: User admin updated their profile information.
+2026-08-29 13:21:49,436 - pms - INFO - AUDIT: User admin uploaded a new Profile Photo.
+2026-08-29 13:21:53,360 - pms - INFO - AUDIT: User admin removed their Profile Photo.
+2026-08-29 13:22:07,512 - pms - INFO - AUDIT: User admin updated their profile information.
+2026-08-29 13:22:07,535 - pms - INFO - AUDIT: User admin uploaded a new Profile Photo.
+2026-08-29 14:36:00,281 - pms - INFO - AUDIT: User admin updated General Settings (Login Page Branding).
+2026-08-29 14:36:10,032 - pms - INFO - AUDIT: User admin updated General Settings (Login Page Branding).
+2026-08-29 14:36:10,138 - pms - INFO - AUDIT: User admin uploaded a new Login Background.
+2026-08-29 14:36:43,400 - pms - INFO - AUDIT: User admin removed the Login Background.
+2026-08-29 15:09:39,085 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-29 15:09:39,132 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-29 15:10:50,648 - pms - INFO - AUDIT: User admin updated their profile information.
+2026-08-29 15:12:42,773 - pms - INFO - Clear Temp Data | User: admin | Deleted 10 files
+2026-08-29 15:12:47,378 - pms - INFO - Clear Temp Data | User: admin | Deleted 0 files
+2026-08-29 15:12:50,008 - pms - INFO - Clear Temp Data | User: admin | Deleted 0 files
