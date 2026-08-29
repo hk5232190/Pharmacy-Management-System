@@ -184,7 +184,7 @@ export default function MyProfileSettingsPage() {
                 <Input 
                   value={fullName}
                   onChange={e => setFullName(e.target.value)}
-                  placeholder="e.g. John Doe"
+                  placeholder="e.g. Muhammad Ali"
                 />
               </div>
               
@@ -193,7 +193,7 @@ export default function MyProfileSettingsPage() {
                 <Input 
                   value={phoneNumber}
                   onChange={e => setPhoneNumber(e.target.value)}
-                  placeholder="e.g. +1 234 567 8900"
+                  placeholder="e.g. +92 300 1234567"
                 />
               </div>
             </div>
