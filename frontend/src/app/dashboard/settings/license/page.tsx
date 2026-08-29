@@ -202,7 +202,7 @@ export default function LicensePage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 pb-10">
+    <div className="max-w-4xl space-y-6 pb-10">
 
       {/* ── Page Header ── */}
       <div className="flex items-start justify-between">

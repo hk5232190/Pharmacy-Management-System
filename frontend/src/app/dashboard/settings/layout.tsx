@@ -35,7 +35,7 @@ export default function SettingsLayout({ children }: { children: ReactNode }) {
   ];
 
   return (
-    <div className="flex flex-col h-full overflow-hidden bg-slate-50 dark:bg-slate-950">
+    <div className="flex flex-col h-full overflow-hidden bg-slate-50 dark:bg-[#0a0a0a]">
       <div className="flex flex-col p-6 pb-2 border-b">
         <div className="flex justify-between items-start gap-4">
           <div>
@@ -69,7 +69,7 @@ export default function SettingsLayout({ children }: { children: ReactNode }) {
 
       <div className="flex flex-1 overflow-hidden">
         {/* Settings Sidebar */}
-        <aside className="w-80 border-r bg-white dark:bg-slate-950 overflow-y-auto hidden md:block">
+        <aside className="w-80 border-r border-border/40 bg-white dark:bg-[#0a0a0a] overflow-y-auto hidden md:block">
           <nav className="p-4 space-y-2">
           {navigation.map((item) => {
               const isActive = pathname.startsWith(item.href);
@@ -79,12 +79,12 @@ export default function SettingsLayout({ children }: { children: ReactNode }) {
                   href={item.href}
                   className={`flex items-center p-3 rounded-lg transition-all ${
                     isActive 
-                      ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border border-blue-100 dark:border-blue-800 shadow-sm" 
+                      ? "bg-blue-600 dark:bg-white text-white dark:text-black shadow-md" 
                       : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-900 border border-transparent"
                   }`}
                 >
-                  <item.icon className={`w-4 h-4 shrink-0 ${isActive ? "text-blue-600 dark:text-blue-400" : "text-slate-500"}`} />
-                  <p className={`ml-3 text-sm font-semibold ${isActive ? "text-blue-700 dark:text-blue-400" : "text-slate-700 dark:text-slate-200"}`}>
+                  <item.icon className={`w-4 h-4 shrink-0 ${isActive ? "text-white dark:text-black" : "text-slate-500"}`} />
+                  <p className={`ml-3 text-sm font-semibold ${isActive ? "text-white dark:text-black" : "text-slate-700 dark:text-slate-200"}`}>
                     {item.name}
                   </p>
                 </Link>
@@ -94,7 +94,7 @@ export default function SettingsLayout({ children }: { children: ReactNode }) {
         </aside>
 
         {/* Main Content Area */}
-        <main key={refreshKey} className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-950 p-6">
+        <main key={refreshKey} className="flex-1 overflow-y-auto bg-slate-50 dark:bg-[#0a0a0a] p-6">
           {children}
         </main>
       </div>
