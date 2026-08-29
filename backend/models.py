@@ -404,3 +404,11 @@ class SecuritySettings(Base):
     SessionTimeoutEnabled = Column(Boolean, default=True, nullable=False)
     SessionTimeoutMinutes = Column(Integer, default=120, nullable=False)
     UpdatedAt = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+class GeneralSettings(Base):
+    __tablename__ = "general_settings"
+
+    SettingsId = Column(Integer, primary_key=True, autoincrement=True)
+    LoginBrandingName = Column(String(255), nullable=False, default="PMS Software")
+    LoginSubheading = Column(String(255), nullable=False, default="Pharmacy Management System")
+    LoginBackgroundPath = Column(String(500), nullable=True)

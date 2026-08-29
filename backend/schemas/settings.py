@@ -109,3 +109,17 @@ class SystemPreferencesResponse(SystemPreferencesBase):
 
     class Config:
         from_attributes = True
+
+class GeneralSettingsBase(BaseModel):
+    LoginBrandingName: str = "PMS Software"
+    LoginSubheading: str = "Pharmacy Management System"
+    LoginBackgroundPath: Optional[str] = None
+
+class GeneralSettingsUpdate(GeneralSettingsBase):
+    pass
+
+class GeneralSettingsResponse(GeneralSettingsBase):
+    SettingsId: int
+
+    class Config:
+        from_attributes = True

@@ -5,14 +5,20 @@ from typing import Any
 import os
 import shutil
 
-from api.deps import get_db
-from models import PharmacyProfile, BillingSettings, InventorySettings, PrinterSettings, SystemPreferences
-from schemas.settings import PharmacyProfileResponse, PharmacyProfileUpdate, BillingSettingsResponse, BillingSettingsUpdate, InventorySettingsResponse, InventorySettingsUpdate, PrinterSettingsResponse, PrinterSettingsUpdate, SystemPreferencesResponse, SystemPreferencesUpdate
+from api.deps import get_db, get_current_admin_user
+from models import PharmacyProfile, BillingSettings, InventorySettings, PrinterSettings, SystemPreferences, GeneralSettings
+from schemas.settings import PharmacyProfileResponse, PharmacyProfileUpdate, BillingSettingsResponse, BillingSettingsUpdate, InventorySettingsResponse, InventorySettingsUpdate, PrinterSettingsResponse, PrinterSettingsUpdate, SystemPreferencesResponse, SystemPreferencesUpdate, GeneralSettingsResponse, GeneralSettingsUpdate
+from core.logger import logger
 
 router = APIRouter()
 
 UPLOAD_DIR = Path("uploads/logo")
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+UPLOAD_DIR_BG = Path("uploads/background")
+UPLOAD_DIR_BG.mkdir(parents=True, exist_ok=True)
+
+ALLOWED_MIME_TYPES = ["image/png", "image/jpeg", "image/webp"]
+MAX_FILE_SIZE = 5 * 1024 * 1024 # 5MB
 
 @router.get("/profile", response_model=PharmacyProfileResponse)
 def get_pharmacy_profile(db: Session = Depends(get_db)) -> Any:
@@ -30,7 +36,8 @@ def get_pharmacy_profile(db: Session = Depends(get_db)) -> Any:
 @router.put("/profile", response_model=PharmacyProfileResponse)
 def update_pharmacy_profile(
     profile_in: PharmacyProfileUpdate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_admin = Depends(get_current_admin_user)
 ) -> Any:
     """
     Update the pharmacy profile.
@@ -46,12 +53,14 @@ def update_pharmacy_profile(
             
     db.commit()
     db.refresh(profile)
+    logger.info(f"AUDIT: User {current_admin.Username} updated Pharmacy Branding (Name/Profile).")
     return profile
 
 @router.post("/profile/logo")
 def upload_pharmacy_logo(
     file: UploadFile = File(...),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_admin = Depends(get_current_admin_user)
 ) -> Any:
     """
     Upload a logo for the pharmacy profile.
@@ -63,19 +72,63 @@ def upload_pharmacy_logo(
         db.commit()
         db.refresh(profile)
         
+    if file.content_type not in ALLOWED_MIME_TYPES:
+        raise HTTPException(status_code=400, detail="Invalid file type. Only PNG, JPEG, and WebP are allowed.")
+        
+    # Read file content to check size and save
+    content = file.file.read()
+    if len(content) > MAX_FILE_SIZE:
+        raise HTTPException(status_code=400, detail="File size exceeds 5MB limit.")
+        
     # Generate unique filename or just overwrite logo.png
     file_extension = file.filename.split(".")[-1]
     filename = f"logo_{profile.ProfileId}.{file_extension}"
     file_path = UPLOAD_DIR / filename
     
+    # Disk cleanup of previous logo if it exists and is different
+    if profile.LogoPath:
+        old_file_path = Path(profile.LogoPath.lstrip("/"))
+        if old_file_path.exists() and old_file_path != file_path:
+            try:
+                os.unlink(old_file_path)
+            except Exception as e:
+                logger.error(f"Failed to delete old logo file {old_file_path}: {e}")
+    
     with file_path.open("wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+        buffer.write(content)
         
     profile.LogoPath = f"/uploads/logo/{filename}"
     db.commit()
     db.refresh(profile)
+    logger.info(f"AUDIT: User {current_admin.Username} uploaded a new Pharmacy Logo.")
     
     return {"message": "Logo uploaded successfully", "logo_path": profile.LogoPath}
+
+@router.delete("/profile/logo")
+def delete_pharmacy_logo(
+    db: Session = Depends(get_db),
+    current_admin = Depends(get_current_admin_user)
+) -> Any:
+    """
+    Remove the pharmacy logo.
+    """
+    profile = db.query(PharmacyProfile).first()
+    if not profile or not profile.LogoPath:
+        raise HTTPException(status_code=404, detail="No logo found.")
+        
+    old_file_path = Path(profile.LogoPath.lstrip("/"))
+    if old_file_path.exists():
+        try:
+            os.unlink(old_file_path)
+        except Exception as e:
+            logger.error(f"Failed to delete logo file {old_file_path}: {e}")
+            
+    profile.LogoPath = None
+    db.commit()
+    db.refresh(profile)
+    logger.info(f"AUDIT: User {current_admin.Username} removed the Pharmacy Logo.")
+    
+    return {"message": "Logo removed successfully"}
 
 @router.get("/billing", response_model=BillingSettingsResponse)
 def get_billing_settings(db: Session = Depends(get_db)) -> Any:
@@ -231,3 +284,110 @@ def update_system_preferences(
     db.commit()
     db.refresh(settings)
     return settings
+
+@router.get("/general", response_model=GeneralSettingsResponse)
+def get_general_settings(db: Session = Depends(get_db)) -> Any:
+    """
+    Get the general settings (Login Page Branding). This is a public endpoint.
+    """
+    settings = db.query(GeneralSettings).first()
+    if not settings:
+        settings = GeneralSettings()
+        db.add(settings)
+        db.commit()
+        db.refresh(settings)
+    return settings
+
+@router.put("/general", response_model=GeneralSettingsResponse)
+def update_general_settings(
+    settings_in: GeneralSettingsUpdate,
+    db: Session = Depends(get_db),
+    current_admin = Depends(get_current_admin_user)
+) -> Any:
+    """
+    Update the general settings (Login Page Branding).
+    """
+    settings = db.query(GeneralSettings).first()
+    if not settings:
+        settings = GeneralSettings(**settings_in.model_dump())
+        db.add(settings)
+    else:
+        update_data = settings_in.model_dump(exclude_unset=True)
+        for field, value in update_data.items():
+            setattr(settings, field, value)
+            
+    db.commit()
+    db.refresh(settings)
+    logger.info(f"AUDIT: User {current_admin.Username} updated General Settings (Login Page Branding).")
+    return settings
+
+@router.post("/general/background")
+def upload_login_background(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_admin = Depends(get_current_admin_user)
+) -> Any:
+    """
+    Upload a background image for the login page.
+    """
+    if file.content_type not in ALLOWED_MIME_TYPES:
+        raise HTTPException(status_code=400, detail="Invalid file type. Only PNG, JPEG, and WebP are allowed.")
+        
+    content = file.file.read()
+    if len(content) > MAX_FILE_SIZE:
+        raise HTTPException(status_code=400, detail="File size exceeds 5MB limit.")
+        
+    settings = db.query(GeneralSettings).first()
+    if not settings:
+        settings = GeneralSettings()
+        db.add(settings)
+        db.commit()
+        db.refresh(settings)
+        
+    file_extension = file.filename.split(".")[-1]
+    filename = f"bg_{settings.SettingsId}.{file_extension}"
+    file_path = UPLOAD_DIR_BG / filename
+    
+    if settings.LoginBackgroundPath:
+        old_file_path = Path(settings.LoginBackgroundPath.lstrip("/"))
+        if old_file_path.exists() and old_file_path != file_path:
+            try:
+                os.unlink(old_file_path)
+            except Exception as e:
+                logger.error(f"Failed to delete old background file {old_file_path}: {e}")
+                
+    with file_path.open("wb") as buffer:
+        buffer.write(content)
+        
+    settings.LoginBackgroundPath = f"/uploads/background/{filename}"
+    db.commit()
+    db.refresh(settings)
+    logger.info(f"AUDIT: User {current_admin.Username} uploaded a new Login Background.")
+    
+    return {"message": "Background uploaded successfully", "background_path": settings.LoginBackgroundPath}
+
+@router.delete("/general/background")
+def delete_login_background(
+    db: Session = Depends(get_db),
+    current_admin = Depends(get_current_admin_user)
+) -> Any:
+    """
+    Remove the login page background image.
+    """
+    settings = db.query(GeneralSettings).first()
+    if not settings or not settings.LoginBackgroundPath:
+        raise HTTPException(status_code=404, detail="No background found.")
+        
+    old_file_path = Path(settings.LoginBackgroundPath.lstrip("/"))
+    if old_file_path.exists():
+        try:
+            os.unlink(old_file_path)
+        except Exception as e:
+            logger.error(f"Failed to delete background file {old_file_path}: {e}")
+            
+    settings.LoginBackgroundPath = None
+    db.commit()
+    db.refresh(settings)
+    logger.info(f"AUDIT: User {current_admin.Username} removed the Login Background.")
+    
+    return {"message": "Background removed successfully"}

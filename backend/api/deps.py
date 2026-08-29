@@ -37,3 +37,8 @@ def get_current_user(
     if not user.IsActive:
         raise AuthenticationError("Inactive user")
     return user
+
+def get_current_admin_user(current_user: User = Depends(get_current_user)) -> User:
+    # Future-proof: Ensure this user has admin rights. 
+    # Currently, any active user acts as an admin.
+    return current_user

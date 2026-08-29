@@ -23,6 +23,7 @@ export default function SettingsLayout({ children }: { children: ReactNode }) {
   };
 
   const navigation = [
+    { name: "General Settings", href: "/dashboard/settings/general", icon: SettingsIcon },
     { name: "Pharmacy Information", href: "/dashboard/settings/profile", icon: Building2 },
     { name: "Billing & POS Settings", href: "/dashboard/settings/billing", icon: ReceiptText },
     { name: "Inventory & Medicine Settings", href: "/dashboard/settings/inventory", icon: Package },

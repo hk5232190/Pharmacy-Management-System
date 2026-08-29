@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +17,26 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [branding, setBranding] = useState({
+    LoginBrandingName: "PMS Software",
+    LoginSubheading: "Sign in to continue.",
+    LoginBackgroundPath: null as string | null
+  });
+
+  useEffect(() => {
+    fetch("http://127.0.0.1:8000/api/v1/settings/general")
+      .then(res => res.json())
+      .then(data => {
+        if (data && !data.detail) {
+          setBranding({
+            LoginBrandingName: data.LoginBrandingName || "PMS Software",
+            LoginSubheading: data.LoginSubheading || "Sign in to continue.",
+            LoginBackgroundPath: data.LoginBackgroundPath || null
+          });
+        }
+      })
+      .catch(err => console.error("Failed to load branding:", err));
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,19 +88,16 @@ export default function LoginPage() {
         
         {/* Dedicated Left Side Image (Contains Logo, Heading, and Badges baked in) */}
         <div className="relative w-full flex-grow bg-white">
-          <Image 
-            src="/images/login page left side.png"
-            alt="Pharmacy Management System"
-            fill
-            quality={100}
-            priority
-            className="object-fill"
+          <img 
+            src={branding.LoginBackgroundPath ? `http://127.0.0.1:8000${branding.LoginBackgroundPath}` : "/images/login page left side.png"}
+            alt={branding.LoginBrandingName}
+            className="absolute inset-0 w-full h-full object-cover"
           />
         </div>
 
         {/* Absolute Bottom Footer Bar */}
         <div className="relative z-10 w-full bg-[#0f172a] py-5 px-12 xl:px-16 flex justify-between items-center text-[13px] text-slate-300 font-medium shrink-0">
-          <p>© 2025 PMS Software. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} {branding.LoginBrandingName}. All rights reserved.</p>
           <p>Version 1.0.0</p>
         </div>
       </div>
@@ -94,7 +111,7 @@ export default function LoginPage() {
           <Card className="p-10 sm:p-12 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border-0 rounded-[20px] bg-white">
             <div className="text-center mb-10">
               <h3 className="text-[28px] font-bold text-slate-900 mb-2">Welcome Back</h3>
-              <p className="text-slate-500 font-medium">Sign in to continue.</p>
+              <p className="text-slate-500 font-medium">{branding.LoginSubheading}</p>
             </div>
 
             <form className="space-y-6" onSubmit={handleLogin}>

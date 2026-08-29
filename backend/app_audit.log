@@ -662,3 +662,78 @@ NoneType: None
 2026-08-28 10:17:33,416 - apscheduler.scheduler - INFO - Scheduler started
 2026-08-28 11:13:47,872 - pms - INFO - Starting Pharmacy Management System backend...
 2026-08-28 11:13:47,935 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-28 16:04:14,395 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-28 16:04:14,432 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-28 16:15:51,242 - pms - INFO - Root endpoint accessed
+2026-08-28 16:17:40,412 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-28 16:17:40,424 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-28 16:21:03,835 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-28 16:21:03,849 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-28 16:25:03,688 - pms - INFO - Database Backup Executed | Type: Manual | File: Backup_2026_08_28_162415.zip | Size: 10720 bytes | Status: Success
+2026-08-28 16:45:17,571 - pms - INFO - Database Restore Initiated | Creating safety snapshot: backups\safety\pre_restore_safety_snapshot.sqlite
+2026-08-28 16:45:17,584 - pms - INFO - Database Restore Successful | Restored from: C:/Users/Muhammad Saqib/Desktop/Backup/Backup_2026_08_28_162415.zip by user admin
+2026-08-28 16:49:03,910 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-28 16:49:03,930 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-28 16:53:35,284 - pms - INFO - Database Backup Executed | Type: Manual | File: Backup_2026_08_28_165315.zip | Size: 10720 bytes | Status: Success
+2026-08-28 16:54:17,162 - pms - INFO - Database Backup Executed | Type: Manual | File: Backup_2026_08_28_165335.zip | Size: 10807 bytes | Status: Success
+2026-08-28 16:55:12,665 - pms - INFO - Database Restore Initiated | Creating safety snapshot: backups\safety\pre_restore_safety_snapshot.sqlite
+2026-08-28 16:55:12,684 - pms - INFO - Database Restore Successful | Restored from: C:/Users/Muhammad Saqib/Desktop/Backup/Backup_2026_08_28_165335.zip by user admin
+2026-08-28 16:56:57,821 - pms - INFO - Database Backup Executed | Type: Manual | File: Backup_2026_08_28_165648.zip | Size: 10805 bytes | Status: Success
+2026-08-28 16:57:21,210 - pms - INFO - Database Restore Initiated | Creating safety snapshot: backups\safety\pre_restore_safety_snapshot.sqlite
+2026-08-28 16:57:21,228 - pms - INFO - Database Restore Successful | Restored from: C:/Users/Muhammad Saqib/Desktop/Backup/Backup_2026_08_28_165648.zip by user admin
+2026-08-28 17:08:53,755 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-28 17:08:53,775 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-28 17:15:42,593 - pms - INFO - Database Restore Initiated | Creating safety snapshot: backups\safety\pre_restore_safety_snapshot.sqlite
+2026-08-28 17:15:42,622 - pms - INFO - Database Restore Successful | Restored from: C:/Users/Muhammad Saqib/Desktop/Backup/Backup_2026_08_28_165648.zip by user admin
+2026-08-28 17:21:35,766 - pms - INFO - Database Backup Executed | Type: Manual | File: Backup_2026_08_28_172042.zip | Size: 10805 bytes | Status: Success
+2026-08-28 18:23:47,119 - pms - ERROR - PMSException caught: Session expired. Please log in again. (status: 401) | Path: /api/v1/auth/me
+2026-08-28 18:23:47,507 - pms - ERROR - PMSException caught: Invalid authentication credentials (status: 401) | Path: /api/v1/backup/history
+2026-08-28 18:23:47,513 - pms - ERROR - PMSException caught: Invalid authentication credentials (status: 401) | Path: /api/v1/backup-settings
+2026-08-28 18:23:47,520 - pms - ERROR - PMSException caught: Invalid authentication credentials (status: 401) | Path: /api/v1/backup/db-health
+2026-08-28 18:23:47,521 - pms - ERROR - PMSException caught: Invalid authentication credentials (status: 401) | Path: /api/v1/backup/db-info
+2026-08-28 18:23:47,546 - pms - ERROR - PMSException caught: Invalid authentication credentials (status: 401) | Path: /api/v1/backup/history
+2026-08-28 18:23:47,555 - pms - ERROR - PMSException caught: Invalid authentication credentials (status: 401) | Path: /api/v1/backup-settings
+2026-08-28 18:23:47,556 - pms - ERROR - PMSException caught: Invalid authentication credentials (status: 401) | Path: /api/v1/backup/db-health
+2026-08-28 18:23:47,560 - pms - ERROR - PMSException caught: Invalid authentication credentials (status: 401) | Path: /api/v1/backup/db-info
+2026-08-28 18:38:34,564 - pms - INFO - Backup Settings Updated | User: admin | AutoBackup: True
+2026-08-28 18:38:34,647 - apscheduler.scheduler - INFO - Added job "run_automatic_backup_job" to job store "default"
+2026-08-28 18:38:34,648 - pms - INFO - Scheduled automatic backup for Daily at 23:00
+2026-08-28 18:43:01,048 - pms - INFO - Backup Settings Updated | User: admin | AutoBackup: True
+2026-08-28 18:43:01,049 - apscheduler.scheduler - INFO - Removed job auto_backup_job
+2026-08-28 18:43:01,051 - apscheduler.scheduler - INFO - Added job "run_automatic_backup_job" to job store "default"
+2026-08-28 18:43:01,051 - pms - INFO - Scheduled automatic backup for Daily at 23:00
+2026-08-29 00:41:08,637 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-29 00:41:08,693 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-29 00:41:08,905 - apscheduler.scheduler - INFO - Added job "run_automatic_backup_job" to job store "default"
+2026-08-29 00:41:08,906 - pms - INFO - Scheduled automatic backup for Daily at 23:00
+2026-08-29 00:42:52,005 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-29 00:42:52,041 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-29 00:42:52,247 - apscheduler.scheduler - INFO - Added job "run_automatic_backup_job" to job store "default"
+2026-08-29 00:42:52,247 - pms - INFO - Scheduled automatic backup for Daily at 23:00
+2026-08-29 01:40:14,310 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-29 01:40:14,355 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-29 01:40:14,596 - apscheduler.scheduler - INFO - Added job "run_automatic_backup_job" to job store "default"
+2026-08-29 01:40:14,596 - pms - INFO - Scheduled automatic backup for Daily at 23:00
+2026-08-29 01:41:26,311 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-29 01:41:26,612 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-29 01:41:27,290 - apscheduler.scheduler - INFO - Added job "run_automatic_backup_job" to job store "default"
+2026-08-29 01:41:27,290 - pms - INFO - Scheduled automatic backup for Daily at 23:00
+2026-08-29 10:23:58,516 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-29 10:23:58,585 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-29 10:23:58,782 - apscheduler.scheduler - INFO - Added job "run_automatic_backup_job" to job store "default"
+2026-08-29 10:23:58,783 - pms - INFO - Scheduled automatic backup for Daily at 23:00
+2026-08-29 10:39:00,185 - pms - INFO - Backup Settings Updated | User: admin | AutoBackup: False
+2026-08-29 10:39:00,186 - apscheduler.scheduler - INFO - Removed job auto_backup_job
+2026-08-29 12:13:14,455 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-29 12:13:14,498 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-29 12:37:59,026 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-29 12:37:59,094 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-29 12:39:26,768 - pms - INFO - AUDIT: User admin removed the Pharmacy Logo.
+2026-08-29 12:40:05,625 - pms - INFO - AUDIT: User admin updated Pharmacy Branding (Name/Profile).
+2026-08-29 12:40:33,213 - pms - INFO - AUDIT: User admin updated Pharmacy Branding (Name/Profile).
+2026-08-29 12:41:00,525 - pms - INFO - AUDIT: User admin updated Pharmacy Branding (Name/Profile).
+2026-08-29 12:41:43,521 - pms - INFO - AUDIT: User admin updated Pharmacy Branding (Name/Profile).
+2026-08-29 12:44:14,506 - pms - INFO - AUDIT: User admin updated Pharmacy Branding (Name/Profile).
+2026-08-29 12:44:21,854 - pms - INFO - AUDIT: User admin updated Pharmacy Branding (Name/Profile).
+2026-08-29 12:44:33,468 - pms - INFO - AUDIT: User admin updated Pharmacy Branding (Name/Profile).
+2026-08-29 12:44:44,964 - pms - INFO - AUDIT: User admin updated Pharmacy Branding (Name/Profile).
