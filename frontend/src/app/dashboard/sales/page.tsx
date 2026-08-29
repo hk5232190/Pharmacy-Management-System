@@ -34,6 +34,8 @@ import { useSystemPreferences } from "@/contexts/SystemPreferencesContext";
 interface SaleInit {
   InvoiceNumber: string;
   DefaultTaxRate: number;
+  MaxDiscountPercentage: number;
+  DiscountEnabled: boolean;
 }
 
 interface ProductSearchBatch {
@@ -69,6 +71,7 @@ interface CartItem {
 }
 
 export default function POSBillingPageWrapper() {
+  const { formatCurrency, currencySymbol } = useSystemPreferences();
   const [refreshKey, setRefreshKey] = useState(0);
   const [refreshState, setRefreshState] = useState<"idle" | "loading" | "done">("idle");
   
@@ -88,14 +91,21 @@ export default function POSBillingPageWrapper() {
 }
 
 function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { onRefresh: () => void, refreshState: "idle" | "loading" | "done", activeTab: "pos" | "history" | "return", onTabChange: (tab: "pos" | "history" | "return") => void }) {
-  const { formatNumber } = useSystemPreferences();
+  const { formatNumber, formatCurrency, currencySymbol } = useSystemPreferences();
   // (activeTab is now managed by the wrapper so it survives a refresh reset)
   const [loadingInit, setLoadingInit] = useState(true);
   const [invoiceNo, setInvoiceNo] = useState("");
   const [taxRate, setTaxRate] = useState(0);
+  const [maxDiscount, setMaxDiscount] = useState(0);
+  const [discountEnabled, setDiscountEnabled] = useState(false);
   const [customers, setCustomers] = useState<any[]>([]);
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>("walkin");
   const [salesperson, setSalesperson] = useState("");
+
+  const [isAdminPinModalOpen, setIsAdminPinModalOpen] = useState(false);
+  const [adminPinInput, setAdminPinInput] = useState("");
+  const [requireAdminPin, setRequireAdminPin] = useState(false);
+  const [adminDiscountThreshold, setAdminDiscountThreshold] = useState(10);
 
   const [isAddCustomerOpen, setIsAddCustomerOpen] = useState(false);
   const [newCustomer, setNewCustomer] = useState({ Name: '', Phone: '', Address: '' });
@@ -206,6 +216,10 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
       if (initRes.success && initRes.data) {
         setInvoiceNo(initRes.data.InvoiceNumber);
         setTaxRate(initRes.data.DefaultTaxRate);
+        setMaxDiscount(initRes.data.MaxDiscountPercentage);
+        setDiscountEnabled(initRes.data.DiscountEnabled);
+        setRequireAdminPin(initRes.data.RequireAdminPinForDiscount);
+        setAdminDiscountThreshold(initRes.data.AdminDiscountThreshold);
       }
 
       const userStr = localStorage.getItem('user');
@@ -290,9 +304,9 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
         AvailableStock: bestBatch.AvailableStock,
         UnitPrice: bestBatch.UnitPrice,
         Quantity: 1,
-        Discount: 0,
+        Discount: discountEnabled ? maxDiscount : 0,
         TaxPercent: taxRate,
-        LineTotal: calculateLineTotal(1, bestBatch.UnitPrice, 0, taxRate),
+        LineTotal: calculateLineTotal(1, bestBatch.UnitPrice, discountEnabled ? maxDiscount : 0, taxRate),
         RequiresPrescription: product.RequiresPrescription
       }];
     });
@@ -316,6 +330,16 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
         const updated = { ...item, [field]: value };
         // Recalculate if qty, discount, or tax changed
         if (['Quantity', 'Discount', 'TaxPercent'].includes(field)) {
+          if (field === 'Discount') {
+            if (!discountEnabled) {
+              toast.error("Discounts are disabled globally.");
+              updated.Discount = 0;
+            } else if (value > maxDiscount) {
+              toast.error(`Maximum allowed discount is ${maxDiscount}%.`);
+              updated.Discount = maxDiscount;
+            }
+          }
+
           // enforce stock limit
           if (field === 'Quantity' && value > item.AvailableStock) {
             toast.error(`Only ${item.AvailableStock} units available in this batch.`);
@@ -354,7 +378,24 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
   const changeDue = Math.max(0, paidAmount - grandTotal);
   const remainingBalance = Math.max(0, grandTotal - paidAmount);
 
-  const handleCompleteSale = async () => {
+  const verifyAdminPin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const res = await apiClient.post('/auth/verify-pin', { pin: adminPinInput });
+      if (res.success) {
+        setIsAdminPinModalOpen(false);
+        setAdminPinInput("");
+        handleCompleteSale(true);
+      } else {
+        toast.error(res.error || "Invalid Admin PIN/Password");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Invalid Admin PIN/Password");
+    }
+  };
+
+  const handleCompleteSale = async (skipPinCheck: boolean | React.MouseEvent = false) => {
+    const isSkip = typeof skipPinCheck === 'boolean' ? skipPinCheck : false;
     if (cart.length === 0) return;
 
     // Auto-fill exact amount if user didn't enter anything for non-credit sales
@@ -367,6 +408,14 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
     if (finalPaidAmount < grandTotal && selectedCustomerId === 'walkin') {
       toast.error("Credit sales are not allowed for Walk-in Customers. Please select or register a customer.");
       return;
+    }
+
+    if (!isSkip && requireAdminPin) {
+      const needsPin = cart.some(item => item.Discount > adminDiscountThreshold);
+      if (needsPin) {
+        setIsAdminPinModalOpen(true);
+        return;
+      }
     }
 
     try {
@@ -517,7 +566,7 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
       };
       const res = await apiClient.post('/sales/return', payload);
       if (res.success) {
-        toast.success(`Return Processed! Refund: Rs ${formatNumber(res.data.RefundAmount)}`);
+        toast.success(`Return Processed! Refund: ${formatCurrency(res.data.RefundAmount)}`);
         setReturnInvoiceData(null);
         setReturnInvoiceNo("");
         setReturnItems([]);
@@ -702,9 +751,9 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
       item.TransactionDate,
       item.InvoiceNumber,
       item.CustomerName || "Walk-in",
-      `Rs ${formatNumber(item.GrandTotal)}`,
-      `Rs ${formatNumber(item.PaidAmount)}`,
-      `Rs ${formatNumber(Math.max(0, item.GrandTotal - item.PaidAmount))}`,
+      `${formatCurrency(item.GrandTotal)}`,
+      `${formatCurrency(item.PaidAmount)}`,
+      `${formatCurrency(Math.max(0, item.GrandTotal - item.PaidAmount))}`,
       item.Status
     ]);
 
@@ -834,11 +883,11 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
         {/* KPI Cards — hidden on Sales Return tab */}
         {activeTab !== 'return' && (() => {
           const salesCards = [
-            { label: "Today's Sales",   val: `Rs ${formatNumber(kpis.todaysSales)}`,     icon: ShoppingCart, accent: "blue" },
-            { label: "Total Revenue",   val: `Rs ${formatNumber(kpis.totalRevenue)}`,     icon: FileText,     accent: "emerald" },
+            { label: "Today's Sales",   val: `${formatCurrency(kpis.todaysSales)}`,     icon: ShoppingCart, accent: "blue" },
+            { label: "Total Revenue",   val: `${formatCurrency(kpis.totalRevenue)}`,     icon: FileText,     accent: "emerald" },
             { label: "Total Invoices",  val: kpis.totalInvoices.toString(),               icon: FileText,     accent: "indigo" },
             { label: "Items Sold Today",val: kpis.itemsSoldToday.toString(),              icon: ShoppingCart, accent: "amber" },
-            { label: "Pending Payments",val: `Rs ${formatNumber(kpis.pendingPayments)}`,  icon: FileText,     accent: "rose" },
+            { label: "Pending Payments",val: `${formatCurrency(kpis.pendingPayments)}`,  icon: FileText,     accent: "rose" },
           ];
 
           const accentMap: Record<string, { border: string; iconCls: string; text: string; bg: string }> = {
@@ -996,7 +1045,7 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
                                 <p className="text-xs text-muted-foreground">{res.GenericName}</p>
                               </div>
                               <div className="text-right">
-                                <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">Rs {formatNumber(res.Batches[0].UnitPrice)}</p>
+                                <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">{formatCurrency(res.Batches[0].UnitPrice)}</p>
                                 <p className="text-xs text-muted-foreground">Stock: {res.Batches[0].AvailableStock}</p>
                               </div>
                             </li>
@@ -1049,7 +1098,7 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
                             </td>
                             <td className="px-3 py-3 font-mono text-xs text-muted-foreground">{item.BatchCode}</td>
                             <td className="px-3 py-3 text-center text-muted-foreground text-xs">{item.AvailableStock}</td>
-                            <td className="px-3 py-3 text-right">Rs {formatNumber(item.UnitPrice)}</td>
+                            <td className="px-3 py-3 text-right">{formatCurrency(item.UnitPrice)}</td>
                             <td className="px-3 py-3 text-center">
                               <div className="flex items-center border border-input rounded-md overflow-hidden h-8">
                                 <button onClick={() => updateCartItem(item.id, 'Quantity', item.Quantity - 1)} className="px-2 bg-secondary/50 hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors">-</button>
@@ -1079,7 +1128,7 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
                                 onChange={(e) => updateCartItem(item.id, 'TaxPercent', parseFloat(e.target.value) || 0)}
                               />
                             </td>
-                            <td className="px-3 py-3 text-right font-bold">Rs {formatNumber(item.LineTotal)}</td>
+                            <td className="px-3 py-3 text-right font-bold">{formatCurrency(item.LineTotal)}</td>
                             <td className="px-3 py-3 text-center">
                               <Button onClick={() => removeCartItem(item.id)} variant="ghost" size="icon" className="h-8 w-8 text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30">
                                 <Trash2 className="w-4 h-4" />
@@ -1115,21 +1164,21 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
                   </div>
                   <div className="flex justify-between text-muted-foreground">
                     <span>Subtotal</span>
-                    <span className="font-medium text-foreground">Rs {formatNumber(subtotal)}</span>
+                    <span className="font-medium text-foreground">{formatCurrency(subtotal)}</span>
                   </div>
                   <div className="flex justify-between text-muted-foreground">
                     <span>Discount</span>
-                    <span className="font-medium text-rose-500">- Rs {formatNumber(totalDiscount)}</span>
+                    <span className="font-medium text-rose-500">- {formatCurrency(totalDiscount)}</span>
                   </div>
                   <div className="flex justify-between text-muted-foreground">
                     <span>Tax ({taxRate}%)</span>
-                    <span className="font-medium text-foreground">Rs {formatNumber(totalTax)}</span>
+                    <span className="font-medium text-foreground">{formatCurrency(totalTax)}</span>
                   </div>
 
                   <div className="border-t border-dashed border-border my-4 pt-4">
                     <div className="flex justify-between items-center mb-4">
                       <span className="text-lg font-bold text-blue-600 dark:text-blue-400">Grand Total</span>
-                      <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">Rs {formatNumber(grandTotal)}</span>
+                      <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">{formatCurrency(grandTotal)}</span>
                     </div>
                   </div>
 
@@ -1137,7 +1186,7 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
                     <div className="flex justify-between items-center">
                       <span className="font-medium text-muted-foreground">Paid Amount</span>
                       <div className="flex items-center gap-1">
-                        <span className="text-muted-foreground font-medium">Rs </span>
+                        <span className="text-muted-foreground font-medium">{currencySymbol} </span>
                         <Input
                           type="number"
                           className="w-24 h-9 font-bold text-right"
@@ -1148,11 +1197,11 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="font-medium text-emerald-600 dark:text-emerald-500">Change Due</span>
-                      <span className="font-bold text-emerald-600 dark:text-emerald-500 text-lg">Rs {formatNumber(changeDue)}</span>
+                      <span className="font-bold text-emerald-600 dark:text-emerald-500 text-lg">{formatCurrency(changeDue)}</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="font-medium text-rose-600 dark:text-rose-500">Remaining Bal.</span>
-                      <span className="font-bold text-rose-600 dark:text-rose-500">Rs {formatNumber(remainingBalance)}</span>
+                      <span className="font-bold text-rose-600 dark:text-rose-500">{formatCurrency(remainingBalance)}</span>
                     </div>
                   </div>
                 </div>
@@ -1213,7 +1262,7 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground">Grand Total</p>
-                    <p className="font-bold text-foreground">Rs {formatNumber(returnInvoiceData.GrandTotal)}</p>
+                    <p className="font-bold text-foreground">{formatCurrency(returnInvoiceData.GrandTotal)}</p>
                   </div>
                 </div>
 
@@ -1240,7 +1289,7 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
                           <tr key={item.SalesItemId} className={isFullyReturned ? "opacity-50 bg-secondary/20" : "hover:bg-secondary/10"}>
                             <td className="px-3 py-3 font-medium text-foreground">{item.MedicineName}</td>
                             <td className="px-3 py-3 font-mono text-xs text-muted-foreground">{item.BatchCode}</td>
-                            <td className="px-3 py-3 text-right">Rs {formatNumber(item.UnitPrice)}</td>
+                            <td className="px-3 py-3 text-right">{formatCurrency(item.UnitPrice)}</td>
                             <td className="px-3 py-3 text-center">{item.Quantity}</td>
                             <td className="px-3 py-3 text-center">
                               <Input
@@ -1267,7 +1316,7 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
                                 <option value="Damaged / Defective">Damaged / Defective</option>
                               </select>
                             </td>
-                            <td className="px-3 py-3 text-right font-bold text-emerald-600">Rs {formatNumber(refund)}</td>
+                            <td className="px-3 py-3 text-right font-bold text-emerald-600">{formatCurrency(refund)}</td>
                           </tr>
                         );
                       })}
@@ -1279,7 +1328,7 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
                   <div className="flex-1 space-y-4">
                     <div>
                       <p className="text-sm text-muted-foreground mb-1">Total Refund to Customer</p>
-                      <p className="text-4xl font-bold text-rose-600">Rs {formatNumber(totalRefundPreview)}</p>
+                      <p className="text-4xl font-bold text-rose-600">{formatCurrency(totalRefundPreview)}</p>
                     </div>
                     {returnInvoiceData?.CustomerId && (
                       <div className="space-y-1.5">
@@ -1353,7 +1402,7 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
                         <td className="px-3 py-3 font-mono text-xs font-medium text-foreground">{ret.ReturnInvoiceNumber}</td>
                         <td className="px-3 py-3 font-mono text-xs text-muted-foreground">{ret.OriginalInvoiceNumber}</td>
                         <td className="px-3 py-3 font-medium text-foreground">{ret.CustomerName}</td>
-                        <td className="px-3 py-3 text-right font-bold text-rose-600">Rs {formatNumber(ret.TotalRefundAmount)}</td>
+                        <td className="px-3 py-3 text-right font-bold text-rose-600">{formatCurrency(ret.TotalRefundAmount)}</td>
                         <td className="px-3 py-3">
                           <span className={cn(
                             "text-xs font-medium px-2 py-1 rounded-full",
@@ -1469,10 +1518,10 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
                           <td className="px-3 py-3 font-medium text-muted-foreground">{item.TransactionDate}</td>
                           <td className="px-3 py-3 font-mono font-bold text-foreground">{item.InvoiceNumber}</td>
                           <td className="px-3 py-3">{item.CustomerName}</td>
-                          <td className="px-3 py-3 text-right font-bold">Rs {formatNumber(item.GrandTotal)}</td>
-                          <td className="px-3 py-3 text-right font-medium text-emerald-600">Rs {formatNumber(item.PaidAmount || 0)}</td>
+                          <td className="px-3 py-3 text-right font-bold">{formatCurrency(item.GrandTotal)}</td>
+                          <td className="px-3 py-3 text-right font-medium text-emerald-600">{formatCurrency(item.PaidAmount || 0)}</td>
                           <td className={cn("px-3 py-3 text-right font-bold", balanceDue > 0 ? "text-rose-500" : "text-muted-foreground")}>
-                            Rs {formatNumber(balanceDue)}
+                            {formatCurrency(balanceDue)}
                           </td>
                           <td className="px-3 py-3 text-center">
                             <span className={cn("px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider", statusBadge.color)}>
@@ -1605,8 +1654,8 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
                         <span>Batch: {item.BatchCode} | Exp: {item.ExpiryDate}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>{item.Quantity} x Rs {formatNumber(item.UnitPrice)}</span>
-                        <span>Rs {formatNumber(item.LineTotal)}</span>
+                        <span>{item.Quantity} x {formatCurrency(item.UnitPrice)}</span>
+                        <span>{formatCurrency(item.LineTotal)}</span>
                       </div>
                     </div>
                   ))}
@@ -1615,26 +1664,26 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
                 <div className="border-t border-dashed border-gray-400 pt-2 mb-4 space-y-1">
                   <div className="flex justify-between">
                     <span>Subtotal:</span>
-                    <span>Rs {formatNumber(completedReceipt.SubTotal)}</span>
+                    <span>{formatCurrency(completedReceipt.SubTotal)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Discount:</span>
-                    <span>- Rs {formatNumber(completedReceipt.Discount)}</span>
+                    <span>- {formatCurrency(completedReceipt.Discount)}</span>
                   </div>
                   <div className="flex justify-between font-bold text-sm mt-2">
                     <span>GRAND TOTAL:</span>
-                    <span>Rs {formatNumber(completedReceipt.GrandTotal)}</span>
+                    <span>{formatCurrency(completedReceipt.GrandTotal)}</span>
                   </div>
                 </div>
 
                 <div className="border-t border-dashed border-gray-400 pt-2 mb-6 space-y-1">
                   <div className="flex justify-between">
                     <span>Paid:</span>
-                    <span>Rs {formatNumber(completedReceipt.PaidAmount)}</span>
+                    <span>{formatCurrency(completedReceipt.PaidAmount)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Change Due:</span>
-                    <span>Rs {formatNumber(completedReceipt.ChangeDue)}</span>
+                    <span>{formatCurrency(completedReceipt.ChangeDue)}</span>
                   </div>
                 </div>
 
@@ -1655,6 +1704,37 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
                 <Printer className="mr-2 w-4 h-4" /> {isPrintingThermal ? "Spooling..." : "Print to Thermal (ESC/POS)"}
               </Button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Admin PIN Modal */}
+      {isAdminPinModalOpen && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-card w-full max-w-sm rounded-xl shadow-xl overflow-hidden border border-border">
+            <div className="px-6 py-4 border-b border-border bg-slate-50/50 dark:bg-secondary/20 flex justify-between items-center">
+              <h3 className="font-semibold text-lg flex items-center gap-2"><User className="w-5 h-5 text-rose-600" /> Manager Authorization</h3>
+              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground" onClick={() => setIsAdminPinModalOpen(false)}>✕</Button>
+            </div>
+            <form onSubmit={verifyAdminPin} className="p-6 space-y-4 text-left">
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground mb-4">A discount exceeding the {adminDiscountThreshold}% limit was detected. Please enter your login password to authorize this sale.</p>
+                <label className="text-sm font-medium text-muted-foreground">Manager Password</label>
+                <Input 
+                  type="password"
+                  value={adminPinInput} 
+                  onChange={e => setAdminPinInput(e.target.value)} 
+                  placeholder="Enter Password" 
+                  autoFocus 
+                  required 
+                  className="text-center text-lg tracking-[0.2em]"
+                />
+              </div>
+              <div className="pt-4 flex justify-end gap-2">
+                <Button type="button" variant="outline" onClick={() => setIsAdminPinModalOpen(false)}>Cancel</Button>
+                <Button type="submit" className="bg-rose-600 hover:bg-rose-700 text-white">Authorize & Complete</Button>
+              </div>
+            </form>
           </div>
         </div>
       )}

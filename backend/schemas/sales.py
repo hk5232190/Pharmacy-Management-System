@@ -5,6 +5,10 @@ from datetime import date
 class SaleInitResponse(BaseModel):
     InvoiceNumber: str
     DefaultTaxRate: float
+    MaxDiscountPercentage: float = 0.0
+    DiscountEnabled: bool = False
+    RequireAdminPinForDiscount: bool = False
+    AdminDiscountThreshold: float = 0.0
 
 class ProductSearchBatch(BaseModel):
     BatchId: int

@@ -30,6 +30,8 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useProfile } from "@/contexts/ProfileContext";
 import { useRouter } from "next/navigation";
+import { useSystemPreferences } from "@/contexts/SystemPreferencesContext";
+
 
 interface InventorySummary {
   total_medicines: number;
@@ -138,6 +140,7 @@ export default function InventoryManagementPage() {
 }
 
 function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTabChange }: { onRefresh: () => void, refreshState: "idle" | "loading" | "done", activeTab: string, onTabChange: (tab: string) => void }) {
+  const { formatCurrency, currencySymbol } = useSystemPreferences();
   const { profile } = useProfile();
   const router = useRouter();
   const [summary, setSummary] = useState<InventorySummary>({
@@ -283,7 +286,7 @@ function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTa
       const tabParam = params.get('tab');
       const statusParam = params.get('status');
       
-      if (tabParam) setActiveTab(tabParam);
+      if (tabParam) onTabChange(tabParam);
       if (statusParam) setStatusFilter(statusParam);
     }
   }, []);
@@ -460,14 +463,14 @@ function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTa
           <td style="padding:8px 10px;font-family:monospace;font-size:10px;color:#6366f1">${item.RackNumber || "—"}</td>
           <td style="padding:8px 10px;font-family:monospace;font-size:11px;color:#111827">${item.BatchCode}</td>
           <td style="padding:8px 10px;font-size:11px;color:${expColour};font-weight:600">${expStr}${expExtra}</td>
-          <td style="padding:8px 10px;text-align:right;font-size:11px;color:#374151">Rs ${item.PurchasePrice.toFixed(2)}</td>
-          <td style="padding:8px 10px;text-align:right;font-size:11px;color:#374151">Rs ${item.SellingPrice.toFixed(2)}</td>
+          <td style="padding:8px 10px;text-align:right;font-size:11px;color:#374151">${formatCurrency(item.PurchasePrice)}</td>
+          <td style="padding:8px 10px;text-align:right;font-size:11px;color:#374151">${formatCurrency(item.SellingPrice)}</td>
           <td style="padding:8px 10px;text-align:right;font-weight:700;font-size:12px;color:#111827">${item.CurrentStock}</td>
           <td style="padding:8px 10px;text-align:right;color:#6b7280;font-size:11px">${item.MinStock}</td>
           <td style="padding:8px 10px;text-align:center">
             <span style="display:inline-block;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:700;background:${statusBg(item.Status)};color:${statusColour(item.Status)}">${item.Status}</span>
           </td>
-          <td style="padding:8px 10px;text-align:right;font-weight:600;font-size:11px">Rs ${item.StockValue.toFixed(2)}</td>
+          <td style="padding:8px 10px;text-align:right;font-weight:600;font-size:11px">${formatCurrency(item.StockValue)}</td>
         </tr>`;
     }).join("");
 
@@ -515,7 +518,7 @@ function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTa
       </div>
       <div class="kpi" style="border-color:#10b981;background:#ecfdf5">
         <div style="font-size:10px;font-weight:700;color:#10b981;text-transform:uppercase;letter-spacing:.05em">Total Stock Value</div>
-        <div style="font-size:20px;font-weight:900;color:#065f46;margin-top:2px">Rs ${totalValue.toLocaleString(undefined,{minimumFractionDigits:2})}</div>
+        <div style="font-size:20px;font-weight:900;color:#065f46;margin-top:2px">${formatCurrency(totalValue)}</div>
       </div>
       <div class="kpi" style="border-color:#f59e0b;background:#fffbeb">
         <div style="font-size:10px;font-weight:700;color:#f59e0b;text-transform:uppercase;letter-spacing:.05em">Low / Out of Stock</div>
@@ -649,7 +652,7 @@ function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTa
         
         if (typeof val === 'number') {
            if (header.toLowerCase().includes('value') || header.toLowerCase().includes('price') || header.toLowerCase().includes('cost')) {
-             return `Rs ${val.toFixed(2)}`;
+             return `${formatCurrency(val)}`;
            }
            return val.toString();
         }
@@ -703,7 +706,7 @@ function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTa
 
         if (typeof val === 'number') {
            if (header.toLowerCase().includes('value') || header.toLowerCase().includes('price') || header.toLowerCase().includes('cost')) {
-             return `Rs ${val.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+             return `${formatCurrency(val)}`;
            }
            return val.toLocaleString();
         }
@@ -829,7 +832,7 @@ function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTa
           <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-7 gap-4 mb-8">
             <KPICard title="Total Medicines"  value={summary.total_medicines}                                                              icon={<Pill           className="h-6 w-6" />} accent="blue"    />
             <KPICard title="Total Stock Qty"  value={summary.total_stock_quantity.toLocaleString()}                                       icon={<Package        className="h-6 w-6" />} accent="emerald" />
-            <KPICard title="Inventory Value"  value={`Rs ${summary.inventory_value.toLocaleString(undefined, {minimumFractionDigits: 2})}`} icon={<CircleDollarSign className="h-6 w-6" />} accent="purple"  />
+            <KPICard title="Inventory Value"  value={`${formatCurrency(summary.inventory_value)}`} icon={<CircleDollarSign className="h-6 w-6" />} accent="purple"  />
             <KPICard title="Low Stock"        value={summary.low_stock_items}                                                              icon={<AlertTriangle  className="h-6 w-6" />} accent="orange"  />
             <KPICard title="Expiring (90d)"   value={summary.expiring_medicines}                                                           icon={<CalendarDays   className="h-6 w-6" />} accent="amber"   />
             <KPICard title="Overstock"        value={summary.overstock_items}                                                              icon={<Package        className="h-6 w-6" />} accent="indigo"  />
@@ -852,7 +855,7 @@ function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTa
               </div>
               <div className="mt-4 pt-3 border-t border-border flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">Total Risk Value</span>
-                <span className="font-semibold text-rose-600 dark:text-rose-400">Rs {expiryKpi.expired_value.toLocaleString()}</span>
+                <span className="font-semibold text-rose-600 dark:text-rose-400">{formatCurrency(expiryKpi.expired_value)}</span>
               </div>
             </div>
 
@@ -868,7 +871,7 @@ function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTa
               </div>
               <div className="mt-4 pt-3 border-t border-border flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">Total Risk Value</span>
-                <span className="font-semibold text-orange-600 dark:text-orange-400">Rs {expiryKpi.expiring_30d_value.toLocaleString()}</span>
+                <span className="font-semibold text-orange-600 dark:text-orange-400">{formatCurrency(expiryKpi.expiring_30d_value)}</span>
               </div>
             </div>
 
@@ -884,7 +887,7 @@ function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTa
               </div>
               <div className="mt-4 pt-3 border-t border-border flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">Total Risk Value</span>
-                <span className="font-semibold text-amber-600 dark:text-amber-400">Rs {expiryKpi.expiring_90d_value.toLocaleString()}</span>
+                <span className="font-semibold text-amber-600 dark:text-amber-400">{formatCurrency(expiryKpi.expiring_90d_value)}</span>
               </div>
             </div>
           </div>
@@ -1045,8 +1048,8 @@ function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTa
                               )}
                             </div>
                           </td>
-                          <td className="px-4 py-3 text-right tabular-nums">Rs {item.PurchasePrice.toFixed(2)}</td>
-                          <td className="px-4 py-3 text-right tabular-nums">Rs {item.SellingPrice.toFixed(2)}</td>
+                          <td className="px-4 py-3 text-right tabular-nums">{formatCurrency(item.PurchasePrice.toFixed(2))}</td>
+                          <td className="px-4 py-3 text-right tabular-nums">{formatCurrency(item.SellingPrice.toFixed(2))}</td>
                           <td className="px-4 py-3 text-right font-bold tabular-nums">{item.CurrentStock}</td>
                           <td className="px-4 py-3 text-right text-muted-foreground tabular-nums">{item.MinStock}</td>
                           <td className="px-4 py-3">
@@ -1370,7 +1373,7 @@ function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTa
                             </span>
                           </td>
                           <td className="px-4 py-3 text-right font-bold text-foreground">
-                            Rs {item.ValueAtRisk.toLocaleString()}
+                            {formatCurrency(item.ValueAtRisk)}
                           </td>
                           <td className="px-4 py-3 text-center">
                             <div className="flex items-center justify-center gap-1.5">
@@ -1783,8 +1786,8 @@ function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTa
                     })()}
                   </div>
                 </div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Purchase Price</span> <span className="font-medium">Rs {selectedBatch.PurchasePrice.toFixed(2)}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Selling Price</span> <span className="font-medium">Rs {selectedBatch.SellingPrice.toFixed(2)}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Purchase Price</span> <span className="font-medium">{formatCurrency(selectedBatch.PurchasePrice.toFixed(2))}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Selling Price</span> <span className="font-medium">{formatCurrency(selectedBatch.SellingPrice.toFixed(2))}</span></div>
               </div>
             </div>
 
@@ -1794,7 +1797,7 @@ function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTa
               <div className="space-y-2.5 text-sm">
                 <div className="flex justify-between items-center"><span className="text-muted-foreground">Current Stock</span> <span className="font-bold text-emerald-600 text-lg">{selectedBatch.CurrentStock}</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Minimum Stock</span> <span className="font-medium">{selectedBatch.MinStock}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Stock Value</span> <span className="font-bold text-foreground">Rs {selectedBatch.StockValue.toLocaleString(undefined, {minimumFractionDigits: 2})}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Stock Value</span> <span className="font-bold text-foreground">{formatCurrency(selectedBatch.StockValue)}</span></div>
               </div>
             </div>
 
@@ -2030,7 +2033,7 @@ function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTa
                         <div><p className="text-xs text-muted-foreground">Supplier</p><p className="font-semibold text-sm">{previewData.SupplierName || "—"}</p></div>
                         <div><p className="text-xs text-muted-foreground">Date</p><p className="font-semibold text-sm">{new Date(previewData.PurchaseDate).toLocaleDateString()}</p></div>
                         <div><p className="text-xs text-muted-foreground">Payment Status</p><p className="font-semibold text-sm">{previewData.PaymentStatus}</p></div>
-                        <div><p className="text-xs text-muted-foreground">Grand Total</p><p className="font-semibold text-sm text-primary">Rs {previewData.GrandTotal?.toLocaleString()}</p></div>
+                        <div><p className="text-xs text-muted-foreground">Grand Total</p><p className="font-semibold text-sm text-primary">{formatCurrency(previewData?.GrandTotal)}</p></div>
                       </>
                     )}
                     {previewDoc.type === "POS Sale" && (
@@ -2038,7 +2041,7 @@ function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTa
                         <div><p className="text-xs text-muted-foreground">Customer</p><p className="font-semibold text-sm">{previewData.CustomerName || "Walk-in"}</p></div>
                         <div><p className="text-xs text-muted-foreground">Date</p><p className="font-semibold text-sm">{new Date(previewData.TransactionDate).toLocaleDateString()}</p></div>
                         <div><p className="text-xs text-muted-foreground">Payment Mode</p><p className="font-semibold text-sm">{previewData.PaymentMethod}</p></div>
-                        <div><p className="text-xs text-muted-foreground">Grand Total</p><p className="font-semibold text-sm text-primary">Rs {previewData.GrandTotal?.toLocaleString()}</p></div>
+                        <div><p className="text-xs text-muted-foreground">Grand Total</p><p className="font-semibold text-sm text-primary">{formatCurrency(previewData?.GrandTotal)}</p></div>
                       </>
                     )}
                     {previewDoc.type === "Purchase Return" && (
@@ -2046,7 +2049,7 @@ function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTa
                         <div><p className="text-xs text-muted-foreground">Supplier</p><p className="font-semibold text-sm">{previewData.SupplierName || "—"}</p></div>
                         <div><p className="text-xs text-muted-foreground">Date</p><p className="font-semibold text-sm">{new Date(previewData.ReturnDate).toLocaleDateString()}</p></div>
                         <div><p className="text-xs text-muted-foreground">Original Invoice</p><p className="font-semibold text-sm">{previewData.OriginalInvoiceNumber || "—"}</p></div>
-                        <div><p className="text-xs text-muted-foreground">Refund Total</p><p className="font-semibold text-sm text-rose-500">Rs {previewData.TotalRefundAmount?.toLocaleString()}</p></div>
+                        <div><p className="text-xs text-muted-foreground">Refund Total</p><p className="font-semibold text-sm text-rose-500">{formatCurrency(previewData.TotalRefundAmount)}</p></div>
                       </>
                     )}
                   </div>
@@ -2073,8 +2076,8 @@ function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTa
                               <td className="px-4 py-2.5 font-medium">{item.MedicineName || "—"}</td>
                               <td className="px-4 py-2.5 font-mono text-xs text-muted-foreground">{item.BatchCode || "—"}</td>
                               <td className="px-4 py-2.5 text-right font-semibold">{item.Quantity || item.ReturnQuantity || 0}</td>
-                              <td className="px-4 py-2.5 text-right text-muted-foreground">Rs {(item.SellingPrice || item.CostPrice || item.UnitRefundPrice || 0).toLocaleString()}</td>
-                              <td className="px-4 py-2.5 text-right font-medium">Rs {(item.LineTotal || item.TotalRefund || 0).toLocaleString()}</td>
+                              <td className="px-4 py-2.5 text-right text-muted-foreground">{formatCurrency((item.SellingPrice || item.CostPrice || item.UnitRefundPrice || 0))}</td>
+                              <td className="px-4 py-2.5 text-right font-medium">{formatCurrency((item.LineTotal || item.TotalRefund || 0))}</td>
                             </tr>
                           ))}
                           {!previewData.items || previewData.items.length === 0 && (

@@ -41,6 +41,9 @@ class ChangePasswordRequest(BaseModel):
     current_password: str
     new_password: str
 
+class VerifyPinRequest(BaseModel):
+    pin: str
+
 @router.post("/login", response_model=Token, summary="Login for Access Token")
 def login_for_access_token(
     db: Session = Depends(get_db), 
@@ -169,6 +172,15 @@ def change_password(
     
     db.commit()
     return {"status": "ok", "message": "Password changed successfully"}
+
+@router.post("/verify-pin", summary="Verify Admin PIN / Password for Operations")
+def verify_admin_pin(
+    request: VerifyPinRequest,
+    current_user: User = Depends(get_current_user)
+):
+    if not verify_password(request.pin, current_user.PasswordHash, current_user.Salt):
+        raise AuthenticationError("Incorrect PIN/Password")
+    return {"success": True, "message": "Authorized"}
 
 @router.post("/logout", summary="Logout")
 def logout():

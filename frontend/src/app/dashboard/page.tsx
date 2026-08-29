@@ -95,7 +95,7 @@ export default function DashboardPageWrapper() {
 
 function DashboardPageInner({ onRefresh, refreshState }: { onRefresh: () => void, refreshState: "idle" | "loading" | "done" }) {
   const router = useRouter();
-  const { formatNumber } = useSystemPreferences();
+  const { formatNumber, formatCurrency } = useSystemPreferences();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<any>(null);
 
@@ -197,21 +197,21 @@ function DashboardPageInner({ onRefresh, refreshState }: { onRefresh: () => void
         <div className="grid gap-4 grid-cols-2 lg:grid-cols-5">
           <DashKPICard
             title={`${getTimeframeLabel()} Sales`}
-            value={`Rs ${formatNumber(data.today_sales)}`}
+            value={formatCurrency(data.today_sales)}
             icon={<DollarSign className="h-6 w-6" />}
             accent="blue"
             onClick={() => router.push('/dashboard/sales')}
           />
           <DashKPICard
             title={`${getTimeframeLabel()} Purchases`}
-            value={`Rs ${formatNumber(data.today_purchases)}`}
+            value={formatCurrency(data.today_purchases)}
             icon={<PackageSearch className="h-6 w-6" />}
             accent="purple"
             onClick={() => router.push('/dashboard/purchases')}
           />
           <DashKPICard
             title={`${getTimeframeLabel()} Profit`}
-            value={`Rs ${formatNumber(data.today_profit)}`}
+            value={formatCurrency(data.today_profit)}
             icon={<TrendingUp className="h-6 w-6" />}
             accent="emerald"
             onClick={() => router.push('/dashboard/reports')}
@@ -225,7 +225,7 @@ function DashboardPageInner({ onRefresh, refreshState }: { onRefresh: () => void
           />
           <DashKPICard
             title="Net Profit (All Time)"
-            value={`Rs ${formatNumber(data.net_profit)}`}
+            value={formatCurrency(data.net_profit)}
             icon={<TrendingUp className="h-6 w-6" />}
             accent="teal"
             onClick={() => router.push('/dashboard/reports')}
@@ -257,14 +257,14 @@ function DashboardPageInner({ onRefresh, refreshState }: { onRefresh: () => void
           />
           <DashKPICard
             title="Total Sales (All Time)"
-            value={`Rs ${formatNumber(data.total_sales)}`}
+            value={formatCurrency(data.total_sales)}
             icon={<DollarSign className="h-6 w-6" />}
             accent="blue"
             onClick={() => router.push('/dashboard/reports')}
           />
           <DashKPICard
             title="Total Purchases (All Time)"
-            value={`Rs ${formatNumber(data.total_purchases)}`}
+            value={formatCurrency(data.total_purchases)}
             icon={<Download className="h-6 w-6" />}
             accent="indigo"
             onClick={() => router.push('/dashboard/reports')}

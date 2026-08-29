@@ -68,34 +68,38 @@ export default function SettingsLayout({ children }: { children: ReactNode }) {
         </div>
       </div>
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden p-6 gap-8 bg-slate-50/50 dark:bg-[#0a0a0a]">
         {/* Settings Sidebar */}
-        <aside className="w-80 border-r border-border/40 bg-white dark:bg-[#0a0a0a] overflow-y-auto hidden md:block">
-          <nav className="p-4 space-y-2">
+        <aside className="w-80 shrink-0 hidden md:block">
+          <div className="h-full rounded-2xl bg-white dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800/80 shadow-[0_8px_30px_rgb(0,0,0,0.06)] dark:shadow-none overflow-hidden flex flex-col relative transition-all duration-300">
+            {/* Top decorative gradient line */}
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 opacity-90"></div>
+            <nav className="p-4 pt-6 space-y-1.5 overflow-y-auto custom-scrollbar flex-1">
           {navigation.map((item) => {
               const isActive = pathname.startsWith(item.href);
               return (
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`flex items-center p-3 rounded-lg transition-all ${
+                  className={`flex items-center p-3 rounded-xl transition-all duration-200 group ${
                     isActive 
-                      ? "bg-blue-600 dark:bg-white text-white dark:text-black shadow-md" 
-                      : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-900 border border-transparent"
+                      ? "bg-blue-600 dark:bg-white text-white dark:text-black shadow-md shadow-blue-500/20 dark:shadow-none" 
+                      : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900 border border-transparent hover:border-slate-200 dark:hover:border-slate-800"
                   }`}
                 >
-                  <item.icon className={`w-4 h-4 shrink-0 ${isActive ? "text-white dark:text-black" : "text-slate-500"}`} />
-                  <p className={`ml-3 text-sm font-semibold ${isActive ? "text-white dark:text-black" : "text-slate-700 dark:text-slate-200"}`}>
+                  <item.icon className={`w-[18px] h-[18px] shrink-0 transition-transform duration-200 ${isActive ? "text-white dark:text-black" : "text-slate-400 group-hover:text-blue-500 dark:group-hover:text-blue-400 group-hover:scale-110"}`} />
+                  <p className={`ml-3.5 text-sm font-semibold tracking-tight ${isActive ? "text-white dark:text-black" : "text-slate-700 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white"}`}>
                     {item.name}
                   </p>
                 </Link>
               );
             })}
           </nav>
+          </div>
         </aside>
 
         {/* Main Content Area */}
-        <main key={refreshKey} className="flex-1 overflow-y-auto bg-slate-50 dark:bg-[#0a0a0a] p-6">
+        <main key={refreshKey} className="flex-1 overflow-y-auto custom-scrollbar pb-10">
           {children}
         </main>
       </div>

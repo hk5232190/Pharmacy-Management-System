@@ -31,6 +31,8 @@ interface SystemPreferencesContextType {
   formatDate: (date: Date | string) => string;
   formatTime: (date: Date | string) => string;
   formatNumber: (value: number | null | undefined) => string;
+  currencySymbol: string;
+  formatCurrency: (value: number | null | undefined) => string;
 }
 
 const SystemPreferencesContext = createContext<SystemPreferencesContextType>({
@@ -39,18 +41,32 @@ const SystemPreferencesContext = createContext<SystemPreferencesContextType>({
   formatDate: () => "",
   formatTime: () => "",
   formatNumber: () => "",
+  currencySymbol: "Rs",
+  formatCurrency: () => "",
 });
 
 export function SystemPreferencesProvider({ children }: { children: ReactNode }) {
   const [preferences, setPreferences] = useState<SystemPreferences>(DEFAULT_SETTINGS);
+  const [currencySymbol, setCurrencySymbol] = useState<string>("Rs");
   const [isLoaded, setIsLoaded] = useState(false);
 
   const fetchPreferences = async () => {
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/v1/settings/appearance");
-      if (res.ok) {
-        const data = await res.json();
+      const [appRes, billRes] = await Promise.all([
+        fetch("http://127.0.0.1:8000/api/v1/settings/appearance"),
+        fetch("http://127.0.0.1:8000/api/v1/settings/billing")
+      ]);
+
+      if (appRes.ok) {
+        const data = await appRes.json();
         setPreferences({ ...DEFAULT_SETTINGS, ...data });
+      }
+
+      if (billRes.ok) {
+        const billData = await billRes.json();
+        if (billData.CurrencySymbol) {
+          setCurrencySymbol(billData.CurrencySymbol);
+        }
       }
     } catch (e) {
       console.error("Failed to load system preferences", e);
@@ -110,13 +126,19 @@ export function SystemPreferencesProvider({ children }: { children: ReactNode })
     return new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value);
   };
 
+  const formatCurrency = (value: number | null | undefined) => {
+    return `${currencySymbol} ${formatNumber(value)}`;
+  };
+
   return (
     <SystemPreferencesContext.Provider value={{
       preferences,
       refreshPreferences: fetchPreferences,
       formatDate,
       formatTime,
-      formatNumber
+      formatNumber,
+      currencySymbol,
+      formatCurrency
     }}>
       {children}
     </SystemPreferencesContext.Provider>

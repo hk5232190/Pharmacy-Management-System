@@ -392,12 +392,12 @@ def get_dashboard_widgets(
         # Assuming Customer relationship exists or fallback to InvoiceNo
         customer_name = "Walk-in"
         if s.customer:
-            customer_name = s.customer.FullName
+            customer_name = s.customer.Name
             
         recent_sales.append({
             "sales_id": s.SalesId,
             "invoice_no": s.InvoiceNumber,
-            "date": s.TransactionDate.strftime('%Y-%m-%d %H:%M'),
+            "date": s.TransactionDate.strftime('%Y-%m-%d %H:%M') if hasattr(s.TransactionDate, 'strftime') else str(s.TransactionDate)[:16],
             "amount": float(s.GrandTotal),
             "customer": customer_name,
             "status": s.Status
@@ -443,9 +443,9 @@ def get_dashboard_widgets(
         med_name = b.medicine.BrandName if b.medicine else "Unknown"
         expiry_alerts.append({
             "batch_id": b.BatchId,
-            "batch_number": b.BatchNumber,
+            "batch_number": b.BatchCode,
             "medicine_name": med_name,
-            "expiry_date": b.ExpiryDate.strftime('%Y-%m-%d'),
+            "expiry_date": b.ExpiryDate.strftime('%Y-%m-%d') if hasattr(b.ExpiryDate, 'strftime') else str(b.ExpiryDate)[:10],
             "quantity": b.Quantity
         })
 

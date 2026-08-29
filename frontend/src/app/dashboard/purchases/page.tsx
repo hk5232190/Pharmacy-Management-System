@@ -72,6 +72,7 @@ interface PurchaseHistory {
 }
 
 export default function PurchaseManagementPageWrapper() {
+  const { formatCurrency, currencySymbol } = useSystemPreferences();
   const [refreshKey, setRefreshKey] = useState(0);
   const [refreshState, setRefreshState] = useState<"idle" | "loading" | "done">("idle");
   
@@ -91,7 +92,7 @@ export default function PurchaseManagementPageWrapper() {
 }
 
 function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChange }: { onRefresh: () => void, refreshState: "idle" | "loading" | "done", activeTab: "invoice" | "history" | "returns", onTabChange: (tab: "invoice" | "history" | "returns") => void }) {
-  const { formatNumber } = useSystemPreferences();
+  const { formatNumber, formatCurrency, currencySymbol } = useSystemPreferences();
   // --- Tabs ---
   // (activeTab is now managed by the wrapper so it survives a refresh reset)
 
@@ -626,10 +627,10 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
           const totalInvoices = summaryData?.total_invoices_count ?? purchaseHistory.length;
 
           const cards = [
-            { title: "Today's Purchases",    value: `Rs ${fmt(Math.max(0, todayTotal))}`, icon: ShoppingCart, accent: "blue" },
-            { title: "Total Purchase Amount", value: `Rs ${fmt(Math.max(0, allTimeTotal))}`, icon: DollarSign,  accent: "emerald" },
+            { title: "Today's Purchases",    value: formatCurrency(Math.max(0, todayTotal)), icon: ShoppingCart, accent: "blue" },
+            { title: "Total Purchase Amount", value: formatCurrency(Math.max(0, allTimeTotal)), icon: DollarSign,  accent: "emerald" },
             { title: "Processed Returns",     value: String(processedReturns),             icon: Undo2,        accent: "orange" },
-            { title: "Total Balance Due",     value: `Rs ${fmt(balanceDue)}`,              icon: CreditCard,   accent: "rose" },
+            { title: "Total Balance Due",     value: formatCurrency(balanceDue),              icon: CreditCard,   accent: "rose" },
             { title: "Total Invoices",        value: String(totalInvoices),                icon: FileText,     accent: "teal" },
           ];
 

@@ -311,12 +311,7 @@ export default function CustomersPage() {
           <Table>
             <TableHeader className="bg-secondary/50">
               <TableRow className="hover:bg-transparent">
-                <TableHead className="w-12 text-center">
-                  <Checkbox
-                    checked={allSelected ? true : someSelected ? (true as any) : false}
-                    onCheckedChange={toggleSelectAll}
-                  />
-                </TableHead>
+
                 <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-10 text-center">#</TableHead>
                 <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-28">Code</TableHead>
                 <TableHead className="font-semibold text-slate-700 dark:text-slate-300">Customer Name</TableHead>
@@ -329,22 +324,16 @@ export default function CustomersPage() {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="h-32 text-center text-muted-foreground">Loading customers...</TableCell>
+                  <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">Loading customers...</TableCell>
                 </TableRow>
               ) : customers.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="h-32 text-center text-muted-foreground">No customers found.</TableCell>
+                  <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">No customers found.</TableCell>
                 </TableRow>
               ) : (
                 customers.map((customer, idx) => (
                   <TableRow key={customer.CustomerId} className="hover:bg-secondary/50 transition-colors h-14">
-                    <TableCell className="text-center py-3">
-                      <Checkbox
-                        checked={selectedIds.has(customer.CustomerId)}
-                        onCheckedChange={() => toggleSelect(customer.CustomerId)}
-                        disabled={customer.CustomerId === 0}
-                      />
-                    </TableCell>
+
                     <TableCell className="text-center py-3 text-[#111827] dark:text-gray-200 font-medium text-[14px]">{(page - 1) * pageSize + idx + 1}</TableCell>
                     <TableCell className="py-3 font-mono text-[14px] font-semibold text-[#111827] dark:text-gray-200">
                       CUST-{customer.CustomerId.toString().padStart(5, '0')}

@@ -9,6 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Save, RefreshCw, Receipt, ShieldAlert, DollarSign, Calculator, Settings2 } from "lucide-react";
+import { useSystemPreferences } from "@/contexts/SystemPreferencesContext";
 
 interface BillingSettings {
   SettingsId?: number;
@@ -47,6 +48,7 @@ export default function BillingSettingsPage() {
   const [settings, setSettings] = useState<BillingSettings>(DEFAULT_SETTINGS);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const { refreshPreferences } = useSystemPreferences();
 
   useEffect(() => {
     fetchSettings();
@@ -77,6 +79,7 @@ export default function BillingSettingsPage() {
         body: JSON.stringify(settings)
       });
       if (res.ok) {
+        await refreshPreferences();
         toast.success("Billing Settings updated successfully!");
       } else {
         toast.error("Failed to update billing settings.");
@@ -128,6 +131,27 @@ export default function BillingSettingsPage() {
                 <Input name="CurrencySymbol" value={settings.CurrencySymbol} onChange={handleChange} placeholder="Rs" />
               </div>
             </div>
+            <div className="mt-4 space-y-2">
+              <Label className="text-sm text-slate-500">Quick Presets</Label>
+              <Select 
+                value={`${settings.Currency}|${settings.CurrencySymbol}`}
+                onValueChange={(val) => {
+                  const [cur, sym] = val.split('|');
+                  setSettings({...settings, Currency: cur, CurrencySymbol: sym});
+                }}
+              >
+                <SelectTrigger className="w-full md:w-1/2">
+                  <SelectValue placeholder="Select Currency" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="PKR|Rs">PKR - Rs</SelectItem>
+                  <SelectItem value="USD|$">USD - $</SelectItem>
+                  <SelectItem value="SAR|﷼">SAR - ﷼</SelectItem>
+                  <SelectItem value="EUR|€">EUR - €</SelectItem>
+                  <SelectItem value="GBP|£">GBP - £</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </CardContent>
         </Card>
 
@@ -147,12 +171,10 @@ export default function BillingSettingsPage() {
               </div>
               <Switch checked={settings.TaxEnabled} onCheckedChange={(c) => handleSwitchChange("TaxEnabled", c)} />
             </div>
-            {settings.TaxEnabled && (
-              <div className="space-y-2">
-                <Label>Default Tax Rate (%)</Label>
-                <Input type="number" step="0.01" name="DefaultTaxRate" value={settings.DefaultTaxRate} onChange={handleChange} />
-              </div>
-            )}
+            <div className={`space-y-2 transition-opacity ${!settings.TaxEnabled ? 'opacity-50 pointer-events-none' : ''}`}>
+              <Label>Default Tax Rate (%)</Label>
+              <Input type="number" step="0.01" name="DefaultTaxRate" value={settings.DefaultTaxRate} onChange={handleChange} disabled={!settings.TaxEnabled} />
+            </div>
 
             <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900/50 rounded-lg border mt-6">
               <div>
@@ -161,13 +183,11 @@ export default function BillingSettingsPage() {
               </div>
               <Switch checked={settings.DiscountEnabled} onCheckedChange={(c) => handleSwitchChange("DiscountEnabled", c)} />
             </div>
-            {settings.DiscountEnabled && (
-              <div className="space-y-2">
-                <Label>Absolute Max Discount (%)</Label>
-                <Input type="number" step="0.01" name="MaxDiscountPercentage" value={settings.MaxDiscountPercentage} onChange={handleChange} />
-                <p className="text-xs text-muted-foreground">The POS will physically prevent any discount above this percentage.</p>
-              </div>
-            )}
+            <div className={`space-y-2 transition-opacity ${!settings.DiscountEnabled ? 'opacity-50 pointer-events-none' : ''}`}>
+              <Label>Absolute Max Discount (%)</Label>
+              <Input type="number" step="0.01" name="MaxDiscountPercentage" value={settings.MaxDiscountPercentage} onChange={handleChange} disabled={!settings.DiscountEnabled} />
+              <p className="text-xs text-muted-foreground">The POS will physically prevent any discount above this percentage.</p>
+            </div>
           </CardContent>
         </Card>
 
@@ -177,7 +197,7 @@ export default function BillingSettingsPage() {
             <CardTitle className="text-lg font-bold flex items-center gap-2 text-red-700 dark:text-red-400">
               <ShieldAlert className="w-5 h-5" /> POS Security Rules
             </CardTitle>
-            <CardDescription>Strict security rules defined by SRS Module 5.</CardDescription>
+            <CardDescription>Enforce manager authorization for discounts and overrides.</CardDescription>
           </CardHeader>
           <CardContent className="p-6 space-y-6">
             <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900/50 rounded-lg border">
@@ -187,13 +207,11 @@ export default function BillingSettingsPage() {
               </div>
               <Switch checked={settings.RequireAdminPinForDiscount} onCheckedChange={(c) => handleSwitchChange("RequireAdminPinForDiscount", c)} />
             </div>
-            {settings.RequireAdminPinForDiscount && (
-              <div className="space-y-2">
-                <Label>Admin PIN Discount Threshold (%)</Label>
-                <Input type="number" step="0.01" name="AdminDiscountThreshold" value={settings.AdminDiscountThreshold} onChange={handleChange} />
-                <p className="text-xs text-muted-foreground">If a cashier attempts a discount greater than {settings.AdminDiscountThreshold}%, an Admin PIN will be required.</p>
-              </div>
-            )}
+            <div className={`space-y-2 transition-opacity ${!settings.RequireAdminPinForDiscount ? 'opacity-50 pointer-events-none' : ''}`}>
+              <Label>Admin PIN Discount Threshold (%)</Label>
+              <Input type="number" step="0.01" name="AdminDiscountThreshold" value={settings.AdminDiscountThreshold} onChange={handleChange} disabled={!settings.RequireAdminPinForDiscount} />
+              <p className="text-xs text-muted-foreground">If a cashier attempts a discount greater than {settings.AdminDiscountThreshold}%, an Admin PIN will be required.</p>
+            </div>
           </CardContent>
         </Card>
 
@@ -256,8 +274,8 @@ export default function BillingSettingsPage() {
       </div>
 
       {/* Right Column: Previews */}
-      <div className="space-y-6">
-        <Card className="border-slate-200 dark:border-slate-800 shadow-sm sticky top-6">
+      <div className="space-y-6 sticky top-6 self-start">
+        <Card className="border-slate-200 dark:border-slate-800 shadow-sm">
           <CardHeader className="bg-slate-50/50 dark:bg-slate-900/20 pb-4 border-b">
             <CardTitle className="text-sm font-bold flex items-center gap-2">
               <Receipt className="w-4 h-4" /> Live System Preview

@@ -16,6 +16,8 @@ import {
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { apiClient } from "@/lib/api-client";
+import { useSystemPreferences } from "@/contexts/SystemPreferencesContext";
+
 
 interface Supplier {
   SupplierId: number;
@@ -29,6 +31,8 @@ interface Supplier {
 }
 
 export default function SuppliersPage() {
+  const { formatCurrency, currencySymbol } = useSystemPreferences();
+
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -316,12 +320,7 @@ export default function SuppliersPage() {
           <Table>
             <TableHeader className="bg-secondary/50">
               <TableRow className="hover:bg-transparent">
-                <TableHead className="w-12 text-center">
-                  <Checkbox
-                    checked={allSelected ? true : someSelected ? (true as any) : false}
-                    onCheckedChange={toggleSelectAll}
-                  />
-                </TableHead>
+
                 <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-10 text-center">#</TableHead>
                 <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-28">Code</TableHead>
                 <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-1/4">Supplier Name</TableHead>
@@ -335,21 +334,16 @@ export default function SuppliersPage() {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={9} className="h-32 text-center text-muted-foreground">Loading suppliers...</TableCell>
+                  <TableCell colSpan={8} className="h-32 text-center text-muted-foreground">Loading suppliers...</TableCell>
                 </TableRow>
               ) : suppliers.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={9} className="h-32 text-center text-muted-foreground">No suppliers found.</TableCell>
+                  <TableCell colSpan={8} className="h-32 text-center text-muted-foreground">No suppliers found.</TableCell>
                 </TableRow>
               ) : (
                 suppliers.map((supplier, idx) => (
                   <TableRow key={supplier.SupplierId} className="hover:bg-secondary/50 transition-colors h-14">
-                    <TableCell className="text-center py-3">
-                      <Checkbox
-                        checked={selectedIds.has(supplier.SupplierId)}
-                        onCheckedChange={() => toggleSelect(supplier.SupplierId)}
-                      />
-                    </TableCell>
+
                     <TableCell className="text-center py-3 text-[#111827] dark:text-gray-200 font-medium text-[14px]">{idx + 1}</TableCell>
                     <TableCell className="py-3 font-mono text-[14px] font-semibold text-[#111827] dark:text-gray-200">
                       SUP-{supplier.SupplierId.toString().padStart(5, '0')}
@@ -364,7 +358,7 @@ export default function SuppliersPage() {
                       {supplier.Phone || "—"}
                     </TableCell>
                     <TableCell className="py-3 font-bold text-emerald-600 dark:text-emerald-400 text-[14px]">
-                      Rs {Number(supplier.CurrentBalance || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      {formatCurrency(Number(supplier.CurrentBalance || 0))}
                     </TableCell>
                     <TableCell className="text-center py-3">
                       <button 

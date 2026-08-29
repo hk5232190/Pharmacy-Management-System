@@ -9,7 +9,7 @@ def utc_to_local_str(dt_obj):
         return ""
     return dt_obj.replace(tzinfo=timezone.utc).astimezone().strftime('%Y-%m-%d %I:%M %p')
 
-from models import Sale, Medicine, StockBatch, Customer, StockAdjustment, SaleReturn
+from models import Sale, Medicine, StockBatch, Customer, StockAdjustment, SaleReturn, BillingSettings
 from schemas.base import BaseResponse
 from schemas.sales import SaleInitResponse, ProductSearchResponse, ProductSearchBatch, SaleReturnHistoryItem, SaleReturnHistoryPagedResponse
 from api.deps import get_current_user, get_db
@@ -30,9 +30,30 @@ def init_sale(
         next_seq = count + 1
         invoice_no = f"INV-{current_year_month}-{next_seq:04d}"
 
+        billing_settings = db.query(BillingSettings).first()
+        
+        default_tax_rate = 0.0
+        max_discount = 0.0
+        discount_enabled = False
+        require_admin_pin = False
+        admin_discount_threshold = 0.0
+        
+        if billing_settings:
+            if billing_settings.TaxEnabled:
+                default_tax_rate = float(billing_settings.DefaultTaxRate)
+            discount_enabled = bool(billing_settings.DiscountEnabled)
+            if discount_enabled:
+                max_discount = float(billing_settings.MaxDiscountPercentage)
+            require_admin_pin = bool(billing_settings.RequireAdminPinForDiscount)
+            admin_discount_threshold = float(billing_settings.AdminDiscountThreshold)
+
         data = SaleInitResponse(
             InvoiceNumber=invoice_no,
-            DefaultTaxRate=settings.DEFAULT_TAX_RATE
+            DefaultTaxRate=default_tax_rate,
+            MaxDiscountPercentage=max_discount,
+            DiscountEnabled=discount_enabled,
+            RequireAdminPinForDiscount=require_admin_pin,
+            AdminDiscountThreshold=admin_discount_threshold
         )
         return {"success": True, "data": data}
     except Exception as e:

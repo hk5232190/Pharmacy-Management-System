@@ -13,6 +13,8 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from "recharts";
 import { cn } from "@/lib/utils";
+import { useSystemPreferences } from "@/contexts/SystemPreferencesContext";
+
 import { 
   ShoppingCart, RefreshCw, Printer, Download, Calendar, 
   TrendingUp, PackageSearch, FileText, FileSpreadsheet,
@@ -22,6 +24,8 @@ import {
 const COLORS = ['#0ea5e9', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#64748b'];
 
 export default function ReportsPage() {
+  const { formatCurrency, currencySymbol } = useSystemPreferences();
+
   const [refreshKey, setRefreshKey] = useState(0);
   const [refreshState, setRefreshState] = useState<"idle" | "loading" | "done">("idle");
   const [activeTab, setActiveTab] = useState("sales");
@@ -63,6 +67,7 @@ function ReportsPageInner({
   activeMedicineTab: string,
   onMedicineTabChange: (tab: string) => void
 }) {
+  const { formatCurrency, currencySymbol } = useSystemPreferences();
   const [loading, setLoading] = useState(true);
   // Per-tab data cache: avoid blanking screen on tab switch
   const [dataCache, setDataCache] = useState<Record<string, any>>({});
@@ -396,7 +401,7 @@ function ReportsPageInner({
       {/* ── Tabs ───────────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-start p-1.5 mb-6 bg-slate-100/80 dark:bg-slate-800/50 rounded-xl w-max max-w-full border border-slate-200/50 dark:border-slate-700/50 overflow-x-auto custom-scrollbar print:hidden">
         <button
-          onClick={() => { if (activeTab !== 'sales') { setData(null); onTabChange('sales'); } }}
+          onClick={() => { if (activeTab !== 'sales') { setData(dataCache[getCacheKey('sales')] || null); onTabChange('sales'); } }}
           className={cn(
             "flex items-center px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 whitespace-nowrap",
             activeTab === "sales" 
@@ -408,7 +413,7 @@ function ReportsPageInner({
           Sales Reports
         </button>
         <button
-          onClick={() => { if (activeTab !== 'purchases') { setData(null); onTabChange('purchases'); } }}
+          onClick={() => { if (activeTab !== 'purchases') { setData(dataCache[getCacheKey('purchases')] || null); onTabChange('purchases'); } }}
           className={cn(
             "flex items-center px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 whitespace-nowrap",
             activeTab === "purchases" 
@@ -420,7 +425,7 @@ function ReportsPageInner({
           Purchase Reports
         </button>
         <button
-          onClick={() => { if (activeTab !== 'inventory') { setData(null); onTabChange('inventory'); } }}
+          onClick={() => { if (activeTab !== 'inventory') { setData(dataCache[getCacheKey('inventory')] || null); onTabChange('inventory'); } }}
           className={cn(
             "flex items-center px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 whitespace-nowrap",
             activeTab === "inventory" 
@@ -432,7 +437,7 @@ function ReportsPageInner({
           Inventory Reports
         </button>
         <button
-          onClick={() => { if (activeTab !== 'medicine') { setData(null); onTabChange('medicine'); } }}
+          onClick={() => { if (activeTab !== 'medicine') { setData(dataCache[getCacheKey('medicine')] || null); onTabChange('medicine'); } }}
           className={cn(
             "flex items-center px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 whitespace-nowrap",
             activeTab === "medicine" 
@@ -444,7 +449,7 @@ function ReportsPageInner({
           Medicine Reports
         </button>
         <button
-          onClick={() => { if (activeTab !== 'financial') { setData(null); onTabChange('financial'); } }}
+          onClick={() => { if (activeTab !== 'financial') { setData(dataCache[getCacheKey('financial')] || null); onTabChange('financial'); } }}
           className={cn(
             "flex items-center px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 whitespace-nowrap ml-1",
             activeTab === "financial" 
@@ -572,35 +577,35 @@ function ReportsPageInner({
             <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
               <KPICard 
                 title="Net Sales" 
-                value={`Rs ${data?.summary?.NetSales?.toLocaleString() || '0'}`} 
+                value={formatCurrency(data?.summary?.NetSales)} 
                 icon={TrendingUp}   
                 accent="emerald"
-                subtext={`Gross: Rs ${data?.summary?.TotalGrossSales?.toLocaleString() || '0'} | Returns: Rs ${data?.summary?.TotalReturns?.toLocaleString() || '0'}`}
+                subtext={`Gross: ${formatCurrency(data?.summary?.TotalGrossSales)} | Returns: ${formatCurrency(data?.summary?.TotalReturns)}`}
               />
               <KPICard 
                 title="Net Profit" 
-                value={`Rs ${data?.summary?.NetProfit?.toLocaleString() || '0'}`} 
+                value={formatCurrency(data?.summary?.NetProfit)} 
                 icon={DollarSign}   
                 accent="teal"
                 badge={`${data?.summary?.ProfitMarginPercent?.toFixed(1) || '0.0'}% Margin`}
               />
               <KPICard 
                 title="COGS"           
-                value={`Rs ${data?.summary?.TotalCOGS?.toLocaleString() || '0'}`}                               
+                value={formatCurrency(data?.summary?.TotalCOGS)}                               
                 icon={ShoppingCart} 
                 accent="purple" 
                 subtext="Cost of Goods Sold"
               />
               <KPICard 
                 title="Invoices & Avg"  
-                value={data?.summary?.TotalInvoices?.toLocaleString() || '0'}                                   
+                value={data?.summary?.TotalInvoices || '0'}                                   
                 icon={FileText}     
                 accent="indigo" 
-                subtext={`Avg Sale: Rs ${data?.summary?.AverageSale?.toLocaleString(undefined, {maximumFractionDigits: 2}) || '0'}`}
+                subtext={`Avg Sale: ${formatCurrency(data?.summary?.AverageSale)}`}
               />
               <KPICard 
                 title="Highest Sale"   
-                value={`Rs ${data?.summary?.HighestSale?.toLocaleString() || '0'}`}                             
+                value={formatCurrency(data?.summary?.HighestSale)}                             
                 icon={TrendingUp}   
                 accent="amber" 
               />
@@ -631,7 +636,7 @@ function ReportsPageInner({
                         }
                         return val;
                       }} />
-                      <YAxis yAxisId="left" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} tickFormatter={(val) => `Rs ${val/1000}k`} dx={-10} />
+                      <YAxis yAxisId="left" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} tickFormatter={(val) => `${formatCurrency(val/1000)}k`} dx={-10} />
                       <Tooltip content={<CustomTooltip />} />
                       <Legend wrapperStyle={{ paddingTop: '10px' }} />
                       <Area yAxisId="left" type="monotone" name="Sales" dataKey="sales" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#colorSales)" activeDot={{ r: 6, strokeWidth: 0 }} />
@@ -669,7 +674,7 @@ function ReportsPageInner({
                                 <span className="text-muted-foreground font-medium">{entry.name || `Method ${index + 1}`}</span>
                               </div>
                               <span className="font-semibold text-foreground">
-                                Rs {entry.value.toLocaleString()} <span className="text-xs text-muted-foreground font-normal ml-1">({percent}%)</span>
+                                {formatCurrency(entry.value)} <span className="text-xs text-muted-foreground font-normal ml-1">({percent}%)</span>
                               </span>
                             </li>
                           );
@@ -687,7 +692,7 @@ function ReportsPageInner({
                     <BarChart data={data?.top_medicines || []} margin={{ top: 10, right: 10, left: -10, bottom: 5 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                       <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#64748b' }} dy={10} interval={0} tickFormatter={(val) => val.length > 10 ? `${val.substring(0, 10)}...` : val} />
-                      <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#64748b' }} tickFormatter={(val) => `Rs ${val/1000}k`} dx={-5} />
+                      <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#64748b' }} tickFormatter={(val) => `${formatCurrency(val/1000)}k`} dx={-5} />
                       <Tooltip cursor={{fill: 'rgba(100,116,139,0.1)'}} content={<CustomTooltip />} />
                       <Bar dataKey="revenue" fill="#8b5cf6" radius={[4, 4, 0, 0]} barSize={32} name="Revenue">
                         {data?.top_medicines?.map((entry: any, index: number) => (
@@ -768,12 +773,12 @@ function ReportsPageInner({
                               <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 cursor-pointer" onClick={() => setSelectedInvoice(t)}>
                                 <td className="px-4 py-3 text-muted-foreground">{startIndex + idx + 1}</td>
                                 <td className="px-4 py-3 font-medium text-blue-600">{t.InvoiceNo}</td>
-                                <td className="px-4 py-3">{new Date(t.TransactionDate).toLocaleString()}</td>
+                                <td className="px-4 py-3">{new Date(t.TransactionDate).toLocaleDateString()}</td>
                                 <td className="px-4 py-3">{t.CustomerName}</td>
                                 <td className="px-4 py-3 text-right tabular-nums">{t.MedicinesSold}</td>
                                 <td className="px-4 py-3 text-right tabular-nums">{t.TotalQty}</td>
-                                <td className="px-4 py-3 text-right font-medium tabular-nums">Rs {t.GrandTotal.toLocaleString()}</td>
-                                <td className="px-4 py-3 text-right font-medium text-emerald-600 tabular-nums">Rs {t.Profit ? t.Profit.toLocaleString() : '0'}</td>
+                                <td className="px-4 py-3 text-right font-medium tabular-nums">{formatCurrency(t.GrandTotal)}</td>
+                                <td className="px-4 py-3 text-right font-medium text-emerald-600 tabular-nums">{formatCurrency(t.Profit || 0)}</td>
                                 <td className="px-4 py-3">{t.PaymentMethod}</td>
                                 <td className="px-4 py-3">
                                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${t.Status === 'Completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
@@ -793,8 +798,8 @@ function ReportsPageInner({
                           {filteredSalesTransactions.length > 0 && (
                             <tr className="bg-slate-50 dark:bg-slate-900/90 border-t-2 border-border font-semibold sticky bottom-0">
                               <td colSpan={6} className="px-4 py-3 text-right">Totals (Filtered):</td>
-                              <td className="px-4 py-3 text-right tabular-nums text-foreground">Rs {totalGrandTotal.toLocaleString()}</td>
-                              <td className="px-4 py-3 text-right tabular-nums text-emerald-600">Rs {totalProfit.toLocaleString()}</td>
+                              <td className="px-4 py-3 text-right tabular-nums text-foreground">{formatCurrency(totalGrandTotal)}</td>
+                              <td className="px-4 py-3 text-right tabular-nums text-emerald-600">{formatCurrency(totalProfit)}</td>
                               <td colSpan={2}></td>
                             </tr>
                           )}
@@ -878,19 +883,19 @@ function ReportsPageInner({
             <div className="grid grid-cols-4 gap-4 mb-8">
               <div className="p-4 border border-gray-200 rounded-lg bg-gray-50/50">
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Gross Sales</p>
-                <p className="text-lg font-bold text-gray-900 mt-1 tabular-nums">Rs. {data?.summary?.TotalGrossSales?.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) || '0.00'}</p>
+                <p className="text-lg font-bold text-gray-900 mt-1 tabular-nums">Rs. {data?.summary?.TotalGrossSales || '0.00'}</p>
               </div>
               <div className="p-4 border border-gray-200 rounded-lg bg-gray-50/50">
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Returns</p>
-                <p className="text-lg font-bold text-rose-600 mt-1 tabular-nums">Rs. {data?.summary?.TotalReturns?.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) || '0.00'}</p>
+                <p className="text-lg font-bold text-rose-600 mt-1 tabular-nums">Rs. {data?.summary?.TotalReturns || '0.00'}</p>
               </div>
               <div className="p-4 border border-gray-200 rounded-lg bg-emerald-50">
                 <p className="text-xs font-semibold text-emerald-700 uppercase tracking-wider">Net Sales</p>
-                <p className="text-xl font-extrabold text-emerald-700 mt-1 tabular-nums">Rs. {data?.summary?.NetSales?.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) || '0.00'}</p>
+                <p className="text-xl font-extrabold text-emerald-700 mt-1 tabular-nums">Rs. {data?.summary?.NetSales || '0.00'}</p>
               </div>
               <div className="p-4 border border-gray-200 rounded-lg bg-gray-50/50">
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Total Invoices</p>
-                <p className="text-lg font-bold text-gray-900 mt-1 tabular-nums">{data?.summary?.TotalInvoices?.toLocaleString() || '0'}</p>
+                <p className="text-lg font-bold text-gray-900 mt-1 tabular-nums">{data?.summary?.TotalInvoices || '0'}</p>
               </div>
             </div>
 
@@ -922,14 +927,14 @@ function ReportsPageInner({
                           <td className="px-3 py-2 text-gray-800">{t.CustomerName || '-'}</td>
                           <td className="px-3 py-2 text-right tabular-nums text-gray-600">{t.MedicinesSold}</td>
                           <td className="px-3 py-2 text-right tabular-nums text-gray-600">{t.TotalQty}</td>
-                          <td className="px-3 py-2 text-right tabular-nums font-semibold text-gray-900">{t.GrandTotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                          <td className="px-3 py-2 text-right tabular-nums font-semibold text-gray-900">{t.GrandTotal}</td>
                         </tr>
                       ))}
                       <tr className="border-t-2 border-gray-800 bg-gray-100">
                         <td colSpan={3} className="px-3 py-3 text-right font-bold text-gray-900 uppercase text-xs">Total for Period:</td>
                         <td className="px-3 py-3 text-right font-bold text-gray-900 tabular-nums">{totalItems}</td>
                         <td className="px-3 py-3 text-right font-bold text-gray-900 tabular-nums">{totalQty}</td>
-                        <td className="px-3 py-3 text-right font-bold text-gray-900 tabular-nums text-base">Rs. {totalGrand.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                        <td className="px-3 py-3 text-right font-bold text-gray-900 tabular-nums text-base">Rs. {totalGrand}</td>
                       </tr>
                     </>
                   );
@@ -974,12 +979,12 @@ function ReportsPageInner({
           <div className="space-y-6 animate-in fade-in duration-300">
             {/* Summary KPIs */}
             <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
-              <KPICard title="Total Cost Value"       value={`Rs ${data?.summary?.TotalCostValue?.toLocaleString(undefined, {maximumFractionDigits: 2}) || '0'}`}           icon={DollarSign}   accent="blue" />
-              <KPICard title="Potential Retail Value" value={`Rs ${data?.summary?.TotalRetailValue?.toLocaleString(undefined, {maximumFractionDigits: 2}) || '0'}`}         icon={TrendingUp}   accent="emerald" />
-              <KPICard title="Expired"                value={`Rs ${data?.summary?.ExpiredWrittenOffValuation?.toLocaleString(undefined, {maximumFractionDigits: 2}) || '0'}`} icon={TrendingUp}   accent="rose" />
-              <KPICard title="Total Items in Stock"   value={data?.summary?.TotalItemsInStock?.toLocaleString() || '0'}                                                     icon={FileText}     accent="purple" />
-              <KPICard title="Low Stock"              value={data?.summary?.LowStockCount?.toLocaleString() || '0'}                                                         icon={AlertTriangle} accent="amber" />
-              <KPICard title="Out of Stock"           value={data?.summary?.OutOfStockCount?.toLocaleString() || '0'}                                                       icon={PackageMinus}  accent="rose" />
+              <KPICard title="Total Cost Value"       value={`${formatCurrency(data?.summary?.TotalCostValue) || '0'}`}           icon={DollarSign}   accent="blue" />
+              <KPICard title="Potential Retail Value" value={`${formatCurrency(data?.summary?.TotalRetailValue) || '0'}`}         icon={TrendingUp}   accent="emerald" />
+              <KPICard title="Expired"                value={`${formatCurrency(data?.summary?.ExpiredWrittenOffValuation) || '0'}`} icon={TrendingUp}   accent="rose" />
+              <KPICard title="Total Items in Stock"   value={data?.summary?.TotalItemsInStock || '0'}                                                     icon={FileText}     accent="purple" />
+              <KPICard title="Low Stock"              value={data?.summary?.LowStockCount || '0'}                                                         icon={AlertTriangle} accent="amber" />
+              <KPICard title="Out of Stock"           value={data?.summary?.OutOfStockCount || '0'}                                                       icon={PackageMinus}  accent="rose" />
             </div>
 
 
@@ -1134,11 +1139,11 @@ function ReportsPageInner({
                             <td className="px-4 py-3 text-muted-foreground text-left">{t.Category}</td>
                             <td className="px-4 py-3 text-left">{t.BatchCode}</td>
                             <td className="px-4 py-3 text-right tabular-nums">{t.Quantity}</td>
-                            <td className="px-4 py-3 text-right tabular-nums">Rs {t.CostPrice}</td>
-                            <td className="px-4 py-3 text-right tabular-nums">Rs {t.SellingPrice}</td>
-                            <td className="px-4 py-3 text-right font-medium tabular-nums">Rs {t.TotalCostValue?.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-                            <td className="px-4 py-3 text-right font-medium tabular-nums text-emerald-600">Rs {t.TotalRetailValue?.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-                            <td className="px-4 py-3 text-right font-medium tabular-nums text-blue-600">Rs {margin.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                            <td className="px-4 py-3 text-right tabular-nums">{formatCurrency(t.CostPrice)}</td>
+                            <td className="px-4 py-3 text-right tabular-nums">{formatCurrency(t.SellingPrice)}</td>
+                            <td className="px-4 py-3 text-right font-medium tabular-nums">{formatCurrency(t.TotalCostValue)}</td>
+                            <td className="px-4 py-3 text-right font-medium tabular-nums text-emerald-600">{formatCurrency(t.TotalRetailValue)}</td>
+                            <td className="px-4 py-3 text-right font-medium tabular-nums text-blue-600">{formatCurrency(margin)}</td>
                             <td className="px-4 py-3 text-left">
                               <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
                                 t.Status === 'Active' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400'
@@ -1164,9 +1169,9 @@ function ReportsPageInner({
                               <td colSpan={4} className="px-4 py-3 text-right font-bold text-foreground uppercase text-xs tracking-wider">Filtered Totals:</td>
                               <td className="px-4 py-3 text-right font-bold tabular-nums text-foreground">{sumQty}</td>
                               <td colSpan={2}></td>
-                              <td className="px-4 py-3 text-right font-bold tabular-nums text-foreground">Rs {sumCost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-                              <td className="px-4 py-3 text-right font-bold tabular-nums text-emerald-600">Rs {sumRetail.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-                              <td className="px-4 py-3 text-right font-bold tabular-nums text-blue-600">Rs {sumMargin.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                              <td className="px-4 py-3 text-right font-bold tabular-nums text-foreground">{formatCurrency(sumCost)}</td>
+                              <td className="px-4 py-3 text-right font-bold tabular-nums text-emerald-600">{formatCurrency(sumRetail)}</td>
+                              <td className="px-4 py-3 text-right font-bold tabular-nums text-blue-600">{formatCurrency(sumMargin)}</td>
                               <td></td>
                             </tr>
                           )}
@@ -1381,34 +1386,34 @@ function ReportsPageInner({
             <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
               <KPICard 
                 title="Net Purchases"   
-                value={`Rs ${data?.summary?.NetPurchases?.toLocaleString() || '0'}`}                                
+                value={formatCurrency(data?.summary?.NetPurchases)}                                
                 icon={ShoppingCart} 
                 accent="emerald" 
-                subtext={`Gross: Rs ${data?.summary?.TotalGrossPurchases?.toLocaleString() || '0'} | Returns: Rs ${data?.summary?.TotalReturns?.toLocaleString() || '0'}`}
+                subtext={`Gross: ${formatCurrency(data?.summary?.TotalGrossPurchases)} | Returns: ${formatCurrency(data?.summary?.TotalReturns)}`}
               />
               <KPICard 
                 title="Returns"         
-                value={`Rs ${data?.summary?.TotalReturns?.toLocaleString() || '0'}`}                                
+                value={formatCurrency(data?.summary?.TotalReturns)}                                
                 icon={TrendingUp}   
                 accent="rose" 
               />
               <KPICard 
                 title="Supplier Due / Payables"  
-                value={`Rs ${totalSupplierDue.toLocaleString()}`}
+                value={formatCurrency(totalSupplierDue)}
                 icon={DollarSign}     
                 accent="blue" 
                 subtext="Total unpaid balance"
               />
               <KPICard 
                 title="Invoices & Avg"  
-                value={data?.summary?.TotalInvoices?.toLocaleString() || '0'}                                       
+                value={data?.summary?.TotalInvoices || '0'}                                       
                 icon={FileText}     
                 accent="indigo" 
-                subtext={`Avg Purchase: Rs ${data?.summary?.AveragePurchase?.toLocaleString(undefined, {maximumFractionDigits: 2}) || '0'}`}
+                subtext={`Avg Purchase: ${formatCurrency(data?.summary?.AveragePurchase) || '0'}`}
               />
               <KPICard 
                 title="Highest Purchase" 
-                value={`Rs ${data?.summary?.HighestPurchase?.toLocaleString() || '0'}`}                             
+                value={formatCurrency(data?.summary?.HighestPurchase)}                             
                 icon={TrendingUp}   
                 accent="amber" 
               />
@@ -1430,7 +1435,7 @@ function ReportsPageInner({
                         }
                         return val;
                       }} />
-                      <YAxis yAxisId="left" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} tickFormatter={(val) => `Rs ${val/1000}k`} />
+                      <YAxis yAxisId="left" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} tickFormatter={(val) => `${formatCurrency(val/1000)}k`} />
                       <Tooltip content={<CustomTooltip />} />
                       <Legend />
                       <Line yAxisId="left" type="monotone" name="Purchases" dataKey="purchases" stroke="#8b5cf6" strokeWidth={3} dot={{ r: 4, fill: "#8b5cf6", strokeWidth: 2, stroke: "#fff" }} activeDot={{ r: 6 }} />
@@ -1476,7 +1481,7 @@ function ReportsPageInner({
                                 <span className="text-muted-foreground font-medium truncate max-w-[120px]" title={entry.name}>{entry.name}</span>
                               </div>
                               <span className="font-semibold text-foreground whitespace-nowrap">
-                                Rs {entry.value.toLocaleString()} <span className="text-xs text-muted-foreground font-normal ml-1">({percent}%)</span>
+                                {formatCurrency(entry.value)} <span className="text-xs text-muted-foreground font-normal ml-1">({percent}%)</span>
                               </span>
                             </li>
                           );
@@ -1494,7 +1499,7 @@ function ReportsPageInner({
                     <BarChart data={data?.top_medicines || []} margin={{ top: 10, right: 10, left: -10, bottom: 5 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                       <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#64748b' }} dy={10} interval={0} tickFormatter={(val) => val.length > 10 ? `${val.substring(0, 10)}...` : val} />
-                      <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#64748b' }} tickFormatter={(val) => `Rs ${val/1000}k`} dx={-5} />
+                      <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#64748b' }} tickFormatter={(val) => `${formatCurrency(val/1000)}k`} dx={-5} />
                       <Tooltip cursor={{fill: 'rgba(100,116,139,0.1)'}} content={<CustomTooltip />} />
                       <Bar dataKey="cost" name="Cost" radius={[4, 4, 0, 0]} barSize={32}>
                         {data?.top_medicines?.map((entry: any, index: number) => (
@@ -1598,9 +1603,9 @@ function ReportsPageInner({
                               <td className="px-4 py-3 font-medium">{t.SupplierName}</td>
                               <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">{t.MedicinesPurchased}</td>
                               <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">{t.TotalQty}</td>
-                              <td className="px-4 py-3 text-right font-semibold tabular-nums text-foreground">Rs {t.GrandTotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-                              <td className="px-4 py-3 text-right tabular-nums text-emerald-600">Rs {paid.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-                              <td className="px-4 py-3 text-right tabular-nums text-rose-600">Rs {balance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                              <td className="px-4 py-3 text-right font-semibold tabular-nums text-foreground">{formatCurrency(t.GrandTotal)}</td>
+                              <td className="px-4 py-3 text-right tabular-nums text-emerald-600">{formatCurrency(paid)}</td>
+                              <td className="px-4 py-3 text-right tabular-nums text-rose-600">{formatCurrency(balance)}</td>
                               <td className="px-4 py-3 text-center">
                                 <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
                                   isPaid ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400'
@@ -1626,9 +1631,9 @@ function ReportsPageInner({
                                 <td colSpan={4} className="px-4 py-3 text-right font-bold text-foreground uppercase text-xs tracking-wider">Filtered Totals:</td>
                                 <td className="px-4 py-3 text-right font-bold tabular-nums text-foreground">{totalItems}</td>
                                 <td className="px-4 py-3 text-right font-bold tabular-nums text-foreground">{totalQty}</td>
-                                <td className="px-4 py-3 text-right font-bold tabular-nums text-primary">Rs {totalGrand.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-                                <td className="px-4 py-3 text-right font-bold tabular-nums text-emerald-600">Rs {totalPaid.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-                                <td className="px-4 py-3 text-right font-bold tabular-nums text-rose-600">Rs {totalBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                                <td className="px-4 py-3 text-right font-bold tabular-nums text-primary">{formatCurrency(totalGrand)}</td>
+                                <td className="px-4 py-3 text-right font-bold tabular-nums text-emerald-600">{formatCurrency(totalPaid)}</td>
+                                <td className="px-4 py-3 text-right font-bold tabular-nums text-rose-600">{formatCurrency(totalBalance)}</td>
                                 <td></td>
                               </tr>
                             )}
@@ -1707,11 +1712,11 @@ function ReportsPageInner({
                       </div>
                       <div>
                         <p className="text-muted-foreground text-xs uppercase tracking-wider mb-1">Discount / Tax</p>
-                        <p className="font-semibold">Rs {selectedPurchaseTransaction?.Discount || 0} / Rs {selectedPurchaseTransaction?.Tax || 0}</p>
+                        <p className="font-semibold">{formatCurrency(selectedPurchaseTransaction?.Discount || 0)} / {formatCurrency(selectedPurchaseTransaction?.Tax || 0)}</p>
                       </div>
                       <div>
                         <p className="text-muted-foreground text-xs uppercase tracking-wider mb-1">Grand Total</p>
-                        <p className="font-semibold text-primary">Rs {selectedPurchaseTransaction?.GrandTotal?.toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
+                        <p className="font-semibold text-primary">{formatCurrency(selectedPurchaseTransaction?.GrandTotal)}</p>
                       </div>
                     </div>
                     
@@ -1931,7 +1936,7 @@ function ReportsPageInner({
                               <td className="px-4 py-3 text-left">{t.SupplierName || '-'}</td>
                               <td className="px-4 py-3 text-right font-medium">{t.SoldQuantity}</td>
                               <td className="px-4 py-3 text-right">{t.SalesVelocity}</td>
-                              <td className="px-4 py-3 text-right text-muted-foreground">Rs {t.Revenue.toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
+                              <td className="px-4 py-3 text-right text-muted-foreground">{formatCurrency(t.Revenue)}</td>
                               <td className="px-4 py-3 text-left">
                                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                                   t.Classification === 'Fast Moving' ? 'bg-emerald-100 text-emerald-700' : 
@@ -2013,17 +2018,17 @@ function ReportsPageInner({
           <div className="space-y-6 animate-in fade-in duration-300">
             {/* Summary KPIs */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 print:hidden">
-              <KPICard title="Total Net Revenue"           value={`Rs ${data?.summary?.TotalRevenue?.toLocaleString(undefined, {maximumFractionDigits: 2}) || '0'}`} icon={DollarSign} accent="blue" />
-              <KPICard title="Cost of Goods Sold (COGS)"   value={`Rs ${data?.summary?.TotalCOGS?.toLocaleString(undefined, {maximumFractionDigits: 2}) || '0'}`}    icon={ShoppingCart} accent="rose" />
+              <KPICard title="Total Net Revenue"           value={`${formatCurrency(data?.summary?.TotalRevenue || '0')}`} icon={DollarSign} accent="blue" />
+              <KPICard title="Cost of Goods Sold (COGS)"   value={`${formatCurrency(data?.summary?.TotalCOGS || '0')}`}    icon={ShoppingCart} accent="rose" />
               <KPICard 
                 title="Net Profit"                  
-                value={<span className={data?.summary?.NetProfit >= 0 ? "text-emerald-600 dark:text-emerald-500" : "text-rose-600 dark:text-rose-500"}>{`Rs ${data?.summary?.NetProfit?.toLocaleString(undefined, {maximumFractionDigits: 2}) || '0'}`}</span>} 
+                value={<span className={data?.summary?.NetProfit >= 0 ? "text-emerald-600 dark:text-emerald-500" : "text-rose-600 dark:text-rose-500"}>{`${formatCurrency(data?.summary?.NetProfit || '0')}`}</span>} 
                 icon={TrendingUp} 
                 accent="emerald" 
               />
               <KPICard 
                 title="Profit Margin"               
-                value={<span className={data?.summary?.ProfitMargin >= 0 ? "text-emerald-600 dark:text-emerald-500" : "text-rose-600 dark:text-rose-500"}>{`${data?.summary?.ProfitMargin?.toLocaleString(undefined, {maximumFractionDigits: 2}) || '0'}%`}</span>}
+                value={<span className={data?.summary?.ProfitMargin >= 0 ? "text-emerald-600 dark:text-emerald-500" : "text-rose-600 dark:text-rose-500"}>{`${data?.summary?.ProfitMargin || '0'}%`}</span>}
                 icon={TrendingUp} 
                 accent="purple" 
               />
@@ -2049,7 +2054,7 @@ function ReportsPageInner({
                         return !isNaN(d.getTime()) ? d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : val;
                       }}
                     />
-                    <YAxis yAxisId="left" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} tickFormatter={(val) => `Rs ${val/1000}k`} />
+                    <YAxis yAxisId="left" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} tickFormatter={(val) => `${formatCurrency(val/1000)}k`} />
                     <Tooltip content={<CustomTooltip />} />
                     <Legend />
                     <Line yAxisId="left" type="monotone" name="Net Profit" dataKey="profit" stroke="#10b981" strokeWidth={3} dot={{ r: 4, fill: "#10b981", strokeWidth: 2, stroke: "#fff" }} activeDot={{ r: 6 }} />
@@ -2097,7 +2102,7 @@ function ReportsPageInner({
                                   <span className="w-3 h-3 rounded-full mr-2 shrink-0" style={{ backgroundColor: entry.color }} />
                                   <span className="text-muted-foreground min-w-[120px] truncate" title={entry.value}>{entry.value}</span>
                                   <span className="ml-auto font-medium text-foreground whitespace-nowrap">
-                                    Rs {val.toLocaleString()} <span className="text-muted-foreground ml-1">({percent}%)</span>
+                                    {formatCurrency(val)} <span className="text-muted-foreground ml-1">({percent}%)</span>
                                   </span>
                                 </li>
                               );
@@ -2146,19 +2151,19 @@ function ReportsPageInner({
                     </tr>
                     <tr className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
                       <td className="px-6 py-2.5 text-muted-foreground pl-10">Gross Sales Revenue</td>
-                      <td className="px-6 py-2.5 text-right font-medium text-emerald-600 dark:text-emerald-400">+ Rs {data?.summary?.GrossSales?.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) || '0.00'}</td>
+                      <td className="px-6 py-2.5 text-right font-medium text-emerald-600 dark:text-emerald-400">+ {formatCurrency(data?.summary?.GrossSales || '0.00')}</td>
                     </tr>
                     <tr className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
                       <td className="px-6 py-2.5 text-muted-foreground pl-10">Less: Sales Returns & Refunds</td>
-                      <td className="px-6 py-2.5 text-right font-medium text-rose-600 dark:text-rose-400">- Rs {data?.summary?.SalesReturns?.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) || '0.00'}</td>
+                      <td className="px-6 py-2.5 text-right font-medium text-rose-600 dark:text-rose-400">- {formatCurrency(data?.summary?.SalesReturns || '0.00')}</td>
                     </tr>
                     <tr className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
                       <td className="px-6 py-2.5 text-muted-foreground pl-10">Less: Discounts Given</td>
-                      <td className="px-6 py-2.5 text-right font-medium text-rose-600 dark:text-rose-400">- Rs {data?.summary?.DiscountsApplied?.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) || '0.00'}</td>
+                      <td className="px-6 py-2.5 text-right font-medium text-rose-600 dark:text-rose-400">- {formatCurrency(data?.summary?.DiscountsApplied || '0.00')}</td>
                     </tr>
                     <tr className="border-t-2 border-border bg-blue-50/30 dark:bg-blue-900/10">
                       <td className="px-6 py-3 font-bold text-right text-blue-700 dark:text-blue-400">Subtotal: Net Revenue</td>
-                      <td className="px-6 py-3 text-right font-bold text-blue-700 dark:text-blue-400">Rs {data?.summary?.TotalRevenue?.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) || '0.00'}</td>
+                      <td className="px-6 py-3 text-right font-bold text-blue-700 dark:text-blue-400">{formatCurrency(data?.summary?.TotalRevenue || '0.00')}</td>
                     </tr>
 
                     {/* 2. Cost of Goods Sold (COGS) Section */}
@@ -2167,11 +2172,11 @@ function ReportsPageInner({
                     </tr>
                     <tr className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
                       <td className="px-6 py-2.5 text-muted-foreground pl-10">Direct Cost of Sold Medicines</td>
-                      <td className="px-6 py-2.5 text-right font-medium text-rose-600 dark:text-rose-400">- Rs {data?.summary?.TotalCOGS?.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) || '0.00'}</td>
+                      <td className="px-6 py-2.5 text-right font-medium text-rose-600 dark:text-rose-400">- {formatCurrency(data?.summary?.TotalCOGS || '0.00')}</td>
                     </tr>
                     <tr className="border-t-2 border-border bg-slate-100 dark:bg-slate-800/50">
                       <td className="px-6 py-3 font-bold text-right text-foreground">Subtotal: Gross Profit</td>
-                      <td className="px-6 py-3 text-right font-bold text-foreground">Rs {data?.summary?.GrossProfit?.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) || '0.00'}</td>
+                      <td className="px-6 py-3 text-right font-bold text-foreground">{formatCurrency(data?.summary?.GrossProfit || '0.00')}</td>
                     </tr>
 
                     {/* 3. Expenses & Operational Losses Section */}
@@ -2180,18 +2185,18 @@ function ReportsPageInner({
                     </tr>
                     <tr className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
                       <td className="px-6 py-2.5 text-muted-foreground pl-10">Inventory Expiry & Write-Offs</td>
-                      <td className="px-6 py-2.5 text-right font-medium text-rose-600 dark:text-rose-400">- Rs {data?.summary?.InventoryLoss?.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) || '0.00'}</td>
+                      <td className="px-6 py-2.5 text-right font-medium text-rose-600 dark:text-rose-400">- {formatCurrency(data?.summary?.InventoryLoss || '0.00')}</td>
                     </tr>
                     <tr className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
                       <td className="px-6 py-2.5 text-muted-foreground pl-10">Operating Expenses (Rent, Utilities, etc.)</td>
-                      <td className="px-6 py-2.5 text-right font-medium text-rose-600 dark:text-rose-400">- Rs {data?.summary?.TotalExpenses?.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) || '0.00'}</td>
+                      <td className="px-6 py-2.5 text-right font-medium text-rose-600 dark:text-rose-400">- {formatCurrency(data?.summary?.TotalExpenses || '0.00')}</td>
                     </tr>
 
                     {/* 4. Final Summary Footer */}
                     <tr className="border-t-4 border-double border-border bg-slate-100 dark:bg-slate-900/80">
                       <td className="px-6 py-5 font-black text-lg text-right">NET PROFIT / LOSS</td>
                       <td className={`px-6 py-5 text-right font-black text-2xl ${data?.summary?.NetProfit >= 0 ? 'text-emerald-600 dark:text-emerald-500' : 'text-rose-600 dark:text-rose-500'}`}>
-                        {data?.summary?.NetProfit >= 0 ? '+ ' : '- '}Rs {Math.abs(data?.summary?.NetProfit || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                        {data?.summary?.NetProfit >= 0 ? '+ ' : '- '}{formatCurrency(Math.abs(data?.summary?.NetProfit || 0))}
                       </td>
                     </tr>
                   </tbody>
@@ -2221,7 +2226,7 @@ function ReportsPageInner({
               </div>
               <div>
                 <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Transaction Date</p>
-                <p className="font-semibold text-foreground">{new Date(selectedInvoice.TransactionDate).toLocaleString()}</p>
+                <p className="font-semibold text-foreground">{new Date(selectedInvoice.TransactionDate).toLocaleDateString()}</p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Customer</p>
@@ -2245,11 +2250,11 @@ function ReportsPageInner({
               <div className="col-span-2 bg-slate-50 dark:bg-slate-900 rounded-lg p-4 mt-2 flex justify-between items-center border border-border">
                 <div>
                   <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Profit</p>
-                  <p className="font-bold text-emerald-600 text-xl">Rs {selectedInvoice.Profit ? selectedInvoice.Profit.toLocaleString() : '0'}</p>
+                  <p className="font-bold text-emerald-600 text-xl">{formatCurrency(selectedInvoice.Profit || 0)}</p>
                 </div>
                 <div className="text-right">
                   <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Grand Total</p>
-                  <p className="font-bold text-foreground text-2xl">Rs {selectedInvoice.GrandTotal?.toLocaleString()}</p>
+                  <p className="font-bold text-foreground text-2xl">{formatCurrency(selectedInvoice.GrandTotal)}</p>
                 </div>
               </div>
             </div>

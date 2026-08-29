@@ -876,3 +876,194 @@ NoneType: None
 2026-08-29 16:57:40,401 - pms - INFO - AUDIT: User admin uploaded a new Pharmacy Logo.
 2026-08-29 16:59:21,270 - pms - INFO - Starting Pharmacy Management System backend...
 2026-08-29 16:59:21,328 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-29 17:09:13,039 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-29 17:09:13,088 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-29 17:20:43,598 - pms - INFO - AUDIT: User admin updated Pharmacy Branding (Name/Profile).
+2026-08-29 17:21:12,772 - pms - INFO - AUDIT: User admin updated Pharmacy Branding (Name/Profile).
+2026-08-29 17:21:12,864 - pms - INFO - AUDIT: User admin uploaded a new Receipt Logo.
+2026-08-29 17:21:19,030 - pms - INFO - AUDIT: User admin updated Pharmacy Branding (Name/Profile).
+2026-08-29 17:21:22,521 - pms - INFO - AUDIT: User admin updated Pharmacy Branding (Name/Profile).
+2026-08-29 17:21:26,864 - pms - INFO - AUDIT: User admin updated Pharmacy Branding (Name/Profile).
+2026-08-29 17:21:32,174 - pms - INFO - AUDIT: User admin updated Pharmacy Branding (Name/Profile).
+2026-08-29 17:21:46,675 - pms - INFO - AUDIT: User admin updated Pharmacy Branding (Name/Profile).
+2026-08-29 17:21:46,746 - pms - INFO - AUDIT: User admin uploaded a new Receipt Logo.
+2026-08-29 17:22:49,074 - pms - INFO - AUDIT: User admin updated Pharmacy Branding (Name/Profile).
+2026-08-29 17:24:08,873 - pms - INFO - AUDIT: User admin updated Pharmacy Branding (Name/Profile).
+2026-08-29 21:29:59,431 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-29 21:29:59,562 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-29 21:31:37,375 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-29 21:31:37,454 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-29 22:28:28,433 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-29 22:28:28,482 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-29 22:58:55,020 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-29 22:58:55,047 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-29 23:04:23,626 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-29 23:04:23,647 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-29 23:06:53,720 - pms - ERROR - PMSException caught: Incorrect PIN/Password (status: 401) | Path: /api/v1/auth/verify-pin
+2026-08-29 23:11:36,375 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-29 23:11:36,404 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-29 23:11:49,971 - pms - ERROR - Unhandled Exception caught: 'Customer' object has no attribute 'FullName' | Path: /api/v1/dashboard/widgets
+NoneType: None
+2026-08-29 23:11:50,773 - pms - ERROR - Unhandled Exception caught: 'Customer' object has no attribute 'FullName' | Path: /api/v1/dashboard/widgets
+NoneType: None
+2026-08-29 23:11:56,698 - pms - ERROR - Unhandled Exception caught: 'Customer' object has no attribute 'FullName' | Path: /api/v1/dashboard/widgets
+NoneType: None
+2026-08-29 23:11:56,727 - pms - ERROR - Unhandled Exception caught: 'Customer' object has no attribute 'FullName' | Path: /api/v1/dashboard/widgets
+NoneType: None
+2026-08-29 23:11:58,380 - pms - ERROR - Unhandled Exception caught: 'Customer' object has no attribute 'FullName' | Path: /api/v1/dashboard/widgets
+NoneType: None
+2026-08-29 23:11:58,411 - pms - ERROR - Unhandled Exception caught: 'Customer' object has no attribute 'FullName' | Path: /api/v1/dashboard/widgets
+NoneType: None
+2026-08-29 23:12:36,853 - pms - ERROR - Unhandled Exception caught: 'Customer' object has no attribute 'FullName' | Path: /api/v1/dashboard/widgets
+NoneType: None
+2026-08-29 23:12:36,872 - pms - ERROR - Unhandled Exception caught: 'Customer' object has no attribute 'FullName' | Path: /api/v1/dashboard/widgets
+NoneType: None
+2026-08-29 23:12:44,482 - pms - ERROR - Unhandled Exception caught: 'Customer' object has no attribute 'FullName' | Path: /api/v1/dashboard/widgets
+NoneType: None
+2026-08-29 23:12:44,522 - pms - ERROR - Unhandled Exception caught: 'Customer' object has no attribute 'FullName' | Path: /api/v1/dashboard/widgets
+NoneType: None
+2026-08-29 23:13:09,939 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-29 23:13:09,962 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-29 23:13:29,252 - pms - ERROR - Unhandled Exception caught: 'Customer' object has no attribute 'FullName' | Path: /api/v1/dashboard/widgets
+NoneType: None
+2026-08-29 23:13:29,501 - pms - ERROR - Unhandled Exception caught: 'Customer' object has no attribute 'FullName' | Path: /api/v1/dashboard/widgets
+NoneType: None
+2026-08-29 23:13:31,632 - pms - ERROR - Unhandled Exception caught: 'Customer' object has no attribute 'FullName' | Path: /api/v1/dashboard/widgets
+NoneType: None
+2026-08-29 23:13:31,655 - pms - ERROR - Unhandled Exception caught: 'Customer' object has no attribute 'FullName' | Path: /api/v1/dashboard/widgets
+NoneType: None
+2026-08-29 23:13:54,936 - pms - ERROR - Unhandled Exception caught: 'Customer' object has no attribute 'FullName' | Path: /api/v1/dashboard/widgets
+NoneType: None
+2026-08-29 23:13:54,960 - pms - ERROR - Unhandled Exception caught: 'Customer' object has no attribute 'FullName' | Path: /api/v1/dashboard/widgets
+NoneType: None
+2026-08-29 23:14:13,367 - pms - ERROR - Unhandled Exception caught: 'Customer' object has no attribute 'FullName' | Path: /api/v1/dashboard/widgets
+NoneType: None
+2026-08-29 23:14:13,392 - pms - ERROR - Unhandled Exception caught: 'Customer' object has no attribute 'FullName' | Path: /api/v1/dashboard/widgets
+NoneType: None
+2026-08-29 23:15:12,017 - pms - ERROR - Unhandled Exception caught: 'Customer' object has no attribute 'FullName' | Path: /api/v1/dashboard/widgets
+NoneType: None
+2026-08-29 23:15:12,050 - pms - ERROR - Unhandled Exception caught: 'Customer' object has no attribute 'FullName' | Path: /api/v1/dashboard/widgets
+NoneType: None
+2026-08-29 23:15:55,675 - pms - ERROR - Unhandled Exception caught: 'Customer' object has no attribute 'FullName' | Path: /api/v1/dashboard/widgets
+NoneType: None
+2026-08-29 23:15:55,700 - pms - ERROR - Unhandled Exception caught: 'Customer' object has no attribute 'FullName' | Path: /api/v1/dashboard/widgets
+NoneType: None
+2026-08-29 23:20:06,772 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-29 23:20:06,788 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-29 23:20:14,954 - pms - ERROR - Unhandled Exception caught: 'Customer' object has no attribute 'FullName' | Path: /api/v1/dashboard/widgets
+NoneType: None
+2026-08-29 23:20:15,035 - pms - ERROR - Unhandled Exception caught: 'Customer' object has no attribute 'FullName' | Path: /api/v1/dashboard/widgets
+NoneType: None
+2026-08-29 23:20:28,171 - pms - ERROR - Unhandled Exception caught: 'Customer' object has no attribute 'FullName' | Path: /api/v1/dashboard/widgets
+NoneType: None
+2026-08-29 23:20:28,218 - pms - ERROR - Unhandled Exception caught: 'Customer' object has no attribute 'FullName' | Path: /api/v1/dashboard/widgets
+NoneType: None
+2026-08-29 23:20:35,236 - pms - ERROR - Unhandled Exception caught: 'Customer' object has no attribute 'FullName' | Path: /api/v1/dashboard/widgets
+NoneType: None
+2026-08-29 23:20:35,275 - pms - ERROR - Unhandled Exception caught: 'Customer' object has no attribute 'FullName' | Path: /api/v1/dashboard/widgets
+NoneType: None
+2026-08-29 23:20:39,787 - pms - ERROR - Unhandled Exception caught: 'Customer' object has no attribute 'FullName' | Path: /api/v1/dashboard/widgets
+NoneType: None
+2026-08-29 23:20:39,909 - pms - ERROR - Unhandled Exception caught: 'Customer' object has no attribute 'FullName' | Path: /api/v1/dashboard/widgets
+NoneType: None
+2026-08-29 23:21:03,066 - pms - ERROR - Unhandled Exception caught: 'Customer' object has no attribute 'FullName' | Path: /api/v1/dashboard/widgets
+NoneType: None
+2026-08-29 23:21:03,124 - pms - ERROR - Unhandled Exception caught: 'Customer' object has no attribute 'FullName' | Path: /api/v1/dashboard/widgets
+NoneType: None
+2026-08-29 23:21:28,535 - pms - ERROR - Unhandled Exception caught: 'Customer' object has no attribute 'FullName' | Path: /api/v1/dashboard/widgets
+NoneType: None
+2026-08-29 23:21:28,575 - pms - ERROR - Unhandled Exception caught: 'Customer' object has no attribute 'FullName' | Path: /api/v1/dashboard/widgets
+NoneType: None
+2026-08-29 23:22:29,079 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-29 23:22:29,111 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-29 23:22:32,971 - pms - ERROR - Unhandled Exception caught: 'Customer' object has no attribute 'FullName' | Path: /api/v1/dashboard/widgets
+NoneType: None
+2026-08-29 23:22:33,009 - pms - ERROR - Unhandled Exception caught: 'Customer' object has no attribute 'FullName' | Path: /api/v1/dashboard/widgets
+NoneType: None
+2026-08-29 23:23:50,448 - pms - ERROR - Unhandled Exception caught: 'Customer' object has no attribute 'FullName' | Path: /api/v1/dashboard/widgets
+NoneType: None
+2026-08-29 23:23:50,489 - pms - ERROR - Unhandled Exception caught: 'Customer' object has no attribute 'FullName' | Path: /api/v1/dashboard/widgets
+NoneType: None
+2026-08-29 23:26:22,004 - pms - ERROR - Unhandled Exception caught: 'Customer' object has no attribute 'FullName' | Path: /api/v1/dashboard/widgets
+NoneType: None
+2026-08-29 23:26:22,041 - pms - ERROR - Unhandled Exception caught: 'Customer' object has no attribute 'FullName' | Path: /api/v1/dashboard/widgets
+NoneType: None
+2026-08-29 23:31:13,688 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-29 23:31:13,718 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-29 23:31:25,134 - pms - ERROR - PMSException caught: Session expired. Please log in again. (status: 401) | Path: /api/v1/auth/me
+2026-08-29 23:31:31,771 - pms - ERROR - Unhandled Exception caught: 'Customer' object has no attribute 'FullName' | Path: /api/v1/dashboard/widgets
+NoneType: None
+2026-08-29 23:31:31,810 - pms - ERROR - Unhandled Exception caught: 'Customer' object has no attribute 'FullName' | Path: /api/v1/dashboard/widgets
+NoneType: None
+2026-08-29 23:31:34,721 - pms - ERROR - Unhandled Exception caught: 'Customer' object has no attribute 'FullName' | Path: /api/v1/dashboard/widgets
+NoneType: None
+2026-08-29 23:31:34,745 - pms - ERROR - Unhandled Exception caught: 'Customer' object has no attribute 'FullName' | Path: /api/v1/dashboard/widgets
+NoneType: None
+2026-08-29 23:32:01,902 - pms - ERROR - Unhandled Exception caught: 'Customer' object has no attribute 'FullName' | Path: /api/v1/dashboard/widgets
+NoneType: None
+2026-08-29 23:32:01,931 - pms - ERROR - Unhandled Exception caught: 'Customer' object has no attribute 'FullName' | Path: /api/v1/dashboard/widgets
+NoneType: None
+2026-08-29 23:32:03,653 - pms - ERROR - Unhandled Exception caught: 'Customer' object has no attribute 'FullName' | Path: /api/v1/dashboard/widgets
+NoneType: None
+2026-08-29 23:32:03,683 - pms - ERROR - Unhandled Exception caught: 'Customer' object has no attribute 'FullName' | Path: /api/v1/dashboard/widgets
+NoneType: None
+2026-08-29 23:32:28,507 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-29 23:32:28,598 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-29 23:32:30,573 - pms - ERROR - Unhandled Exception caught: 'Customer' object has no attribute 'FullName' | Path: /api/v1/dashboard/widgets
+NoneType: None
+2026-08-29 23:32:30,621 - pms - ERROR - Unhandled Exception caught: 'Customer' object has no attribute 'FullName' | Path: /api/v1/dashboard/widgets
+NoneType: None
+2026-08-29 23:32:34,398 - pms - ERROR - Unhandled Exception caught: 'Customer' object has no attribute 'FullName' | Path: /api/v1/dashboard/widgets
+NoneType: None
+2026-08-29 23:32:34,421 - pms - ERROR - Unhandled Exception caught: 'Customer' object has no attribute 'FullName' | Path: /api/v1/dashboard/widgets
+NoneType: None
+2026-08-29 23:33:17,847 - pms - ERROR - Unhandled Exception caught: 'Customer' object has no attribute 'FullName' | Path: /api/v1/dashboard/widgets
+NoneType: None
+2026-08-29 23:33:17,891 - pms - ERROR - Unhandled Exception caught: 'Customer' object has no attribute 'FullName' | Path: /api/v1/dashboard/widgets
+NoneType: None
+2026-08-29 23:33:29,158 - pms - ERROR - Unhandled Exception caught: 'Customer' object has no attribute 'FullName' | Path: /api/v1/dashboard/widgets
+NoneType: None
+2026-08-29 23:33:29,180 - pms - ERROR - Unhandled Exception caught: 'Customer' object has no attribute 'FullName' | Path: /api/v1/dashboard/widgets
+NoneType: None
+2026-08-29 23:34:15,042 - pms - ERROR - Unhandled Exception caught: 'Customer' object has no attribute 'FullName' | Path: /api/v1/dashboard/widgets
+NoneType: None
+2026-08-29 23:34:15,066 - pms - ERROR - Unhandled Exception caught: 'Customer' object has no attribute 'FullName' | Path: /api/v1/dashboard/widgets
+NoneType: None
+2026-08-29 23:35:11,712 - pms - ERROR - Unhandled Exception caught: 'Customer' object has no attribute 'FullName' | Path: /api/v1/dashboard/widgets
+NoneType: None
+2026-08-29 23:35:11,738 - pms - ERROR - Unhandled Exception caught: 'Customer' object has no attribute 'FullName' | Path: /api/v1/dashboard/widgets
+NoneType: None
+2026-08-29 23:40:13,550 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-29 23:40:13,574 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-30 00:05:44,900 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-30 00:05:44,931 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-30 00:08:25,229 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-30 00:08:25,262 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-30 00:12:18,489 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-30 00:12:18,535 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-30 00:14:46,569 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-30 00:14:46,584 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-30 00:15:03,871 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-30 00:15:03,882 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-30 00:15:46,610 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-30 00:15:46,627 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-30 00:28:44,692 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-30 00:28:44,719 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-30 00:33:13,910 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-30 00:33:13,928 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-30 00:33:44,920 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-30 00:33:44,935 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-30 00:34:23,145 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-30 00:34:23,161 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-30 00:38:35,075 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-30 00:38:35,088 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-30 00:39:19,041 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-30 00:39:19,059 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-30 00:40:35,836 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-30 00:40:35,856 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-30 00:43:56,330 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-30 00:43:56,345 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-30 00:58:35,507 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-30 00:58:35,545 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-30 00:59:29,395 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-30 00:59:29,413 - apscheduler.scheduler - INFO - Scheduler started

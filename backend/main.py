@@ -122,9 +122,20 @@ async def startup_event():
     
     from database import SessionLocal
     from models import BackupSettings, BackupHistory
+    from sqlalchemy import text
     
     db = SessionLocal()
     try:
+        try:
+            result = db.execute(text("PRAGMA table_info(billing_settings)")).fetchall()
+            columns = [row[1] for row in result]
+            if "CurrencySymbol" not in columns:
+                logger.info("Migrating billing_settings to add CurrencySymbol column.")
+                db.execute(text("ALTER TABLE billing_settings ADD COLUMN CurrencySymbol VARCHAR(10) DEFAULT 'Rs'"))
+                db.commit()
+        except Exception as e:
+            logger.error(f"Migration error for CurrencySymbol: {e}")
+
         db_settings = db.query(BackupSettings).first()
         if db_settings:
             schedule_backup_job(db_settings)
