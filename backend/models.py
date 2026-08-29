@@ -10,6 +10,9 @@ class User(Base):
     Username = Column(String(50), unique=True, nullable=False)
     PasswordHash = Column(String(256), nullable=False)
     Salt = Column(String(128), nullable=False)
+    FullName = Column(String(100), nullable=True)
+    PhoneNumber = Column(String(20), nullable=True)
+    ProfilePhotoPath = Column(String(255), nullable=True)
     IsActive = Column(Boolean, default=True)
     CreatedAt = Column(DateTime, server_default=func.now())
 

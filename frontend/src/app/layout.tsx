@@ -4,6 +4,7 @@ import "./globals.css";
 import { StartupProvider } from "@/components/providers/startup-provider";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { ProfileProvider } from "@/contexts/ProfileContext";
+import { AuthProvider } from "@/contexts/AuthContext";
 import { SystemPreferencesProvider } from "@/contexts/SystemPreferencesContext";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -37,9 +38,11 @@ export default function RootLayout({
         >
           <SystemPreferencesProvider>
             <StartupProvider>
-              <ProfileProvider>
-                {children}
-              </ProfileProvider>
+              <AuthProvider>
+                <ProfileProvider>
+                  {children}
+                </ProfileProvider>
+              </AuthProvider>
             </StartupProvider>
           </SystemPreferencesProvider>
           <Toaster />

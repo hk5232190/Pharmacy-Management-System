@@ -3,11 +3,15 @@ from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
+from typing import Optional
+import os
+import pathlib
 
 from api.deps import get_db, get_current_user
 from models import User
 from core.security import verify_password, create_access_token, get_password_hash_and_salt
 from core.exceptions import AuthenticationError, ValidationError
+from core.logger import logger
 
 router = APIRouter()
 
@@ -23,6 +27,13 @@ class UserProfile(BaseModel):
     id: int
     username: str
     is_active: bool
+    full_name: Optional[str] = None
+    phone_number: Optional[str] = None
+    profile_photo_path: Optional[str] = None
+
+class UserProfileUpdate(BaseModel):
+    FullName: Optional[str] = None
+    PhoneNumber: Optional[str] = None
 
 class ChangePasswordRequest(BaseModel):
     current_password: str
@@ -60,8 +71,84 @@ def read_users_me(current_user: User = Depends(get_current_user)):
     return UserProfile(
         id=current_user.UserId,
         username=current_user.Username,
-        is_active=current_user.IsActive
+        is_active=current_user.IsActive,
+        full_name=current_user.FullName,
+        phone_number=current_user.PhoneNumber,
+        profile_photo_path=current_user.ProfilePhotoPath
     )
+
+@router.put("/me", summary="Update Current User Profile")
+def update_user_profile(
+    profile_data: UserProfileUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    current_user.FullName = profile_data.FullName
+    current_user.PhoneNumber = profile_data.PhoneNumber
+    db.commit()
+    
+    logger.info(f"AUDIT: User {current_user.Username} updated their profile information.")
+    return {"message": "Profile updated successfully"}
+
+from fastapi import UploadFile, File, HTTPException
+@router.post("/me/photo", summary="Upload Profile Photo")
+def upload_profile_photo(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    if file.content_type not in ["image/jpeg", "image/png", "image/webp"]:
+        raise HTTPException(status_code=400, detail="Invalid file type. Only JPEG, PNG, and WEBP are allowed.")
+    
+    file.file.seek(0, 2)
+    file_size = file.file.tell()
+    if file_size > 5 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="File size exceeds 5MB limit.")
+    file.file.seek(0)
+
+    # Cleanup old photo
+    if current_user.ProfilePhotoPath:
+        old_path = os.path.join(".", current_user.ProfilePhotoPath.lstrip("/"))
+        if os.path.exists(old_path):
+            try:
+                os.unlink(old_path)
+            except Exception as e:
+                logger.error(f"Failed to delete old profile photo: {e}")
+
+    file_extension = file.filename.split(".")[-1]
+    filename = f"user_{current_user.UserId}.{file_extension}"
+    file_path = f"uploads/profile/{filename}"
+
+    with open(file_path, "wb") as buffer:
+        import shutil
+        shutil.copyfileobj(file.file, buffer)
+
+    current_user.ProfilePhotoPath = f"/{file_path}"
+    db.commit()
+    db.refresh(current_user)
+    
+    logger.info(f"AUDIT: User {current_user.Username} uploaded a new Profile Photo.")
+    return {"message": "Profile photo uploaded successfully", "photo_path": current_user.ProfilePhotoPath}
+
+@router.delete("/me/photo", summary="Remove Profile Photo")
+def remove_profile_photo(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    if current_user.ProfilePhotoPath:
+        old_path = os.path.join(".", current_user.ProfilePhotoPath.lstrip("/"))
+        if os.path.exists(old_path):
+            try:
+                os.unlink(old_path)
+            except Exception as e:
+                logger.error(f"Failed to delete old profile photo: {e}")
+                
+        current_user.ProfilePhotoPath = None
+        db.commit()
+        
+        logger.info(f"AUDIT: User {current_user.Username} removed their Profile Photo.")
+        
+    return {"message": "Profile photo removed successfully"}
 
 @router.post("/change-password", summary="Change Password")
 def change_password(

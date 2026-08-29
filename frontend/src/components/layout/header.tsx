@@ -12,6 +12,7 @@ import {
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useProfile } from "@/contexts/ProfileContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { useSystemPreferences } from "@/contexts/SystemPreferencesContext";
 
 const SEARCH_ITEMS = [
@@ -40,6 +41,7 @@ function getGreeting(): string {
 export function Header() {
   const router = useRouter();
   const { profile } = useProfile();
+  const { user } = useAuth();
   const { formatDate } = useSystemPreferences();
   const [currentDate, setCurrentDate] = useState("");
   const [currentDayName, setCurrentDayName] = useState("");
@@ -107,7 +109,7 @@ export function Header() {
     <header className="h-16 flex items-center justify-between px-6 bg-card border-b border-border shadow-sm shrink-0 z-40">
       <div className="flex items-center gap-4 flex-1 min-w-0">
         <div className="flex flex-col shrink-0">
-          <span className="font-bold text-[15px] text-foreground leading-tight">{greeting || "Welcome"}, Admin!</span>
+          <span className="font-bold text-[15px] text-foreground leading-tight">{greeting || "Welcome"}, {user.full_name || user.username || "Admin"}!</span>
           <span className="text-[11px] text-muted-foreground font-medium">{profile.PharmacyName || "Pharmacy"}</span>
         </div>
         <div className="w-[1px] h-8 bg-border hidden sm:block shrink-0" />
@@ -203,16 +205,20 @@ export function Header() {
         <div className="w-[1px] h-6 bg-border mx-0.5" />
         <DropdownMenu>
           <DropdownMenuTrigger className="flex items-center gap-2.5 hover:bg-secondary p-1.5 pr-3 rounded-full transition-colors outline-none focus:ring-2 focus:ring-primary/20">
-            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
-              <User size={16} />
+            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary border border-primary/20 overflow-hidden">
+              {user.profile_photo_path ? (
+                <img src={`http://127.0.0.1:8000${user.profile_photo_path}`} alt="Profile" className="w-full h-full object-cover" />
+              ) : (
+                <User size={16} />
+              )}
             </div>
             <div className="hidden md:flex items-center gap-1.5">
-              <span className="text-sm font-semibold text-foreground">Admin</span>
+              <span className="text-sm font-semibold text-foreground">{user.full_name || user.username || "Admin"}</span>
               <ChevronDownIcon className="w-4 h-4 text-muted-foreground" />
             </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56 mt-2">
-            <DropdownMenuItem onClick={() => router.push("/dashboard/settings/profile")} className="text-sm cursor-pointer py-2">
+            <DropdownMenuItem onClick={() => router.push("/dashboard/settings/my-profile")} className="text-sm cursor-pointer py-2">
               <User className="mr-2 w-4 h-4 text-slate-500" /> My Profile
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => router.push("/dashboard/settings/security")} className="text-sm cursor-pointer py-2">

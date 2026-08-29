@@ -26,6 +26,7 @@ import os
 # Create uploads dir if not exists
 os.makedirs("uploads/logo", exist_ok=True)
 os.makedirs("uploads/background", exist_ok=True)
+os.makedirs("uploads/profile", exist_ok=True)
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 # Add CORS middleware
