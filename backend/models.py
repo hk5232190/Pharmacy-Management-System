@@ -330,8 +330,10 @@ class PharmacyProfile(Base):
     ProfileId = Column(Integer, primary_key=True, autoincrement=True)
     PharmacyName = Column(String(255), nullable=False, default="My Pharmacy")
     OwnerName = Column(String(255), nullable=True)
+    PharmacySlogan = Column(String(255), nullable=True)
     RegistrationNumber = Column(String(100), nullable=True)
     DrugLicenseNumber = Column(String(100), nullable=True)
+    NtnStrn = Column(String(100), nullable=True)
     PhoneNumber = Column(String(50), nullable=True)
     EmailAddress = Column(String(255), nullable=True)
     Address = Column(String(500), nullable=True)
@@ -341,6 +343,7 @@ class PharmacyProfile(Base):
     PostalCode = Column(String(20), nullable=True)
     Website = Column(String(255), nullable=True)
     LogoPath = Column(String(500), nullable=True)
+    ReceiptLogoPath = Column(String(500), nullable=True)
     UpdatedAt = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
 class BillingSettings(Base):

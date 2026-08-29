@@ -5,8 +5,10 @@ from datetime import datetime
 class PharmacyProfileBase(BaseModel):
     PharmacyName: str
     OwnerName: Optional[str] = None
+    PharmacySlogan: Optional[str] = None
     RegistrationNumber: Optional[str] = None
     DrugLicenseNumber: Optional[str] = None
+    NtnStrn: Optional[str] = None
     PhoneNumber: Optional[str] = Field(None, pattern=r'^(?:(?:\+92|0)[-\s]?\d{2,4}[-\s]?\d{6,8})?$')
     EmailAddress: Optional[str] = None
     Address: Optional[str] = None
@@ -16,6 +18,7 @@ class PharmacyProfileBase(BaseModel):
     PostalCode: Optional[str] = None
     Website: Optional[str] = None
     LogoPath: Optional[str] = None
+    ReceiptLogoPath: Optional[str] = None
 
 class PharmacyProfileCreate(PharmacyProfileBase):
     pass

@@ -80,7 +80,7 @@ const NAV_ITEMS = [
 export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { profile } = useProfile();
+  const { profile, isLoading } = useProfile();
   
   const handleLogout = () => {
     localStorage.removeItem("access_token");
@@ -108,21 +108,33 @@ export function Sidebar() {
       {/* Brand Logo Header */}
       <div className="min-h-[64px] py-3 flex items-center px-6 bg-transparent border-b border-white/5 shrink-0">
         <div className="flex items-center gap-3 w-full">
-          {profile.LogoPath ? (
-            <div className="h-8 w-8 flex items-center justify-center shrink-0">
-              <img src={`http://127.0.0.1:8000${profile.LogoPath}`} alt="Logo" className="max-h-full max-w-full object-contain drop-shadow-sm" />
-            </div>
+          {isLoading ? (
+            <>
+              <div className="h-8 w-8 rounded-lg bg-white/10 animate-pulse shrink-0"></div>
+              <div className="flex-1 space-y-2">
+                <div className="h-3.5 bg-white/10 rounded animate-pulse w-3/4"></div>
+                <div className="h-2 bg-white/5 rounded animate-pulse w-1/2"></div>
+              </div>
+            </>
           ) : (
-            <div className="bg-primary text-primary-foreground p-1.5 rounded-lg flex items-center justify-center shrink-0">
-              <PlusSquare className="h-6 w-6" />
-            </div>
+            <>
+              {profile.LogoPath ? (
+                <div className="h-8 w-8 flex items-center justify-center shrink-0">
+                  <img src={`http://127.0.0.1:8000${profile.LogoPath}`} alt="Logo" className="max-h-full max-w-full object-contain drop-shadow-sm" />
+                </div>
+              ) : (
+                <div className="bg-primary text-primary-foreground p-1.5 rounded-lg flex items-center justify-center shrink-0">
+                  <PlusSquare className="h-6 w-6" />
+                </div>
+              )}
+              <div className="flex-1">
+                <h1 className="font-bold text-[17px] leading-tight text-white break-words">
+                  {profile.PharmacyName || "Pharmacy"}
+                </h1>
+                <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wider mt-0.5">Management System</p>
+              </div>
+            </>
           )}
-          <div className="flex-1">
-            <h1 className="font-bold text-[17px] leading-tight text-white break-words">
-              {profile.PharmacyName || "Pharmacy"}
-            </h1>
-            <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wider mt-0.5">Management System</p>
-          </div>
         </div>
       </div>
 

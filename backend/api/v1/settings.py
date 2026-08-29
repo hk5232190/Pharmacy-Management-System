@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Any
 import os
 import shutil
+import uuid
 
 from api.deps import get_db, get_current_admin_user
 from models import PharmacyProfile, BillingSettings, InventorySettings, PrinterSettings, SystemPreferences, GeneralSettings
@@ -129,6 +130,76 @@ def delete_pharmacy_logo(
     logger.info(f"AUDIT: User {current_admin.Username} removed the Pharmacy Logo.")
     
     return {"message": "Logo removed successfully"}
+
+@router.post("/profile/receipt-logo")
+def upload_receipt_logo(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_admin = Depends(get_current_admin_user)
+) -> Any:
+    """
+    Upload a receipt logo for the pharmacy profile.
+    """
+    if not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="File must be an image")
+
+    # Ensure upload directory exists
+    upload_dir = Path("uploads/logo")
+    upload_dir.mkdir(parents=True, exist_ok=True)
+
+    file_ext = Path(file.filename).suffix
+    filename = f"receipt_logo_{uuid.uuid4().hex}{file_ext}"
+    file_path = upload_dir / filename
+
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+
+    profile = db.query(PharmacyProfile).first()
+    if not profile:
+        profile = PharmacyProfile()
+        db.add(profile)
+        
+    # Delete old receipt logo if it exists
+    if profile.ReceiptLogoPath:
+        old_file_path = Path(profile.ReceiptLogoPath.lstrip("/"))
+        if old_file_path.exists():
+            try:
+                os.unlink(old_file_path)
+            except Exception as e:
+                logger.error(f"Failed to delete old receipt logo file {old_file_path}: {e}")
+
+    profile.ReceiptLogoPath = f"/uploads/logo/{filename}"
+    db.commit()
+    db.refresh(profile)
+    logger.info(f"AUDIT: User {current_admin.Username} uploaded a new Receipt Logo.")
+    
+    return {"message": "Receipt Logo uploaded successfully", "logo_path": profile.ReceiptLogoPath}
+
+@router.delete("/profile/receipt-logo")
+def delete_receipt_logo(
+    db: Session = Depends(get_db),
+    current_admin = Depends(get_current_admin_user)
+) -> Any:
+    """
+    Remove the receipt logo.
+    """
+    profile = db.query(PharmacyProfile).first()
+    if not profile or not profile.ReceiptLogoPath:
+        raise HTTPException(status_code=404, detail="No receipt logo found.")
+        
+    old_file_path = Path(profile.ReceiptLogoPath.lstrip("/"))
+    if old_file_path.exists():
+        try:
+            os.unlink(old_file_path)
+        except Exception as e:
+            logger.error(f"Failed to delete receipt logo file {old_file_path}: {e}")
+            
+    profile.ReceiptLogoPath = None
+    db.commit()
+    db.refresh(profile)
+    logger.info(f"AUDIT: User {current_admin.Username} removed the Receipt Logo.")
+    
+    return {"message": "Receipt Logo removed successfully"}
 
 @router.get("/billing", response_model=BillingSettingsResponse)
 def get_billing_settings(db: Session = Depends(get_db)) -> Any:

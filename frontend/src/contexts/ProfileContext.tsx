@@ -28,11 +28,13 @@ const DEFAULT_PROFILE: PharmacyProfile = {
 
 interface ProfileContextType {
   profile: PharmacyProfile;
+  isLoading: boolean;
   refreshProfile: () => Promise<void>;
 }
 
 const ProfileContext = createContext<ProfileContextType>({
   profile: DEFAULT_PROFILE,
+  isLoading: true,
   refreshProfile: async () => {},
 });
 
@@ -40,6 +42,7 @@ export const useProfile = () => useContext(ProfileContext);
 
 export function ProfileProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<PharmacyProfile>(DEFAULT_PROFILE);
+  const [isLoading, setIsLoading] = useState(true);
 
   const fetchProfile = async () => {
     try {
@@ -53,6 +56,8 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (error) {
       console.error("Failed to fetch pharmacy profile:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -61,7 +66,7 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <ProfileContext.Provider value={{ profile, refreshProfile: fetchProfile }}>
+    <ProfileContext.Provider value={{ profile, isLoading, refreshProfile: fetchProfile }}>
       {children}
     </ProfileContext.Provider>
   );
