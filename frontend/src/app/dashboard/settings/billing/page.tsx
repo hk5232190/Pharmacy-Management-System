@@ -108,7 +108,7 @@ export default function BillingSettingsPage() {
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pb-20">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pb-20 pr-2 lg:pr-4">
       {/* Left Column: Forms */}
       <div className="lg:col-span-2 space-y-6">
         
@@ -274,7 +274,7 @@ export default function BillingSettingsPage() {
       </div>
 
       {/* Right Column: Previews */}
-      <div className="space-y-6 sticky top-6 self-start">
+      <div className="space-y-6 sticky top-0 self-start">
         <Card className="border-slate-200 dark:border-slate-800 shadow-sm">
           <CardHeader className="bg-slate-50/50 dark:bg-slate-900/20 pb-4 border-b">
             <CardTitle className="text-sm font-bold flex items-center gap-2">

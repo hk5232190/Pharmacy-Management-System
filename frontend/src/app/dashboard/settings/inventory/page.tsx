@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Save, RefreshCw, Box, AlertTriangle, ShieldCheck, Barcode, Settings2, Lock } from "lucide-react";
+import { Save, RefreshCw, Box, AlertTriangle, Barcode, Settings2 } from "lucide-react";
 
 interface InventorySettings {
   SettingsId?: number;
@@ -131,35 +131,6 @@ export default function InventorySettingsPage() {
           </CardContent>
         </Card>
 
-        {/* Stock Safeguards */}
-        <Card className="border-red-100 dark:border-red-900 shadow-sm">
-          <CardHeader className="pb-4 border-b bg-red-50/50 dark:bg-red-900/10">
-            <CardTitle className="text-lg font-bold flex items-center gap-2 text-red-700 dark:text-red-400">
-              <ShieldCheck className="w-5 h-5" /> Safety & Stock Safeguards
-            </CardTitle>
-            <CardDescription>Strict safety mechanisms and billing protections.</CardDescription>
-          </CardHeader>
-          <CardContent className="p-6 space-y-6">
-            <div className="flex items-center justify-between p-4 bg-slate-100 dark:bg-slate-900/80 rounded-lg border border-slate-200 dark:border-slate-800">
-              <div className="flex items-start gap-3">
-                <Lock className="w-5 h-5 mt-1 text-slate-400" />
-                <div>
-                  <Label className="text-base font-semibold text-slate-700 dark:text-slate-300">Prevent Sale of Expired Items</Label>
-                  <p className="text-sm text-slate-500">Immutable Regulatory Compliance Rule (SRS Mod 5).</p>
-                </div>
-              </div>
-              <Switch checked={true} disabled={true} />
-            </div>
-
-            <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900/50 rounded-lg border mt-6">
-              <div>
-                <Label className="text-base font-semibold text-red-600 dark:text-red-400">Allow Negative Stock</Label>
-                <p className="text-sm text-slate-500">Allow billing even if physical inventory shows zero.</p>
-              </div>
-              <Switch checked={settings.AllowNegativeStock} onCheckedChange={(c) => handleSwitchChange("AllowNegativeStock", c)} />
-            </div>
-          </CardContent>
-        </Card>
 
         {/* Product Defaults */}
         <Card className="border-slate-200 dark:border-slate-800 shadow-sm">
@@ -215,26 +186,7 @@ export default function InventorySettingsPage() {
           </CardHeader>
           <CardContent className="p-6 space-y-6 text-sm">
             
-            <div className="space-y-3">
-              <h4 className="font-semibold text-slate-900 dark:text-white border-b pb-1">Safety Constraints</h4>
-              <ul className="space-y-2">
-                <li className="flex justify-between items-center">
-                  <span className="text-slate-600 dark:text-slate-400">Sale of Expired</span>
-                  <span className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 px-2 py-0.5 rounded text-xs font-semibold flex items-center gap-1">
-                    <Lock className="w-3 h-3" /> BLOCKED
-                  </span>
-                </li>
-                <li className="flex justify-between items-center">
-                  <span className="text-slate-600 dark:text-slate-400">Negative Stock</span>
-                  {settings.AllowNegativeStock ? (
-                    <span className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 px-2 py-0.5 rounded text-xs font-semibold">ALLOWED</span>
-                  ) : (
-                    <span className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 px-2 py-0.5 rounded text-xs font-semibold">BLOCKED</span>
-                  )}
-                </li>
-              </ul>
-            </div>
-            
+
             <div className="space-y-3">
               <h4 className="font-semibold text-slate-900 dark:text-white border-b pb-1">Automated Triggers</h4>
               <ul className="space-y-2">
