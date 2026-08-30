@@ -1070,3 +1070,221 @@ NoneType: None
 2026-08-30 01:14:03,543 - pms - ERROR - PMSException caught: Incorrect username or password (status: 401) | Path: /api/v1/auth/login
 2026-08-30 01:32:25,086 - pms - INFO - Starting Pharmacy Management System backend...
 2026-08-30 01:32:25,122 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-30 02:09:09,173 - pms - INFO - Security Settings Updated | User: admin | AutoLock: True (1m) | SessionTimeout: True (120m)
+2026-08-30 02:09:21,968 - pms - INFO - Database Optimization | User: admin | Reclaimed: 8192 bytes
+2026-08-30 02:09:43,292 - pms - INFO - Clear Temp Data | User: admin | Deleted 4 files
+2026-08-30 14:46:17,644 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-30 14:46:17,675 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-30 14:46:50,978 - pms - WARNING - License token has expired.
+2026-08-30 14:46:57,755 - pms - WARNING - License token has expired.
+2026-08-30 14:47:03,240 - pms - WARNING - License token has expired.
+2026-08-30 14:47:04,290 - pms - WARNING - License token has expired.
+2026-08-30 15:23:46,680 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-30 15:23:46,702 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-30 15:51:56,525 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-30 15:51:56,559 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-30 15:54:42,948 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-30 15:54:42,979 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-30 15:54:49,871 - pms - ERROR - Unhandled Exception caught: name 'sys' is not defined | Path: /api/v1/settings/printer/list
+NoneType: None
+2026-08-30 15:54:50,934 - pms - ERROR - Unhandled Exception caught: name 'sys' is not defined | Path: /api/v1/settings/printer/list
+NoneType: None
+2026-08-30 15:54:50,953 - pms - ERROR - Unhandled Exception caught: 1 validation error:
+  {'type': 'missing', 'loc': ('response', 'ShowAddress'), 'msg': 'Field required', 'input': <models.PrinterSettings object at 0x000001C6885EEBA0>}
+
+  File "E:\Projects\PMS-Software\backend\api\v1\settings.py", line 273, in get_printer_settings
+    GET /api/v1/settings/printer | Path: /api/v1/settings/printer
+NoneType: None
+2026-08-30 15:54:50,984 - pms - ERROR - Unhandled Exception caught: 1 validation error:
+  {'type': 'missing', 'loc': ('response', 'ShowAddress'), 'msg': 'Field required', 'input': <models.PrinterSettings object at 0x000001C688699D10>}
+
+  File "E:\Projects\PMS-Software\backend\api\v1\settings.py", line 273, in get_printer_settings
+    GET /api/v1/settings/printer | Path: /api/v1/settings/printer
+NoneType: None
+2026-08-30 15:55:11,855 - pms - ERROR - Unhandled Exception caught: name 'sys' is not defined | Path: /api/v1/settings/printer/list
+NoneType: None
+2026-08-30 15:55:11,887 - pms - ERROR - Unhandled Exception caught: 1 validation error:
+  {'type': 'missing', 'loc': ('response', 'ShowAddress'), 'msg': 'Field required', 'input': <models.PrinterSettings object at 0x000001C689BE5950>}
+
+  File "E:\Projects\PMS-Software\backend\api\v1\settings.py", line 273, in get_printer_settings
+    GET /api/v1/settings/printer | Path: /api/v1/settings/printer
+NoneType: None
+2026-08-30 15:55:11,889 - pms - ERROR - Unhandled Exception caught: name 'sys' is not defined | Path: /api/v1/settings/printer/list
+NoneType: None
+2026-08-30 15:55:11,926 - pms - ERROR - Unhandled Exception caught: 1 validation error:
+  {'type': 'missing', 'loc': ('response', 'ShowAddress'), 'msg': 'Field required', 'input': <models.PrinterSettings object at 0x000001C6898F1480>}
+
+  File "E:\Projects\PMS-Software\backend\api\v1\settings.py", line 273, in get_printer_settings
+    GET /api/v1/settings/printer | Path: /api/v1/settings/printer
+NoneType: None
+2026-08-30 15:55:47,752 - pms - ERROR - Unhandled Exception caught: name 'sys' is not defined | Path: /api/v1/settings/printer/list
+NoneType: None
+2026-08-30 15:55:47,775 - pms - ERROR - Unhandled Exception caught: 1 validation error:
+  {'type': 'missing', 'loc': ('response', 'ShowAddress'), 'msg': 'Field required', 'input': <models.PrinterSettings object at 0x000001C6898F1480>}
+
+  File "E:\Projects\PMS-Software\backend\api\v1\settings.py", line 273, in get_printer_settings
+    GET /api/v1/settings/printer | Path: /api/v1/settings/printer
+NoneType: None
+2026-08-30 15:55:47,794 - pms - ERROR - Unhandled Exception caught: name 'sys' is not defined | Path: /api/v1/settings/printer/list
+NoneType: None
+2026-08-30 15:55:47,815 - pms - ERROR - Unhandled Exception caught: 1 validation error:
+  {'type': 'missing', 'loc': ('response', 'ShowAddress'), 'msg': 'Field required', 'input': <models.PrinterSettings object at 0x000001C689A1F650>}
+
+  File "E:\Projects\PMS-Software\backend\api\v1\settings.py", line 273, in get_printer_settings
+    GET /api/v1/settings/printer | Path: /api/v1/settings/printer
+NoneType: None
+2026-08-30 15:56:02,988 - pms - ERROR - Unhandled Exception caught: name 'sys' is not defined | Path: /api/v1/settings/printer/list
+NoneType: None
+2026-08-30 15:56:58,520 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-30 15:56:58,549 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-30 15:57:01,259 - pms - ERROR - Failed to list printers: No module named 'win32print'
+2026-08-30 15:57:01,284 - pms - ERROR - Unhandled Exception caught: 1 validation error:
+  {'type': 'missing', 'loc': ('response', 'ShowAddress'), 'msg': 'Field required', 'input': <models.PrinterSettings object at 0x0000020140B92A50>}
+
+  File "E:\Projects\PMS-Software\backend\api\v1\settings.py", line 274, in get_printer_settings
+    GET /api/v1/settings/printer | Path: /api/v1/settings/printer
+NoneType: None
+2026-08-30 15:57:01,292 - pms - ERROR - Failed to list printers: No module named 'win32print'
+2026-08-30 15:57:01,356 - pms - ERROR - Unhandled Exception caught: 1 validation error:
+  {'type': 'missing', 'loc': ('response', 'ShowAddress'), 'msg': 'Field required', 'input': <models.PrinterSettings object at 0x0000020140BD3ED0>}
+
+  File "E:\Projects\PMS-Software\backend\api\v1\settings.py", line 274, in get_printer_settings
+    GET /api/v1/settings/printer | Path: /api/v1/settings/printer
+NoneType: None
+2026-08-30 15:57:04,646 - pms - ERROR - Failed to list printers: No module named 'win32print'
+2026-08-30 15:57:04,648 - pms - ERROR - Unhandled Exception caught: 1 validation error:
+  {'type': 'missing', 'loc': ('response', 'ShowAddress'), 'msg': 'Field required', 'input': <models.PrinterSettings object at 0x00000201408CEC10>}
+
+  File "E:\Projects\PMS-Software\backend\api\v1\settings.py", line 274, in get_printer_settings
+    GET /api/v1/settings/printer | Path: /api/v1/settings/printer
+NoneType: None
+2026-08-30 15:57:04,683 - pms - ERROR - Failed to list printers: No module named 'win32print'
+2026-08-30 15:57:04,690 - pms - ERROR - Unhandled Exception caught: 1 validation error:
+  {'type': 'missing', 'loc': ('response', 'ShowAddress'), 'msg': 'Field required', 'input': <models.PrinterSettings object at 0x000002014096CFC0>}
+
+  File "E:\Projects\PMS-Software\backend\api\v1\settings.py", line 274, in get_printer_settings
+    GET /api/v1/settings/printer | Path: /api/v1/settings/printer
+NoneType: None
+2026-08-30 15:58:35,464 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-30 15:58:35,473 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-30 15:59:19,182 - pms - ERROR - Failed to list printers: No module named 'win32print'
+2026-08-30 15:59:36,459 - pms - ERROR - Failed to list printers: No module named 'win32print'
+2026-08-30 15:59:36,465 - pms - ERROR - Unhandled Exception caught: 1 validation error:
+  {'type': 'missing', 'loc': ('response', 'ShowAddress'), 'msg': 'Field required', 'input': <models.PrinterSettings object at 0x000002014096FBB0>}
+
+  File "E:\Projects\PMS-Software\backend\api\v1\settings.py", line 274, in get_printer_settings
+    GET /api/v1/settings/printer | Path: /api/v1/settings/printer
+NoneType: None
+2026-08-30 15:59:36,502 - pms - ERROR - Failed to list printers: No module named 'win32print'
+2026-08-30 15:59:36,515 - pms - ERROR - Unhandled Exception caught: 1 validation error:
+  {'type': 'missing', 'loc': ('response', 'ShowAddress'), 'msg': 'Field required', 'input': <models.PrinterSettings object at 0x0000020140C8DD90>}
+
+  File "E:\Projects\PMS-Software\backend\api\v1\settings.py", line 274, in get_printer_settings
+    GET /api/v1/settings/printer | Path: /api/v1/settings/printer
+NoneType: None
+2026-08-30 16:00:53,551 - pms - ERROR - Failed to list printers: No module named 'win32print'
+2026-08-30 16:00:53,558 - pms - ERROR - Unhandled Exception caught: 1 validation error:
+  {'type': 'missing', 'loc': ('response', 'ShowAddress'), 'msg': 'Field required', 'input': <models.PrinterSettings object at 0x0000020140A686B0>}
+
+  File "E:\Projects\PMS-Software\backend\api\v1\settings.py", line 274, in get_printer_settings
+    GET /api/v1/settings/printer | Path: /api/v1/settings/printer
+NoneType: None
+2026-08-30 16:00:53,588 - pms - ERROR - Failed to list printers: No module named 'win32print'
+2026-08-30 16:00:53,598 - pms - ERROR - Unhandled Exception caught: 1 validation error:
+  {'type': 'missing', 'loc': ('response', 'ShowAddress'), 'msg': 'Field required', 'input': <models.PrinterSettings object at 0x0000020140BF3680>}
+
+  File "E:\Projects\PMS-Software\backend\api\v1\settings.py", line 274, in get_printer_settings
+    GET /api/v1/settings/printer | Path: /api/v1/settings/printer
+NoneType: None
+2026-08-30 16:01:11,397 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-30 16:01:11,443 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-30 16:01:13,787 - pms - ERROR - Failed to list printers: No module named 'win32print'
+2026-08-30 16:01:13,812 - pms - ERROR - Unhandled Exception caught: 1 validation error:
+  {'type': 'missing', 'loc': ('response', 'ShowAddress'), 'msg': 'Field required', 'input': <models.PrinterSettings object at 0x000001F5C0C3E3C0>}
+
+  File "E:\Projects\PMS-Software\backend\api\v1\settings.py", line 274, in get_printer_settings
+    GET /api/v1/settings/printer | Path: /api/v1/settings/printer
+NoneType: None
+2026-08-30 16:01:13,820 - pms - ERROR - Failed to list printers: No module named 'win32print'
+2026-08-30 16:01:13,863 - pms - ERROR - Unhandled Exception caught: 1 validation error:
+  {'type': 'missing', 'loc': ('response', 'ShowAddress'), 'msg': 'Field required', 'input': <models.PrinterSettings object at 0x000001F5C09DD950>}
+
+  File "E:\Projects\PMS-Software\backend\api\v1\settings.py", line 274, in get_printer_settings
+    GET /api/v1/settings/printer | Path: /api/v1/settings/printer
+NoneType: None
+2026-08-30 16:01:34,743 - pms - ERROR - Failed to list printers: No module named 'win32print'
+2026-08-30 16:01:34,746 - pms - ERROR - Unhandled Exception caught: 1 validation error:
+  {'type': 'missing', 'loc': ('response', 'ShowAddress'), 'msg': 'Field required', 'input': <models.PrinterSettings object at 0x000001F5C22B02D0>}
+
+  File "E:\Projects\PMS-Software\backend\api\v1\settings.py", line 274, in get_printer_settings
+    GET /api/v1/settings/printer | Path: /api/v1/settings/printer
+NoneType: None
+2026-08-30 16:01:34,780 - pms - ERROR - Failed to list printers: No module named 'win32print'
+2026-08-30 16:01:34,785 - pms - ERROR - Unhandled Exception caught: 1 validation error:
+  {'type': 'missing', 'loc': ('response', 'ShowAddress'), 'msg': 'Field required', 'input': <models.PrinterSettings object at 0x000001F5C0F5D940>}
+
+  File "E:\Projects\PMS-Software\backend\api\v1\settings.py", line 274, in get_printer_settings
+    GET /api/v1/settings/printer | Path: /api/v1/settings/printer
+NoneType: None
+2026-08-30 16:01:40,886 - pms - ERROR - Unhandled Exception caught: 1 validation error:
+  {'type': 'missing', 'loc': ('response', 'ShowAddress'), 'msg': 'Field required', 'input': <models.PrinterSettings object at 0x000001F5C0F5DE00>}
+
+  File "E:\Projects\PMS-Software\backend\api\v1\settings.py", line 274, in get_printer_settings
+    GET /api/v1/settings/printer | Path: /api/v1/settings/printer
+NoneType: None
+2026-08-30 16:01:40,887 - pms - ERROR - Failed to list printers: No module named 'win32print'
+2026-08-30 16:01:40,918 - pms - ERROR - Failed to list printers: No module named 'win32print'
+2026-08-30 16:01:40,920 - pms - ERROR - Unhandled Exception caught: 1 validation error:
+  {'type': 'missing', 'loc': ('response', 'ShowAddress'), 'msg': 'Field required', 'input': <models.PrinterSettings object at 0x000001F5C20A9910>}
+
+  File "E:\Projects\PMS-Software\backend\api\v1\settings.py", line 274, in get_printer_settings
+    GET /api/v1/settings/printer | Path: /api/v1/settings/printer
+NoneType: None
+2026-08-30 16:01:52,984 - pms - ERROR - Failed to list printers: No module named 'win32print'
+2026-08-30 16:01:53,007 - pms - ERROR - Unhandled Exception caught: 1 validation error:
+  {'type': 'missing', 'loc': ('response', 'ShowAddress'), 'msg': 'Field required', 'input': <models.PrinterSettings object at 0x000001F5C21C0C00>}
+
+  File "E:\Projects\PMS-Software\backend\api\v1\settings.py", line 274, in get_printer_settings
+    GET /api/v1/settings/printer | Path: /api/v1/settings/printer
+NoneType: None
+2026-08-30 16:01:53,016 - pms - ERROR - Failed to list printers: No module named 'win32print'
+2026-08-30 16:01:53,038 - pms - ERROR - Unhandled Exception caught: 1 validation error:
+  {'type': 'missing', 'loc': ('response', 'ShowAddress'), 'msg': 'Field required', 'input': <models.PrinterSettings object at 0x000001F5C21C38A0>}
+
+  File "E:\Projects\PMS-Software\backend\api\v1\settings.py", line 274, in get_printer_settings
+    GET /api/v1/settings/printer | Path: /api/v1/settings/printer
+NoneType: None
+2026-08-30 16:03:51,619 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-30 16:03:51,656 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-30 16:03:54,977 - pms - ERROR - Failed to list printers: No module named 'win32print'
+2026-08-30 16:03:55,007 - pms - ERROR - Failed to list printers: No module named 'win32print'
+2026-08-30 16:03:56,442 - pms - ERROR - Failed to list printers: No module named 'win32print'
+2026-08-30 16:03:56,475 - pms - ERROR - Failed to list printers: No module named 'win32print'
+2026-08-30 16:04:02,870 - pms - ERROR - Failed to list printers: No module named 'win32print'
+2026-08-30 16:04:02,891 - pms - ERROR - Failed to list printers: No module named 'win32print'
+2026-08-30 16:04:07,570 - pms - ERROR - Failed to list printers: No module named 'win32print'
+2026-08-30 16:04:08,202 - pms - ERROR - Failed to list printers: No module named 'win32print'
+2026-08-30 16:04:08,547 - pms - ERROR - Failed to list printers: No module named 'win32print'
+2026-08-30 16:04:08,723 - pms - ERROR - Failed to list printers: No module named 'win32print'
+2026-08-30 16:06:44,900 - pms - ERROR - Failed to list printers: No module named 'win32print'
+2026-08-30 16:06:44,929 - pms - ERROR - Failed to list printers: No module named 'win32print'
+2026-08-30 16:06:46,634 - pms - ERROR - Failed to list printers: No module named 'win32print'
+2026-08-30 16:06:46,657 - pms - ERROR - Failed to list printers: No module named 'win32print'
+2026-08-30 16:08:14,595 - pms - ERROR - Failed to list printers: No module named 'win32print'
+2026-08-30 16:08:14,628 - pms - ERROR - Failed to list printers: No module named 'win32print'
+2026-08-30 16:08:16,228 - pms - ERROR - PMSException caught: Invalid authentication credentials (status: 401) | Path: /api/v1/settings/printer/test
+2026-08-30 16:08:18,117 - pms - ERROR - PMSException caught: Invalid authentication credentials (status: 401) | Path: /api/v1/settings/printer/test-drawer
+2026-08-30 16:08:21,270 - pms - ERROR - Failed to list printers: No module named 'win32print'
+2026-08-30 16:08:21,318 - pms - ERROR - Failed to list printers: No module named 'win32print'
+2026-08-30 16:08:39,528 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-30 16:08:39,581 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-30 16:08:42,231 - pms - ERROR - Failed to list printers: No module named 'win32print'
+2026-08-30 16:08:42,265 - pms - ERROR - Failed to list printers: No module named 'win32print'
+2026-08-30 16:08:44,835 - pms - ERROR - Failed to list printers: No module named 'win32print'
+2026-08-30 16:08:44,862 - pms - ERROR - Failed to list printers: No module named 'win32print'
+2026-08-30 16:08:46,229 - pms - ERROR - PMSException caught: Invalid authentication credentials (status: 401) | Path: /api/v1/settings/printer/test
+2026-08-30 16:08:51,189 - pms - ERROR - PMSException caught: Invalid authentication credentials (status: 401) | Path: /api/v1/settings/printer/test-drawer
+2026-08-30 16:12:33,520 - pms - ERROR - Failed to list printers: No module named 'win32print'
+2026-08-30 16:12:33,548 - pms - ERROR - Failed to list printers: No module named 'win32print'
+2026-08-30 16:12:56,437 - pms - ERROR - Failed to list printers: No module named 'win32print'
+2026-08-30 16:12:56,459 - pms - ERROR - Failed to list printers: No module named 'win32print'

@@ -170,12 +170,12 @@ export function Sidebar() {
                     href={item.href}
                     className={cn(
                       "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 group",
-                      isActive 
+                      (isActive || isSectionActive) 
                         ? "bg-slate-200 text-slate-900 shadow-sm" 
                         : "text-slate-400 hover:text-slate-200 hover:bg-white/5"
                     )}
                   >
-                    <item.icon className={cn("w-5 h-5", isActive ? "text-slate-900" : "text-slate-500 group-hover:text-slate-400")} />
+                    <item.icon className={cn("w-5 h-5", (isActive || isSectionActive) ? "text-slate-900" : "text-slate-500 group-hover:text-slate-400")} />
                     {item.title}
                   </Link>
                 )}

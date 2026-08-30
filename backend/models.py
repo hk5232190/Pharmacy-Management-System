@@ -389,6 +389,11 @@ class PrinterSettings(Base):
     ShowPharmacyName = Column(Boolean, default=True, nullable=False)
     ShowAddress = Column(Boolean, default=True, nullable=False)
     ReceiptFooterMessage = Column(Text, nullable=True, default="Thank you for your visit! Wishing you good health.")
+    AutoCutPaper = Column(Boolean, default=True, nullable=False)
+    OpenCashDrawer = Column(Boolean, default=True, nullable=False)
+    PrintBatchAndExpiry = Column(Boolean, default=True, nullable=False)
+    PrintLicenseAndNtn = Column(Boolean, default=False, nullable=False)
+    PrintDoctorAndPatient = Column(Boolean, default=False, nullable=False)
 
 class SystemPreferences(Base):
     __tablename__ = "system_preferences"

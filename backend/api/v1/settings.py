@@ -3,11 +3,12 @@ from sqlalchemy.orm import Session
 from pathlib import Path
 from typing import Any
 import os
+import sys
 import shutil
 import uuid
 
-from api.deps import get_db, get_current_admin_user
-from models import PharmacyProfile, BillingSettings, InventorySettings, PrinterSettings, SystemPreferences, GeneralSettings
+from api.deps import get_db, get_current_admin_user, get_current_user
+from models import PharmacyProfile, BillingSettings, InventorySettings, PrinterSettings, SystemPreferences, GeneralSettings, AuditLog
 from schemas.settings import PharmacyProfileResponse, PharmacyProfileUpdate, BillingSettingsResponse, BillingSettingsUpdate, InventorySettingsResponse, InventorySettingsUpdate, PrinterSettingsResponse, PrinterSettingsUpdate, SystemPreferencesResponse, SystemPreferencesUpdate, GeneralSettingsResponse, GeneralSettingsUpdate
 from core.logger import logger
 
@@ -304,19 +305,123 @@ def update_printer_settings(
     db.refresh(settings)
     return settings
 
-@router.post("/printer/test")
-def test_printer_connection(db: Session = Depends(get_db)) -> Any:
+@router.get("/printer/list")
+def list_printers() -> Any:
     """
-    Endpoint to test ESC/POS printing (simulated for now, would connect to hardware in prod).
+    Dynamically fetch the names of all installed OS printers.
+    Uses win32print on Windows, returns empty/mock on other platforms.
+    """
+    printers = []
+    if sys.platform == 'win32':
+        try:
+            import win32print
+            flags = win32print.PRINTER_ENUM_LOCAL | win32print.PRINTER_ENUM_CONNECTIONS
+            printer_info = win32print.EnumPrinters(flags, None, 1)
+            printers = [p[2] for p in printer_info]
+        except Exception as e:
+            logger.error(f"Failed to list printers: {e}")
+    return {"success": True, "data": printers}
+
+@router.post("/printer/test")
+def test_printer_connection(
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+) -> Any:
+    """
+    Endpoint to test ESC/POS printing (connects to hardware).
     """
     settings = db.query(PrinterSettings).first()
     if not settings:
         raise HTTPException(status_code=404, detail="Printer settings not configured.")
         
+    test_text = b"\x1B\x40Test Print Successful\n\n\n\x1D\x56\x41\x00"
+    
+    if settings.ConnectionPort.startswith("COM") or settings.ConnectionPort.startswith("LPT"):
+        try:
+            with open(settings.ConnectionPort, "wb") as f:
+                f.write(test_text)
+        except Exception as e:
+            logger.error(f"Failed direct port print: {e}")
+    elif sys.platform == 'win32' and settings.SelectedPrinterName:
+        try:
+            import win32print
+            hprinter = win32print.OpenPrinter(settings.SelectedPrinterName)
+            try:
+                win32print.StartDocPrinter(hprinter, 1, ("Test Print", None, "RAW"))
+                win32print.StartPagePrinter(hprinter)
+                win32print.WritePrinter(hprinter, test_text)
+                win32print.EndPagePrinter(hprinter)
+                win32print.EndDocPrinter(hprinter)
+            finally:
+                win32print.ClosePrinter(hprinter)
+        except Exception as e:
+            logger.error(f"Failed spooler print: {e}")
+            raise HTTPException(status_code=500, detail=str(e))
+            
+    audit = AuditLog(
+        UserId=current_user.UserId,
+        Action="Test Printer",
+        Description=f"Sent test print to {settings.ConnectionPort}/{settings.SelectedPrinterName}"
+    )
+    db.add(audit)
+    db.commit()
+        
     return {
         "status": "success",
         "message": f"Successfully sent test payload to {settings.SelectedPrinterName or 'Default Printer'} on {settings.ConnectionPort}"
     }
+
+@router.post("/printer/test-drawer")
+def test_cash_drawer(
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+) -> Any:
+    """
+    Test Cash Drawer pulse using binary hex parser.
+    """
+    settings = db.query(PrinterSettings).first()
+    if not settings or not settings.CustomRawByteSequence:
+        raise HTTPException(status_code=400, detail="Drawer byte sequence not configured.")
+        
+    # Clean string: remove \x, 0x, spaces
+    hex_str = settings.CustomRawByteSequence.replace('\\x', '').replace('0x', '').replace(' ', '')
+    try:
+        raw_bytes = bytes.fromhex(hex_str)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid hex sequence for drawer kick.")
+        
+    if settings.ConnectionPort.startswith("COM") or settings.ConnectionPort.startswith("LPT"):
+        try:
+            with open(settings.ConnectionPort, "wb") as f:
+                f.write(raw_bytes)
+        except Exception as e:
+            logger.error(f"Failed direct port drawer kick: {e}")
+    elif sys.platform == 'win32' and settings.SelectedPrinterName:
+        try:
+            import win32print
+            hprinter = win32print.OpenPrinter(settings.SelectedPrinterName)
+            try:
+                win32print.StartDocPrinter(hprinter, 1, ("Drawer Kick", None, "RAW"))
+                win32print.StartPagePrinter(hprinter)
+                win32print.WritePrinter(hprinter, raw_bytes)
+                win32print.EndPagePrinter(hprinter)
+                win32print.EndDocPrinter(hprinter)
+            finally:
+                win32print.ClosePrinter(hprinter)
+        except Exception as e:
+            logger.error(f"Failed spooler drawer kick: {e}")
+            raise HTTPException(status_code=500, detail=str(e))
+            
+    # Audit log
+    audit = AuditLog(
+        UserId=current_user.UserId,
+        Action="Test Cash Drawer",
+        Description=f"Sent drawer kick sequence to {settings.ConnectionPort}/{settings.SelectedPrinterName}"
+    )
+    db.add(audit)
+    db.commit()
+    
+    return {"status": "success", "message": "Cash drawer test signal sent."}
 
 @router.get("/appearance", response_model=SystemPreferencesResponse)
 def get_system_preferences(db: Session = Depends(get_db)) -> Any:

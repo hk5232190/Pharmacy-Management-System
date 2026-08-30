@@ -86,6 +86,11 @@ class PrinterSettingsBase(BaseModel):
     ShowPharmacyName: bool
     ShowAddress: bool
     ReceiptFooterMessage: Optional[str] = None
+    AutoCutPaper: bool = True
+    OpenCashDrawer: bool = True
+    PrintBatchAndExpiry: bool = True
+    PrintLicenseAndNtn: bool = False
+    PrintDoctorAndPatient: bool = False
 
 class PrinterSettingsUpdate(PrinterSettingsBase):
     pass

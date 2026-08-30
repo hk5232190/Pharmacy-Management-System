@@ -19,3 +19,4 @@ tzlocal
 tzdata
 plyer
 pyyaml
+pypiwin32; sys_platform == 'win32'
