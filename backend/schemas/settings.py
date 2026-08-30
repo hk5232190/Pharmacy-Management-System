@@ -64,6 +64,8 @@ class InventorySettingsBase(BaseModel):
     DefaultUnit: str
     AutoGenerateBarcode: bool
     PreventSaleOfExpired: bool = True
+    EnableFefo: bool = True
+    DefaultProfitMargin: float = 0.00
 
 class InventorySettingsUpdate(InventorySettingsBase):
     pass

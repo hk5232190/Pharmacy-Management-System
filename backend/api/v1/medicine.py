@@ -8,7 +8,7 @@ import random
 import csv
 import io
 
-from models import Medicine, Category, Company, StockBatch, SaleItem, PurchaseItem
+from models import Medicine, Category, Company, StockBatch, SaleItem, PurchaseItem, InventorySettings
 from schemas.medicine import MedicineCreate, MedicineUpdate, MedicineResponse
 from schemas.base import BaseResponse
 from api.deps import get_current_user, get_db
@@ -78,10 +78,28 @@ def create_medicine(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
-    # Auto-generate barcode if none provided
-    if not medicine_in.Barcode:
+    # Fetch Inventory Settings for Auto-Barcode preference
+    inv_settings = db.query(InventorySettings).first()
+    auto_generate = inv_settings.AutoGenerateBarcode if inv_settings else True
+
+    # Auto-generate EAN-13 barcode if none provided and setting is enabled
+    if not medicine_in.Barcode and auto_generate:
         while True:
-            generated_barcode = str(random.randint(1000000000000, 9999999999999))
+            # Generate 12 random digits for EAN-13
+            base = str(random.randint(100000000000, 999999999999))
+            
+            # Calculate EAN-13 check digit
+            total = 0
+            for i, char in enumerate(base):
+                if i % 2 == 0:
+                    total += int(char) * 1
+                else:
+                    total += int(char) * 3
+            check_digit = (10 - (total % 10)) % 10
+            
+            generated_barcode = base + str(check_digit)
+            
+            # Uniqueness check
             existing = db.query(Medicine).filter(Medicine.Barcode == generated_barcode).first()
             if not existing:
                 medicine_in.Barcode = generated_barcode

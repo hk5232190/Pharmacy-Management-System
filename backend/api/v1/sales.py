@@ -9,7 +9,7 @@ def utc_to_local_str(dt_obj):
         return ""
     return dt_obj.replace(tzinfo=timezone.utc).astimezone().strftime('%Y-%m-%d %I:%M %p')
 
-from models import Sale, Medicine, StockBatch, Customer, StockAdjustment, SaleReturn, BillingSettings
+from models import Sale, Medicine, StockBatch, Customer, StockAdjustment, SaleReturn, BillingSettings, InventorySettings
 from schemas.base import BaseResponse
 from schemas.sales import SaleInitResponse, ProductSearchResponse, ProductSearchBatch, SaleReturnHistoryItem, SaleReturnHistoryPagedResponse
 from api.deps import get_current_user, get_db
@@ -88,13 +88,25 @@ def search_product(
             )
         ).all()
 
+        
+        inv_settings = db.query(InventorySettings).first()
+        enable_fefo = inv_settings.EnableFefo if inv_settings else True
+
         results = []
         for med in medicines:
-            # Get batches with available stock, sorted by ExpiryDate ascending (FEFO)
-            batches = db.query(StockBatch).filter(
+            # Get batches with available stock
+            batch_query = db.query(StockBatch).filter(
                 StockBatch.MedicineId == med.MedicineId,
                 StockBatch.Quantity > 0
-            ).order_by(StockBatch.ExpiryDate.asc()).all()
+            )
+            
+            if enable_fefo:
+                # FEFO Query Guardrail: Ensure Quantity > 0 is filtered before order_by
+                batch_query = batch_query.order_by(StockBatch.ExpiryDate.asc())
+            else:
+                batch_query = batch_query.order_by(StockBatch.ReceivedDate.desc())
+                
+            batches = batch_query.all()
 
             if not batches:
                 continue # Skip medicines with no active stock
@@ -138,6 +150,11 @@ def complete_sale(
             raise ValidationError("Cart is empty")
 
         current_date = dt.date.today()
+        
+        inv_settings = db.query(InventorySettings).first()
+        prevent_expired = inv_settings.PreventSaleOfExpired if inv_settings else True
+        allow_negative = inv_settings.AllowNegativeStock if inv_settings else False
+        enable_fefo = inv_settings.EnableFefo if inv_settings else True
 
         # Create Sale Record
         billing_settings = db.query(BillingSettings).with_for_update().first()
@@ -170,26 +187,54 @@ def complete_sale(
         for item in sale_data.Items:
             remaining_qty_to_fulfill = item.Quantity
             
-            # Strict FEFO Deduction & Expiration Check
-            batches = db.query(StockBatch).filter(
-                StockBatch.MedicineId == item.MedicineId,
-                StockBatch.ExpiryDate > current_date, # Strictly block expired
-                StockBatch.Quantity > 0
-            ).order_by(StockBatch.ExpiryDate.asc()).with_for_update().all()
+            batch_query = db.query(StockBatch).filter(StockBatch.MedicineId == item.MedicineId)
+            
+            if prevent_expired:
+                batch_query = batch_query.filter(StockBatch.ExpiryDate > current_date)
+                
+            if not allow_negative:
+                batch_query = batch_query.filter(StockBatch.Quantity > 0)
+                
+            if enable_fefo:
+                batch_query = batch_query.order_by(StockBatch.ExpiryDate.asc())
+            else:
+                batch_query = batch_query.order_by(StockBatch.ReceivedDate.desc())
+                
+            batches = batch_query.with_for_update().all()
 
             if not batches:
-                raise ValidationError(f"No valid, unexpired stock available for medicine ID {item.MedicineId}")
+                if allow_negative:
+                    dummy_batch = StockBatch(
+                        MedicineId=item.MedicineId,
+                        BatchCode="NEG-STOCK",
+                        Quantity=0,
+                        CostPrice=0,
+                        SellingPrice=item.UnitPrice,
+                        ExpiryDate=current_date + dt.timedelta(days=365)
+                    )
+                    db.add(dummy_batch)
+                    db.flush()
+                    batches = [dummy_batch]
+                else:
+                    raise ValidationError(f"No valid stock available for medicine ID {item.MedicineId}")
 
             total_available = sum(b.Quantity for b in batches)
-            if total_available < remaining_qty_to_fulfill:
-                raise ValidationError(f"Insufficient unexpired stock for medicine ID {item.MedicineId}. Requested {item.Quantity}, available {total_available}.")
+            if not allow_negative and total_available < remaining_qty_to_fulfill:
+                raise ValidationError(f"Insufficient stock for medicine ID {item.MedicineId}. Requested {item.Quantity}, available {total_available}.")
 
-            # Cascade FEFO
-            for batch in batches:
+            # Cascade Deduction
+            for idx, batch in enumerate(batches):
                 if remaining_qty_to_fulfill <= 0:
                     break
                 
-                qty_from_this_batch = min(batch.Quantity, remaining_qty_to_fulfill)
+                if allow_negative and idx == len(batches) - 1:
+                    # Dump all remaining negative quantity into the last available batch
+                    qty_from_this_batch = remaining_qty_to_fulfill
+                else:
+                    # Take up to what is available
+                    qty_from_this_batch = min(max(batch.Quantity, 0), remaining_qty_to_fulfill)
+                    if qty_from_this_batch == 0 and allow_negative:
+                        continue
                 
                 # Deduct stock
                 batch.Quantity -= qty_from_this_batch

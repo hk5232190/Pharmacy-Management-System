@@ -101,7 +101,6 @@ class StockBatch(Base):
     sales_items = relationship("SaleItem", back_populates="batch")
 
     __table_args__ = (
-        CheckConstraint('Quantity >= 0', name='check_quantity_positive'),
         Index('IX_StockBatches_Medicine_Expiry', 'MedicineId', 'ExpiryDate', 'Quantity'),
     )
 
@@ -374,6 +373,8 @@ class InventorySettings(Base):
     DefaultUnit = Column(String(50), nullable=False, default="Box")
     AutoGenerateBarcode = Column(Boolean, default=True, nullable=False)
     PreventSaleOfExpired = Column(Boolean, default=True, nullable=False)
+    EnableFefo = Column(Boolean, default=True, nullable=False)
+    DefaultProfitMargin = Column(Numeric(5, 2), default=0.00, nullable=False)
 
 class PrinterSettings(Base):
     __tablename__ = "printer_settings"

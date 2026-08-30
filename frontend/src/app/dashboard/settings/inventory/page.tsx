@@ -18,6 +18,8 @@ interface InventorySettings {
   DefaultUnit: string;
   AutoGenerateBarcode: boolean;
   PreventSaleOfExpired: boolean;
+  EnableFefo: boolean;
+  DefaultProfitMargin: number;
 }
 
 const DEFAULT_SETTINGS: InventorySettings = {
@@ -27,6 +29,8 @@ const DEFAULT_SETTINGS: InventorySettings = {
   DefaultUnit: "Box",
   AutoGenerateBarcode: true,
   PreventSaleOfExpired: true,
+  EnableFefo: true,
+  DefaultProfitMargin: 0.0,
 };
 
 export default function InventorySettingsPage() {
@@ -91,7 +95,7 @@ export default function InventorySettingsPage() {
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pb-20">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pb-20 items-start lg:pr-6">
       {/* Left Column: Forms */}
       <div className="lg:col-span-2 space-y-6">
         
@@ -131,6 +135,51 @@ export default function InventorySettingsPage() {
           </CardContent>
         </Card>
 
+        {/* Stock & Dispensing Safeguards */}
+        <Card className="border-slate-200 dark:border-slate-800 shadow-sm">
+          <CardHeader className="pb-4 border-b">
+            <CardTitle className="text-lg font-bold flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-red-500" /> Stock & Dispensing Safeguards
+            </CardTitle>
+            <CardDescription>Strict compliance rules and stock flow enforcements at POS.</CardDescription>
+          </CardHeader>
+          <CardContent className="p-6 space-y-4">
+            
+            <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900/50 rounded-lg border">
+              <div className="flex items-start gap-3">
+                <Box className="w-5 h-5 mt-0.5 text-red-400" />
+                <div>
+                  <Label className="text-sm font-semibold">Block Sale of Expired Medicines</Label>
+                  <p className="text-xs text-slate-500">Strictly prevent POS checkout for any expired stock batch.</p>
+                </div>
+              </div>
+              <Switch checked={settings.PreventSaleOfExpired} onCheckedChange={(c) => handleSwitchChange("PreventSaleOfExpired", c)} />
+            </div>
+
+            <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900/50 rounded-lg border">
+              <div className="flex items-start gap-3">
+                <RefreshCw className="w-5 h-5 mt-0.5 text-blue-400" />
+                <div>
+                  <Label className="text-sm font-semibold">Allow Negative Inventory / Over-Selling</Label>
+                  <p className="text-xs text-slate-500">Permit billing even if system stock shows zero or negative.</p>
+                </div>
+              </div>
+              <Switch checked={settings.AllowNegativeStock} onCheckedChange={(c) => handleSwitchChange("AllowNegativeStock", c)} />
+            </div>
+
+            <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900/50 rounded-lg border">
+              <div className="flex items-start gap-3">
+                <RefreshCw className="w-5 h-5 mt-0.5 text-green-400" />
+                <div>
+                  <Label className="text-sm font-semibold">Enforce FEFO Batch Selection</Label>
+                  <p className="text-xs text-slate-500">Auto-select batches with nearest expiry dates during POS checkout.</p>
+                </div>
+              </div>
+              <Switch checked={settings.EnableFefo} onCheckedChange={(c) => handleSwitchChange("EnableFefo", c)} />
+            </div>
+
+          </CardContent>
+        </Card>
 
         {/* Product Defaults */}
         <Card className="border-slate-200 dark:border-slate-800 shadow-sm">
@@ -152,13 +201,20 @@ export default function InventorySettingsPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Box">Box</SelectItem>
-                  <SelectItem value="Strips">Strips</SelectItem>
-                  <SelectItem value="Tablets">Tablets</SelectItem>
-                  <SelectItem value="Syrup">Syrup (Bottle)</SelectItem>
-                  <SelectItem value="Injection">Injection</SelectItem>
-                  <SelectItem value="Cream">Cream / Tube</SelectItem>
+                  <SelectItem value="Strip">Strip</SelectItem>
+                  <SelectItem value="Tablet">Tablet</SelectItem>
+                  <SelectItem value="Bottle">Bottle</SelectItem>
+                  <SelectItem value="Vial">Vial</SelectItem>
+                  <SelectItem value="Sachet">Sachet</SelectItem>
+                  <SelectItem value="Syrup">Syrup</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Default Retail Profit Margin (%)</Label>
+              <Input type="number" name="DefaultProfitMargin" value={settings.DefaultProfitMargin} onChange={handleChange} step="0.1" />
+              <p className="text-xs text-muted-foreground">Auto-calculates sell price on purchase entry.</p>
             </div>
 
             <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900/50 rounded-lg border">
@@ -197,6 +253,24 @@ export default function InventorySettingsPage() {
                 <li className="flex justify-between">
                   <span className="text-slate-600 dark:text-slate-400">Expiry Alert</span>
                   <span className="font-semibold text-amber-600 dark:text-amber-400">&lt; {settings.ExpiryAlertDays} Days</span>
+                </li>
+                <li className="flex justify-between">
+                  <span className="text-slate-600 dark:text-slate-400">Expired Sale Block</span>
+                  <span className="font-semibold text-slate-800 dark:text-slate-200">
+                    {settings.PreventSaleOfExpired ? "Enabled" : "Disabled"}
+                  </span>
+                </li>
+                <li className="flex justify-between">
+                  <span className="text-slate-600 dark:text-slate-400">Negative Stock</span>
+                  <span className="font-semibold text-slate-800 dark:text-slate-200">
+                    {settings.AllowNegativeStock ? "Allowed" : "Blocked"}
+                  </span>
+                </li>
+                <li className="flex justify-between">
+                  <span className="text-slate-600 dark:text-slate-400">FEFO Sorting</span>
+                  <span className="font-semibold text-slate-800 dark:text-slate-200">
+                    {settings.EnableFefo ? "Active" : "Inactive"}
+                  </span>
                 </li>
               </ul>
             </div>

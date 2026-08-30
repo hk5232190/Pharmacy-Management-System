@@ -259,13 +259,9 @@ def update_inventory_settings(
     settings = db.query(InventorySettings).first()
     if not settings:
         settings = InventorySettings(**settings_in.model_dump())
-        # Enforce SRS Module 5 constraint strictly
-        settings.PreventSaleOfExpired = True
         db.add(settings)
     else:
         update_data = settings_in.model_dump(exclude_unset=True)
-        # Enforce SRS Module 5 constraint strictly overriding any API manipulation
-        update_data['PreventSaleOfExpired'] = True
         
         for field, value in update_data.items():
             setattr(settings, field, value)
