@@ -407,6 +407,11 @@ class SystemPreferences(Base):
     EnableAudioAlerts = Column(Boolean, default=True, nullable=False)
     EnableToastNotifications = Column(Boolean, default=True, nullable=False)
     Language = Column(String(50), nullable=False, default="English")
+    AlertVolume = Column(Integer, default=50, nullable=False)
+    AlertTriggerSale = Column(Boolean, default=True, nullable=False)
+    AlertTriggerLowStock = Column(Boolean, default=True, nullable=False)
+    AlertTriggerNearExpiry = Column(Boolean, default=True, nullable=False)
+    AlertTriggerErrors = Column(Boolean, default=True, nullable=False)
 
 class SecuritySettings(Base):
     __tablename__ = "security_settings"

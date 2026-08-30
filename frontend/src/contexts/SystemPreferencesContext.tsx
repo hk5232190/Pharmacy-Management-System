@@ -12,6 +12,11 @@ interface SystemPreferences {
   EnableAudioAlerts: boolean;
   EnableToastNotifications: boolean;
   Language: string;
+  AlertVolume: number;
+  AlertTriggerSale: boolean;
+  AlertTriggerLowStock: boolean;
+  AlertTriggerNearExpiry: boolean;
+  AlertTriggerErrors: boolean;
 }
 
 const DEFAULT_SETTINGS: SystemPreferences = {
@@ -23,6 +28,11 @@ const DEFAULT_SETTINGS: SystemPreferences = {
   EnableAudioAlerts: true,
   EnableToastNotifications: true,
   Language: "English",
+  AlertVolume: 50,
+  AlertTriggerSale: true,
+  AlertTriggerLowStock: true,
+  AlertTriggerNearExpiry: true,
+  AlertTriggerErrors: true,
 };
 
 interface SystemPreferencesContextType {
@@ -33,6 +43,7 @@ interface SystemPreferencesContextType {
   formatNumber: (value: number | null | undefined) => string;
   currencySymbol: string;
   formatCurrency: (value: number | null | undefined) => string;
+  triggerNotification: (type: "success" | "warning" | "error", triggerKey: keyof SystemPreferences, message: string) => void;
 }
 
 const SystemPreferencesContext = createContext<SystemPreferencesContextType>({
@@ -43,12 +54,18 @@ const SystemPreferencesContext = createContext<SystemPreferencesContextType>({
   formatNumber: () => "",
   currencySymbol: "Rs",
   formatCurrency: () => "",
+  triggerNotification: () => {},
 });
+
+import { toast } from "sonner";
+import { useAudio } from "@/hooks/use-audio";
 
 export function SystemPreferencesProvider({ children }: { children: ReactNode }) {
   const [preferences, setPreferences] = useState<SystemPreferences>(DEFAULT_SETTINGS);
   const [currencySymbol, setCurrencySymbol] = useState<string>("Rs");
   const [isLoaded, setIsLoaded] = useState(false);
+  
+  const { playTone } = useAudio();
 
   const fetchPreferences = async () => {
     try {
@@ -130,6 +147,19 @@ export function SystemPreferencesProvider({ children }: { children: ReactNode })
     return `${currencySymbol} ${formatNumber(value)}`;
   };
 
+  const triggerNotification = (type: "success" | "warning" | "error", triggerKey: keyof SystemPreferences, message: string) => {
+    // 1. Toast logic
+    if (preferences.EnableToastNotifications) {
+      if (type === "success") toast.success(message);
+      else if (type === "warning") toast.warning(message);
+      else if (type === "error") toast.error(message);
+    }
+    
+    // 2. Audio logic
+    const isTriggerEnabled = preferences[triggerKey] as boolean;
+    playTone(type, preferences.AlertVolume, preferences.EnableAudioAlerts && isTriggerEnabled);
+  };
+
   return (
     <SystemPreferencesContext.Provider value={{
       preferences,
@@ -138,7 +168,8 @@ export function SystemPreferencesProvider({ children }: { children: ReactNode })
       formatTime,
       formatNumber,
       currencySymbol,
-      formatCurrency
+      formatCurrency,
+      triggerNotification
     }}>
       {children}
     </SystemPreferencesContext.Provider>

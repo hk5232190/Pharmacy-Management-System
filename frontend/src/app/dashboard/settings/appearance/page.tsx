@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { Save, RefreshCw, Volume2, Bell, LayoutDashboard } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useSystemPreferences } from "@/contexts/SystemPreferencesContext";
+import { useAudio } from "@/hooks/use-audio";
 
 interface SystemPreferences {
   SettingsId?: number;
@@ -21,6 +22,11 @@ interface SystemPreferences {
   EnableAudioAlerts: boolean;
   EnableToastNotifications: boolean;
   Language: string;
+  AlertVolume: number;
+  AlertTriggerSale: boolean;
+  AlertTriggerLowStock: boolean;
+  AlertTriggerNearExpiry: boolean;
+  AlertTriggerErrors: boolean;
 }
 
 const DEFAULT_SETTINGS: SystemPreferences = {
@@ -32,6 +38,11 @@ const DEFAULT_SETTINGS: SystemPreferences = {
   EnableAudioAlerts: true,
   EnableToastNotifications: true,
   Language: "English",
+  AlertVolume: 50,
+  AlertTriggerSale: true,
+  AlertTriggerLowStock: true,
+  AlertTriggerNearExpiry: true,
+  AlertTriggerErrors: true,
 };
 
 export default function AppearanceSettingsPage() {
@@ -40,6 +51,7 @@ export default function AppearanceSettingsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const { setTheme } = useTheme();
   const { refreshPreferences } = useSystemPreferences();
+  const { playTone } = useAudio();
 
   useEffect(() => {
     fetchSettings();
@@ -64,13 +76,17 @@ export default function AppearanceSettingsPage() {
   const handleSave = async () => {
     setIsSaving(true);
     try {
+      const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token") || "";
       const res = await fetch("http://127.0.0.1:8000/api/v1/settings/appearance", {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
         body: JSON.stringify(settings)
       });
       if (res.ok) {
-        toast.success("System Preferences updated successfully!");
+        toast.success("Notification settings updated successfully!");
         await refreshPreferences(); // Globally update the entire app instantly
       } else {
         toast.error("Failed to update system preferences.");
@@ -109,21 +125,47 @@ export default function AppearanceSettingsPage() {
         <Card className="border-slate-200 dark:border-slate-800 shadow-sm">
           <CardHeader className="pb-4 border-b">
             <CardTitle className="text-lg font-bold flex items-center gap-2">
-              <Bell className="w-5 h-5 text-indigo-600" /> Notification Behavior
+              <Bell className="w-5 h-5 text-indigo-600" /> Notifications & Audio Alerts
             </CardTitle>
-            <CardDescription>Control how the system grabs your attention.</CardDescription>
+            <CardDescription>Configure audio cues, toast banners, and event trigger alerts.</CardDescription>
           </CardHeader>
           <CardContent className="p-6 space-y-4">
             
-            <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900/50 rounded-lg border">
-              <div className="flex items-start gap-3">
-                <Volume2 className="w-5 h-5 mt-0.5 text-slate-400" />
-                <div>
-                  <Label className="text-sm font-semibold">Enable Audio Alerts</Label>
-                  <p className="text-xs text-slate-500">Play a sound when an error occurs or a sale is successfully processed.</p>
+            <div className="flex flex-col gap-4 p-4 bg-slate-50 dark:bg-slate-900/50 rounded-lg border">
+              <div className="flex items-start justify-between">
+                <div className="flex items-start gap-3">
+                  <Volume2 className="w-5 h-5 mt-0.5 text-slate-400" />
+                  <div>
+                    <Label className="text-sm font-semibold">Enable Audio Alerts</Label>
+                    <p className="text-xs text-slate-500">Play a sound when an error occurs or a sale is successfully processed.</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => playTone('success', settings.AlertVolume, settings.EnableAudioAlerts)}
+                    disabled={!settings.EnableAudioAlerts}
+                  >
+                    Play Test Sound
+                  </Button>
+                  <Switch checked={settings.EnableAudioAlerts} onCheckedChange={(c) => handleSwitchChange("EnableAudioAlerts", c)} />
                 </div>
               </div>
-              <Switch checked={settings.EnableAudioAlerts} onCheckedChange={(c) => handleSwitchChange("EnableAudioAlerts", c)} />
+
+              <div className="mt-2 ml-8 pr-4">
+                <div className="flex justify-between items-center mb-2">
+                  <Label className="text-sm text-slate-600 dark:text-slate-400">Alert Volume: {settings.AlertVolume}%</Label>
+                </div>
+                <input 
+                  type="range" 
+                  min="0" max="100" 
+                  value={settings.AlertVolume} 
+                  onChange={(e) => setSettings({ ...settings, AlertVolume: parseInt(e.target.value) })}
+                  className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer"
+                  disabled={!settings.EnableAudioAlerts}
+                />
+              </div>
             </div>
 
             <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900/50 rounded-lg border">
@@ -135,6 +177,28 @@ export default function AppearanceSettingsPage() {
                 </div>
               </div>
               <Switch checked={settings.EnableToastNotifications} onCheckedChange={(c) => handleSwitchChange("EnableToastNotifications", c)} />
+            </div>
+
+            <div className="space-y-3 pt-4">
+              <h4 className="font-semibold text-slate-900 dark:text-white border-b pb-1">Alert Triggers</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex items-center justify-between p-3 border rounded-lg">
+                  <Label className="text-sm font-medium">Sale Completed</Label>
+                  <Switch checked={settings.AlertTriggerSale} onCheckedChange={(c) => handleSwitchChange("AlertTriggerSale", c)} />
+                </div>
+                <div className="flex items-center justify-between p-3 border rounded-lg">
+                  <Label className="text-sm font-medium">Low Stock Warning</Label>
+                  <Switch checked={settings.AlertTriggerLowStock} onCheckedChange={(c) => handleSwitchChange("AlertTriggerLowStock", c)} />
+                </div>
+                <div className="flex items-center justify-between p-3 border rounded-lg">
+                  <Label className="text-sm font-medium">Near Expiry Alert</Label>
+                  <Switch checked={settings.AlertTriggerNearExpiry} onCheckedChange={(c) => handleSwitchChange("AlertTriggerNearExpiry", c)} />
+                </div>
+                <div className="flex items-center justify-between p-3 border rounded-lg">
+                  <Label className="text-sm font-medium">System Errors & Warnings</Label>
+                  <Switch checked={settings.AlertTriggerErrors} onCheckedChange={(c) => handleSwitchChange("AlertTriggerErrors", c)} />
+                </div>
+              </div>
             </div>
 
             <div className="pt-4 mt-2 border-t border-slate-100 dark:border-slate-800 flex justify-end items-center gap-4">

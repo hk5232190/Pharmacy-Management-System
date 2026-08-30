@@ -140,7 +140,7 @@ export default function InventoryManagementPage() {
 }
 
 function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTabChange }: { onRefresh: () => void, refreshState: "idle" | "loading" | "done", activeTab: string, onTabChange: (tab: string) => void }) {
-  const { formatCurrency, currencySymbol } = useSystemPreferences();
+  const { formatCurrency, currencySymbol, triggerNotification } = useSystemPreferences();
   const { profile } = useProfile();
   const router = useRouter();
   const [summary, setSummary] = useState<InventorySummary>({
@@ -578,13 +578,13 @@ function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTa
   }, [searchQuery, statusFilter]);
 
   const handleStockAdjustment = async () => {
-    if (!adjustData.BatchId || adjustData.BatchId <= 0) return toast.error("Please select a valid batch from the list");
-    if (!adjustData.Quantity || isNaN(Number(adjustData.Quantity)) || Number(adjustData.Quantity) <= 0) return toast.error("Enter a valid quantity > 0");
-    if (!adjustData.Reason) return toast.error("Please select a justification reason");
+    if (!adjustData.BatchId || adjustData.BatchId <= 0) return triggerNotification('warning', 'AlertTriggerErrors', "Please select a valid batch from the list");
+    if (!adjustData.Quantity || isNaN(Number(adjustData.Quantity)) || Number(adjustData.Quantity) <= 0) return triggerNotification('warning', 'AlertTriggerErrors', "Enter a valid quantity > 0");
+    if (!adjustData.Reason) return triggerNotification('warning', 'AlertTriggerErrors', "Please select a justification reason");
 
     const currentStock = stockList.find(b => b.BatchId === adjustData.BatchId)?.CurrentStock || 0;
     if (adjustData.Type === "Decrease" && Number(adjustData.Quantity) > currentStock) {
-        return toast.error(`Cannot deduct more than current available stock (${currentStock} units)`);
+        return triggerNotification('warning', 'AlertTriggerErrors', `Cannot deduct more than current available stock (${currentStock} units)`);
     }
 
     const finalReason = adjustData.Notes ? `[${adjustData.Reason}] ${adjustData.Notes}` : adjustData.Reason;
@@ -598,7 +598,7 @@ function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTa
       });
 
       if (res.success) {
-        toast.success(res.message);
+        triggerNotification('success', 'AlertTriggerSale', res.message);
         setIsAdjustModalOpen(false);
         setAdjustData({ BatchId: 0, Type: "Increase", Quantity: "", Reason: "", Notes: "" });
         setAdjustBatchLabel("");
@@ -612,10 +612,10 @@ function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTa
         }
         fetchData();
       } else {
-        toast.error(res.message || "Failed to adjust stock");
+        triggerNotification('error', 'AlertTriggerErrors', res.message || "Failed to adjust stock");
       }
     } catch (err: any) {
-      toast.error(err.response?.data?.detail || "An error occurred");
+      triggerNotification('error', 'AlertTriggerErrors', err.response?.data?.detail || "An error occurred");
     }
   };
 

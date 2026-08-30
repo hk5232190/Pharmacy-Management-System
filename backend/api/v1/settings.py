@@ -439,7 +439,8 @@ def get_system_preferences(db: Session = Depends(get_db)) -> Any:
 @router.put("/appearance", response_model=SystemPreferencesResponse)
 def update_system_preferences(
     settings_in: SystemPreferencesUpdate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
 ) -> Any:
     """
     Update the system appearance and preferences.
@@ -455,6 +456,9 @@ def update_system_preferences(
             
     db.commit()
     db.refresh(settings)
+    
+    logger.info(f"AUDIT: User {current_user.Username} updated System Notification & Appearance Settings.")
+    
     return settings
 
 @router.get("/general", response_model=GeneralSettingsResponse)

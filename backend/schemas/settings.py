@@ -107,9 +107,14 @@ class SystemPreferencesBase(BaseModel):
     TimeFormat: str
     NumberFormat: str
     StartupModule: str
-    EnableAudioAlerts: bool
-    EnableToastNotifications: bool
-    Language: str
+    EnableAudioAlerts: Optional[bool] = True
+    EnableToastNotifications: Optional[bool] = True
+    Language: Optional[str] = "English"
+    AlertVolume: Optional[int] = 50
+    AlertTriggerSale: Optional[bool] = True
+    AlertTriggerLowStock: Optional[bool] = True
+    AlertTriggerNearExpiry: Optional[bool] = True
+    AlertTriggerErrors: Optional[bool] = True
 
 class SystemPreferencesUpdate(SystemPreferencesBase):
     pass

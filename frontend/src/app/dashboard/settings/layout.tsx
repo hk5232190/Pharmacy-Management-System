@@ -3,7 +3,7 @@
 import { ReactNode, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Building2, ReceiptText, Package, Settings as SettingsIcon, Paintbrush, ShieldCheck, Info, Printer, Shield, RefreshCcw, Check, Database, User as UserIcon } from "lucide-react";
+import { Building2, ReceiptText, Package, Settings as SettingsIcon, Bell, ShieldCheck, Info, Printer, Shield, RefreshCcw, Check, Database, User as UserIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -29,7 +29,7 @@ export default function SettingsLayout({ children }: { children: ReactNode }) {
     { name: "Billing & POS Settings", href: "/dashboard/settings/billing", icon: ReceiptText },
     { name: "Inventory & Medicine Settings", href: "/dashboard/settings/inventory", icon: Package },
     { name: "Printer & Receipt Settings", href: "/dashboard/settings/printer", icon: Printer },
-    { name: "Appearance & System Preferences", href: "/dashboard/settings/appearance", icon: Paintbrush },
+    { name: "Notification Settings", href: "/dashboard/settings/appearance", icon: Bell },
     { name: "Security & Maintenance", href: "/dashboard/settings/security", icon: Shield },
     { name: "License Information", href: "/dashboard/settings/license", icon: ShieldCheck },
     { name: "About Software", href: "/dashboard/settings/about", icon: Info },

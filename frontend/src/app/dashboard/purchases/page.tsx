@@ -72,7 +72,7 @@ interface PurchaseHistory {
 }
 
 export default function PurchaseManagementPageWrapper() {
-  const { formatCurrency, currencySymbol } = useSystemPreferences();
+  const { formatCurrency, currencySymbol, triggerNotification } = useSystemPreferences();
   const [refreshKey, setRefreshKey] = useState(0);
   const [refreshState, setRefreshState] = useState<"idle" | "loading" | "done">("idle");
   
@@ -92,7 +92,7 @@ export default function PurchaseManagementPageWrapper() {
 }
 
 function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChange }: { onRefresh: () => void, refreshState: "idle" | "loading" | "done", activeTab: "invoice" | "history" | "returns", onTabChange: (tab: "invoice" | "history" | "returns") => void }) {
-  const { formatNumber, formatCurrency, currencySymbol } = useSystemPreferences();
+  const { formatNumber, formatCurrency, currencySymbol, triggerNotification } = useSystemPreferences();
   // --- Tabs ---
   // (activeTab is now managed by the wrapper so it survives a refresh reset)
 
@@ -345,7 +345,7 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
       if (!item.ExpiryDate) return toast.error(`Missing Expiry Date for ${item.MedicineName}`);
       
       if (Number(item.CostPrice) > Number(item.SellingPrice)) {
-        return toast.error(`Cost Price cannot exceed Sale Price for ${item.MedicineName} (SRS Rule)`);
+        return triggerNotification('warning', 'AlertTriggerErrors', `Cost Price cannot exceed Sale Price for ${item.MedicineName} (SRS Rule)`);
       }
       
       const expDate = new Date(item.ExpiryDate);
@@ -354,7 +354,7 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
       const minDate = new Date();
       minDate.setDate(minDate.getDate() + 30);
       if (expDate <= minDate) {
-        return toast.error(`Expiry Date for ${item.MedicineName} must be strictly > 30 days from today (SRS Rule)`);
+        return triggerNotification('warning', 'AlertTriggerErrors', `Expiry Date for ${item.MedicineName} must be strictly > 30 days from today (SRS Rule)`);
       }
     }
 
