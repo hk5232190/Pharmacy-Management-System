@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { apiClient } from "@/lib/api-client";
 import { useSystemPreferences } from "@/contexts/SystemPreferencesContext";
+import { useInventorySettings } from "@/contexts/InventorySettingsContext";
 
 // --- Types ---
 interface Supplier {
@@ -93,6 +94,7 @@ export default function PurchaseManagementPageWrapper() {
 
 function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChange }: { onRefresh: () => void, refreshState: "idle" | "loading" | "done", activeTab: "invoice" | "history" | "returns", onTabChange: (tab: "invoice" | "history" | "returns") => void }) {
   const { formatNumber, formatCurrency, currencySymbol, triggerNotification } = useSystemPreferences();
+  const { inventorySettings } = useInventorySettings();
   // --- Tabs ---
   // (activeTab is now managed by the wrapper so it survives a refresh reset)
 
@@ -290,6 +292,11 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
           const discountPct = Number(updated.Discount) || 0;
           const taxPct = Number(updated.TaxPercentage) || 0;
           
+          if (field === 'CostPrice') {
+            const margin = inventorySettings.DefaultProfitMargin || 0;
+            updated.SellingPrice = Number((cost * (1 + margin / 100)).toFixed(2));
+          }
+
           const base = (qty * cost);
           const discAmt = base * (discountPct / 100);
           const taxAmt = (base - discAmt) * (taxPct / 100);

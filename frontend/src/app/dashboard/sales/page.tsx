@@ -29,6 +29,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useSystemPreferences } from "@/contexts/SystemPreferencesContext";
+import { useInventorySettings } from "@/contexts/InventorySettingsContext";
 
 // --- Interfaces ---
 interface SaleInit {
@@ -92,6 +93,7 @@ export default function POSBillingPageWrapper() {
 
 function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { onRefresh: () => void, refreshState: "idle" | "loading" | "done", activeTab: "pos" | "history" | "return", onTabChange: (tab: "pos" | "history" | "return") => void }) {
   const { formatNumber, formatCurrency, currencySymbol } = useSystemPreferences();
+  const { inventorySettings } = useInventorySettings();
   // (activeTab is now managed by the wrapper so it survives a refresh reset)
   const [loadingInit, setLoadingInit] = useState(true);
   const [invoiceNo, setInvoiceNo] = useState("");
@@ -286,15 +288,30 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
   };
 
   const addToCart = (product: ProductSearchResponse) => {
-    // FEFO: Auto-pick the first batch (since backend sorts ExpiryDate ascending)
-    const bestBatch = product.Batches[0];
+    let bestBatch = product.Batches[0];
+
+    // Handle PreventSaleOfExpired
+    if (inventorySettings.PreventSaleOfExpired) {
+      const validBatches = product.Batches.filter(b => {
+        if (!b.ExpiryDate) return true;
+        const expiryDate = new Date(b.ExpiryDate);
+        return expiryDate > new Date();
+      });
+      if (validBatches.length === 0) {
+        toast.error(`Cannot add. All batches for ${product.MedicineName} are expired.`);
+        return;
+      }
+      bestBatch = inventorySettings.EnableFefo ? validBatches[0] : validBatches[validBatches.length - 1]; // very basic FEFO toggle
+    } else {
+      bestBatch = inventorySettings.EnableFefo ? product.Batches[0] : product.Batches[product.Batches.length - 1];
+    }
 
     const uniqueId = `${product.MedicineId}-${bestBatch.BatchId}`;
 
     setCart(prev => {
       const existing = prev.find(i => i.id === uniqueId);
       if (existing) {
-        if (existing.Quantity + 1 > existing.AvailableStock) {
+        if (existing.Quantity + 1 > existing.AvailableStock && !inventorySettings.AllowNegativeStock) {
           toast.error(`Cannot add more. Only ${existing.AvailableStock} in stock.`);
           return prev;
         }
@@ -352,7 +369,7 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
           }
 
           // enforce stock limit
-          if (field === 'Quantity' && value > item.AvailableStock) {
+          if (field === 'Quantity' && value > item.AvailableStock && !inventorySettings.AllowNegativeStock) {
             toast.error(`Only ${item.AvailableStock} units available in this batch.`);
             updated.Quantity = item.AvailableStock;
           }

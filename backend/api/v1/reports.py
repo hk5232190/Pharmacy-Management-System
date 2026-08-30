@@ -437,6 +437,10 @@ def fetch_inventory_report_data(
     # 1. Snapshot metrics
     batches = db.query(models.StockBatch).all()
     
+    inv_settings = db.query(models.InventorySettings).first()
+    low_stock_threshold = inv_settings.LowStockThreshold if inv_settings else 10
+    expiry_alert_days = inv_settings.ExpiryAlertDays if inv_settings else 90
+    
     total_cost_value = 0.0
     total_retail_value = 0.0
     expired_valuation = 0.0
@@ -501,7 +505,7 @@ def fetch_inventory_report_data(
         qty = med_stock_map[m.MedicineId]
         if qty == 0:
             out_of_stock_count += 1
-        elif qty <= m.ReorderLevel:
+        elif qty <= (m.ReorderLevel if m.ReorderLevel and m.ReorderLevel > 0 else low_stock_threshold):
             low_stock_count += 1
             
     summary = InventoryReportSummary(
@@ -674,6 +678,10 @@ def fetch_medicine_report_data(
     from sqlalchemy import select
     today = date.today()
     
+    inv_settings = db.query(models.InventorySettings).first()
+    low_stock_threshold = inv_settings.LowStockThreshold if inv_settings else 10
+    expiry_alert_days = inv_settings.ExpiryAlertDays if inv_settings else 90
+
     # --- 1. Expiry Items (Batch-level) ---
     expiry_items = []
     total_expired = 0
@@ -715,15 +723,14 @@ def fetch_medicine_report_data(
         elif days_to_expiry <= 30:
             status = 'Expiring < 30 days'
             expiring_soon += 1
-        elif days_to_expiry <= 90:
-            status = 'Expiring < 90 days'
+        elif days_to_expiry <= expiry_alert_days:
+            status = f'Expiring < {expiry_alert_days} days'
             expiring_soon += 1
         else:
             status = 'Safe'
             
-        if report_type == 'expiry' and start_date and end_date:
-            if batch.ExpiryDate < start_date or batch.ExpiryDate > end_date:
-                continue
+        if status == 'Safe' and report_type == 'expiry':
+            continue
 
         if status != 'Safe':
             expiry_items.append(MedicineExpiryItem(
@@ -767,7 +774,7 @@ def fetch_medicine_report_data(
         if current_stock > 0:
             active_medicines.add(med.MedicineId)
             
-        reorder_level = med.ReorderLevel or 0
+        reorder_level = med.ReorderLevel if med.ReorderLevel and med.ReorderLevel > 0 else low_stock_threshold
         if current_stock <= reorder_level:
             deficit = reorder_level - current_stock
             suggested = max((reorder_level * 2) - current_stock, 0)

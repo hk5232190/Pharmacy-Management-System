@@ -9,6 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Save, RefreshCw, Box, AlertTriangle, Barcode, Settings2 } from "lucide-react";
+import { useInventorySettings } from "@/contexts/InventorySettingsContext";
 
 interface InventorySettings {
   SettingsId?: number;
@@ -37,6 +38,8 @@ export default function InventorySettingsPage() {
   const [settings, setSettings] = useState<InventorySettings>(DEFAULT_SETTINGS);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [customExpiryMode, setCustomExpiryMode] = useState(false);
+  const { refreshInventorySettings } = useInventorySettings();
 
   useEffect(() => {
     fetchSettings();
@@ -48,6 +51,7 @@ export default function InventorySettingsPage() {
       if (res.ok) {
         const data = await res.json();
         setSettings({ ...DEFAULT_SETTINGS, ...data });
+        setCustomExpiryMode(![30, 60, 90, 180].includes(data.ExpiryAlertDays));
       } else {
         toast.error("Failed to load inventory settings");
       }
@@ -68,6 +72,7 @@ export default function InventorySettingsPage() {
       });
       if (res.ok) {
         toast.success("Inventory Settings updated successfully!");
+        await refreshInventorySettings();
       } else {
         toast.error("Failed to update inventory settings.");
       }
@@ -117,8 +122,15 @@ export default function InventorySettingsPage() {
               <div className="space-y-2">
                 <Label>Expiry Alert Horizon (Days)</Label>
                 <Select 
-                  value={String(settings.ExpiryAlertDays)} 
-                  onValueChange={(val) => setSettings({...settings, ExpiryAlertDays: parseInt(val)})}
+                  value={customExpiryMode ? "custom" : String(settings.ExpiryAlertDays)} 
+                  onValueChange={(val) => {
+                    if (val === "custom") {
+                      setCustomExpiryMode(true);
+                    } else {
+                      setCustomExpiryMode(false);
+                      setSettings({...settings, ExpiryAlertDays: parseInt(val)});
+                    }
+                  }}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select alert horizon" />
@@ -127,8 +139,20 @@ export default function InventorySettingsPage() {
                     <SelectItem value="30">30 Days</SelectItem>
                     <SelectItem value="60">60 Days</SelectItem>
                     <SelectItem value="90">90 Days</SelectItem>
+                    <SelectItem value="180">180 Days</SelectItem>
+                    <SelectItem value="custom">Custom</SelectItem>
                   </SelectContent>
                 </Select>
+                {customExpiryMode && (
+                  <Input 
+                    type="number" 
+                    min="1"
+                    className="mt-2"
+                    placeholder="Enter custom days" 
+                    value={settings.ExpiryAlertDays}
+                    onChange={(e) => setSettings({...settings, ExpiryAlertDays: parseInt(e.target.value) || 0})}
+                  />
+                )}
                 <p className="text-xs text-muted-foreground">Alert this many days before expiration.</p>
               </div>
             </div>

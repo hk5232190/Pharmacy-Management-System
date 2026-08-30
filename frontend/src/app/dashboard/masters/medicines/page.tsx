@@ -16,6 +16,7 @@ import {
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { apiClient } from "@/lib/api-client";
+import { useInventorySettings } from "@/contexts/InventorySettingsContext";
 
 interface Medicine {
   MedicineId: number;
@@ -38,6 +39,7 @@ interface Medicine {
 }
 
 export default function MedicinesPage() {
+  const { inventorySettings } = useInventorySettings();
   const [medicines, setMedicines] = useState<Medicine[]>([]);
   const [categories, setCategories] = useState<{CategoryId: number, CategoryName: string}[]>([]);
   const [companies, setCompanies] = useState<{CompanyId: number, CompanyName: string}[]>([]);
@@ -287,8 +289,13 @@ export default function MedicinesPage() {
   const openNewDialog = () => {
     setCurrentMedicine({
       BrandName: "", GenericName: "", CategoryId: 0, CompanyId: 0, RackNumber: "",
-      ReorderLevel: 10, RequiresPrescription: false, Unit: "Box", Barcode: "",
-      DefaultCostPrice: 0, DefaultSellingPrice: 0, IsActive: true
+      ReorderLevel: inventorySettings.LowStockThreshold || 10, 
+      RequiresPrescription: false, 
+      Unit: inventorySettings.DefaultUnit || "Box", 
+      Barcode: "",
+      DefaultCostPrice: 0, 
+      DefaultSellingPrice: 0, 
+      IsActive: true
     });
     setIsDialogOpen(true);
   };
@@ -604,7 +611,16 @@ export default function MedicinesPage() {
                 min="0"
                 step="0.01"
                 value={currentMedicine.DefaultCostPrice}
-                onChange={e => setCurrentMedicine({...currentMedicine, DefaultCostPrice: Number(e.target.value)})}
+                onChange={e => {
+                  const cost = Number(e.target.value);
+                  const margin = inventorySettings.DefaultProfitMargin || 0;
+                  const newSelling = Number((cost * (1 + margin / 100)).toFixed(2));
+                  setCurrentMedicine({
+                    ...currentMedicine, 
+                    DefaultCostPrice: cost,
+                    DefaultSellingPrice: newSelling
+                  });
+                }}
                 className="h-10"
               />
             </div>

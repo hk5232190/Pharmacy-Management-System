@@ -4,7 +4,7 @@ from sqlalchemy import func, desc, or_, text
 from typing import List, Optional
 from datetime import datetime, timedelta
 
-from models import StockBatch, Medicine, Category, Company, Supplier, PurchaseItem, Purchase, PurchaseReturnItem, PurchaseReturn, StockAdjustment, AuditLog, SaleItem, Sale
+from models import StockBatch, Medicine, Category, Company, Supplier, PurchaseItem, Purchase, PurchaseReturnItem, PurchaseReturn, StockAdjustment, AuditLog, SaleItem, Sale, InventorySettings
 from schemas.base import BaseResponse
 from schemas.inventory import StockAdjustmentCreate, StockAdjustmentResponse, StockMovementResponse, AuditLogResponse
 from api.deps import get_current_user, get_db
@@ -29,11 +29,17 @@ def get_inventory_summary(
         total_stock_quantity = int(stock_agg.total_qty or 0)
         inventory_value = float(stock_agg.total_value or 0)
         
-        # Expiring Medicines (batches expiring within 90 days with stock > 0)
-        ninety_days_from_now = datetime.utcnow().date() + timedelta(days=90)
+        inv_settings = db.query(InventorySettings).first()
+        expiry_alert_days = inv_settings.ExpiryAlertDays if inv_settings else 90
+        low_stock_threshold = inv_settings.LowStockThreshold if inv_settings else 10
+
+        today = date.today()
+        alert_days_from_now = today + timedelta(days=expiry_alert_days)
+        
+        # Expiring Medicines (batches expiring within alert days with stock > 0)
         expiring_batches_count = db.query(StockBatch).filter(
             StockBatch.Quantity > 0,
-            StockBatch.ExpiryDate <= ninety_days_from_now
+            StockBatch.ExpiryDate <= alert_days_from_now
         ).count()
         
         # Low Stock & Out of Stock
@@ -46,7 +52,7 @@ def get_inventory_summary(
          .filter(Medicine.IsActive == True)\
          .group_by(Medicine.MedicineId, Medicine.ReorderLevel).all()
         
-        low_stock_items = sum(1 for m in medicine_stocks if 0 < m.total_qty <= m.ReorderLevel)
+        low_stock_items = sum(1 for m in medicine_stocks if 0 < m.total_qty <= (m.ReorderLevel if m.ReorderLevel and m.ReorderLevel > 0 else low_stock_threshold))
         out_of_stock_medicines = sum(1 for m in medicine_stocks if m.total_qty == 0)
         
         # Overstock Items (arbitrary rule: Stock > 3 * ReorderLevel)
@@ -86,6 +92,9 @@ def get_stock_list(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
+    inv_settings = db.query(InventorySettings).first()
+    low_stock_threshold = inv_settings.LowStockThreshold if inv_settings else 10
+
     try:
         # Base query joining necessary tables, starting from Medicine to include out of stock ones
         query = db.query(
@@ -128,8 +137,8 @@ def get_stock_list(
 
             # Determine Status
             current_stock = batch.Quantity if batch else 0
-            min_stock = med.ReorderLevel
-            max_stock = (med.ReorderLevel * 3) if med.ReorderLevel > 0 else None
+            min_stock = med.ReorderLevel if med.ReorderLevel and med.ReorderLevel > 0 else low_stock_threshold
+            max_stock = (min_stock * 3) if min_stock > 0 else None
             
             if current_stock <= 0:
                 med_status = "Out of Stock"

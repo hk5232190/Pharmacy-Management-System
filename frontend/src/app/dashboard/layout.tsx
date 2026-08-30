@@ -1,5 +1,6 @@
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
+import { InventorySettingsProvider } from "@/contexts/InventorySettingsContext";
 
 export default function DashboardLayout({
   children,
@@ -16,7 +17,9 @@ export default function DashboardLayout({
           <Header />
         </div>
         <main className="flex-1 overflow-y-auto print:overflow-visible">
-          {children}
+          <InventorySettingsProvider>
+            {children}
+          </InventorySettingsProvider>
         </main>
       </div>
     </div>
