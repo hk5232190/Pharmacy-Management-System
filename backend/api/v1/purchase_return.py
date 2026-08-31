@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import desc
 from typing import List
 
-from models import PurchaseReturn, PurchaseReturnItem, StockBatch, Supplier, Medicine, Purchase
+from models import PurchaseReturn, PurchaseReturnItem, StockBatch, Supplier, Medicine, Purchase, InventorySettings
 from schemas.purchase_return import PurchaseReturnCreate, PurchaseReturnResponse
 from schemas.base import BaseResponse
 from api.deps import get_current_user, get_db
@@ -32,6 +32,9 @@ def create_purchase_return(
         db.add(new_return)
         db.flush()
         
+        inv_settings = db.query(InventorySettings).first()
+        allow_negative = inv_settings.AllowNegativeStock if inv_settings else False
+        
         for item in return_in.items:
             medicine = db.query(Medicine).filter(Medicine.MedicineId == item.MedicineId).first()
             if not medicine:
@@ -52,13 +55,26 @@ def create_purchase_return(
             existing_batch = db.query(StockBatch).filter(
                 StockBatch.MedicineId == item.MedicineId,
                 StockBatch.BatchCode == item.BatchCode
-            ).first()
+            ).with_for_update().first()
             
             if not existing_batch:
-                db.rollback()
-                raise HTTPException(status_code=400, detail=f"Batch {item.BatchCode} for medicine {medicine.BrandName} not found in stock.")
+                if not allow_negative:
+                    db.rollback()
+                    raise HTTPException(status_code=400, detail=f"Batch {item.BatchCode} for medicine {medicine.BrandName} not found in stock.")
+                else:
+                    # Create dummy negative batch if allowed
+                    existing_batch = StockBatch(
+                        MedicineId=item.MedicineId,
+                        BatchCode=item.BatchCode,
+                        Quantity=0,
+                        CostPrice=0,
+                        SellingPrice=0,
+                        ExpiryDate=None
+                    )
+                    db.add(existing_batch)
+                    db.flush()
                 
-            if existing_batch.Quantity < item.ReturnQuantity:
+            if existing_batch.Quantity < item.ReturnQuantity and not allow_negative:
                 db.rollback()
                 raise HTTPException(status_code=400, detail=f"Cannot return {item.ReturnQuantity} of {medicine.BrandName} (Batch {item.BatchCode}). Only {existing_batch.Quantity} in stock.")
                 

@@ -55,7 +55,7 @@ export default function PrinterSettingsPage() {
   const [currency, setCurrency] = useState("Rs");
   const [licenseInfo, setLicenseInfo] = useState("License: XYZ123 / NTN: 9876543-2");
   
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
   const [isTestingDrawer, setIsTestingDrawer] = useState(false);
@@ -480,3 +480,4 @@ export default function PrinterSettingsPage() {
     </div>
   );
 }
+

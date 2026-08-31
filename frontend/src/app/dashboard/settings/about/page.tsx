@@ -78,13 +78,13 @@ function SectionCard({ icon: Icon, title, children, className }: {
 }) {
   return (
     <div className={cn("bg-card border border-border rounded-2xl shadow-sm overflow-hidden", className)}>
-      <div className="px-5 py-4 border-b border-border bg-secondary/20 flex items-center gap-2.5">
+      <div className="px-6 py-4 border-b border-border bg-secondary/20 flex items-center gap-2.5">
         <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
           <Icon size={15} className="text-primary" />
         </div>
-        <h3 className="font-bold text-sm text-foreground">{title}</h3>
+        <h3 className="font-bold text-xl text-foreground">{title}</h3>
       </div>
-      <div className="p-5">{children}</div>
+      <div className="p-6">{children}</div>
     </div>
   );
 }
@@ -94,14 +94,14 @@ function InfoRow({ label, value, mono = false, href }: {
 }) {
   return (
     <div className="flex items-start justify-between py-2.5 border-b border-border/60 last:border-0 gap-4">
-      <span className="text-xs text-muted-foreground font-medium shrink-0">{label}</span>
+      <span className="text-sm text-muted-foreground font-medium shrink-0">{label}</span>
       {href ? (
         <a href={href} target="_blank" rel="noopener noreferrer"
-          className="text-xs font-semibold text-primary hover:underline flex items-center gap-1 text-right">
-          {value} <ExternalLink size={11} />
+          className="text-sm font-semibold text-primary hover:underline flex items-center gap-1 text-right">
+          {value} <ExternalLink size={13} />
         </a>
       ) : (
-        <span className={cn("text-xs font-semibold text-foreground text-right break-all", mono && "font-mono")}>
+        <span className={cn("text-sm font-semibold text-foreground text-right break-all", mono && "font-mono")}>
           {value ?? "—"}
         </span>
       )}
@@ -183,7 +183,7 @@ function LicenseStatusBadge({ status, type, expiryDate, remainingDays, isLifetim
 
 export default function AboutPage() {
   const [data, setData] = useState<AboutData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => { fetchAbout(); }, []);
 
@@ -216,7 +216,7 @@ export default function AboutPage() {
   const { app, developer, support, system, license } = data;
 
   return (
-    <div className="max-w-4xl space-y-6 pb-10">
+    <div className="w-full flex-1 space-y-6 pb-20 pr-24 lg:pr-32">
 
       {/* ── Page Header ── */}
       <div className="flex items-start justify-between">
@@ -246,26 +246,26 @@ export default function AboutPage() {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-3 flex-wrap">
               <h1 className="text-2xl font-black text-foreground">{app.software_name}</h1>
-              <span className="bg-primary/10 text-primary border border-primary/20 text-xs font-bold px-2.5 py-1 rounded-full">
+              <span className="bg-primary/10 text-primary border border-primary/20 text-sm font-bold px-3 py-1 rounded-full">
                 {app.edition}
               </span>
             </div>
             <p className="text-sm text-muted-foreground mt-1 font-medium">{app.framework}</p>
             <div className="flex items-center gap-4 mt-3 flex-wrap">
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <Tag size={13} />
+              <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                <Tag size={15} />
                 <span className="font-semibold text-foreground">V {app.version}</span>
               </div>
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <Code2 size={13} />
+              <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                <Code2 size={15} />
                 <span>Build {app.build_number}</span>
               </div>
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <Calendar size={13} />
+              <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                <Calendar size={15} />
                 <span>Released {app.release_date}</span>
               </div>
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <Database size={13} />
+              <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                <Database size={15} />
                 <span>{app.database_engine}</span>
               </div>
             </div>
@@ -420,3 +420,4 @@ export default function AboutPage() {
     </div>
   );
 }
+

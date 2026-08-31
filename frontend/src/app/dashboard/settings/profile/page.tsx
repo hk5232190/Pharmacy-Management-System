@@ -40,7 +40,7 @@ const DEFAULT_PROFILE: PharmacyProfile = {
 export default function PharmacyProfilePage() {
   const { refreshProfile } = useProfile();
   const [profile, setProfile] = useState<PharmacyProfile>(DEFAULT_PROFILE);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [logoPreviewUrl, setLogoPreviewUrl] = useState<string | null>(null);
@@ -197,7 +197,7 @@ export default function PharmacyProfilePage() {
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pb-20 pr-2 lg:pr-4">
       {/* Left Column: Form */}
       <div className="lg:col-span-2 space-y-6">
         <Card className="border-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none rounded-2xl overflow-hidden ring-1 ring-slate-200/60 dark:ring-slate-800 transition-all">
@@ -490,3 +490,4 @@ export default function PharmacyProfilePage() {
     </div>
   );
 }
+

@@ -5,12 +5,20 @@ import {
   Lock, Shield, Timer, Wrench, HeartPulse, ScrollText,
   Trash2, AlertTriangle, CheckCircle2, XCircle, Loader2,
   Eye, EyeOff, RefreshCw, Key, ChevronRight, Database,
-  FileWarning, ShieldAlert, ClipboardList, Eraser, Siren
+  FileWarning, ShieldAlert, ClipboardList, Eraser, Siren, Download, Search
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 
 const API = "http://127.0.0.1:8000/api/v1";
@@ -63,11 +71,19 @@ export default function SecurityMaintenancePage() {
   const [currentPwd, setCurrentPwd] = useState("");
   const [newPwd, setNewPwd] = useState("");
   const [confirmPwd, setConfirmPwd] = useState("");
-  const [showPwd, setShowPwd] = useState(false);
+  const [showCurrentPwd, setShowCurrentPwd] = useState(false);
+  const [showNewPwd, setShowNewPwd] = useState(false);
+  const [showConfirmPwd, setShowConfirmPwd] = useState(false);
   const [isChangingPwd, setIsChangingPwd] = useState(false);
 
   // ── Security settings state ──
   const [secSettings, setSecSettings] = useState({
+    AutoLockEnabled: false,
+    AutoLockMinutes: 15,
+    SessionTimeoutEnabled: true,
+    SessionTimeoutMinutes: 120,
+  });
+  const [savedSecSettings, setSavedSecSettings] = useState({
     AutoLockEnabled: false,
     AutoLockMinutes: 15,
     SessionTimeoutEnabled: true,
@@ -84,10 +100,12 @@ export default function SecurityMaintenancePage() {
   const [integrityResult, setIntegrityResult] = useState<any>(null);
 
   // ── Logs state ──
-  const [logs, setLogs] = useState<string[]>([]);
+  const [logs, setLogs] = useState<any[]>([]);
   const [logsTotal, setLogsTotal] = useState(0);
   const [logsPage, setLogsPage] = useState(1);
   const [isLoadingLogs, setIsLoadingLogs] = useState(false);
+  const [logLevel, setLogLevel] = useState("ALL");
+  const [logSearch, setLogSearch] = useState("");
   const LOG_PAGE_SIZE = 100;
 
   // ── Clear temp state ──
@@ -98,6 +116,8 @@ export default function SecurityMaintenancePage() {
   const [resetPassword, setResetPassword] = useState("");
   const [resetPhrase, setResetPhrase] = useState("");
   const [isResetting, setIsResetting] = useState(false);
+  const [showResetPwd, setShowResetPwd] = useState(false);
+  const [showResetConfirmDialog, setShowResetConfirmDialog] = useState(false);
 
   // ─── Load on mount ──────────────────────────────────────────────────────────
   useEffect(() => {
@@ -116,14 +136,19 @@ export default function SecurityMaintenancePage() {
   const fetchSecuritySettings = async () => {
     try {
       const res = await fetch(`${API}/security/settings`, { headers: authHeaders() });
-      if (res.ok) setSecSettings(await res.json());
+      if (res.ok) {
+        const data = await res.json();
+        setSecSettings(data);
+        setSavedSecSettings(data);
+      }
     } catch {}
   };
 
-  const fetchLogs = useCallback(async (page: number) => {
+  const fetchLogs = async (page: number, overrideLevel?: string) => {
     setIsLoadingLogs(true);
+    const lvl = overrideLevel || logLevel;
     try {
-      const res = await fetch(`${API}/security/logs?page=${page}&page_size=${LOG_PAGE_SIZE}`, { headers: authHeaders() });
+      const res = await fetch(`${API}/security/logs?page=${page}&page_size=${LOG_PAGE_SIZE}&level=${lvl}&search=${encodeURIComponent(logSearch)}`, { headers: authHeaders() });
       if (res.ok) {
         const data = await res.json();
         setLogs(data.lines);
@@ -135,7 +160,24 @@ export default function SecurityMaintenancePage() {
     } finally {
       setIsLoadingLogs(false);
     }
-  }, []);
+  };
+
+  const handleExportLogs = async () => {
+    try {
+      const res = await fetch(`${API}/security/logs/export`, { headers: authHeaders() });
+      if (!res.ok) throw new Error("Export failed");
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `app_audit_${new Date().getTime()}.log`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch {
+      toast.error("Failed to export logs.");
+    }
+  };
 
   // ─── Change Password ────────────────────────────────────────────────────────
   const handleChangePassword = async () => {
@@ -172,8 +214,10 @@ export default function SecurityMaintenancePage() {
       const res = await fetch(`${API}/security/settings`, {
         method: "PUT", headers: authHeaders(), body: JSON.stringify(secSettings)
       });
-      if (res.ok) toast.success("Security settings saved.");
-      else toast.error("Failed to save settings.");
+      if (res.ok) {
+        toast.success("Auto Lock & Session Timeout updated successfully.");
+        setSavedSecSettings(secSettings);
+      } else toast.error("Failed to save settings.");
     } catch { toast.error("Error saving settings."); }
     finally { setIsSavingSecSettings(false); }
   };
@@ -225,13 +269,17 @@ export default function SecurityMaintenancePage() {
   };
 
   // ─── Safe Reset ─────────────────────────────────────────────────────────────
-  const handleSafeReset = async () => {
+  const handleSafeResetClick = () => {
     if (resetPhrase !== "RESET ALL DATA") {
       toast.error('Type exactly: RESET ALL DATA'); return;
     }
     if (!resetPassword) {
       toast.error("Enter your admin password to confirm."); return;
     }
+    setShowResetConfirmDialog(true);
+  };
+
+  const handleSafeReset = async () => {
     setIsResetting(true);
     try {
       const res = await fetch(`${API}/security/reset-data`, {
@@ -253,7 +301,7 @@ export default function SecurityMaintenancePage() {
   const totalLogPages = Math.ceil(logsTotal / LOG_PAGE_SIZE);
 
   return (
-    <div className="space-y-6 pb-10">
+    <div className="space-y-6 pb-20 pr-2 lg:pr-4">
       {/* Page Header */}
       <div>
         <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
@@ -268,18 +316,42 @@ export default function SecurityMaintenancePage() {
       {/* Summary stat strip */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: "Auto Lock", value: secSettings.AutoLockEnabled ? `${secSettings.AutoLockMinutes}m` : "Off", icon: Lock, color: "text-blue-600" },
-          { label: "Session Timeout", value: secSettings.SessionTimeoutEnabled ? `${secSettings.SessionTimeoutMinutes}m` : "Off", icon: Timer, color: "text-purple-600" },
-          { label: "Audit Log Entries", value: logsTotal.toLocaleString(), icon: ScrollText, color: "text-green-600" },
-          { label: "DB Integrity", value: integrityResult ? integrityResult.integrity : "Not Checked", icon: HeartPulse, color: integrityResult?.integrity === "Passed" ? "text-green-600" : "text-amber-600" },
-        ].map(({ label, value, icon: Icon, color }) => (
-          <div key={label} className="bg-white dark:bg-slate-900 border rounded-xl p-4 flex items-center gap-3 shadow-sm">
-            <div className={`p-2 rounded-lg bg-slate-50 dark:bg-slate-800 ${color}`}>
-              <Icon className="h-5 w-5" />
+          { 
+            label: "Auto Lock", 
+            value: savedSecSettings.AutoLockEnabled ? `${savedSecSettings.AutoLockMinutes}m` : "Off", 
+            icon: Lock, 
+            accent: { border: "border-l-blue-500", icon: "text-blue-500", text: "text-blue-600 dark:text-blue-400", bg: "bg-blue-50 dark:bg-blue-900/20" } 
+          },
+          { 
+            label: "Session Timeout", 
+            value: savedSecSettings.SessionTimeoutEnabled ? `${savedSecSettings.SessionTimeoutMinutes}m` : "Off", 
+            icon: Timer, 
+            accent: { border: "border-l-purple-500", icon: "text-purple-500", text: "text-purple-600 dark:text-purple-400", bg: "bg-purple-50 dark:bg-purple-900/20" } 
+          },
+          { 
+            label: "Audit Log Entries", 
+            value: logsTotal.toLocaleString(), 
+            icon: ScrollText, 
+            accent: { border: "border-l-emerald-500", icon: "text-emerald-500", text: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-900/20" } 
+          },
+          { 
+            label: "DB Integrity", 
+            value: integrityResult ? (integrityResult.integrity === "Passed" ? "Passed" : "Errors Found") : "Not Checked", 
+            icon: HeartPulse, 
+            accent: integrityResult?.integrity === "Passed" 
+              ? { border: "border-l-emerald-500", icon: "text-emerald-500", text: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-900/20" } 
+              : integrityResult?.integrity === "Failed"
+                ? { border: "border-l-rose-500", icon: "text-rose-500", text: "text-rose-600 dark:text-rose-400", bg: "bg-rose-50 dark:bg-rose-900/20" }
+                : { border: "border-l-amber-500", icon: "text-amber-500", text: "text-amber-600 dark:text-amber-400", bg: "bg-amber-50 dark:bg-amber-900/20" }
+          },
+        ].map(({ label, value, icon: Icon, accent }) => (
+          <div key={label} className={`relative bg-white dark:bg-card rounded-xl border border-border border-l-4 shadow-sm p-4 flex flex-col gap-3 overflow-hidden transition-all hover:shadow-md ${accent.border}`}>
+            <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${accent.bg}`}>
+              <Icon className={`h-5 w-5 ${accent.icon}`} />
             </div>
             <div>
-              <p className="text-xs text-slate-500">{label}</p>
-              <p className="font-semibold text-slate-900 dark:text-white text-sm">{value}</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-0.5">{label}</p>
+              <p className={`text-2xl font-extrabold leading-none tabular-nums truncate ${accent.text}`}>{value}</p>
             </div>
           </div>
         ))}
@@ -289,7 +361,7 @@ export default function SecurityMaintenancePage() {
         {/* ── Change Password ─────────────────────────────────────── */}
         <Card className="shadow-sm">
           <CardHeader className="pb-3">
-            <SectionHeader icon={Key} title="Change Password" description="Update your admin account password with PBKDF2 verification." color="blue" />
+            <SectionHeader icon={Key} title="Change Password" description="Update your master admin password." color="blue" />
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
@@ -297,23 +369,33 @@ export default function SecurityMaintenancePage() {
               <div className="relative">
                 <Input
                   id="currentPwd"
-                  type={showPwd ? "text" : "password"}
+                  type={showCurrentPwd ? "text" : "password"}
                   value={currentPwd}
                   onChange={e => setCurrentPwd(e.target.value)}
                   placeholder="Enter current password"
                 />
-                <button type="button" onClick={() => setShowPwd(p => !p)} className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600">
-                  {showPwd ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                <button type="button" onClick={() => setShowCurrentPwd(p => !p)} className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600">
+                  {showCurrentPwd ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="newPwd">New Password</Label>
-              <Input id="newPwd" type={showPwd ? "text" : "password"} value={newPwd} onChange={e => setNewPwd(e.target.value)} placeholder="Min. 6 characters" />
+              <div className="relative">
+                <Input id="newPwd" type={showNewPwd ? "text" : "password"} value={newPwd} onChange={e => setNewPwd(e.target.value)} placeholder="Min. 6 characters" />
+                <button type="button" onClick={() => setShowNewPwd(p => !p)} className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600">
+                  {showNewPwd ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="confirmPwd">Confirm New Password</Label>
-              <Input id="confirmPwd" type={showPwd ? "text" : "password"} value={confirmPwd} onChange={e => setConfirmPwd(e.target.value)} placeholder="Re-enter new password" />
+              <div className="relative">
+                <Input id="confirmPwd" type={showConfirmPwd ? "text" : "password"} value={confirmPwd} onChange={e => setConfirmPwd(e.target.value)} placeholder="Re-enter new password" />
+                <button type="button" onClick={() => setShowConfirmPwd(p => !p)} className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600">
+                  {showConfirmPwd ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
               {confirmPwd && newPwd !== confirmPwd && (
                 <p className="text-xs text-red-500 flex items-center gap-1 mt-1"><XCircle className="h-3 w-3" /> Passwords do not match</p>
               )}
@@ -363,18 +445,17 @@ export default function SecurityMaintenancePage() {
                 <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${secSettings.AutoLockEnabled ? "translate-x-6" : "translate-x-1"}`} />
               </button>
             </div>
-            {secSettings.AutoLockEnabled && (
-              <div className="space-y-2 pl-1">
-                <Label>Lock after (minutes)</Label>
-                <div className="flex items-center gap-3">
-                  <Input type="number" min={1} max={120} value={secSettings.AutoLockMinutes}
-                    onChange={e => setSecSettings(s => ({ ...s, AutoLockMinutes: parseInt(e.target.value) || 15 }))}
-                    className="w-28"
-                  />
-                  <span className="text-sm text-slate-500">minutes of inactivity</span>
-                </div>
+            <div className={`space-y-2 pl-1 transition-opacity ${!secSettings.AutoLockEnabled ? "opacity-50 pointer-events-none" : ""}`}>
+              <Label>Lock after (minutes)</Label>
+              <div className="flex items-center gap-3">
+                <Input type="number" min={1} max={120} value={secSettings.AutoLockMinutes}
+                  onChange={e => setSecSettings(s => ({ ...s, AutoLockMinutes: parseInt(e.target.value) || 15 }))}
+                  className="w-28"
+                  disabled={!secSettings.AutoLockEnabled}
+                />
+                <span className="text-sm text-slate-500">minutes of inactivity</span>
               </div>
-            )}
+            </div>
 
             {/* Session Timeout */}
             <div className="flex items-center justify-between p-3 rounded-lg border bg-slate-50/50 dark:bg-slate-900/30">
@@ -389,18 +470,17 @@ export default function SecurityMaintenancePage() {
                 <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${secSettings.SessionTimeoutEnabled ? "translate-x-6" : "translate-x-1"}`} />
               </button>
             </div>
-            {secSettings.SessionTimeoutEnabled && (
-              <div className="space-y-2 pl-1">
-                <Label>Session duration (minutes)</Label>
-                <div className="flex items-center gap-3">
-                  <Input type="number" min={15} max={1440} value={secSettings.SessionTimeoutMinutes}
-                    onChange={e => setSecSettings(s => ({ ...s, SessionTimeoutMinutes: parseInt(e.target.value) || 120 }))}
-                    className="w-28"
-                  />
-                  <span className="text-sm text-slate-500">minutes ({Math.floor(secSettings.SessionTimeoutMinutes / 60)}h {secSettings.SessionTimeoutMinutes % 60}m)</span>
-                </div>
+            <div className={`space-y-2 pl-1 transition-opacity ${!secSettings.SessionTimeoutEnabled ? "opacity-50 pointer-events-none" : ""}`}>
+              <Label>Session duration (minutes)</Label>
+              <div className="flex items-center gap-3">
+                <Input type="number" min={15} max={1440} value={secSettings.SessionTimeoutMinutes}
+                  onChange={e => setSecSettings(s => ({ ...s, SessionTimeoutMinutes: parseInt(e.target.value) || 120 }))}
+                  className="w-28"
+                  disabled={!secSettings.SessionTimeoutEnabled}
+                />
+                <span className="text-sm text-slate-500">minutes ({Math.floor(secSettings.SessionTimeoutMinutes / 60)}h {secSettings.SessionTimeoutMinutes % 60}m)</span>
               </div>
-            )}
+            </div>
           </CardContent>
           <CardFooter className="border-t pt-4 flex justify-end bg-slate-50/50 dark:bg-slate-900/30 rounded-b-xl">
             <Button onClick={handleSaveSecSettings} disabled={isSavingSecSettings} className="bg-blue-600 hover:bg-blue-700 text-white w-36">
@@ -438,7 +518,7 @@ export default function SecurityMaintenancePage() {
             )}
           </CardContent>
           <CardFooter className="border-t pt-4 flex justify-end bg-slate-50/50 dark:bg-slate-900/30 rounded-b-xl">
-            <Button onClick={handleOptimize} disabled={isOptimizing} className="bg-green-600 hover:bg-green-700 text-white w-48">
+            <Button onClick={handleOptimize} disabled={isOptimizing || isCheckingIntegrity} className="bg-green-600 hover:bg-green-700 text-white w-48">
               {isOptimizing ? <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Optimizing…</> : <><Wrench className="h-4 w-4 mr-2" /> Run Optimization</>}
             </Button>
           </CardFooter>
@@ -489,7 +569,7 @@ export default function SecurityMaintenancePage() {
             )}
           </CardContent>
           <CardFooter className="border-t pt-4 flex justify-end bg-slate-50/50 dark:bg-slate-900/30 rounded-b-xl">
-            <Button onClick={handleIntegrityCheck} disabled={isCheckingIntegrity} className="bg-amber-600 hover:bg-amber-700 text-white w-48">
+            <Button onClick={handleIntegrityCheck} disabled={isCheckingIntegrity || isOptimizing} className="bg-amber-600 hover:bg-amber-700 text-white w-48">
               {isCheckingIntegrity ? <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Checking…</> : <><HeartPulse className="h-4 w-4 mr-2" /> Run Check</>}
             </Button>
           </CardFooter>
@@ -498,16 +578,46 @@ export default function SecurityMaintenancePage() {
 
       {/* ── Application Logs ──────────────────────────────────────────────────── */}
       <Card className="shadow-sm">
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-3 border-b border-border/50">
           <div className="flex items-start justify-between">
             <SectionHeader icon={ScrollText} title="Application Logs" description={`Structured audit trail from app_audit.log — ${logsTotal.toLocaleString()} entries, newest first.`} color="slate" />
-            <Button variant="outline" size="sm" onClick={() => fetchLogs(1)} disabled={isLoadingLogs}>
-              <RefreshCw className={`h-4 w-4 mr-1.5 ${isLoadingLogs ? "animate-spin" : ""}`} />
-              Refresh
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={() => fetchLogs(1)}>
+                <RefreshCw className={`h-4 w-4 mr-1.5 ${isLoadingLogs ? "animate-spin" : ""}`} />
+                Refresh
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleExportLogs}>
+                <Download className="h-4 w-4 mr-1.5" />
+                Export Log
+              </Button>
+            </div>
+          </div>
+          
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-4">
+            <div className="flex bg-slate-100 dark:bg-slate-800/50 p-1 rounded-lg">
+              {["ALL", "AUDIT", "ERROR"].map(lvl => (
+                <button
+                  key={lvl}
+                  onClick={() => { setLogLevel(lvl); fetchLogs(1, lvl); }}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${logLevel === lvl ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'}`}
+                >
+                  {lvl === "ALL" ? "All" : lvl === "AUDIT" ? "Audit Actions" : "Errors Only"}
+                </button>
+              ))}
+            </div>
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
+              <Input 
+                placeholder="Search logs (press Enter)..." 
+                value={logSearch}
+                onChange={e => setLogSearch(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && fetchLogs(1)}
+                className="h-9 pl-9 text-sm"
+              />
+            </div>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-4">
           <div className="rounded-lg border bg-slate-950 dark:bg-slate-900 overflow-hidden">
             {isLoadingLogs ? (
               <div className="flex items-center justify-center py-12 text-slate-400">
@@ -519,13 +629,17 @@ export default function SecurityMaintenancePage() {
               </div>
             ) : (
               <div className="overflow-y-auto max-h-96 font-mono text-xs leading-5">
-                {logs.map((line, i) => {
-                  const isError = line.includes("ERROR") || line.includes("Failed");
-                  const isWarn = line.includes("WARNING") || line.includes("Unauthorized");
-                  const isInfo = line.includes("INFO");
+                {logs.map((entry, i) => {
+                  const isError = entry.level === "ERROR";
+                  const isAudit = entry.level === "AUDIT";
                   return (
-                    <div key={i} className={`px-3 py-0.5 border-b border-slate-800/50 last:border-0 hover:bg-slate-800/40 transition-colors ${isError ? "text-red-400" : isWarn ? "text-amber-400" : isInfo ? "text-slate-300" : "text-slate-400"}`}>
-                      {line || "\u00A0"}
+                    <div key={i} className={`px-3 py-2 flex flex-col sm:flex-row sm:items-start gap-1 sm:gap-3 border-b border-slate-800/50 last:border-0 hover:bg-slate-800/40 transition-colors ${isError ? "text-red-400" : isAudit ? "text-cyan-400" : "text-slate-400"}`}>
+                      {entry.timestamp && <span className="shrink-0 opacity-70 whitespace-nowrap">{entry.timestamp}</span>}
+                      {entry.level && entry.level !== "INFO" && (
+                        <span className={`shrink-0 font-bold ${isError ? "text-red-500" : "text-cyan-500"}`}>[{entry.level}]</span>
+                      )}
+                      {entry.module && <span className="shrink-0 opacity-50">[{entry.module}]</span>}
+                      <span className="break-all">{entry.message}</span>
                     </div>
                   );
                 })}
@@ -559,11 +673,7 @@ export default function SecurityMaintenancePage() {
             {clearResult && (
               <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg text-sm text-green-700 dark:text-green-400">
                 <p className="font-semibold">{clearResult.message}</p>
-                {clearResult.deleted_files.length > 0 && (
-                  <ul className="mt-1 space-y-0.5 text-xs opacity-80">
-                    {clearResult.deleted_files.map((f: string, i: number) => <li key={i}>{f}</li>)}
-                  </ul>
-                )}
+                <p className="text-xs opacity-80 mt-1">Files cleared: {clearResult.files_cleared} | Space reclaimed: {clearResult.size_reclaimed_kb} KB</p>
               </div>
             )}
           </CardContent>
@@ -601,18 +711,23 @@ export default function SecurityMaintenancePage() {
 
             <div className="space-y-2">
               <Label htmlFor="resetPassword">Admin Password</Label>
-              <Input
-                id="resetPassword"
-                type="password"
-                placeholder="Your admin password to authorize reset"
-                value={resetPassword}
-                onChange={e => setResetPassword(e.target.value)}
-              />
+              <div className="relative">
+                <Input
+                  id="resetPassword"
+                  type={showResetPwd ? "text" : "password"}
+                  placeholder="Your admin password to authorize reset"
+                  value={resetPassword}
+                  onChange={e => setResetPassword(e.target.value)}
+                />
+                <button type="button" onClick={() => setShowResetPwd(p => !p)} className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600">
+                  {showResetPwd ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
           </CardContent>
           <CardFooter className="border-t border-red-100 dark:border-red-900/40 pt-4 flex justify-end bg-red-50/30 dark:bg-red-950/10 rounded-b-xl">
             <Button
-              onClick={handleSafeReset}
+              onClick={handleSafeResetClick}
               disabled={isResetting || resetPhrase !== "RESET ALL DATA" || !resetPassword}
               className="w-48 bg-red-600 hover:bg-red-700 text-white disabled:opacity-40"
             >
@@ -621,6 +736,45 @@ export default function SecurityMaintenancePage() {
           </CardFooter>
         </Card>
       </div>
+      
+      {/* ── Confirmation Dialog ── */}
+      <Dialog open={showResetConfirmDialog} onOpenChange={setShowResetConfirmDialog}>
+        <DialogContent className="sm:max-w-[480px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600 dark:text-red-500 text-xl">
+              <ShieldAlert className="h-6 w-6" />
+              Final Confirmation
+            </DialogTitle>
+            <DialogDescription className="pt-3 text-slate-600 dark:text-slate-300 text-sm leading-relaxed">
+              You are about to <strong>permanently delete</strong> all your medicines, sales, purchases, and operational history.
+              <br /><br />
+              Even though a snapshot will be taken, this action will immediately disrupt the system's current operating state and clear all dashboard statistics.
+              <br /><br />
+              <span className="text-red-600 dark:text-red-400 font-semibold block bg-red-50 dark:bg-red-950/30 p-2.5 rounded-md border border-red-100 dark:border-red-900">Are you absolutely sure you want to proceed?</span>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-5 flex gap-3 sm:gap-0">
+            <Button variant="outline" onClick={() => setShowResetConfirmDialog(false)} className="sm:flex-1">
+              Cancel
+            </Button>
+            <Button 
+              onClick={() => { setShowResetConfirmDialog(false); handleSafeReset(); }} 
+              className="sm:flex-1 bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-600/20 dark:shadow-none"
+            >
+              Yes, Destroy Data
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {isResetting && (
+        <div className="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-sm flex flex-col items-center justify-center text-white">
+          <Loader2 className="h-16 w-16 animate-spin text-red-500 mb-6" />
+          <h2 className="text-2xl font-bold">Wiping Database...</h2>
+          <p className="opacity-80 mt-2">Creating safety snapshot and permanently deleting data.</p>
+          <p className="opacity-80">Please do not close or refresh this page.</p>
+        </div>
+      )}
     </div>
   );
 }

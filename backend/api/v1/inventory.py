@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc, or_, text
 from typing import List, Optional
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 
 from models import StockBatch, Medicine, Category, Company, Supplier, PurchaseItem, Purchase, PurchaseReturnItem, PurchaseReturn, StockAdjustment, AuditLog, SaleItem, Sale, InventorySettings
 from schemas.base import BaseResponse
@@ -187,11 +187,14 @@ def adjust_stock(
     current_user = Depends(get_current_user)
 ):
     try:
-        batch = db.query(StockBatch).filter(StockBatch.BatchId == adjustment_in.BatchId).first()
+        batch = db.query(StockBatch).filter(StockBatch.BatchId == adjustment_in.BatchId).with_for_update().first()
         if not batch:
             raise HTTPException(status_code=404, detail="Stock batch not found")
 
-        if adjustment_in.AdjustmentType == "Decrease" and batch.Quantity < adjustment_in.Quantity:
+        inv_settings = db.query(InventorySettings).first()
+        allow_negative = inv_settings.AllowNegativeStock if inv_settings else False
+
+        if adjustment_in.AdjustmentType == "Decrease" and batch.Quantity < adjustment_in.Quantity and not allow_negative:
             raise HTTPException(status_code=400, detail=f"Cannot decrease {adjustment_in.Quantity} units. Only {batch.Quantity} in stock.")
 
         previous_qty = batch.Quantity

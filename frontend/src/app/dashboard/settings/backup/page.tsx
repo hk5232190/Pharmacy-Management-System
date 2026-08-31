@@ -69,7 +69,7 @@ export default function BackupDataManagementSettingsPage() {
   });
   const [dbInfo, setDbInfo] = useState<DbInfo | null>(null);
   const [dbHealth, setDbHealth] = useState<DbHealth | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isCheckingHealth, setIsCheckingHealth] = useState(false);
 
@@ -438,3 +438,4 @@ export default function BackupDataManagementSettingsPage() {
     </div>
   );
 }
+

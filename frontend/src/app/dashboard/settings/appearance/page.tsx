@@ -47,7 +47,7 @@ const DEFAULT_SETTINGS: SystemPreferences = {
 
 export default function AppearanceSettingsPage() {
   const [settings, setSettings] = useState<SystemPreferences>(DEFAULT_SETTINGS);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const { setTheme } = useTheme();
   const { refreshPreferences } = useSystemPreferences();
@@ -216,3 +216,4 @@ export default function AppearanceSettingsPage() {
     </div>
   );
 }
+

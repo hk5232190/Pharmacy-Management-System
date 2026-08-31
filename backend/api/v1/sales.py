@@ -187,8 +187,15 @@ def complete_sale(
         for item in sale_data.Items:
             remaining_qty_to_fulfill = item.Quantity
             
-            batch_query = db.query(StockBatch).filter(StockBatch.MedicineId == item.MedicineId)
-            
+            # Use specific BatchId if FEFO is not enabled, otherwise query all
+            if not enable_fefo and item.BatchId:
+                batch_query = db.query(StockBatch).filter(
+                    StockBatch.MedicineId == item.MedicineId,
+                    StockBatch.BatchId == item.BatchId
+                )
+            else:
+                batch_query = db.query(StockBatch).filter(StockBatch.MedicineId == item.MedicineId)
+
             if prevent_expired:
                 batch_query = batch_query.filter(StockBatch.ExpiryDate > current_date)
                 
@@ -203,6 +210,12 @@ def complete_sale(
             batches = batch_query.with_for_update().all()
 
             if not batches:
+                if prevent_expired and not allow_negative:
+                    # Let's check if it was because it was expired
+                    any_batch = db.query(StockBatch).filter(StockBatch.MedicineId == item.MedicineId, StockBatch.BatchId == item.BatchId).first()
+                    if any_batch and any_batch.ExpiryDate and any_batch.ExpiryDate <= current_date:
+                        raise ValidationError(f"Batch {any_batch.BatchCode} for medicine ID {item.MedicineId} is expired. Sale strictly prevented.")
+
                 if allow_negative:
                     dummy_batch = StockBatch(
                         MedicineId=item.MedicineId,
@@ -220,7 +233,7 @@ def complete_sale(
 
             total_available = sum(b.Quantity for b in batches)
             if not allow_negative and total_available < remaining_qty_to_fulfill:
-                raise ValidationError(f"Insufficient stock for medicine ID {item.MedicineId}. Requested {item.Quantity}, available {total_available}.")
+                raise ValidationError(f"Insufficient stock for medicine ID {item.MedicineId}. Requested {item.Quantity}, available {total_available}. Strict negative stock guard enforced.")
 
             # Cascade Deduction
             for idx, batch in enumerate(batches):

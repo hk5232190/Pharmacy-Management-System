@@ -2,10 +2,12 @@ import os
 import sqlite3
 import shutil
 import glob
+import re
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from sqlalchemy import text
@@ -164,7 +166,7 @@ def check_integrity(
         fk_violations = cursor.fetchall()
 
         # Table count
-        cursor.execute("SELECT count(*) FROM sqlite_master WHERE type='table';")
+        cursor.execute("SELECT count(*) FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%';")
         table_count = cursor.fetchone()[0]
 
         # Page count and free pages
@@ -201,13 +203,17 @@ def check_integrity(
 
 # ─── Application Logs ─────────────────────────────────────────────────────────
 
+LOG_PATTERN = re.compile(r"^(\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2},\d{3})\s-\s(.*?)\s-\s(.*?)\s-\s(.*)$")
+
 @router.get("/logs")
 def get_application_logs(
+    level: str = "ALL",
+    search: str = "",
     page: int = 1,
     page_size: int = 100,
     current_user: User = Depends(get_current_user)
 ):
-    """Read the app_audit.log file, newest entries first, paginated."""
+    """Read the app_audit.log file, newest entries first, paginated with filters."""
     log_file = Path("app_audit.log")
     if not log_file.exists():
         return {"lines": [], "total": 0}
@@ -215,14 +221,72 @@ def get_application_logs(
     with open(log_file, "r", encoding="utf-8", errors="replace") as f:
         all_lines = f.readlines()
 
+    parsed_lines = []
+    for line in all_lines:
+        line = line.strip()
+        if not line:
+            continue
+        
+        # Filter out apscheduler by default
+        if "apscheduler" in line:
+            continue
+            
+        match = LOG_PATTERN.match(line)
+        if match:
+            timestamp, module, log_level, message = match.groups()
+            
+            # Identify audit actions
+            if message.startswith("AUDIT:"):
+                log_level = "AUDIT"
+                message = message[6:].strip() # remove "AUDIT: "
+                
+            parsed_lines.append({
+                "timestamp": timestamp,
+                "module": module,
+                "level": log_level,
+                "message": message,
+                "raw": line
+            })
+        else:
+            # Fallback for unparseable lines
+            parsed_lines.append({
+                "timestamp": "",
+                "module": "",
+                "level": "INFO",
+                "message": line,
+                "raw": line
+            })
+            
+    # Apply filters
+    filtered_lines = []
+    search_lower = search.lower() if search else ""
+    for entry in parsed_lines:
+        if level != "ALL" and entry["level"] != level:
+            continue
+        if search_lower and search_lower not in entry["raw"].lower():
+            continue
+        filtered_lines.append(entry)
+            
     # Newest first
-    all_lines.reverse()
-    total = len(all_lines)
+    filtered_lines.reverse()
+    total = len(filtered_lines)
     start = (page - 1) * page_size
     end = start + page_size
-    page_lines = [line.rstrip() for line in all_lines[start:end]]
+    page_lines = filtered_lines[start:end]
 
     return {"lines": page_lines, "total": total, "page": page, "page_size": page_size}
+
+@router.get("/logs/export")
+def export_application_logs(current_user: User = Depends(get_current_user)):
+    """Export the raw log file."""
+    log_file = Path("app_audit.log")
+    if not log_file.exists():
+        raise HTTPException(status_code=404, detail="Log file not found.")
+    return FileResponse(
+        path=log_file,
+        filename=f"app_audit_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log",
+        media_type="text/plain"
+    )
 
 # ─── Clear Temporary Data ────────────────────────────────────────────────────
 
@@ -231,34 +295,41 @@ def clear_temp_data(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Delete files in the spooler directory and any *.tmp files in backend root."""
-    deleted_files = []
+    """Delete files in the spooler directory, temp directories, and *.tmp/*.pdf in backend root."""
+    deleted_files_count = 0
+    reclaimed_bytes = 0
     errors = []
 
-    # Clear spooler directory
-    spooler_dir = Path("spooler")
-    if spooler_dir.exists():
-        for f in spooler_dir.iterdir():
-            try:
-                if f.is_file():
-                    f.unlink()
-                    deleted_files.append(str(f))
-            except Exception as e:
-                errors.append(str(e))
+    def clear_dir(d_path: Path, pattern="*"):
+        nonlocal deleted_files_count, reclaimed_bytes
+        if d_path.exists() and d_path.is_dir():
+            for f in d_path.glob(pattern):
+                try:
+                    if f.is_file():
+                        size = f.stat().st_size
+                        f.unlink()
+                        deleted_files_count += 1
+                        reclaimed_bytes += size
+                except Exception as e:
+                    errors.append(str(e))
 
-    # Clear *.tmp files in backend root
-    for tmp_file in Path(".").glob("*.tmp"):
-        try:
-            tmp_file.unlink()
-            deleted_files.append(str(tmp_file))
-        except Exception as e:
-            errors.append(str(e))
+    # Clear spooler, spool, and temp dirs
+    clear_dir(Path("spooler"))
+    clear_dir(Path("spool"))
+    clear_dir(Path("temp"))
 
-    logger.info(f"Clear Temp Data | User: {current_user.Username} | Deleted {len(deleted_files)} files")
+    # Clear *.tmp and *.pdf in backend root
+    clear_dir(Path("."), "*.tmp")
+    clear_dir(Path("."), "*.pdf")
+
+    reclaimed_kb = reclaimed_bytes / 1024.0
+
+    logger.info(f"Clear Temp Data | User: {current_user.Username} | Deleted {deleted_files_count} files | Reclaimed: {reclaimed_kb:.2f} KB")
     return {
         "status": "ok",
-        "message": f"Cleared {len(deleted_files)} temporary file(s).",
-        "deleted_files": deleted_files,
+        "message": f"Cleared {deleted_files_count} temporary file(s).",
+        "files_cleared": deleted_files_count,
+        "size_reclaimed_kb": round(reclaimed_kb, 2),
         "errors": errors
     }
 
@@ -330,10 +401,19 @@ def safe_data_reset(
                 logger.warning(f"Safe Data Reset | Could not clear table '{table}': {e}")
 
         db.commit()
+        
+        # Run VACUUM to reclaim space outside of transaction
+        try:
+            conn = sqlite3.connect(str(db_path))
+            conn.execute("VACUUM;")
+            conn.close()
+        except Exception as e:
+            logger.warning(f"Safe Data Reset | Vacuum failed: {e}")
+            
         logger.info(f"Safe Data Reset | SUCCESS | User: {current_user.Username} | Snapshot: {snapshot_path.name}")
         return {
             "status": "ok",
-            "message": "All transactional data has been wiped. Settings and configuration are preserved.",
+            "message": "Database reset successful. All transactional records have been deleted, but your system settings and user accounts were safely preserved.",
             "snapshot": snapshot_path.name
         }
     except Exception as e:

@@ -98,7 +98,7 @@ function CheckRow({ label, ok }: { label: string; ok: boolean }) {
 export default function LicensePage() {
   const [info, setInfo] = useState<LicenseInfo | null>(null);
   const [validation, setValidation] = useState<ValidationChecks | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [validating, setValidating] = useState(false);
   const [importing, setImporting] = useState(false);
   const [copiedHwid, setCopiedHwid] = useState(false);
@@ -497,3 +497,4 @@ export default function LicensePage() {
     </div>
   );
 }
+

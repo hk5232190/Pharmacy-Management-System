@@ -1324,3 +1324,50 @@ NoneType: None
 2026-08-30 21:37:05,866 - pms - ERROR - PMSException caught: Session expired. Please log in again. (status: 401) | Path: /api/v1/categories
 2026-08-30 21:37:05,910 - pms - ERROR - PMSException caught: Session expired. Please log in again. (status: 401) | Path: /api/v1/categories
 2026-08-30 21:37:05,924 - pms - ERROR - PMSException caught: Session expired. Please log in again. (status: 401) | Path: /api/v1/auth/me
+2026-08-30 22:31:37,844 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-30 22:31:37,875 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-30 22:32:56,401 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-30 22:32:56,488 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-31 00:10:13,009 - pms - ERROR - PMSException caught: Session expired. Please log in again. (status: 401) | Path: /api/v1/auth/me
+2026-08-31 19:31:01,067 - pms - INFO - Starting Pharmacy Management System backend...
+2026-08-31 19:31:01,098 - apscheduler.scheduler - INFO - Scheduler started
+2026-08-31 19:39:14,813 - pms - INFO - AUDIT: User admin removed the Pharmacy Logo.
+2026-08-31 19:39:21,601 - pms - INFO - AUDIT: User admin updated Pharmacy Branding (Name/Profile).
+2026-08-31 19:39:21,644 - pms - INFO - AUDIT: User admin uploaded a new Pharmacy Logo.
+2026-08-31 19:39:39,169 - pms - INFO - AUDIT: User admin updated Pharmacy Branding (Name/Profile).
+2026-08-31 22:01:21,744 - pms - ERROR - PMSException caught: Session expired. Please log in again. (status: 401) | Path: /api/v1/auth/me
+2026-09-01 00:10:36,754 - pms - ERROR - PMSException caught: Session expired. Please log in again. (status: 401) | Path: /api/v1/auth/me
+2026-09-01 00:35:23,860 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-01 00:35:23,909 - apscheduler.scheduler - INFO - Scheduler started
+2026-09-01 01:02:51,093 - pms - INFO - Clear Temp Data | User: admin | Deleted 0 files
+2026-09-01 01:02:55,795 - pms - INFO - Database Optimization | User: admin | Reclaimed: 4096 bytes
+2026-09-01 01:13:17,094 - pms - INFO - Security Settings Updated | User: admin | AutoLock: True (1m) | SessionTimeout: True (120m)
+2026-09-01 01:15:19,772 - pms - INFO - Change Password | Success | User: admin
+2026-09-01 01:17:34,556 - pms - INFO - Security Settings Updated | User: admin | AutoLock: True (1m) | SessionTimeout: True (120m)
+2026-09-01 01:17:52,044 - pms - INFO - Security Settings Updated | User: admin | AutoLock: True (1m) | SessionTimeout: True (120m)
+2026-09-01 01:19:11,096 - pms - INFO - AUDIT: User admin updated Pharmacy Branding (Name/Profile).
+2026-09-01 01:19:19,122 - pms - INFO - Security Settings Updated | User: admin | AutoLock: True (1m) | SessionTimeout: True (120m)
+2026-09-01 01:19:24,754 - pms - INFO - AUDIT: User admin updated Pharmacy Branding (Name/Profile).
+2026-09-01 01:19:26,815 - pms - INFO - AUDIT: User admin updated General Settings (Login Page Branding).
+2026-09-01 01:19:39,571 - pms - INFO - AUDIT: User admin updated their profile information.
+2026-09-01 01:19:47,866 - pms - INFO - AUDIT: User admin updated Pharmacy Branding (Name/Profile).
+2026-09-01 01:20:00,699 - pms - INFO - Security Settings Updated | User: admin | AutoLock: True (1m) | SessionTimeout: True (120m)
+2026-09-01 01:21:02,382 - pms - INFO - AUDIT: User admin updated their profile information.
+2026-09-01 01:22:18,264 - pms - INFO - Security Settings Updated | User: admin | AutoLock: True (1m) | SessionTimeout: True (120m)
+2026-09-01 01:22:41,531 - pms - INFO - Database Optimization | User: admin | Reclaimed: 0 bytes
+2026-09-01 01:31:21,196 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-01 01:31:21,219 - apscheduler.scheduler - INFO - Scheduler started
+2026-09-01 01:31:56,595 - pms - INFO - Database Optimization | User: admin | Reclaimed: 0 bytes
+2026-09-01 01:33:13,411 - pms - INFO - Database Optimization | User: admin | Reclaimed: 0 bytes
+2026-09-01 01:37:53,368 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-01 01:37:53,388 - apscheduler.scheduler - INFO - Scheduler started
+2026-09-01 01:43:34,602 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-01 01:43:34,625 - apscheduler.scheduler - INFO - Scheduler started
+2026-09-01 01:43:54,093 - pms - INFO - Clear Temp Data | User: admin | Deleted 2 files | Reclaimed: 6.90 KB
+2026-09-01 01:44:14,830 - pms - INFO - Safe Data Reset | SUCCESS | User: admin | Snapshot: pre_reset_snapshot_20260901_014414.sqlite
+2026-09-01 01:49:51,431 - pms - INFO - Clear Temp Data | User: admin | Deleted 0 files | Reclaimed: 0.00 KB
+2026-09-01 01:50:14,683 - pms - INFO - Safe Data Reset | SUCCESS | User: admin | Snapshot: pre_reset_snapshot_20260901_015014.sqlite
+2026-09-01 01:51:18,691 - pms - INFO - Safe Data Reset | SUCCESS | User: admin | Snapshot: pre_reset_snapshot_20260901_015118.sqlite
+2026-09-01 01:53:39,877 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-01 01:53:39,955 - apscheduler.scheduler - INFO - Scheduler started
+2026-09-01 01:54:06,106 - pms - INFO - Safe Data Reset | SUCCESS | User: admin | Snapshot: pre_reset_snapshot_20260901_015406.sqlite

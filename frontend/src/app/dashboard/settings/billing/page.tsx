@@ -46,7 +46,7 @@ const DEFAULT_SETTINGS: BillingSettings = {
 
 export default function BillingSettingsPage() {
   const [settings, setSettings] = useState<BillingSettings>(DEFAULT_SETTINGS);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const { refreshPreferences } = useSystemPreferences();
 
@@ -338,3 +338,4 @@ export default function BillingSettingsPage() {
     </div>
   );
 }
+

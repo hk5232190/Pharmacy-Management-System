@@ -30,7 +30,7 @@ export default function GeneralSettingsPage() {
   const [profile, setProfile] = useState<PharmacyProfile>(DEFAULT_PROFILE);
   const [general, setGeneral] = useState<GeneralSettings>(DEFAULT_GENERAL);
   
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [isSavingGeneral, setIsSavingGeneral] = useState(false);
   const [showLoginPreview, setShowLoginPreview] = useState(false);
@@ -250,7 +250,7 @@ export default function GeneralSettingsPage() {
 
   return (
     <>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-20">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-20 pr-2 lg:pr-4">
         
         {/* Left Column: Pharmacy Branding */}
       <div className="space-y-6">
@@ -556,3 +556,4 @@ export default function GeneralSettingsPage() {
   </>
   );
 }
+

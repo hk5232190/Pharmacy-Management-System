@@ -22,15 +22,15 @@ function getInitials(name: string): string {
 
 export default function MyProfileSettingsPage() {
   const { user, refreshUser } = useAuth();
-  const [fullName, setFullName] = useState("");
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
+  const [fullName, setFullName] = useState(user.full_name || "");
+  const [username, setUsername] = useState(user.username || "");
+  const [email, setEmail] = useState(user.email || "");
+  const [phoneNumber, setPhoneNumber] = useState(user.phone_number || "");
   
   // Validation errors
   const [errors, setErrors] = useState<{ email?: string, phone?: string }>({});
   
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(user.id === 0);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
 
   // File Inputs

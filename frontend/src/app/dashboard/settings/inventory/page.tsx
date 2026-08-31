@@ -36,7 +36,7 @@ const DEFAULT_SETTINGS: InventorySettings = {
 
 export default function InventorySettingsPage() {
   const [settings, setSettings] = useState<InventorySettings>(DEFAULT_SETTINGS);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [customExpiryMode, setCustomExpiryMode] = useState(false);
   const { refreshInventorySettings } = useInventorySettings();
@@ -312,3 +312,4 @@ export default function InventorySettingsPage() {
     </div>
   );
 }
+

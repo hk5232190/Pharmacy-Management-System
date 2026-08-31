@@ -7,6 +7,7 @@ from typing import List
 import random
 import csv
 import io
+from decimal import Decimal, ROUND_HALF_UP
 
 from models import Medicine, Category, Company, StockBatch, SaleItem, PurchaseItem, InventorySettings
 from schemas.medicine import MedicineCreate, MedicineUpdate, MedicineResponse
@@ -110,6 +111,20 @@ def create_medicine(
         existing = db.query(Medicine).filter(Medicine.Barcode == medicine_in.Barcode).first()
         if existing:
             raise HTTPException(status_code=400, detail="Medicine with this barcode already exists")
+            
+    # Apply defaults from Inventory Settings
+    if not medicine_in.Unit:
+        medicine_in.Unit = inv_settings.DefaultUnit if inv_settings else "Box"
+    
+    if medicine_in.ReorderLevel is None or medicine_in.ReorderLevel == 0:
+        medicine_in.ReorderLevel = inv_settings.LowStockThreshold if inv_settings else 10
+        
+    # Calculate precision selling price if not provided
+    if medicine_in.DefaultCostPrice and (not medicine_in.DefaultSellingPrice or medicine_in.DefaultSellingPrice == 0):
+        margin = Decimal(str(inv_settings.DefaultProfitMargin)) if inv_settings else Decimal('0')
+        cost = Decimal(str(medicine_in.DefaultCostPrice))
+        selling = cost * (Decimal('1') + margin / Decimal('100'))
+        medicine_in.DefaultSellingPrice = float(selling.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP))
             
     new_medicine = Medicine(**medicine_in.model_dump())
     db.add(new_medicine)
@@ -293,13 +308,20 @@ def import_medicines(
         skipped_count = 0
         errors = []
         
+        # Load global inventory settings for defaults
+        inv_settings = db.query(InventorySettings).first()
+        default_unit = inv_settings.DefaultUnit if inv_settings else "Box"
+        auto_generate = inv_settings.AutoGenerateBarcode if inv_settings else True
+        default_low_stock = inv_settings.LowStockThreshold if inv_settings else 10
+        margin_dec = Decimal(str(inv_settings.DefaultProfitMargin)) if inv_settings else Decimal('0')
+        
         for row_idx, row in enumerate(csv_reader, start=2): # Row 1 is header
             try:
                 brand = row.get("BrandName", "").strip()
                 generic = row.get("GenericName", "").strip()
                 cat_name = row.get("CategoryName", "").strip()
                 comp_name = row.get("CompanyName", "").strip()
-                unit = row.get("Unit", "Box").strip()
+                unit = row.get("Unit", "").strip() or default_unit
                 
                 if not brand or not generic or not cat_name or not comp_name:
                     skipped_count += 1
@@ -332,18 +354,36 @@ def import_medicines(
                     skipped_count += 1
                     continue
                     
+                # Apply Auto Barcode Logic
+                barcode = row.get("Barcode", "").strip()
+                if not barcode and auto_generate:
+                    # Generate 12 random digits for EAN-13
+                    base = str(random.randint(100000000000, 999999999999))
+                    total_val = sum(int(char) * (1 if i % 2 == 0 else 3) for i, char in enumerate(base))
+                    check_digit = (10 - (total_val % 10)) % 10
+                    barcode = base + str(check_digit)
+
+                # Precision Selling Price Logic
+                cost_price = float(row.get("DefaultCostPrice", "0").strip() or 0)
+                selling_price = float(row.get("DefaultSellingPrice", "0").strip() or 0)
+                
+                if cost_price > 0 and selling_price == 0:
+                    cost_dec = Decimal(str(cost_price))
+                    selling_dec = cost_dec * (Decimal('1') + margin_dec / Decimal('100'))
+                    selling_price = float(selling_dec.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP))
+                    
                 new_med = Medicine(
                     BrandName=brand,
                     GenericName=generic,
                     CategoryId=category.CategoryId,
                     CompanyId=company.CompanyId,
                     RackNumber=row.get("RackNumber", "").strip() or None,
-                    ReorderLevel=int(row.get("ReorderLevel", "10").strip() or 10),
+                    ReorderLevel=int(row.get("ReorderLevel", "").strip() or default_low_stock),
                     RequiresPrescription=req_presc,
                     Unit=unit,
-                    Barcode=row.get("Barcode", "").strip() or f"MED{random.randint(10000, 99999)}",
-                    DefaultCostPrice=float(row.get("DefaultCostPrice", "0").strip() or 0),
-                    DefaultSellingPrice=float(row.get("DefaultSellingPrice", "0").strip() or 0),
+                    Barcode=barcode,
+                    DefaultCostPrice=cost_price,
+                    DefaultSellingPrice=selling_price,
                     IsActive=is_active
                 )
                 db.add(new_med)
