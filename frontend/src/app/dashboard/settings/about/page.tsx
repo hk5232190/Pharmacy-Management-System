@@ -73,14 +73,17 @@ interface AboutData {
 
 // ─── Sub-Components ───────────────────────────────────────────────────────────
 
-function SectionCard({ icon: Icon, title, children, className }: {
-  icon: any; title: string; children: React.ReactNode; className?: string;
+function SectionCard({ icon: Icon, title, children, className, action }: {
+  icon: any; title: string; children: React.ReactNode; className?: string; action?: React.ReactNode;
 }) {
   return (
     <div className={cn("border-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none overflow-hidden ring-1 ring-slate-200/60 dark:ring-slate-800 transition-all duration-500 hover:shadow-[0_8px_30px_rgb(99,102,241,0.08)] rounded-2xl bg-white dark:bg-card", className)}>
-      <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-r from-indigo-50/80 to-transparent dark:from-transparent dark:to-transparent flex items-center gap-3">
-        <Icon size={20} className="text-indigo-600 dark:text-indigo-400 drop-shadow-sm" />
-        <h3 className="font-bold text-xl text-indigo-700 dark:text-indigo-400">{title}</h3>
+      <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-r from-indigo-50/80 to-transparent dark:from-transparent dark:to-transparent flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Icon size={20} className="text-indigo-600 dark:text-indigo-400 drop-shadow-sm" />
+          <h3 className="font-bold text-xl text-indigo-700 dark:text-indigo-400">{title}</h3>
+        </div>
+        {action && <div>{action}</div>}
       </div>
       <div className="p-7 space-y-1">{children}</div>
     </div>
@@ -181,6 +184,7 @@ function LicenseStatusBadge({ status, type, expiryDate, remainingDays, isLifetim
 
 export default function AboutPage() {
   const [data, setData] = useState<AboutData | null>(null);
+  const [diagnostics, setDiagnostics] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [checkingUpdates, setCheckingUpdates] = useState(false);
   const [updateStatus, setUpdateStatus] = useState<string | null>(null);
@@ -204,9 +208,17 @@ export default function AboutPage() {
   const fetchAbout = async () => {
     setLoading(true);
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/v1/about/info");
-      if (!res.ok) throw new Error("Failed");
-      setData(await res.json());
+      const [resAbout, resDiag] = await Promise.all([
+        fetch("http://127.0.0.1:8000/api/v1/about/info"),
+        fetch("http://127.0.0.1:8000/api/v1/system/diagnostics").catch(() => null)
+      ]);
+      
+      if (!resAbout.ok) throw new Error("Failed");
+      setData(await resAbout.json());
+      
+      if (resDiag && resDiag.ok) {
+        setDiagnostics(await resDiag.json());
+      }
     } catch {
       toast.error("Failed to load about information.");
     } finally {
@@ -343,56 +355,82 @@ export default function AboutPage() {
       </div>
 
       {/* ── System Information ── */}
-      <SectionCard icon={Monitor} title="System Information">
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
-          <StatPill
-            icon={Monitor}
-            label="Operating System"
-            value={system.os_name}
-            color="bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-400"
-          />
-          <StatPill
-            icon={Cpu}
-            label="Architecture"
-            value={system.architecture}
-            color="bg-violet-50 dark:bg-violet-950/20 border-violet-200 dark:border-violet-800 text-violet-700 dark:text-violet-400"
-          />
-          <StatPill
-            icon={MemoryStick}
-            label="Total RAM"
-            value={system.ram_total}
-            color="bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400"
-          />
-          <StatPill
-            icon={Clock}
-            label="Server Uptime"
-            value={system.server_uptime}
-            color="bg-orange-50 dark:bg-orange-950/20 border-orange-200 dark:border-orange-800 text-orange-700 dark:text-orange-400"
-          />
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8">
-          <div>
-            <InfoRow label="CPU" value={system.cpu} />
-            <InfoRow label="Python Version" value={system.python_version} mono />
-            <InfoRow label="Backend Port" value={`:${system.backend_port}`} mono />
-            <InfoRow label="Frontend Port" value={`:${system.frontend_port}`} mono />
+      {diagnostics ? (
+        <SectionCard 
+          icon={Monitor} 
+          title="System Information"
+          action={
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const text = `OS: ${diagnostics.os_name} | Arch: ${diagnostics.architecture} | RAM: ${diagnostics.total_ram_gb}GB | Uptime: ${diagnostics.server_uptime}`;
+                navigator.clipboard.writeText(text);
+                toast.success("Diagnostics copied to clipboard");
+              }}
+              className="h-8 gap-1.5 text-indigo-600 border-indigo-200 hover:bg-indigo-50"
+            >
+              <Copy size={14} /> Copy System Info
+            </Button>
+          }
+        >
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+            <StatPill
+              icon={Monitor}
+              label="Operating System"
+              value={diagnostics.os_name}
+              color="bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-400"
+            />
+            <StatPill
+              icon={Cpu}
+              label="Architecture"
+              value={diagnostics.architecture}
+              color="bg-violet-50 dark:bg-violet-950/20 border-violet-200 dark:border-violet-800 text-violet-700 dark:text-violet-400"
+            />
+            <StatPill
+              icon={MemoryStick}
+              label="Total RAM"
+              value={`${diagnostics.total_ram_gb} GB`}
+              color="bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400"
+            />
+            <StatPill
+              icon={Clock}
+              label="Server Uptime"
+              value={diagnostics.server_uptime}
+              color="bg-orange-50 dark:bg-orange-950/20 border-orange-200 dark:border-orange-800 text-orange-700 dark:text-orange-400"
+            />
           </div>
-          <div>
-            <InfoRow label="OS Version" value={system.os_version} mono />
-            <InfoRow label="Database File" value={system.database.path} mono />
-            <InfoRow label="Database Size" value={system.database.size_human} />
-            <div className="py-2.5 border-b border-border/60 last:border-0">
-              <p className="text-xs text-muted-foreground font-medium mb-2">Disk Usage</p>
-              <DiskBar
-                used={system.disk.used}
-                total={system.disk.total}
-                percent={system.disk.used_percent}
-              />
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8">
+            <div>
+              <InfoRow label="CPU" value={diagnostics.cpu_model} />
+              <InfoRow label="Python Version" value={diagnostics.python_version} mono />
+              <InfoRow label="Backend Port" value={`:${diagnostics.backend_port}`} mono />
+              <InfoRow label="Frontend Port" value={`:${diagnostics.frontend_port}`} mono />
+            </div>
+            <div>
+              <InfoRow label="OS Version" value={diagnostics.os_version} mono />
+              <InfoRow label="Database File" value={diagnostics.db_file} mono />
+              <InfoRow label="Database Size" value={diagnostics.db_size_human} />
+              <div className="py-2.5 border-b border-border/60 last:border-0">
+                <p className="text-xs text-muted-foreground font-medium mb-2">Disk Usage</p>
+                <DiskBar
+                  used={`${diagnostics.disk_used_gb} GB`}
+                  total={`${diagnostics.disk_total_gb} GB`}
+                  percent={diagnostics.disk_used_percent}
+                />
+              </div>
             </div>
           </div>
-        </div>
-      </SectionCard>
+        </SectionCard>
+      ) : (
+        <SectionCard icon={Monitor} title="System Information">
+          <div className="p-4 flex flex-col items-center justify-center text-muted-foreground">
+            <Loader2 size={24} className="animate-spin mb-2" />
+            <p className="text-sm">Loading Live Diagnostics...</p>
+          </div>
+        </SectionCard>
+      )}
 
       {/* ── License Info (Display Only) ── */}
       <SectionCard icon={Shield} title="License Information (Display Only)">

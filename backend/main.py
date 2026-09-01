@@ -8,7 +8,7 @@ from core.exceptions import (
     general_exception_handler
 )
 
-from api.v1 import license, auth, category, company, supplier, customer, medicine, purchase, purchase_return, inventory, sales, dashboard, reports, backup, backup_settings, settings as pms_settings, security, about
+from api.v1 import license, auth, category, company, supplier, customer, medicine, purchase, purchase_return, inventory, sales, dashboard, reports, backup, backup_settings, settings as pms_settings, security, about, system
 
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -60,6 +60,7 @@ api_router.include_router(backup_settings.router, prefix="/backup-settings", tag
 api_router.include_router(pms_settings.router, prefix="/settings", tags=["Settings"])
 api_router.include_router(security.router)
 api_router.include_router(about.router, prefix="/about", tags=["About"])
+api_router.include_router(system.router, prefix="/system", tags=["System Diagnostics"])
 
 app.include_router(api_router)
 
