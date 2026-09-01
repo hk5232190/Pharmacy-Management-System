@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import {
   Code2, Monitor, HardDrive, Cpu, MemoryStick, Database,
-  Globe, Mail, Phone, Shield, ShieldCheck,
+  Globe, Mail, Phone, Shield, ShieldCheck, ShieldAlert, ShieldX,
   Calendar, Tag, Building2, Copyright, RefreshCw,
   Loader2, ExternalLink, Server, Clock, Layers,
   Info, HeartHandshake, Infinity, Package, Copy
