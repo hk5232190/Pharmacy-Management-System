@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import Link from "next/link";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -146,21 +147,50 @@ function DiskBar({ used, total, percent }: { used: string; total: string; percen
 function LicenseStatusBadge({ status, type, expiryDate, remainingDays, isLifetime }: {
   status: string; type?: string; expiryDate?: string; remainingDays?: number | null; isLifetime?: boolean;
 }) {
-  const isActive = status === "Active";
+  let tier = "invalid";
+  if (status === "Active") {
+    if (isLifetime || (remainingDays !== null && remainingDays > 14)) tier = "active";
+    else if (remainingDays !== null && remainingDays <= 14) tier = "warning";
+  }
+
+  const styles = {
+    active: {
+      bg: "bg-emerald-50 dark:bg-emerald-950/20",
+      border: "border-emerald-200 dark:border-emerald-800",
+      iconBg: "bg-emerald-100 dark:bg-emerald-900/40",
+      text: "text-emerald-700 dark:text-emerald-400",
+      icon: "text-emerald-600",
+      IconElement: ShieldCheck
+    },
+    warning: {
+      bg: "bg-amber-50 dark:bg-amber-950/20",
+      border: "border-amber-200 dark:border-amber-800",
+      iconBg: "bg-amber-100 dark:bg-amber-900/40",
+      text: "text-amber-700 dark:text-amber-400",
+      icon: "text-amber-600",
+      IconElement: ShieldAlert
+    },
+    invalid: {
+      bg: "bg-rose-50 dark:bg-rose-950/20",
+      border: "border-rose-200 dark:border-rose-800",
+      iconBg: "bg-rose-100 dark:bg-rose-900/40",
+      text: "text-rose-700 dark:text-rose-400",
+      icon: "text-rose-600",
+      IconElement: ShieldX
+    }
+  };
+
+  const activeStyle = styles[tier as keyof typeof styles];
+  const IconCmp = activeStyle.IconElement;
+
   return (
-    <div className={cn(
-      "rounded-xl border p-4 flex items-center gap-4",
-      isActive
-        ? "bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800"
-        : "bg-rose-50 dark:bg-rose-950/20 border-rose-200 dark:border-rose-800"
-    )}>
-      <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0",
-        isActive ? "bg-emerald-100 dark:bg-emerald-900/40" : "bg-rose-100 dark:bg-rose-900/40")}>
-        <ShieldCheck size={20} className={isActive ? "text-emerald-600" : "text-rose-600"} />
+    <div className={cn("rounded-xl border p-4 flex items-center gap-4", activeStyle.bg, activeStyle.border)}>
+      <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0", activeStyle.iconBg)}>
+        <IconCmp size={20} className={activeStyle.icon} />
       </div>
       <div className="flex-1">
         <div className="flex items-center gap-2">
-          <span className={cn("text-sm font-bold", isActive ? "text-emerald-700 dark:text-emerald-400" : "text-rose-700 dark:text-rose-400")}>
+          <span className={cn("text-sm font-bold", activeStyle.text)}>
             {status}
           </span>
           {type && (
@@ -169,13 +199,13 @@ function LicenseStatusBadge({ status, type, expiryDate, remainingDays, isLifetim
             </span>
           )}
         </div>
-        {isActive && (
+        {status === "Active" && (
           <p className="text-xs text-muted-foreground mt-0.5">
             {isLifetime ? "Lifetime License – Never Expires" : `Expires: ${expiryDate} (${remainingDays} days remaining)`}
           </p>
         )}
       </div>
-      {isActive && isLifetime && <Infinity size={22} className="text-primary shrink-0" />}
+      {status === "Active" && isLifetime && <Infinity size={22} className="text-primary shrink-0" />}
     </div>
   );
 }
@@ -208,13 +238,28 @@ export default function AboutPage() {
   const fetchAbout = async () => {
     setLoading(true);
     try {
-      const [resAbout, resDiag] = await Promise.all([
+      const [resAbout, resDiag, resLic] = await Promise.all([
         fetch("http://127.0.0.1:8000/api/v1/about/info"),
-        fetch("http://127.0.0.1:8000/api/v1/system/diagnostics").catch(() => null)
+        fetch("http://127.0.0.1:8000/api/v1/system/diagnostics").catch(() => null),
+        fetch("http://127.0.0.1:8000/api/v1/license/info", {
+          headers: { Authorization: `Bearer ${localStorage.getItem("access_token") || sessionStorage.getItem("access_token") || ""}` }
+        }).catch(() => null)
       ]);
       
       if (!resAbout.ok) throw new Error("Failed");
-      setData(await resAbout.json());
+      const aboutData = await resAbout.json();
+      
+      if (resLic && resLic.ok) {
+        const licData = await resLic.json();
+        aboutData.license = {
+          status: licData.status,
+          type: licData.license_type,
+          expiry_date: licData.expiry_date,
+          remaining_days: licData.remaining_days,
+          is_lifetime: licData.total_days === null,
+        };
+      }
+      setData(aboutData);
       
       if (resDiag && resDiag.ok) {
         setDiagnostics(await resDiag.json());
@@ -444,9 +489,9 @@ export default function AboutPage() {
         <p className="text-xs text-muted-foreground mt-3 flex items-center gap-1.5">
           <Info size={12} />
           To manage your license, go to{" "}
-          <a href="/dashboard/settings/license" className="text-primary font-semibold hover:underline">
+          <Link href="/dashboard/settings/license" className="text-primary font-semibold hover:underline">
             Settings → License Information
-          </a>
+          </Link>
         </p>
       </SectionCard>
 
@@ -455,7 +500,7 @@ export default function AboutPage() {
         <div className="flex items-center justify-center gap-2 mt-2">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
           <span className="text-xs text-muted-foreground font-medium">
-            PMS V {app.version} · Build {app.build_number} · Running on port {system.backend_port}
+            PMS V {app.version} · Build {app.build_number} · Running on port {diagnostics ? diagnostics.backend_port : system.backend_port}
           </span>
         </div>
       </div>
