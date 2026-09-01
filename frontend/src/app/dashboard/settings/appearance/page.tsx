@@ -122,28 +122,31 @@ export default function AppearanceSettingsPage() {
 
 
         {/* Notifications */}
-        <Card className="border-slate-200 dark:border-slate-800 shadow-sm">
-          <CardHeader className="pb-4 border-b">
-            <CardTitle className="text-lg font-bold flex items-center gap-2">
-              <Bell className="w-5 h-5 text-indigo-600" /> Notifications & Audio Alerts
-            </CardTitle>
-            <CardDescription>Configure audio cues, toast banners, and event trigger alerts.</CardDescription>
+        <Card className="border-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none overflow-hidden ring-1 ring-slate-200/60 dark:ring-slate-800 transition-all duration-500 hover:shadow-[0_8px_30px_rgb(99,102,241,0.08)] rounded-2xl">
+          <CardHeader className="pb-5 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-r from-indigo-50/80 to-transparent dark:from-transparent dark:to-transparent">
+            <div>
+              <CardTitle className="text-xl font-bold flex items-center gap-2.5 text-indigo-700 dark:text-indigo-400">
+                <Bell className="w-5 h-5 drop-shadow-sm" /> Notifications & Audio Alerts
+              </CardTitle>
+              <CardDescription className="text-slate-500 mt-1">Configure audio cues, toast banners, and event trigger alerts.</CardDescription>
+            </div>
           </CardHeader>
-          <CardContent className="p-6 space-y-4">
+          <CardContent className="p-7 space-y-5">
             
-            <div className="flex flex-col gap-4 p-4 bg-slate-50 dark:bg-slate-900/50 rounded-lg border">
+            <div className="flex flex-col gap-4 p-5 bg-slate-50/50 dark:bg-slate-900/20 rounded-xl border border-slate-100 dark:border-slate-800 transition-all hover:bg-slate-50 dark:hover:bg-slate-900/40">
               <div className="flex items-start justify-between">
                 <div className="flex items-start gap-3">
-                  <Volume2 className="w-5 h-5 mt-0.5 text-slate-400" />
+                  <Volume2 className="w-5 h-5 mt-0.5 text-indigo-500" />
                   <div>
-                    <Label className="text-sm font-semibold">Enable Audio Alerts</Label>
-                    <p className="text-xs text-slate-500">Play a sound when an error occurs or a sale is successfully processed.</p>
+                    <Label className="text-sm font-bold text-slate-800 dark:text-slate-200">Enable Audio Alerts</Label>
+                    <p className="text-xs text-slate-500 mt-1">Play a sound when an error occurs or a sale is successfully processed.</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
                   <Button 
                     variant="outline" 
                     size="sm"
+                    className="rounded-xl border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
                     onClick={() => playTone('success', settings.AlertVolume, settings.EnableAudioAlerts)}
                     disabled={!settings.EnableAudioAlerts}
                   >
@@ -168,45 +171,45 @@ export default function AppearanceSettingsPage() {
               </div>
             </div>
 
-            <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900/50 rounded-lg border">
+            <div className="flex items-center justify-between p-5 bg-slate-50/50 dark:bg-slate-900/20 rounded-xl border border-slate-100 dark:border-slate-800 transition-all hover:bg-slate-50 dark:hover:bg-slate-900/40">
               <div className="flex items-start gap-3">
-                <LayoutDashboard className="w-5 h-5 mt-0.5 text-slate-400" />
+                <LayoutDashboard className="w-5 h-5 mt-0.5 text-slate-500" />
                 <div>
-                  <Label className="text-sm font-semibold">Enable Toast Popups</Label>
-                  <p className="text-xs text-slate-500">Show non-intrusive popup notifications in the bottom corner of the screen.</p>
+                  <Label className="text-sm font-bold text-slate-800 dark:text-slate-200">Enable Toast Popups</Label>
+                  <p className="text-xs text-slate-500 mt-1">Show non-intrusive popup notifications in the bottom corner of the screen.</p>
                 </div>
               </div>
               <Switch checked={settings.EnableToastNotifications} onCheckedChange={(c) => handleSwitchChange("EnableToastNotifications", c)} />
             </div>
 
-            <div className="space-y-3 pt-4">
-              <h4 className="font-semibold text-slate-900 dark:text-white border-b pb-1">Alert Triggers</h4>
+            <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+              <h4 className="font-semibold text-slate-900 dark:text-white">Alert Triggers</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="flex items-center justify-between p-3 border rounded-lg">
-                  <Label className="text-sm font-medium">Sale Completed</Label>
+                <div className="flex items-center justify-between p-4 bg-slate-50/50 dark:bg-slate-900/20 rounded-xl border border-slate-100 dark:border-slate-800">
+                  <Label className="text-sm font-semibold text-slate-800 dark:text-slate-200">Sale Completed</Label>
                   <Switch checked={settings.AlertTriggerSale} onCheckedChange={(c) => handleSwitchChange("AlertTriggerSale", c)} />
                 </div>
-                <div className="flex items-center justify-between p-3 border rounded-lg">
-                  <Label className="text-sm font-medium">Low Stock Warning</Label>
+                <div className="flex items-center justify-between p-4 bg-slate-50/50 dark:bg-slate-900/20 rounded-xl border border-slate-100 dark:border-slate-800">
+                  <Label className="text-sm font-semibold text-slate-800 dark:text-slate-200">Low Stock Warning</Label>
                   <Switch checked={settings.AlertTriggerLowStock} onCheckedChange={(c) => handleSwitchChange("AlertTriggerLowStock", c)} />
                 </div>
-                <div className="flex items-center justify-between p-3 border rounded-lg">
-                  <Label className="text-sm font-medium">Near Expiry Alert</Label>
+                <div className="flex items-center justify-between p-4 bg-slate-50/50 dark:bg-slate-900/20 rounded-xl border border-slate-100 dark:border-slate-800">
+                  <Label className="text-sm font-semibold text-slate-800 dark:text-slate-200">Near Expiry Alert</Label>
                   <Switch checked={settings.AlertTriggerNearExpiry} onCheckedChange={(c) => handleSwitchChange("AlertTriggerNearExpiry", c)} />
                 </div>
-                <div className="flex items-center justify-between p-3 border rounded-lg">
-                  <Label className="text-sm font-medium">System Errors & Warnings</Label>
+                <div className="flex items-center justify-between p-4 bg-slate-50/50 dark:bg-slate-900/20 rounded-xl border border-slate-100 dark:border-slate-800">
+                  <Label className="text-sm font-semibold text-slate-800 dark:text-slate-200">System Errors & Warnings</Label>
                   <Switch checked={settings.AlertTriggerErrors} onCheckedChange={(c) => handleSwitchChange("AlertTriggerErrors", c)} />
                 </div>
               </div>
             </div>
 
-            <div className="pt-4 mt-2 border-t border-slate-100 dark:border-slate-800 flex justify-end items-center gap-4">
-              <Button variant="ghost" onClick={() => fetchSettings()} disabled={isSaving} className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 font-medium">
+            <div className="pt-6 border-t border-slate-100 dark:border-slate-800 flex justify-end items-center gap-3">
+              <Button variant="ghost" onClick={() => fetchSettings()} disabled={isSaving} className="h-12 px-6 rounded-xl transition-colors">
                 Cancel Changes
               </Button>
-              <Button onClick={handleSave} disabled={isSaving} className="h-10 px-6 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-500/30 font-medium">
-                {isSaving ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+              <Button onClick={handleSave} disabled={isSaving} className="h-12 min-w-[140px] px-6 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-600/25 hover:shadow-indigo-600/40 transition-all duration-300 font-semibold border-0">
+                {isSaving ? <RefreshCw className="w-5 h-5 mr-2 animate-spin" /> : <Save className="w-5 h-5 mr-2" />}
                 {isSaving ? "Saving..." : "Save Changes"}
               </Button>
             </div>

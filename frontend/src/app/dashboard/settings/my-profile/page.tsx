@@ -348,11 +348,11 @@ export default function MyProfileSettingsPage() {
                 setErrors({});
                 setPhotoFile(null);
                 setPhotoPreview(null);
-              }} className="rounded-full px-6 transition-colors">
+              }} className="rounded-xl h-12 px-6 transition-colors">
                 Cancel Changes
               </Button>
-              <Button onClick={handleSaveProfileText} disabled={isSavingProfile} className="bg-indigo-600 hover:bg-indigo-700 min-w-[140px] rounded-full shadow-lg shadow-indigo-600/25 hover:shadow-indigo-600/40 hover:-translate-y-0.5 transition-all duration-300">
-                {isSavingProfile ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />} Save Changes
+              <Button onClick={handleSaveProfileText} disabled={isSavingProfile} className="bg-indigo-600 hover:bg-indigo-700 h-12 min-w-[140px] rounded-xl shadow-lg shadow-indigo-600/25 hover:shadow-indigo-600/40 transition-all duration-300">
+                {isSavingProfile ? <RefreshCw className="w-5 h-5 mr-2 animate-spin" /> : <Save className="w-5 h-5 mr-2" />} {isSavingProfile ? "Saving..." : "Save Changes"}
               </Button>
             </div>
 

@@ -7,6 +7,7 @@ import {
   Infinity, Info, Loader2, HardDrive
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { apiClient } from "@/lib/api-client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -260,12 +261,12 @@ export default function LicensePage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
         {/* ── License Details ── */}
-        <div className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden">
-          <div className="px-5 py-4 border-b border-border bg-secondary/20 flex items-center gap-2">
-            <Key size={16} className="text-primary" />
-            <h3 className="font-bold text-base text-foreground">License Details</h3>
-          </div>
-          <div className="px-5 py-1">
+        <Card className="border-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none overflow-hidden ring-1 ring-slate-200/60 dark:ring-slate-800 transition-all duration-500 hover:shadow-[0_8px_30px_rgb(99,102,241,0.08)] rounded-2xl">
+          <CardHeader className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-r from-indigo-50/80 to-transparent dark:from-transparent dark:to-transparent flex flex-row items-center gap-2 space-y-0">
+            <Key size={18} className="text-indigo-600 dark:text-indigo-400 drop-shadow-sm" />
+            <CardTitle className="font-bold text-base text-indigo-700 dark:text-indigo-400">License Details</CardTitle>
+          </CardHeader>
+          <CardContent className="px-5 py-1">
             <InfoRow label="License Status">
               <StatusBadge status={info?.status || "Error"} />
             </InfoRow>
@@ -300,17 +301,17 @@ export default function LicensePage() {
                 {info?.license_id && info.license_id !== "N/A" ? info.license_id : "N/A"}
               </span>
             </InfoRow>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
         {/* ── Hardware & Key Reference ── */}
         <div className="space-y-6">
-          <div className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden">
-            <div className="px-5 py-4 border-b border-border bg-secondary/20 flex items-center gap-2">
-              <Cpu size={16} className="text-primary" />
-              <h3 className="font-bold text-base text-foreground">Hardware ID</h3>
-            </div>
-            <div className="p-5 space-y-4">
+          <Card className="border-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none overflow-hidden ring-1 ring-slate-200/60 dark:ring-slate-800 transition-all duration-500 hover:shadow-[0_8px_30px_rgb(59,130,246,0.08)] rounded-2xl">
+            <CardHeader className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-r from-blue-50/80 to-transparent dark:from-transparent dark:to-transparent flex flex-row items-center gap-2 space-y-0">
+              <Cpu size={18} className="text-blue-600 dark:text-blue-400 drop-shadow-sm" />
+              <CardTitle className="font-bold text-base text-blue-700 dark:text-blue-400">Hardware ID</CardTitle>
+            </CardHeader>
+            <CardContent className="p-5 space-y-4">
               <div>
                 <p className="text-xs text-muted-foreground font-medium mb-2">
                   Generated from SHA-256(CPU ID + Motherboard UUID + MAC Address)
@@ -328,15 +329,15 @@ export default function LicensePage() {
                 {copiedHwid ? <Check size={15} className="text-emerald-500" /> : <Copy size={15} />}
                 {copiedHwid ? "Copied!" : "Copy Hardware ID"}
               </Button>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
-          <div className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden">
-            <div className="px-5 py-4 border-b border-border bg-secondary/20 flex items-center gap-2">
-              <HardDrive size={16} className="text-primary" />
-              <h3 className="font-bold text-base text-foreground">Key Reference</h3>
-            </div>
-            <div className="p-5 space-y-3">
+          <Card className="border-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none overflow-hidden ring-1 ring-slate-200/60 dark:ring-slate-800 transition-all duration-500 hover:shadow-[0_8px_30px_rgb(168,85,247,0.08)] rounded-2xl">
+            <CardHeader className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-r from-purple-50/80 to-transparent dark:from-transparent dark:to-transparent flex flex-row items-center gap-2 space-y-0">
+              <HardDrive size={18} className="text-purple-600 dark:text-purple-400 drop-shadow-sm" />
+              <CardTitle className="font-bold text-base text-purple-700 dark:text-purple-400">Key Reference</CardTitle>
+            </CardHeader>
+            <CardContent className="p-5 space-y-3">
               <div className="bg-secondary/50 border border-border rounded-xl p-3 font-mono text-xs text-foreground break-all">
                 {info?.key_reference || "No license file"}
               </div>
@@ -349,18 +350,18 @@ export default function LicensePage() {
                 {copiedKey ? <Check size={15} className="text-emerald-500" /> : <Copy size={15} />}
                 {copiedKey ? "Copied!" : "Copy Key Reference"}
               </Button>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
 
       {/* ── License File Information ── */}
-      <div className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden">
-        <div className="px-5 py-4 border-b border-border bg-secondary/20 flex items-center gap-2">
-          <FileText size={16} className="text-primary" />
-          <h3 className="font-bold text-base text-foreground">License File Information</h3>
-        </div>
-        <div className="px-5 py-1">
+      <Card className="border-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none overflow-hidden ring-1 ring-slate-200/60 dark:ring-slate-800 transition-all duration-500 hover:shadow-[0_8px_30px_rgb(245,158,11,0.08)] rounded-2xl">
+        <CardHeader className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-r from-amber-50/80 to-transparent dark:from-transparent dark:to-transparent flex flex-row items-center gap-2 space-y-0">
+          <FileText size={18} className="text-amber-600 dark:text-amber-400 drop-shadow-sm" />
+          <CardTitle className="font-bold text-base text-amber-700 dark:text-amber-400">License File Information</CardTitle>
+        </CardHeader>
+        <CardContent className="px-5 py-1">
           <InfoRow label="File Name" value={info?.license_file_info?.file_name ?? "No file found"} mono />
           <InfoRow label="File Location" value={info?.license_file_info?.file_path ?? "—"} mono />
           <InfoRow
@@ -370,28 +371,28 @@ export default function LicensePage() {
               : "—"}
           />
           <InfoRow label="Last Modified" value={info?.license_file_info?.last_modified ?? "—"} />
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* ── License Validation Status ── */}
-      <div className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden">
-        <div className="px-5 py-4 border-b border-border bg-secondary/20 flex items-center justify-between">
+      <Card className="border-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none overflow-hidden ring-1 ring-slate-200/60 dark:ring-slate-800 transition-all duration-500 hover:shadow-[0_8px_30px_rgb(16,185,129,0.08)] rounded-2xl">
+        <CardHeader className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-r from-emerald-50/80 to-transparent dark:from-transparent dark:to-transparent flex flex-row items-center justify-between space-y-0">
           <div className="flex items-center gap-2">
-            <ShieldCheck size={16} className="text-primary" />
-            <h3 className="font-bold text-base text-foreground">License Validation Status</h3>
+            <ShieldCheck size={18} className="text-emerald-600 dark:text-emerald-400 drop-shadow-sm" />
+            <CardTitle className="font-bold text-base text-emerald-700 dark:text-emerald-400">License Validation Status</CardTitle>
           </div>
           <Button
             size="sm"
             onClick={handleValidate}
             disabled={validating}
-            className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground h-9"
+            className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/20 h-9 rounded-xl"
           >
             {validating
               ? <><Loader2 size={14} className="animate-spin" /> Validating...</>
               : <><RefreshCw size={14} /> Run Validation</>}
           </Button>
-        </div>
-        <div className="px-5 py-2">
+        </CardHeader>
+        <CardContent className="px-5 py-2">
           {validation ? (
             <>
               <CheckRow label="License file exists on disk" ok={validation.checks.file_exists} />
@@ -416,16 +417,16 @@ export default function LicensePage() {
               <p className="text-sm font-medium">Click "Run Validation" to perform a live license check.</p>
             </div>
           )}
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* ── Import New / Renewed License ── */}
-      <div className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden">
-        <div className="px-5 py-4 border-b border-border bg-secondary/20 flex items-center gap-2">
-          <Upload size={16} className="text-primary" />
-          <h3 className="font-bold text-base text-foreground">Import New / Renewed License</h3>
-        </div>
-        <div className="p-5 space-y-4">
+      <Card className="border-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none overflow-hidden ring-1 ring-slate-200/60 dark:ring-slate-800 transition-all duration-500 hover:shadow-[0_8px_30px_rgb(59,130,246,0.08)] rounded-2xl">
+        <CardHeader className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-r from-blue-50/80 to-transparent dark:from-transparent dark:to-transparent flex flex-row items-center gap-2 space-y-0">
+          <Upload size={18} className="text-blue-600 dark:text-blue-400 drop-shadow-sm" />
+          <CardTitle className="font-bold text-base text-blue-700 dark:text-blue-400">Import New / Renewed License</CardTitle>
+        </CardHeader>
+        <CardContent className="p-7 space-y-6">
           <div className="flex items-start gap-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
             <Info size={18} className="text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
             <p className="text-sm text-blue-700 dark:text-blue-300 font-medium">
@@ -485,14 +486,14 @@ export default function LicensePage() {
           <Button
             onClick={() => fileInputRef.current?.click()}
             disabled={importing}
-            className="w-full h-11 gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-sm"
+            className="w-full h-12 gap-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/20 font-semibold"
           >
             {importing
-              ? <><Loader2 size={16} className="animate-spin" /> Importing &amp; Validating...</>
-              : <><Upload size={16} /> Browse &amp; Import License File</>}
+              ? <><Loader2 size={18} className="animate-spin" /> Importing &amp; Validating...</>
+              : <><Upload size={18} /> Browse &amp; Import License File</>}
           </Button>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
     </div>
   );

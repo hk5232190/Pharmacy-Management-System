@@ -359,8 +359,8 @@ export default function SecurityMaintenancePage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* ── Change Password ─────────────────────────────────────── */}
-        <Card className="shadow-sm">
-          <CardHeader className="pb-3">
+        <Card className="border-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none overflow-hidden ring-1 ring-slate-200/60 dark:ring-slate-800 transition-all duration-500 hover:shadow-[0_8px_30px_rgb(59,130,246,0.08)] rounded-2xl">
+          <CardHeader className="pb-5 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-r from-blue-50/80 to-transparent dark:from-transparent dark:to-transparent">
             <SectionHeader icon={Key} title="Change Password" description="Update your master admin password." color="blue" />
           </CardHeader>
           <CardContent className="space-y-4">
@@ -427,8 +427,8 @@ export default function SecurityMaintenancePage() {
         </Card>
 
         {/* ── Auto Lock & Session Timeout ─────────────────────────── */}
-        <Card className="shadow-sm">
-          <CardHeader className="pb-3">
+        <Card className="border-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none overflow-hidden ring-1 ring-slate-200/60 dark:ring-slate-800 transition-all duration-500 hover:shadow-[0_8px_30px_rgb(168,85,247,0.08)] rounded-2xl">
+          <CardHeader className="pb-5 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-r from-purple-50/80 to-transparent dark:from-transparent dark:to-transparent">
             <SectionHeader icon={Lock} title="Auto Lock &amp; Session Timeout" description="Configure inactivity lock and JWT session expiry behaviour." color="purple" />
           </CardHeader>
           <CardContent className="space-y-5">
@@ -490,8 +490,8 @@ export default function SecurityMaintenancePage() {
         </Card>
 
         {/* ── Database Optimization ───────────────────────────────── */}
-        <Card className="shadow-sm">
-          <CardHeader className="pb-3">
+        <Card className="border-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none overflow-hidden ring-1 ring-slate-200/60 dark:ring-slate-800 transition-all duration-500 hover:shadow-[0_8px_30px_rgb(34,197,94,0.08)] rounded-2xl">
+          <CardHeader className="pb-5 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-r from-green-50/80 to-transparent dark:from-transparent dark:to-transparent">
             <SectionHeader icon={Wrench} title="Database Optimization" description="Run VACUUM to reclaim space and ANALYZE to rebuild query statistics." color="green" />
           </CardHeader>
           <CardContent className="space-y-4">
@@ -525,8 +525,8 @@ export default function SecurityMaintenancePage() {
         </Card>
 
         {/* ── Integrity Check ─────────────────────────────────────── */}
-        <Card className="shadow-sm">
-          <CardHeader className="pb-3">
+        <Card className="border-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none overflow-hidden ring-1 ring-slate-200/60 dark:ring-slate-800 transition-all duration-500 hover:shadow-[0_8px_30px_rgb(245,158,11,0.08)] rounded-2xl">
+          <CardHeader className="pb-5 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-r from-amber-50/80 to-transparent dark:from-transparent dark:to-transparent">
             <SectionHeader icon={HeartPulse} title="Integrity Check" description="Run a full SQLite PRAGMA integrity_check and foreign key validation." color="amber" />
           </CardHeader>
           <CardContent className="space-y-4">
@@ -577,8 +577,8 @@ export default function SecurityMaintenancePage() {
       </div>
 
       {/* ── Application Logs ──────────────────────────────────────────────────── */}
-      <Card className="shadow-sm">
-        <CardHeader className="pb-3 border-b border-border/50">
+      <Card className="border-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none overflow-hidden ring-1 ring-slate-200/60 dark:ring-slate-800 transition-all duration-500 hover:shadow-[0_8px_30px_rgb(100,116,139,0.08)] rounded-2xl">
+        <CardHeader className="pb-5 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-r from-slate-100/80 to-transparent dark:from-transparent dark:to-transparent">
           <div className="flex items-start justify-between">
             <SectionHeader icon={ScrollText} title="Application Logs" description={`Structured audit trail from app_audit.log — ${logsTotal.toLocaleString()} entries, newest first.`} color="slate" />
             <div className="flex items-center gap-2">
@@ -661,8 +661,8 @@ export default function SecurityMaintenancePage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* ── Clear Temporary Data ─────────────────────────────────── */}
-        <Card className="shadow-sm">
-          <CardHeader className="pb-3">
+        <Card className="border-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none overflow-hidden ring-1 ring-slate-200/60 dark:ring-slate-800 transition-all duration-500 hover:shadow-[0_8px_30px_rgb(59,130,246,0.08)] rounded-2xl">
+          <CardHeader className="pb-5 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-r from-blue-50/80 to-transparent dark:from-transparent dark:to-transparent">
             <SectionHeader icon={Eraser} title="Clear Temporary Data" description="Remove print spooler files and temporary data from the system." color="blue" />
           </CardHeader>
           <CardContent className="space-y-4">
@@ -685,8 +685,8 @@ export default function SecurityMaintenancePage() {
         </Card>
 
         {/* ── Safe Data Reset ──────────────────────────────────────── */}
-        <Card className="shadow-sm border-red-200 dark:border-red-900/40">
-          <CardHeader className="pb-3">
+        <Card className="border-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none overflow-hidden ring-1 ring-red-200/80 dark:ring-red-900/60 transition-all duration-500 hover:shadow-[0_8px_30px_rgb(239,68,68,0.12)] rounded-2xl bg-red-50/10 dark:bg-red-950/5">
+          <CardHeader className="pb-5 border-b border-red-100 dark:border-red-900/40 bg-gradient-to-r from-red-50/80 to-transparent dark:from-red-950/40 dark:to-transparent">
             <SectionHeader icon={ShieldAlert} title="Safe Data Reset" description="Permanently wipe all transactional and master data. Settings are preserved." color="red" />
           </CardHeader>
           <CardContent className="space-y-4">

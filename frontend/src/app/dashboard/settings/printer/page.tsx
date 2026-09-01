@@ -194,32 +194,34 @@ export default function PrinterSettingsPage() {
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pb-20 items-start lg:pr-6">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pb-20 items-start pr-2 lg:pr-4">
       {/* Left Column: Forms */}
       <div className="lg:col-span-2 space-y-6">
         
         {/* Hardware Configuration */}
-        <Card className="border-blue-100 dark:border-blue-900 shadow-sm">
-          <CardHeader className="pb-4 border-b bg-blue-50/50 dark:bg-blue-900/10">
-            <CardTitle className="text-lg font-bold flex items-center gap-2 text-blue-700 dark:text-blue-400">
-              <Server className="w-5 h-5" /> Hardware Integration (ESC/POS)
-            </CardTitle>
-            <CardDescription>Configure OS printers, cash drawers, and auto-cutters.</CardDescription>
+        <Card className="border-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none overflow-hidden ring-1 ring-slate-200/60 dark:ring-slate-800 transition-all duration-500 hover:shadow-[0_8px_30px_rgb(59,130,246,0.08)] rounded-2xl">
+          <CardHeader className="pb-5 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-r from-blue-50/80 to-transparent dark:from-transparent dark:to-transparent">
+            <div>
+              <CardTitle className="text-xl font-bold flex items-center gap-2.5 text-blue-700 dark:text-blue-500">
+                <Server className="w-5 h-5 drop-shadow-sm" /> Hardware Integration (ESC/POS)
+              </CardTitle>
+              <CardDescription className="text-slate-500 mt-1">Configure OS printers, cash drawers, and auto-cutters.</CardDescription>
+            </div>
           </CardHeader>
-          <CardContent className="p-6 space-y-6">
+          <CardContent className="p-7 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               
-              <div className="space-y-2">
-                <Label>System Printer Selection</Label>
+              <div className="space-y-3">
+                <Label className="text-sm font-semibold">System Printer Selection</Label>
                 <div className="flex gap-2">
                   <Select 
                     value={settings.SelectedPrinterName} 
                     onValueChange={(val) => setSettings({...settings, SelectedPrinterName: val})}
                   >
-                    <SelectTrigger className="flex-1">
+                    <SelectTrigger className="flex-1 rounded-xl bg-slate-50/50 dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 focus:ring-blue-500/30 focus:border-blue-500 transition-all shadow-sm">
                       <SelectValue placeholder="Select OS printer..." />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="rounded-xl">
                       {osPrinters.length > 0 ? (
                         osPrinters.map(p => (
                           <SelectItem key={p} value={p}>{p}</SelectItem>
@@ -233,23 +235,23 @@ export default function PrinterSettingsPage() {
                       )}
                     </SelectContent>
                   </Select>
-                  <Button variant="outline" size="icon" onClick={fetchOsPrinters} disabled={isLoadingPrinters} title="Refresh OS Printers">
+                  <Button variant="outline" size="icon" onClick={fetchOsPrinters} disabled={isLoadingPrinters} title="Refresh OS Printers" className="rounded-xl border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800">
                     <RefreshCw className={`w-4 h-4 ${isLoadingPrinters ? 'animate-spin' : ''}`} />
                   </Button>
                 </div>
                 <p className="text-xs text-muted-foreground">Auto-detected Windows Spooler printers.</p>
               </div>
 
-              <div className="space-y-2">
-                <Label>Connection Port / Method</Label>
+              <div className="space-y-3">
+                <Label className="text-sm font-semibold">Connection Port / Method</Label>
                 <Select 
                   value={settings.ConnectionPort} 
                   onValueChange={(val) => setSettings({...settings, ConnectionPort: val})}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="rounded-xl bg-slate-50/50 dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 focus:ring-blue-500/30 focus:border-blue-500 transition-all shadow-sm">
                     <SelectValue placeholder="Select port" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="rounded-xl">
                     <SelectItem value="USB">USB (Spooler)</SelectItem>
                     <SelectItem value="COM1">COM1</SelectItem>
                     <SelectItem value="COM2">COM2</SelectItem>
@@ -260,31 +262,31 @@ export default function PrinterSettingsPage() {
                 <p className="text-xs text-muted-foreground">Direct port access vs OS Spooler.</p>
               </div>
               
-              <div className="space-y-2">
-                <Label>Printer Type</Label>
+              <div className="space-y-3">
+                <Label className="text-sm font-semibold">Printer Type</Label>
                 <Select 
                   value={settings.PrinterType} 
                   onValueChange={(val) => setSettings({...settings, PrinterType: val})}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="rounded-xl bg-slate-50/50 dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 focus:ring-blue-500/30 focus:border-blue-500 transition-all shadow-sm">
                     <SelectValue placeholder="Select type" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="rounded-xl">
                     <SelectItem value="ESC/POS Thermal">ESC/POS Thermal</SelectItem>
                     <SelectItem value="A4">A4 Standard</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2">
-                <Label>Paper Size</Label>
+              <div className="space-y-3">
+                <Label className="text-sm font-semibold">Paper Size</Label>
                 <Select 
                   value={settings.PaperSize} 
                   onValueChange={(val) => setSettings({...settings, PaperSize: val})}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="rounded-xl bg-slate-50/50 dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 focus:ring-blue-500/30 focus:border-blue-500 transition-all shadow-sm">
                     <SelectValue placeholder="Select size" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="rounded-xl">
                     <SelectItem value="58mm">58mm (Thermal)</SelectItem>
                     <SelectItem value="80mm">80mm (Thermal)</SelectItem>
                     <SelectItem value="A4">A4 (Standard)</SelectItem>
@@ -294,18 +296,18 @@ export default function PrinterSettingsPage() {
             </div>
 
             {/* Hardware Commands */}
-            <div className="pt-4 border-t space-y-4">
-              <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900/50 rounded-lg border">
+            <div className="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-4">
+              <div className="flex items-center justify-between p-4 bg-slate-50/50 dark:bg-slate-900/20 rounded-xl border border-slate-100 dark:border-slate-800 transition-all hover:bg-slate-50 dark:hover:bg-slate-900/40">
                 <div>
-                  <Label className="text-sm font-semibold">Auto-Cut Paper After Receipt</Label>
-                  <p className="text-xs text-slate-500">Send standard \x1D\x56\x41\x00 cut sequence on print completion.</p>
+                  <Label className="text-sm font-bold text-slate-800 dark:text-slate-200">Auto-Cut Paper After Receipt</Label>
+                  <p className="text-xs text-slate-500 mt-1">Send standard \x1D\x56\x41\x00 cut sequence on print completion.</p>
                 </div>
                 <Switch checked={settings.AutoCutPaper} onCheckedChange={(c) => handleSwitchChange("AutoCutPaper", c)} />
               </div>
-              <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900/50 rounded-lg border">
+              <div className="flex items-center justify-between p-4 bg-slate-50/50 dark:bg-slate-900/20 rounded-xl border border-slate-100 dark:border-slate-800 transition-all hover:bg-slate-50 dark:hover:bg-slate-900/40">
                 <div>
-                  <Label className="text-sm font-semibold">Kick Cash Drawer on Cash Sale</Label>
-                  <p className="text-xs text-slate-500">Automatically trigger the cash drawer pulse for cash payment methods.</p>
+                  <Label className="text-sm font-bold text-slate-800 dark:text-slate-200">Kick Cash Drawer on Cash Sale</Label>
+                  <p className="text-xs text-slate-500 mt-1">Automatically trigger the cash drawer pulse for cash payment methods.</p>
                 </div>
                 <Switch checked={settings.OpenCashDrawer} onCheckedChange={(c) => handleSwitchChange("OpenCashDrawer", c)} />
               </div>
@@ -338,49 +340,52 @@ export default function PrinterSettingsPage() {
         </Card>
 
         {/* Receipt Customization */}
-        <Card className="border-slate-200 dark:border-slate-800 shadow-sm">
-          <CardHeader className="pb-4 border-b">
-            <CardTitle className="text-lg font-bold flex items-center gap-2">
-              <Receipt className="w-5 h-5 text-indigo-600" /> Receipt Formatting & Toggles
-            </CardTitle>
-            <CardDescription>Control what information gets printed on customer receipts.</CardDescription>
+        <Card className="border-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none overflow-hidden ring-1 ring-slate-200/60 dark:ring-slate-800 transition-all duration-500 hover:shadow-[0_8px_30px_rgb(99,102,241,0.08)] rounded-2xl">
+          <CardHeader className="pb-5 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-r from-indigo-50/80 to-transparent dark:from-transparent dark:to-transparent">
+            <div>
+              <CardTitle className="text-xl font-bold flex items-center gap-2.5 text-indigo-700 dark:text-indigo-400">
+                <Receipt className="w-5 h-5 drop-shadow-sm" /> Receipt Formatting & Toggles
+              </CardTitle>
+              <CardDescription className="text-slate-500 mt-1">Control what information gets printed on customer receipts.</CardDescription>
+            </div>
           </CardHeader>
-          <CardContent className="p-6 space-y-6">
+          <CardContent className="p-7 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900/50 rounded-lg border">
-                <div><Label className="text-sm font-semibold">Print Pharmacy Logo</Label></div>
+              <div className="flex items-center justify-between p-4 bg-slate-50/50 dark:bg-slate-900/20 rounded-xl border border-slate-100 dark:border-slate-800 transition-all hover:bg-slate-50 dark:hover:bg-slate-900/40">
+                <div><Label className="text-sm font-bold text-slate-800 dark:text-slate-200">Print Pharmacy Logo</Label></div>
                 <Switch checked={settings.ShowLogo} onCheckedChange={(c) => handleSwitchChange("ShowLogo", c)} />
               </div>
-              <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900/50 rounded-lg border">
-                <div><Label className="text-sm font-semibold">Print Pharmacy Name</Label></div>
+              <div className="flex items-center justify-between p-4 bg-slate-50/50 dark:bg-slate-900/20 rounded-xl border border-slate-100 dark:border-slate-800 transition-all hover:bg-slate-50 dark:hover:bg-slate-900/40">
+                <div><Label className="text-sm font-bold text-slate-800 dark:text-slate-200">Print Pharmacy Name</Label></div>
                 <Switch checked={settings.ShowPharmacyName} onCheckedChange={(c) => handleSwitchChange("ShowPharmacyName", c)} />
               </div>
-              <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900/50 rounded-lg border">
-                <div><Label className="text-sm font-semibold">Print Address & Contact</Label></div>
+              <div className="flex items-center justify-between p-4 bg-slate-50/50 dark:bg-slate-900/20 rounded-xl border border-slate-100 dark:border-slate-800 transition-all hover:bg-slate-50 dark:hover:bg-slate-900/40">
+                <div><Label className="text-sm font-bold text-slate-800 dark:text-slate-200">Print Address & Contact</Label></div>
                 <Switch checked={settings.ShowAddress} onCheckedChange={(c) => handleSwitchChange("ShowAddress", c)} />
               </div>
-              <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900/50 rounded-lg border">
-                <div><Label className="text-sm font-semibold">Print Batch No. & Expiry</Label></div>
+              <div className="flex items-center justify-between p-4 bg-slate-50/50 dark:bg-slate-900/20 rounded-xl border border-slate-100 dark:border-slate-800 transition-all hover:bg-slate-50 dark:hover:bg-slate-900/40">
+                <div><Label className="text-sm font-bold text-slate-800 dark:text-slate-200">Print Batch No. & Expiry</Label></div>
                 <Switch checked={settings.PrintBatchAndExpiry} onCheckedChange={(c) => handleSwitchChange("PrintBatchAndExpiry", c)} />
               </div>
-              <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900/50 rounded-lg border">
-                <div><Label className="text-sm font-semibold">Print Drug License & NTN</Label></div>
+              <div className="flex items-center justify-between p-4 bg-slate-50/50 dark:bg-slate-900/20 rounded-xl border border-slate-100 dark:border-slate-800 transition-all hover:bg-slate-50 dark:hover:bg-slate-900/40">
+                <div><Label className="text-sm font-bold text-slate-800 dark:text-slate-200">Print Drug License & NTN</Label></div>
                 <Switch checked={settings.PrintLicenseAndNtn} onCheckedChange={(c) => handleSwitchChange("PrintLicenseAndNtn", c)} />
               </div>
-              <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900/50 rounded-lg border">
-                <div><Label className="text-sm font-semibold">Print Doctor & Patient Info</Label></div>
+              <div className="flex items-center justify-between p-4 bg-slate-50/50 dark:bg-slate-900/20 rounded-xl border border-slate-100 dark:border-slate-800 transition-all hover:bg-slate-50 dark:hover:bg-slate-900/40">
+                <div><Label className="text-sm font-bold text-slate-800 dark:text-slate-200">Print Doctor & Patient Info</Label></div>
                 <Switch checked={settings.PrintDoctorAndPatient} onCheckedChange={(c) => handleSwitchChange("PrintDoctorAndPatient", c)} />
               </div>
             </div>
 
-            <div className="space-y-2 mt-4">
-              <Label>Receipt Footer Message</Label>
+            <div className="space-y-3 mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+              <Label className="text-sm font-semibold">Receipt Footer Message</Label>
               <Textarea 
                 name="ReceiptFooterMessage" 
                 value={settings.ReceiptFooterMessage} 
                 onChange={handleChange} 
                 placeholder="Thank you for shopping!"
                 rows={3}
+                className="rounded-xl bg-slate-50/50 dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 focus-visible:ring-indigo-500/30 focus-visible:border-indigo-500 transition-all shadow-sm resize-none"
               />
             </div>
           </CardContent>
@@ -390,84 +395,87 @@ export default function PrinterSettingsPage() {
 
       {/* Right Column: Previews & Actions */}
       <div className="space-y-6">
-        <Card className="border-slate-200 dark:border-slate-800 shadow-sm lg:sticky lg:top-6">
-          <CardHeader className="bg-slate-50/50 dark:bg-slate-900/20 pb-4 border-b">
-            <CardTitle className="text-sm font-bold flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-green-600" /> Live Receipt Preview
+        <Card className="border-0 shadow-[0_8px_30px_rgb(0,0,0,0.06)] dark:shadow-none overflow-hidden ring-1 ring-slate-200/60 dark:ring-slate-800 rounded-2xl lg:sticky lg:top-6">
+          <CardHeader className="bg-slate-50/50 dark:bg-slate-900/20 pb-5 border-b border-slate-100 dark:border-slate-800">
+            <CardTitle className="text-base font-bold flex items-center gap-2 text-slate-900 dark:text-white">
+              <CheckCircle2 className="w-5 h-5 text-green-500" /> Live Receipt Preview
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-6 space-y-6 text-sm">
+          <CardContent className="p-6 space-y-6">
             
             {/* The Mock Receipt */}
-            <div className={`mx-auto bg-white border border-slate-200 shadow-sm p-4 font-mono text-xs text-center text-slate-800 ${settings.PaperSize === '58mm' ? 'w-48' : 'w-64'} transition-all duration-300`}>
+            <div className={`mx-auto bg-white border border-slate-200 shadow-md p-5 font-mono text-xs text-center text-slate-800 ${settings.PaperSize === '58mm' ? 'w-48' : 'w-64'} transition-all duration-300 relative`}>
+              {/* Subtle top cut marks */}
+              <div className="absolute top-0 left-0 w-full flex justify-between px-1 h-1 bg-gradient-to-r from-transparent via-slate-100 to-transparent"></div>
+              
               {settings.ShowLogo && (
-                <div className="mb-2 flex justify-center">
-                  <div className="w-12 h-12 bg-slate-200 rounded-full flex items-center justify-center border border-slate-300">
-                    <span className="text-[10px] text-slate-400">LOGO</span>
+                <div className="mb-3 flex justify-center">
+                  <div className="w-14 h-14 bg-slate-100 rounded-full flex items-center justify-center border border-slate-200 shadow-inner">
+                    <span className="text-[10px] text-slate-400 font-bold">LOGO</span>
                   </div>
                 </div>
               )}
               {settings.ShowPharmacyName && (
-                <div className="font-bold text-sm mb-1 uppercase tracking-tight">{pharmacyName}</div>
+                <div className="font-extrabold text-sm mb-1 uppercase tracking-tight text-slate-900">{pharmacyName}</div>
               )}
               {settings.ShowAddress && (
-                <div className="mb-1 text-[10px] text-slate-600 leading-tight whitespace-pre-wrap">
+                <div className="mb-2 text-[10px] text-slate-600 leading-tight whitespace-pre-wrap font-medium">
                   {pharmacyAddress}
                 </div>
               )}
               {settings.PrintLicenseAndNtn && (
-                <div className="mb-3 text-[9px] text-slate-500 leading-tight uppercase">
+                <div className="mb-4 text-[9px] text-slate-500 leading-tight uppercase font-medium">
                   {licenseInfo}
                 </div>
               )}
               
-              <div className="border-t border-dashed border-slate-300 my-2"></div>
+              <div className="border-t border-dashed border-slate-300 my-3"></div>
               
               {settings.PrintDoctorAndPatient && (
                 <>
-                  <div className="text-left text-[10px] space-y-1 mb-2">
+                  <div className="text-left text-[10px] space-y-1 mb-3 text-slate-700">
                     <div>Patient: John Doe</div>
                     <div>Dr: Dr. Smith (Reg: 12345)</div>
                   </div>
-                  <div className="border-t border-dashed border-slate-300 my-2"></div>
+                  <div className="border-t border-dashed border-slate-300 my-3"></div>
                 </>
               )}
 
-              <div className="text-left space-y-2 mb-2">
+              <div className="text-left space-y-2.5 mb-3 text-slate-800">
                 <div>
-                  <div className="flex justify-between font-semibold"><span>Panadol 500mg (2x)</span><span>{currency} 100</span></div>
-                  {settings.PrintBatchAndExpiry && <div className="text-[9px] text-slate-500">Batch: B123 | Exp: 12/26</div>}
+                  <div className="flex justify-between font-bold"><span>Panadol 500mg (2x)</span><span>{currency} 100</span></div>
+                  {settings.PrintBatchAndExpiry && <div className="text-[9px] text-slate-500 font-medium">Batch: B123 | Exp: 12/26</div>}
                 </div>
                 <div>
-                  <div className="flex justify-between font-semibold"><span>Amoxil Syrup (1x)</span><span>{currency} 250</span></div>
-                  {settings.PrintBatchAndExpiry && <div className="text-[9px] text-slate-500">Batch: A456 | Exp: 05/27</div>}
+                  <div className="flex justify-between font-bold"><span>Amoxil Syrup (1x)</span><span>{currency} 250</span></div>
+                  {settings.PrintBatchAndExpiry && <div className="text-[9px] text-slate-500 font-medium">Batch: A456 | Exp: 05/27</div>}
                 </div>
               </div>
               
-              <div className="border-t border-dashed border-slate-300 my-2"></div>
+              <div className="border-t border-dashed border-slate-300 my-3"></div>
               
-              <div className="flex justify-between font-bold text-sm mb-4">
+              <div className="flex justify-between font-extrabold text-sm mb-5 text-slate-900">
                 <span>TOTAL:</span><span>{currency} 350</span>
               </div>
               
               {settings.ReceiptFooterMessage && (
-                <div className="text-[10px] text-slate-600 whitespace-pre-wrap italic mt-4">
+                <div className="text-[10px] text-slate-600 whitespace-pre-wrap italic mt-5 font-medium">
                   {settings.ReceiptFooterMessage}
                 </div>
               )}
             </div>
 
-            <div className="space-y-3 pt-4">
-              <Button onClick={handleSave} disabled={isSaving} className="w-full h-11 text-base shadow-sm">
-                {isSaving ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+            <div className="space-y-3 pt-6 border-t border-slate-100 dark:border-slate-800">
+              <Button onClick={handleSave} disabled={isSaving} className="w-full h-12 rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/25 hover:shadow-blue-600/40 transition-all duration-300 font-semibold text-base border-0">
+                {isSaving ? <RefreshCw className="w-5 h-5 mr-2 animate-spin" /> : <Save className="w-5 h-5 mr-2" />}
                 {isSaving ? "Saving..." : "Save Settings"}
               </Button>
-              <div className="grid grid-cols-2 gap-2">
-                <Button onClick={handleTestPrint} disabled={isTesting} variant="outline" className="h-10 border-slate-300 text-slate-700">
+              <div className="grid grid-cols-2 gap-3">
+                <Button onClick={handleTestPrint} disabled={isTesting} variant="outline" className="h-11 rounded-xl border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 shadow-sm transition-all font-semibold">
                   {isTesting ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Printer className="w-4 h-4 mr-2 text-indigo-600" />}
                   Test Print
                 </Button>
-                <Button onClick={handleTestDrawer} disabled={isTestingDrawer} variant="outline" className="h-10 border-slate-300 text-slate-700">
+                <Button onClick={handleTestDrawer} disabled={isTestingDrawer} variant="outline" className="h-11 rounded-xl border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 shadow-sm transition-all font-semibold">
                   {isTestingDrawer ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Usb className="w-4 h-4 mr-2 text-emerald-600" />}
                   Test Drawer
                 </Button>

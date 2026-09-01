@@ -200,7 +200,7 @@ export default function PharmacyProfilePage() {
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pb-20 pr-2 lg:pr-4">
       {/* Left Column: Form */}
       <div className="lg:col-span-2 space-y-6">
-        <Card className="border-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none rounded-2xl overflow-hidden ring-1 ring-slate-200/60 dark:ring-slate-800 transition-all">
+        <Card className="border-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none overflow-hidden ring-1 ring-slate-200/60 dark:ring-slate-800 transition-all duration-500 hover:shadow-[0_8px_30px_rgb(99,102,241,0.08)] rounded-2xl">
           <CardHeader className="pb-5 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-r from-indigo-50/80 to-transparent dark:from-transparent dark:to-transparent">
             <div>
               <CardTitle className="text-xl font-bold flex items-center gap-2.5 text-indigo-700 dark:text-indigo-400">
@@ -209,29 +209,29 @@ export default function PharmacyProfilePage() {
               <CardDescription className="text-slate-500 mt-1">Update your core pharmacy details. These will be elegantly displayed on your invoices and system reports.</CardDescription>
             </div>
           </CardHeader>
-          <CardContent className="p-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <CardContent className="p-7 space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Logo Section */}
-              <div className="md:col-span-2 flex flex-col sm:flex-row gap-6 p-6 rounded-2xl border border-slate-200/60 dark:border-slate-800 items-center transition-all group">
-                 <div className="shrink-0 w-20 h-20 rounded-xl border border-slate-200 dark:border-slate-700 flex items-center justify-center bg-slate-50 dark:bg-zinc-900 overflow-hidden shadow-sm relative cursor-pointer group-hover:border-indigo-400 dark:group-hover:border-indigo-500 transition-colors" onClick={() => fileInputRef.current?.click()}>
+              <div className="md:col-span-2 flex flex-col sm:flex-row gap-6 p-6 rounded-2xl border border-slate-200/60 dark:border-slate-800 items-center transition-all group bg-slate-50/30 dark:bg-slate-900/20 hover:bg-slate-50/80 dark:hover:bg-slate-900/40">
+                 <div className="shrink-0 w-24 h-24 rounded-2xl border border-slate-200 dark:border-slate-700 flex items-center justify-center bg-white dark:bg-zinc-900 overflow-hidden shadow-sm relative cursor-pointer group-hover:border-indigo-400 dark:group-hover:border-indigo-500 transition-colors" onClick={() => fileInputRef.current?.click()}>
                    {logoPreviewUrl ? (
                      <img src={logoPreviewUrl} alt="Logo" className="w-full h-full object-cover group-hover:opacity-70 transition-opacity" />
                    ) : (
-                     <ImageIcon className="w-8 h-8 text-slate-300 dark:text-slate-600 group-hover:scale-110 transition-transform" />
+                     <ImageIcon className="w-10 h-10 text-slate-300 dark:text-slate-600 group-hover:scale-110 transition-transform" />
                    )}
                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                      <UploadCloud className="w-6 h-6 text-white" />
+                      <UploadCloud className="w-7 h-7 text-white" />
                    </div>
                  </div>
-                 <div className="space-y-1.5 w-full text-center sm:text-left">
-                   <h4 className="text-base font-semibold text-slate-800 dark:text-slate-200">Pharmacy Logo</h4>
-                   <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">Recommended ratio 1:1 (Square), max 5MB.</p>
+                 <div className="space-y-2 w-full text-center sm:text-left">
+                   <h4 className="text-base font-bold text-slate-800 dark:text-slate-200">Pharmacy Logo</h4>
+                   <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">Recommended ratio 1:1 (Square), max 5MB. Displayed on receipts.</p>
                    <div className="flex gap-3 justify-center sm:justify-start">
-                     <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} className="text-xs h-9 px-4 rounded-lg bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700">
-                       <UploadCloud className="w-3.5 h-3.5 mr-2" /> {logoPreviewUrl ? 'Change Logo' : 'Upload Logo'}
+                     <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} className="h-10 px-4 rounded-xl bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 font-semibold shadow-sm transition-all">
+                       <UploadCloud className="w-4 h-4 mr-2" /> {logoPreviewUrl ? 'Change Logo' : 'Upload Logo'}
                      </Button>
                      {(logoPreviewUrl || profile.ReceiptLogoPath) && (
-                       <Button variant="outline" size="sm" onClick={handleRemoveLogo} className="text-xs h-9 px-4 rounded-lg text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-950/30 border-red-200 dark:border-red-900/30 transition-colors">
+                       <Button variant="outline" size="sm" onClick={handleRemoveLogo} className="h-10 px-4 rounded-xl text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-950/30 border-red-200 dark:border-red-900/30 transition-colors font-semibold shadow-sm">
                          Remove
                        </Button>
                      )}
@@ -240,99 +240,99 @@ export default function PharmacyProfilePage() {
                  </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="PharmacyName">Pharmacy Name <span className="text-red-500">*</span></Label>
-                <Input id="PharmacyName" name="PharmacyName" value={profile.PharmacyName || ""} onChange={handleChange} placeholder="e.g. ABC Pharmacy" />
+              <div className="space-y-3">
+                <Label htmlFor="PharmacyName" className="text-sm font-semibold">Pharmacy Name <span className="text-red-500">*</span></Label>
+                <Input id="PharmacyName" name="PharmacyName" value={profile.PharmacyName || ""} onChange={handleChange} placeholder="e.g. ABC Pharmacy" className="rounded-xl bg-slate-50/50 dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 focus-visible:ring-indigo-500/30 focus-visible:border-indigo-500 transition-all shadow-sm" />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="PharmacySlogan">Pharmacy Slogan / Tagline</Label>
-                <Input id="PharmacySlogan" name="PharmacySlogan" value={profile.PharmacySlogan || ""} onChange={handleChange} placeholder="e.g. Your Health, Our Priority" />
+              <div className="space-y-3">
+                <Label htmlFor="PharmacySlogan" className="text-sm font-semibold">Pharmacy Slogan / Tagline</Label>
+                <Input id="PharmacySlogan" name="PharmacySlogan" value={profile.PharmacySlogan || ""} onChange={handleChange} placeholder="e.g. Your Health, Our Priority" className="rounded-xl bg-slate-50/50 dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 focus-visible:ring-indigo-500/30 focus-visible:border-indigo-500 transition-all shadow-sm" />
               </div>
 
               {/* Compliance & Licensing Group */}
-              <div className="md:col-span-2 pt-6 pb-2">
-                <div className="flex items-center space-x-2 border-b border-slate-200/60 dark:border-slate-800 pb-3">
+              <div className="md:col-span-2 pt-4">
+                <div className="flex items-center space-x-2 bg-indigo-50/50 dark:bg-indigo-950/20 p-3 rounded-lg border border-indigo-100/50 dark:border-indigo-900/30">
                   <ShieldCheck className="w-5 h-5 text-indigo-500" />
-                  <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200 uppercase tracking-wider">Tax & Licensing Compliance</h4>
+                  <h4 className="text-sm font-bold text-indigo-900 dark:text-indigo-300 uppercase tracking-wider">Tax & Licensing Compliance</h4>
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="OwnerName">Owner Name</Label>
-                <Input id="OwnerName" name="OwnerName" value={profile.OwnerName || ""} onChange={handleChange} placeholder="e.g. Mr. Ahmad Khan" />
+              <div className="space-y-3">
+                <Label htmlFor="OwnerName" className="text-sm font-semibold">Owner Name</Label>
+                <Input id="OwnerName" name="OwnerName" value={profile.OwnerName || ""} onChange={handleChange} placeholder="e.g. Mr. Ahmad Khan" className="rounded-xl bg-slate-50/50 dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 focus-visible:ring-indigo-500/30 focus-visible:border-indigo-500 transition-all shadow-sm" />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="NtnStrn">NTN / Tax STRN Number</Label>
-                <Input id="NtnStrn" name="NtnStrn" value={profile.NtnStrn || ""} onChange={handleChange} placeholder="e.g. 1234567-8" />
+              <div className="space-y-3">
+                <Label htmlFor="NtnStrn" className="text-sm font-semibold">NTN / Tax STRN Number</Label>
+                <Input id="NtnStrn" name="NtnStrn" value={profile.NtnStrn || ""} onChange={handleChange} placeholder="e.g. 1234567-8" className="rounded-xl bg-slate-50/50 dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 focus-visible:ring-indigo-500/30 focus-visible:border-indigo-500 transition-all shadow-sm" />
               </div>
               
-              <div className="space-y-2">
-                <Label htmlFor="DrugLicenseNumber">Drug License Number</Label>
-                <Input id="DrugLicenseNumber" name="DrugLicenseNumber" value={profile.DrugLicenseNumber || ""} onChange={handleChange} placeholder="DLD-987654" />
+              <div className="space-y-3">
+                <Label htmlFor="DrugLicenseNumber" className="text-sm font-semibold">Drug License Number</Label>
+                <Input id="DrugLicenseNumber" name="DrugLicenseNumber" value={profile.DrugLicenseNumber || ""} onChange={handleChange} placeholder="DLD-987654" className="rounded-xl bg-slate-50/50 dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 focus-visible:ring-indigo-500/30 focus-visible:border-indigo-500 transition-all shadow-sm" />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="RegistrationNumber">Registration Number</Label>
-                <Input id="RegistrationNumber" name="RegistrationNumber" value={profile.RegistrationNumber || ""} onChange={handleChange} placeholder="REG-2021-5566" />
+              <div className="space-y-3">
+                <Label htmlFor="RegistrationNumber" className="text-sm font-semibold">Registration Number</Label>
+                <Input id="RegistrationNumber" name="RegistrationNumber" value={profile.RegistrationNumber || ""} onChange={handleChange} placeholder="REG-2021-5566" className="rounded-xl bg-slate-50/50 dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 focus-visible:ring-indigo-500/30 focus-visible:border-indigo-500 transition-all shadow-sm" />
               </div>
 
               {/* Contact Information Group */}
-              <div className="md:col-span-2 pt-6 pb-2">
-                <div className="flex items-center space-x-2 border-b border-slate-200/60 dark:border-slate-800 pb-3">
+              <div className="md:col-span-2 pt-4">
+                <div className="flex items-center space-x-2 bg-indigo-50/50 dark:bg-indigo-950/20 p-3 rounded-lg border border-indigo-100/50 dark:border-indigo-900/30">
                   <MapPin className="w-5 h-5 text-indigo-500" />
-                  <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200 uppercase tracking-wider">Contact & Address</h4>
+                  <h4 className="text-sm font-bold text-indigo-900 dark:text-indigo-300 uppercase tracking-wider">Contact & Address</h4>
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="PhoneNumber">Phone Number <span className="text-red-500">*</span></Label>
-                <Input id="PhoneNumber" name="PhoneNumber" value={profile.PhoneNumber || ""} onChange={handleChange} placeholder="+92 300 1234567" />
+              <div className="space-y-3">
+                <Label htmlFor="PhoneNumber" className="text-sm font-semibold">Phone Number <span className="text-red-500">*</span></Label>
+                <Input id="PhoneNumber" name="PhoneNumber" value={profile.PhoneNumber || ""} onChange={handleChange} placeholder="+92 300 1234567" className="rounded-xl bg-slate-50/50 dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 focus-visible:ring-indigo-500/30 focus-visible:border-indigo-500 transition-all shadow-sm" />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="EmailAddress">Email Address <span className="text-red-500">*</span></Label>
-                <Input id="EmailAddress" name="EmailAddress" value={profile.EmailAddress || ""} onChange={handleChange} placeholder="abcpharmacy@gmail.com" />
-              </div>
-
-              <div className="md:col-span-2 space-y-2">
-                <Label htmlFor="Address">Address <span className="text-red-500">*</span></Label>
-                <Input id="Address" name="Address" value={profile.Address || ""} onChange={handleChange} placeholder="123 Main Street, Near City Hospital, Saddar" />
+              <div className="space-y-3">
+                <Label htmlFor="EmailAddress" className="text-sm font-semibold">Email Address <span className="text-red-500">*</span></Label>
+                <Input id="EmailAddress" name="EmailAddress" value={profile.EmailAddress || ""} onChange={handleChange} placeholder="abcpharmacy@gmail.com" className="rounded-xl bg-slate-50/50 dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 focus-visible:ring-indigo-500/30 focus-visible:border-indigo-500 transition-all shadow-sm" />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="City">City <span className="text-red-500">*</span></Label>
-                <Input id="City" name="City" value={profile.City || ""} onChange={handleChange} placeholder="Lahore" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="State">State / Province <span className="text-red-500">*</span></Label>
-                <Input id="State" name="State" value={profile.State || ""} onChange={handleChange} placeholder="Punjab" />
+              <div className="md:col-span-2 space-y-3">
+                <Label htmlFor="Address" className="text-sm font-semibold">Address <span className="text-red-500">*</span></Label>
+                <Input id="Address" name="Address" value={profile.Address || ""} onChange={handleChange} placeholder="123 Main Street, Near City Hospital, Saddar" className="rounded-xl bg-slate-50/50 dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 focus-visible:ring-indigo-500/30 focus-visible:border-indigo-500 transition-all shadow-sm" />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="Country">Country <span className="text-red-500">*</span></Label>
-                <Input id="Country" name="Country" value={profile.Country || ""} onChange={handleChange} placeholder="Pakistan" />
+              <div className="space-y-3">
+                <Label htmlFor="City" className="text-sm font-semibold">City <span className="text-red-500">*</span></Label>
+                <Input id="City" name="City" value={profile.City || ""} onChange={handleChange} placeholder="Lahore" className="rounded-xl bg-slate-50/50 dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 focus-visible:ring-indigo-500/30 focus-visible:border-indigo-500 transition-all shadow-sm" />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="PostalCode">Postal Code</Label>
-                <Input id="PostalCode" name="PostalCode" value={profile.PostalCode || ""} onChange={handleChange} placeholder="54000" />
+              <div className="space-y-3">
+                <Label htmlFor="State" className="text-sm font-semibold">State / Province <span className="text-red-500">*</span></Label>
+                <Input id="State" name="State" value={profile.State || ""} onChange={handleChange} placeholder="Punjab" className="rounded-xl bg-slate-50/50 dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 focus-visible:ring-indigo-500/30 focus-visible:border-indigo-500 transition-all shadow-sm" />
               </div>
 
-              <div className="md:col-span-2 space-y-2">
-                <Label htmlFor="Website">Website (optional)</Label>
-                <Input id="Website" name="Website" value={profile.Website || ""} onChange={handleChange} placeholder="www.abcpharmacy.com" />
+              <div className="space-y-3">
+                <Label htmlFor="Country" className="text-sm font-semibold">Country <span className="text-red-500">*</span></Label>
+                <Input id="Country" name="Country" value={profile.Country || ""} onChange={handleChange} placeholder="Pakistan" className="rounded-xl bg-slate-50/50 dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 focus-visible:ring-indigo-500/30 focus-visible:border-indigo-500 transition-all shadow-sm" />
+              </div>
+              <div className="space-y-3">
+                <Label htmlFor="PostalCode" className="text-sm font-semibold">Postal Code</Label>
+                <Input id="PostalCode" name="PostalCode" value={profile.PostalCode || ""} onChange={handleChange} placeholder="54000" className="rounded-xl bg-slate-50/50 dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 focus-visible:ring-indigo-500/30 focus-visible:border-indigo-500 transition-all shadow-sm" />
+              </div>
+
+              <div className="md:col-span-2 space-y-3">
+                <Label htmlFor="Website" className="text-sm font-semibold">Website (optional)</Label>
+                <Input id="Website" name="Website" value={profile.Website || ""} onChange={handleChange} placeholder="www.abcpharmacy.com" className="rounded-xl bg-slate-50/50 dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 focus-visible:ring-indigo-500/30 focus-visible:border-indigo-500 transition-all shadow-sm" />
               </div>
             </div>
             
             <div className="mt-10 pt-6 border-t border-slate-200/60 dark:border-slate-800 flex flex-col md:flex-row items-center justify-between">
-              <p className="text-xs text-slate-500 mb-4 md:mb-0 flex items-center">
-                <Info className="w-3.5 h-3.5 mr-1.5 text-indigo-500" />
+              <p className="text-xs text-slate-500 mb-4 md:mb-0 flex items-center font-medium">
+                <Info className="w-4 h-4 mr-1.5 text-indigo-500" />
                 Fields marked with <span className="text-red-500 mx-1">*</span> are required.
               </p>
               <div className="flex space-x-3 w-full md:w-auto">
-                <Button variant="outline" onClick={fetchProfile} className="w-full md:w-auto px-6 rounded-xl border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800">
+                <Button variant="outline" onClick={fetchProfile} className="w-full md:w-auto px-6 h-12 rounded-xl border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 font-semibold shadow-sm transition-all">
                   <RefreshCw className="w-4 h-4 mr-2" /> Reset
                 </Button>
-                <Button onClick={handleSave} disabled={isSaving} className="w-full md:w-auto px-6 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all border-0">
-                  {isSaving ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />} 
-                  Save Changes
+                <Button onClick={handleSave} disabled={isSaving} className="w-full md:w-auto px-8 h-12 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-600/25 hover:shadow-indigo-600/40 transition-all duration-300 font-semibold text-base border-0">
+                  {isSaving ? <RefreshCw className="w-5 h-5 mr-2 animate-spin" /> : <Save className="w-5 h-5 mr-2" />} 
+                  {isSaving ? "Saving..." : "Save Changes"}
                 </Button>
               </div>
             </div>
@@ -342,19 +342,18 @@ export default function PharmacyProfilePage() {
       </div>
 
       {/* Right Column: Previews */}
-      <div className="space-y-6">
-
+      <div className="space-y-6 sticky top-0 self-start">
 
         {/* Receipt Preview */}
         <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center">
-              <Info className="w-4 h-4 mr-2 text-indigo-500" />
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center">
+              <Info className="w-5 h-5 mr-2 text-indigo-600" />
               Information Preview (Receipt)
             </h3>
           </div>
           
-          <Card className="border-0 shadow-2xl relative overflow-hidden ring-1 ring-slate-200/50 dark:ring-slate-800/80 rounded-sm">
+          <Card className="border-0 shadow-[0_8px_30px_rgb(0,0,0,0.06)] relative overflow-hidden ring-1 ring-slate-200/50 dark:ring-slate-800/80 rounded-sm">
             {/* Top receipt tear edge effect */}
             <div className="absolute top-0 left-0 right-0 h-3 flex justify-between space-x-1 px-1 bg-slate-200/20 dark:bg-black/20 shadow-inner">
               {[...Array(20)].map((_, i) => (

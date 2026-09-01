@@ -77,14 +77,12 @@ function SectionCard({ icon: Icon, title, children, className }: {
   icon: any; title: string; children: React.ReactNode; className?: string;
 }) {
   return (
-    <div className={cn("bg-card border border-border rounded-2xl shadow-sm overflow-hidden", className)}>
-      <div className="px-6 py-4 border-b border-border bg-secondary/20 flex items-center gap-2.5">
-        <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
-          <Icon size={15} className="text-primary" />
-        </div>
-        <h3 className="font-bold text-xl text-foreground">{title}</h3>
+    <div className={cn("border-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none overflow-hidden ring-1 ring-slate-200/60 dark:ring-slate-800 transition-all duration-500 hover:shadow-[0_8px_30px_rgb(99,102,241,0.08)] rounded-2xl bg-white dark:bg-card", className)}>
+      <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-r from-indigo-50/80 to-transparent dark:from-transparent dark:to-transparent flex items-center gap-3">
+        <Icon size={20} className="text-indigo-600 dark:text-indigo-400 drop-shadow-sm" />
+        <h3 className="font-bold text-xl text-indigo-700 dark:text-indigo-400">{title}</h3>
       </div>
-      <div className="p-6">{children}</div>
+      <div className="p-7 space-y-1">{children}</div>
     </div>
   );
 }
@@ -93,15 +91,15 @@ function InfoRow({ label, value, mono = false, href }: {
   label: string; value?: string | null; mono?: boolean; href?: string;
 }) {
   return (
-    <div className="flex items-start justify-between py-2.5 border-b border-border/60 last:border-0 gap-4">
-      <span className="text-sm text-muted-foreground font-medium shrink-0">{label}</span>
+    <div className="flex items-start justify-between py-3.5 border-b border-slate-100 dark:border-slate-800/60 last:border-0 gap-4">
+      <span className="text-sm text-slate-500 dark:text-slate-400 font-medium shrink-0">{label}</span>
       {href ? (
         <a href={href} target="_blank" rel="noopener noreferrer"
-          className="text-sm font-semibold text-primary hover:underline flex items-center gap-1 text-right">
-          {value} <ExternalLink size={13} />
+          className="text-sm font-semibold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1.5 text-right">
+          {value} <ExternalLink size={14} />
         </a>
       ) : (
-        <span className={cn("text-sm font-semibold text-foreground text-right break-all", mono && "font-mono")}>
+        <span className={cn("text-sm font-semibold text-slate-900 dark:text-slate-100 text-right break-all", mono && "font-mono")}>
           {value ?? "—"}
         </span>
       )}

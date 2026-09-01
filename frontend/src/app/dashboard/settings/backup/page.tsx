@@ -174,14 +174,14 @@ export default function BackupDataManagementSettingsPage() {
       </div>
 
       {/* ── Section 1: Backup Preferences ──────────────────────────────────── */}
-      <Card className="shadow-sm border-border/60 overflow-hidden relative">
+      <Card className="border-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none overflow-hidden ring-1 ring-slate-200/60 dark:ring-slate-800 transition-all duration-500 hover:shadow-[0_8px_30px_rgb(59,130,246,0.08)] rounded-2xl relative">
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-indigo-500" />
-        <CardHeader className="bg-slate-50/50 dark:bg-slate-900/20 border-b border-border/40 pb-4">
-          <CardTitle className="text-base flex items-center text-slate-800 dark:text-slate-200">
-            <Clock className="h-4 w-4 mr-2 text-blue-500" />
+        <CardHeader className="bg-gradient-to-r from-blue-50/80 to-transparent dark:from-transparent dark:to-transparent border-b border-slate-100 dark:border-slate-800 pb-5">
+          <CardTitle className="text-xl flex items-center gap-2.5 text-blue-700 dark:text-blue-400 font-bold">
+            <Clock className="h-5 w-5 drop-shadow-sm" />
             Backup Preferences
           </CardTitle>
-          <CardDescription>Set up automatic scheduled backups for your pharmacy database.</CardDescription>
+          <CardDescription className="text-slate-500 mt-1">Set up automatic scheduled backups for your pharmacy database.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6 pt-5">
 
@@ -330,26 +330,26 @@ export default function BackupDataManagementSettingsPage() {
             </div>
           </div>
         </CardContent>
-        <CardFooter className="border-t border-border/40 bg-slate-50/50 dark:bg-slate-900/20 p-4 flex justify-end">
+        <CardFooter className="border-t border-slate-100 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-900/10 p-5 flex justify-end">
           <Button
             onClick={handleSave}
             disabled={isSaving}
-            className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-sm font-semibold px-8"
+            className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/20 font-semibold px-8 h-12 rounded-xl transition-all"
           >
-            {isSaving ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving…</> : <><CheckCircle2 className="mr-2 h-4 w-4" /> Save Configuration</>}
+            {isSaving ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Saving…</> : <><CheckCircle2 className="mr-2 h-5 w-5" /> Save Configuration</>}
           </Button>
         </CardFooter>
       </Card>
 
       {/* ── Section 2: Database Information ────────────────────────────────── */}
-      <Card className="shadow-sm border-border/60 overflow-hidden relative">
+      <Card className="border-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none overflow-hidden ring-1 ring-slate-200/60 dark:ring-slate-800 transition-all duration-500 hover:shadow-[0_8px_30px_rgb(16,185,129,0.08)] rounded-2xl relative">
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 to-teal-500" />
-        <CardHeader className="bg-slate-50/50 dark:bg-slate-900/20 border-b border-border/40 pb-4">
-          <CardTitle className="text-base flex items-center text-slate-800 dark:text-slate-200">
-            <Database className="h-4 w-4 mr-2 text-emerald-500" />
+        <CardHeader className="bg-gradient-to-r from-emerald-50/80 to-transparent dark:from-transparent dark:to-transparent border-b border-slate-100 dark:border-slate-800 pb-5">
+          <CardTitle className="text-xl flex items-center gap-2.5 text-emerald-700 dark:text-emerald-400 font-bold">
+            <Database className="h-5 w-5 drop-shadow-sm" />
             Database Information
           </CardTitle>
-          <CardDescription>Read-only summary of your active pharmacy database.</CardDescription>
+          <CardDescription className="text-slate-500 mt-1">Read-only summary of your active pharmacy database.</CardDescription>
         </CardHeader>
         <CardContent className="pt-5">
           {dbInfo ? (
@@ -373,14 +373,14 @@ export default function BackupDataManagementSettingsPage() {
       </Card>
 
       {/* ── Section 3: Database Health ──────────────────────────────────────── */}
-      <Card className="shadow-sm border-border/60 overflow-hidden relative">
+      <Card className="border-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none overflow-hidden ring-1 ring-slate-200/60 dark:ring-slate-800 transition-all duration-500 hover:shadow-[0_8px_30px_rgb(139,92,246,0.08)] rounded-2xl relative">
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-violet-500 to-purple-500" />
-        <CardHeader className="bg-slate-50/50 dark:bg-slate-900/20 border-b border-border/40 pb-4">
-          <CardTitle className="text-base flex items-center text-slate-800 dark:text-slate-200">
-            <ShieldCheck className="h-4 w-4 mr-2 text-violet-500" />
+        <CardHeader className="bg-gradient-to-r from-violet-50/80 to-transparent dark:from-transparent dark:to-transparent border-b border-slate-100 dark:border-slate-800 pb-5">
+          <CardTitle className="text-xl flex items-center gap-2.5 text-violet-700 dark:text-violet-400 font-bold">
+            <ShieldCheck className="h-5 w-5 drop-shadow-sm" />
             Database Health
           </CardTitle>
-          <CardDescription>Run an integrity check to verify your database is not corrupted.</CardDescription>
+          <CardDescription className="text-slate-500 mt-1">Run an integrity check to verify your database is not corrupted.</CardDescription>
         </CardHeader>
         <CardContent className="pt-5 space-y-4">
           {dbHealth ? (
@@ -413,7 +413,7 @@ export default function BackupDataManagementSettingsPage() {
             variant="outline"
             onClick={handleCheckHealth}
             disabled={isCheckingHealth}
-            className="gap-2"
+            className="gap-2 h-11 rounded-xl font-medium"
           >
             {isCheckingHealth
               ? <><Loader2 className="h-4 w-4 animate-spin" /> Checking…</>
