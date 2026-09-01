@@ -7,12 +7,22 @@ from utils.hwid import generate_hwid
 from utils.license_engine import validate_license
 from core.exceptions import PMSException
 from api.deps import get_current_user
+from database import SessionLocal
+from sqlalchemy.orm import Session
 import models
 
 router = APIRouter()
 
 LICENSE_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "licenses")
 ACTIVE_LICENSE_PATH = os.path.join(LICENSE_DIR, "active.lic")
+
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -66,6 +76,19 @@ def get_hardware_id():
     return {"hwid": hwid}
 
 
+@router.get("/hardware-id", summary="Get Hardware Fingerprint (Canonical)")
+def get_hardware_fingerprint():
+    """
+    Dedicated endpoint: returns the machine hardware fingerprint used for
+    license binding. Derived from SHA-256(CPU ID + Motherboard UUID + MAC Address).
+    """
+    hwid = generate_hwid()
+    return {
+        "hardware_id": hwid,
+        "generated_from": "SHA-256(CPU ID + Motherboard UUID + MAC Address)",
+    }
+
+
 from pydantic import BaseModel
 
 
@@ -113,17 +136,35 @@ def get_license_status():
 # ─── New Enhanced Endpoints ───────────────────────────────────────────────────
 
 @router.get("/info", summary="Full License Information")
-def get_license_info():
+def get_license_info(db: Session = Depends(get_db)):
     """
     Returns the complete license dashboard data:
     status, type, activation date, expiry date, remaining days,
-    hardware ID, key reference, file metadata, and validation details.
+    hardware ID (included directly to avoid extra round-trips),
+    masked key reference, pharmacy name, total_days for progress bar,
+    file metadata, and validation details.
+
+    Key reference is always masked server-side for security.
+    Use GET /key-reference (authenticated) to obtain the full value.
     """
     hwid = generate_hwid()
+
+    # ── Pharmacy name from DB (Client / Licensee binding) ────────────────────
+    pharmacy_name: str | None = None
+    try:
+        profile = db.query(models.PharmacyProfile).first()
+        if profile and profile.PharmacyName:
+            pharmacy_name = profile.PharmacyName
+    except Exception:
+        pass  # Non-fatal; fall back to license payload value
+
     base = {
         "hardware_id": hwid,
         "license_file_info": _file_info(ACTIVE_LICENSE_PATH) if os.path.exists(ACTIVE_LICENSE_PATH) else {},
+        # Masked key — full value never transmitted in standard status payload
         "key_reference": _key_reference(ACTIVE_LICENSE_PATH) if os.path.exists(ACTIVE_LICENSE_PATH) else "N/A",
+        "pharmacy_name": pharmacy_name,
+        "total_days": None,
     }
 
     if not os.path.exists(ACTIVE_LICENSE_PATH):
@@ -168,15 +209,30 @@ def get_license_info():
 
         remaining_days = _remaining_days(exp) if not is_lifetime else None
 
+        # ── total_days: span from activation to expiry (for progress bar) ────
+        total_days: int | None = None
+        if not is_lifetime and iat and exp:
+            try:
+                iat_dt = datetime.datetime.fromtimestamp(float(iat), tz=datetime.timezone.utc)
+                exp_dt = datetime.datetime.fromtimestamp(float(exp), tz=datetime.timezone.utc)
+                span = (exp_dt - iat_dt).days
+                total_days = max(1, span)  # Guard: always at least 1
+            except Exception:
+                total_days = None
+
+        client_name = payload.get("client_name") or payload.get("sub") or "Licensed User"
+
         return {
             **base,
+            "total_days": total_days,
+            "pharmacy_name": pharmacy_name or client_name,
             "status": "Active",
             "validation_message": "License is valid and verified against this hardware.",
             "license_type": license_type,
             "activation_date": activation_date,
             "expiry_date": expiry_date if not is_lifetime else "Never (Lifetime)",
             "remaining_days": remaining_days,
-            "client_name": payload.get("client_name") or payload.get("sub") or "Licensed User",
+            "client_name": client_name,
             "license_id": payload.get("jti") or payload.get("license_id") or "N/A",
             "is_lifetime": is_lifetime,
         }
@@ -209,6 +265,25 @@ def get_license_info():
         }
 
 
+@router.get("/key-reference", summary="Reveal Full Key Reference (Authenticated)")
+def get_key_reference(
+    current_user: models.User = Depends(get_current_user)
+):
+    """
+    Authenticated endpoint: returns the full (unmasked) key reference string
+    from the active license file. Requires a valid bearer token.
+    This is intentionally separate from /info to protect licensing secrets.
+    """
+    if not os.path.exists(ACTIVE_LICENSE_PATH):
+        raise HTTPException(status_code=404, detail="No active license file found.")
+    try:
+        with open(ACTIVE_LICENSE_PATH, "rb") as f:
+            raw = f.read().decode("utf-8", errors="ignore").strip()
+        return {"key_reference": raw}
+    except Exception:
+        raise HTTPException(status_code=500, detail="Could not read license file.")
+
+
 @router.post("/import", summary="Import New or Renewed License File")
 async def import_license_file(
     file: UploadFile = File(...),
@@ -232,8 +307,16 @@ async def import_license_file(
     # Validate BEFORE saving
     try:
         license_data = validate_license(content)
+        # Check expiration specifically for import
+        exp = license_data.get("exp")
+        if exp is not None:
+            exp_dt = datetime.datetime.fromtimestamp(float(exp), tz=datetime.timezone.utc)
+            if exp_dt <= datetime.datetime.now(datetime.timezone.utc):
+                raise HTTPException(status_code=400, detail="Cannot import an expired license.")
     except PMSException as e:
         raise HTTPException(status_code=400, detail=f"License validation failed: {e.message}")
+    except HTTPException:
+        raise
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid or tampered license file.")
 
@@ -241,8 +324,7 @@ async def import_license_file(
 
     # Backup existing license if present
     if os.path.exists(ACTIVE_LICENSE_PATH):
-        backup_ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        backup_path = os.path.join(LICENSE_DIR, f"backup_{backup_ts}.lic")
+        backup_path = os.path.join(LICENSE_DIR, "backup_active.lic")
         try:
             with open(ACTIVE_LICENSE_PATH, "rb") as src, open(backup_path, "wb") as dst:
                 dst.write(src.read())
@@ -268,14 +350,12 @@ def revalidate_license():
     """
     if not os.path.exists(ACTIVE_LICENSE_PATH):
         return {
-            "valid": False,
-            "checks": {
-                "file_exists": False,
-                "signature_valid": False,
-                "hardware_match": False,
-                "not_expired": False,
-            },
-            "message": "No license file found."
+            "file_exists": False,
+            "signature_valid": False,
+            "hardware_match": False,
+            "not_expired": False,
+            "overall_status": "FAILED",
+            "error_message": "No license file found."
         }
 
     checks = {
@@ -297,7 +377,11 @@ def revalidate_license():
         if exp is None or datetime.datetime.fromtimestamp(float(exp), tz=datetime.timezone.utc) > datetime.datetime.now(datetime.timezone.utc):
             checks["not_expired"] = True
 
-        return {"valid": True, "checks": checks, "message": "License passed all validation checks."}
+        return {
+            **checks,
+            "overall_status": "PASSED",
+            "error_message": None
+        }
 
     except PMSException as e:
         # Determine which check failed
@@ -309,6 +393,14 @@ def revalidate_license():
             checks["signature_valid"] = True
             checks["hardware_match"] = True
             checks["not_expired"] = False
-        return {"valid": False, "checks": checks, "message": err_msg}
+        return {
+            **checks,
+            "overall_status": "FAILED",
+            "error_message": err_msg
+        }
     except Exception as e:
-        return {"valid": False, "checks": checks, "message": f"Validation error: {str(e)}"}
+        return {
+            **checks,
+            "overall_status": "FAILED",
+            "error_message": f"Validation error: {str(e)}"
+        }

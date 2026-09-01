@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
-  ShieldCheck, ShieldAlert, ShieldX, Clock, Calendar, Cpu, Key, FileText,
-  Upload, Copy, Check, RefreshCw, AlertTriangle, CheckCircle2, XCircle,
-  Infinity, Info, Loader2, HardDrive
+  ShieldCheck, ShieldAlert, ShieldX, Cpu, Key, FileText,
+  Upload, Copy, Check, RefreshCw, AlertTriangle, CheckCircle2, XCircle, X,
+  Infinity, Info, Loader2, HardDrive, Eye, EyeOff,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,7 +21,11 @@ interface LicenseInfo {
   activation_date: string | null;
   expiry_date: string | null;
   remaining_days: number | null;
+  /** Total subscription span in days (activation → expiry). Null for lifetime. */
+  total_days: number | null;
   client_name: string | null;
+  /** Active pharmacy name from DB — used as Client / Licensee display value. */
+  pharmacy_name: string | null;
   license_id: string | null;
   hardware_id: string;
   key_reference: string;
@@ -35,14 +39,12 @@ interface LicenseInfo {
 }
 
 interface ValidationChecks {
-  valid: boolean;
-  checks: {
-    file_exists: boolean;
-    signature_valid: boolean;
-    hardware_match: boolean;
-    not_expired: boolean;
-  };
-  message: string;
+  file_exists: boolean;
+  signature_valid: boolean;
+  hardware_match: boolean;
+  not_expired: boolean;
+  overall_status: "PASSED" | "FAILED";
+  error_message: string | null;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -94,6 +96,94 @@ function CheckRow({ label, ok }: { label: string; ok: boolean }) {
   );
 }
 
+// ─── Status tier helpers ──────────────────────────────────────────────────────
+
+type StatusTier = "active" | "warning" | "danger" | "lifetime";
+
+function getStatusTier(
+  status: string,
+  remaining: number | null,
+  isLifetime: boolean,
+): StatusTier {
+  if (isLifetime) return "lifetime";
+  if (status === "Active") {
+    return remaining !== null && remaining <= 14 ? "warning" : "active";
+  }
+  return "danger";
+}
+
+const TIER_STYLES: Record<StatusTier, {
+  banner: string; icon: string; iconFg: string;
+  bar: string; track: string; days: string;
+  shield: any;
+}> = {
+  active: {
+    banner: "bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800",
+    icon:   "bg-emerald-100 dark:bg-emerald-900/40",
+    iconFg: "text-emerald-600 dark:text-emerald-400",
+    bar:    "bg-emerald-500",
+    track:  "bg-emerald-100 dark:bg-emerald-900/40",
+    days:   "text-emerald-600 dark:text-emerald-400",
+    shield: ShieldCheck,
+  },
+  warning: {
+    banner: "bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800",
+    icon:   "bg-amber-100 dark:bg-amber-900/40",
+    iconFg: "text-amber-600 dark:text-amber-400",
+    bar:    "bg-amber-500",
+    track:  "bg-amber-100 dark:bg-amber-900/40",
+    days:   "text-amber-600 dark:text-amber-400",
+    shield: ShieldAlert,
+  },
+  danger: {
+    banner: "bg-rose-50 dark:bg-rose-950/20 border-rose-200 dark:border-rose-800",
+    icon:   "bg-rose-100 dark:bg-rose-900/40",
+    iconFg: "text-rose-600 dark:text-rose-400",
+    bar:    "bg-rose-500",
+    track:  "bg-rose-100 dark:bg-rose-900/40",
+    days:   "text-rose-600 dark:text-rose-400",
+    shield: ShieldAlert,
+  },
+  lifetime: {
+    banner: "bg-violet-50 dark:bg-violet-950/20 border-violet-200 dark:border-violet-800",
+    icon:   "bg-violet-100 dark:bg-violet-900/40",
+    iconFg: "text-violet-600 dark:text-violet-400",
+    bar:    "bg-violet-500",
+    track:  "bg-violet-100 dark:bg-violet-900/40",
+    days:   "text-violet-600 dark:text-violet-400",
+    shield: ShieldCheck,
+  },
+};
+
+// ─── Subscription Progress Bar ────────────────────────────────────────────────
+
+function SubscriptionProgressBar({
+  totalDays, remainingDays, tier,
+}: { totalDays: number | null; remainingDays: number | null; tier: StatusTier }) {
+  // Strict guards: no calculation if lifetime, total_days missing/zero, or remaining unknown
+  if (tier === "lifetime" || totalDays === null || totalDays <= 0 || remainingDays === null) {
+    return null;
+  }
+  const usedDays = Math.max(0, totalDays - remainingDays);
+  // Clamp strictly between 0 and 100 — prevents rendering errors from bad data
+  const pct = Math.min(100, Math.max(0, (usedDays / totalDays) * 100));
+  const styles = TIER_STYLES[tier];
+  return (
+    <div className="mt-3 space-y-1.5">
+      <div className={cn("h-2.5 w-full rounded-full overflow-hidden", styles.track)}>
+        <div
+          className={cn("h-full rounded-full transition-all duration-700 ease-out", styles.bar)}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      <div className="flex justify-between text-xs text-muted-foreground font-medium">
+        <span>{usedDays} day{usedDays !== 1 ? "s" : ""} used</span>
+        <span>{remainingDays} day{remainingDays !== 1 ? "s" : ""} remaining</span>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function LicensePage() {
@@ -105,10 +195,17 @@ export default function LicensePage() {
   const [copiedHwid, setCopiedHwid] = useState(false);
   const [copiedKey, setCopiedKey] = useState(false);
   const [dragOver, setDragOver] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  // Key reference reveal state
+  const [showKey, setShowKey] = useState(false);
+  const [revealedKey, setRevealedKey] = useState<string | null>(null);
+  const [revealLoading, setRevealLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetchInfo();
+    handleValidate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchInfo = async () => {
@@ -116,6 +213,9 @@ export default function LicensePage() {
     try {
       const res = await apiClient.get("/license/info");
       setInfo(res);
+      // Reset reveal state whenever license info is refreshed
+      setRevealedKey(null);
+      setShowKey(false);
     } catch {
       toast.error("Failed to load license information.");
     } finally {
@@ -123,12 +223,28 @@ export default function LicensePage() {
     }
   };
 
+  /** Toggle key visibility — fetches full key from authenticated endpoint on first reveal */
+  const handleToggleKey = useCallback(async () => {
+    if (showKey) { setShowKey(false); return; }
+    if (revealedKey !== null) { setShowKey(true); return; }
+    setRevealLoading(true);
+    try {
+      const res = await apiClient.get("/license/key-reference");
+      setRevealedKey(res.key_reference ?? null);
+      setShowKey(true);
+    } catch {
+      toast.error("Could not reveal key reference. Please ensure you are logged in.");
+    } finally {
+      setRevealLoading(false);
+    }
+  }, [showKey, revealedKey]);
+
   const handleValidate = async () => {
     setValidating(true);
     try {
       const res = await apiClient.post("/license/validate", {});
       setValidation(res);
-      if (res.valid) {
+      if (res.overall_status === "PASSED") {
         toast.success("License passed all validation checks.");
       } else {
         toast.error("License validation failed. See details below.");
@@ -159,8 +275,10 @@ export default function LicensePage() {
       const data = await res.json();
       if (res.ok && data.success) {
         toast.success("New license imported and activated successfully!");
+        setSelectedFile(null);
+        if (fileInputRef.current) fileInputRef.current.value = "";
         await fetchInfo();
-        setValidation(null);
+        await handleValidate();
       } else {
         toast.error(data.detail || "Import failed. Invalid license file.");
       }
@@ -180,7 +298,6 @@ export default function LicensePage() {
         setCopiedKey(true);
         setTimeout(() => setCopiedKey(false), 2000);
       }
-      toast.success("Copied to clipboard!");
     });
   };
 
@@ -213,50 +330,54 @@ export default function LicensePage() {
             View, validate, and manage your PMS software license.
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={fetchInfo} className="gap-2 shrink-0">
-          <RefreshCw size={15} /> Refresh
-        </Button>
       </div>
 
-      {/* ── Status Banner ── */}
-      <div className={cn(
-        "rounded-2xl border p-5 flex items-center gap-4",
-        info?.status === "Active"
-          ? "bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800"
-          : info?.status === "Invalid"
-          ? "bg-rose-50 dark:bg-rose-950/20 border-rose-200 dark:border-rose-800"
-          : "bg-orange-50 dark:bg-orange-950/20 border-orange-200 dark:border-orange-800"
-      )}>
-        <div className={cn(
-          "w-14 h-14 rounded-xl flex items-center justify-center shrink-0",
-          info?.status === "Active" ? "bg-emerald-100 dark:bg-emerald-900/40" : "bg-rose-100 dark:bg-rose-900/40"
-        )}>
-          {info?.status === "Active"
-            ? <ShieldCheck size={28} className="text-emerald-600 dark:text-emerald-400" />
-            : <ShieldAlert size={28} className="text-rose-600 dark:text-rose-400" />}
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-3 flex-wrap">
-            <h3 className="font-bold text-lg text-foreground">License Status</h3>
-            <StatusBadge status={info?.status || "Error"} />
-          </div>
-          <p className="text-sm text-muted-foreground mt-1">{info?.validation_message}</p>
-        </div>
-        {info?.status === "Active" && info.remaining_days !== null && (
-          <div className="shrink-0 text-right">
-            <div className={cn("text-3xl font-black tabular-nums", remainingColor(info.remaining_days))}>
-              {info.remaining_days}
+      {/* ── Status Banner (dynamic tier coloring + subscription progress bar) ── */}
+      {(() => {
+        const tier = getStatusTier(
+          info?.status ?? "Error",
+          info?.remaining_days ?? null,
+          info?.is_lifetime ?? false,
+        );
+        const ts = TIER_STYLES[tier];
+        const ShieldIcon = ts.shield;
+        return (
+          <div className={cn("rounded-2xl border p-5", ts.banner)}>
+            <div className="flex items-center gap-4">
+              <div className={cn("w-14 h-14 rounded-xl flex items-center justify-center shrink-0", ts.icon)}>
+                <ShieldIcon size={28} className={ts.iconFg} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-3 flex-wrap">
+                  <h3 className="font-bold text-lg text-foreground">License Status</h3>
+                  <StatusBadge status={info?.status || "Error"} />
+                </div>
+                <p className="text-sm text-muted-foreground mt-1">{info?.validation_message}</p>
+                {/* Progress bar — strict guards applied inside component */}
+                <SubscriptionProgressBar
+                  totalDays={info?.total_days ?? null}
+                  remainingDays={info?.remaining_days ?? null}
+                  tier={tier}
+                />
+              </div>
+              {/* Right-side counter or perpetual badge */}
+              {info?.is_lifetime ? (
+                <div className="shrink-0 text-right flex flex-col items-center gap-1">
+                  <Infinity size={32} className={ts.iconFg} />
+                  <div className="text-xs text-muted-foreground font-semibold">Perpetual</div>
+                </div>
+              ) : info?.status === "Active" && info.remaining_days !== null ? (
+                <div className="shrink-0 text-right">
+                  <div className={cn("text-3xl font-black tabular-nums", ts.days)}>
+                    {info.remaining_days}
+                  </div>
+                  <div className="text-xs text-muted-foreground font-medium">days remaining</div>
+                </div>
+              ) : null}
             </div>
-            <div className="text-xs text-muted-foreground font-medium">days remaining</div>
           </div>
-        )}
-        {info?.is_lifetime && (
-          <div className="shrink-0 text-right">
-            <Infinity size={32} className="text-primary" />
-            <div className="text-xs text-muted-foreground font-medium mt-1">Lifetime</div>
-          </div>
-        )}
-      </div>
+        );
+      })()}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
@@ -276,7 +397,11 @@ export default function LicensePage() {
                 ? `${info.license_type}${info.is_lifetime ? " (Lifetime)" : ""}`
                 : "—"}
             />
-            <InfoRow label="Client / Licensee" value={info?.client_name ?? "—"} />
+            {/* Client / Licensee — bound to active pharmacy name from database */}
+            <InfoRow
+              label="Client / Licensee"
+              value={info?.pharmacy_name ?? info?.client_name ?? "—"}
+            />
             <InfoRow label="Activation Date" value={info?.activation_date ?? "—"} />
             <InfoRow
               label="Expiry Date"
@@ -321,34 +446,74 @@ export default function LicensePage() {
                 </div>
               </div>
               <Button
+                id="copy-hardware-id-btn"
                 onClick={() => copyToClipboard(info?.hardware_id || "", "hwid")}
                 variant="outline"
-                className="w-full gap-2 h-10"
+                className={cn(
+                  "w-full gap-2 h-10 transition-all duration-200",
+                  copiedHwid && "border-emerald-400 text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/20",
+                )}
                 disabled={!info?.hardware_id}
               >
-                {copiedHwid ? <Check size={15} className="text-emerald-500" /> : <Copy size={15} />}
-                {copiedHwid ? "Copied!" : "Copy Hardware ID"}
+                {copiedHwid ? <><Check size={15} className="text-emerald-500" /> Copied!</> : <><Copy size={15} /> Copy Hardware ID</>}
               </Button>
             </CardContent>
           </Card>
 
           <Card className="border-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none overflow-hidden ring-1 ring-slate-200/60 dark:ring-slate-800 transition-all duration-500 hover:shadow-[0_8px_30px_rgb(168,85,247,0.08)] rounded-2xl">
-            <CardHeader className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-r from-purple-50/80 to-transparent dark:from-transparent dark:to-transparent flex flex-row items-center gap-2 space-y-0">
-              <HardDrive size={18} className="text-purple-600 dark:text-purple-400 drop-shadow-sm" />
-              <CardTitle className="font-bold text-base text-purple-700 dark:text-purple-400">Key Reference</CardTitle>
+            <CardHeader className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-r from-purple-50/80 to-transparent dark:from-transparent dark:to-transparent flex flex-row items-center justify-between space-y-0">
+              <div className="flex items-center gap-2">
+                <HardDrive size={18} className="text-purple-600 dark:text-purple-400 drop-shadow-sm" />
+                <CardTitle className="font-bold text-base text-purple-700 dark:text-purple-400">Key Reference</CardTitle>
+              </div>
+              {/* Show / Hide toggle — calls authenticated endpoint on first reveal */}
+              <button
+                id="toggle-key-visibility-btn"
+                onClick={handleToggleKey}
+                disabled={
+                  revealLoading ||
+                  !info?.key_reference ||
+                  info.key_reference === "N/A" ||
+                  info.key_reference === "No license file"
+                }
+                className={cn(
+                  "rounded-lg p-1.5 transition-colors text-muted-foreground hover:text-foreground hover:bg-secondary disabled:opacity-40 disabled:cursor-not-allowed",
+                  showKey && "text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/20",
+                )}
+                title={showKey ? "Hide key" : "Reveal key"}
+              >
+                {revealLoading
+                  ? <Loader2 size={16} className="animate-spin" />
+                  : showKey
+                  ? <EyeOff size={16} />
+                  : <Eye size={16} />}
+              </button>
             </CardHeader>
             <CardContent className="p-5 space-y-3">
-              <div className="bg-secondary/50 border border-border rounded-xl p-3 font-mono text-xs text-foreground break-all">
-                {info?.key_reference || "No license file"}
+              <div className={cn(
+                "bg-secondary/50 border border-border rounded-xl p-3 font-mono text-xs text-foreground break-all transition-all duration-200 min-h-[48px] flex items-center",
+                !showKey && "tracking-widest text-muted-foreground select-none",
+              )}>
+                {showKey && revealedKey !== null
+                  ? revealedKey
+                  : (info?.key_reference && info.key_reference !== "N/A" && info.key_reference !== "No license file"
+                    ? "•".repeat(32)
+                    : "No license file")}
               </div>
               <Button
-                onClick={() => copyToClipboard(info?.key_reference || "", "key")}
+                id="copy-key-reference-btn"
+                onClick={() => copyToClipboard(
+                  revealedKey ?? info?.key_reference ?? "",
+                  "key",
+                )}
                 variant="outline"
-                className="w-full gap-2 h-10"
+                className={cn(
+                  "w-full gap-2 h-10 transition-all duration-200",
+                  copiedKey && "border-emerald-400 text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/20",
+                )}
                 disabled={!info?.key_reference || info.key_reference === "N/A" || info.key_reference === "No license file"}
               >
-                {copiedKey ? <Check size={15} className="text-emerald-500" /> : <Copy size={15} />}
-                {copiedKey ? "Copied!" : "Copy Key Reference"}
+                {copiedKey ? <><Check size={15} className="text-emerald-500" /> Copied!</> : <><Copy size={15} /> Copy Key Reference</>}
               </Button>
             </CardContent>
           </Card>
@@ -395,20 +560,18 @@ export default function LicensePage() {
         <CardContent className="px-5 py-2">
           {validation ? (
             <>
-              <CheckRow label="License file exists on disk" ok={validation.checks.file_exists} />
-              <CheckRow label="Digital signature is authentic (RSA-256)" ok={validation.checks.signature_valid} />
-              <CheckRow label="Hardware ID matches this machine" ok={validation.checks.hardware_match} />
-              <CheckRow label="License has not expired" ok={validation.checks.not_expired} />
+              <CheckRow label="License file exists on disk" ok={validation.file_exists} />
+              <CheckRow label="Digital signature is authentic (RSA-256)" ok={validation.signature_valid} />
+              <CheckRow label="Hardware ID matches this machine" ok={validation.hardware_match} />
+              <CheckRow label="License has not expired" ok={validation.not_expired} />
               <div className={cn(
                 "mt-4 mb-3 flex items-center gap-3 px-4 py-3 rounded-xl border text-sm font-semibold",
-                validation.valid
+                validation.overall_status === "PASSED"
                   ? "bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400"
                   : "bg-rose-50 dark:bg-rose-950/20 border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-400"
               )}>
-                {validation.valid
-                  ? <CheckCircle2 size={18} />
-                  : <XCircle size={18} />}
-                {validation.message}
+                {validation.overall_status === "PASSED" ? <CheckCircle2 size={18} /> : <XCircle size={18} />}
+                {validation.overall_status === "PASSED" ? "License passed all validation checks." : validation.error_message}
               </div>
             </>
           ) : (
@@ -443,33 +606,66 @@ export default function LicensePage() {
               e.preventDefault();
               setDragOver(false);
               const file = e.dataTransfer.files[0];
-              if (file) handleImportFile(file);
+              if (file) {
+                if (!file.name.endsWith(".lic")) {
+                  toast.error("Only .lic files are accepted.");
+                  return;
+                }
+                setSelectedFile(file);
+              }
             }}
-            onClick={() => fileInputRef.current?.click()}
+            onClick={() => {
+              if (!selectedFile) fileInputRef.current?.click();
+            }}
             className={cn(
-              "border-2 border-dashed rounded-2xl p-10 text-center cursor-pointer transition-all duration-200",
+              "border-2 rounded-2xl p-10 text-center transition-all duration-200 relative",
               dragOver
-                ? "border-primary bg-primary/5 scale-[1.01]"
-                : "border-border hover:border-primary/50 hover:bg-secondary/30"
+                ? "border-primary bg-primary/5 scale-[1.01] border-solid"
+                : selectedFile
+                  ? "border-primary/50 bg-secondary/30 border-solid"
+                  : "border-dashed border-border hover:border-primary/50 hover:bg-secondary/30 cursor-pointer"
             )}
           >
-            <div className="flex flex-col items-center gap-3">
-              <div className={cn(
-                "w-14 h-14 rounded-2xl flex items-center justify-center transition-colors",
-                dragOver ? "bg-primary/10" : "bg-secondary"
-              )}>
-                <Upload size={26} className={dragOver ? "text-primary" : "text-muted-foreground"} />
+            {selectedFile ? (
+              <div className="flex flex-col items-center justify-center gap-3 relative z-10">
+                <div className="bg-primary/10 text-primary p-3 rounded-full">
+                  <FileText size={28} />
+                </div>
+                <div>
+                  <p className="font-bold text-foreground">{selectedFile.name}</p>
+                  <p className="text-sm text-muted-foreground mt-1">{formatBytes(selectedFile.size)}</p>
+                </div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedFile(null);
+                    if (fileInputRef.current) fileInputRef.current.value = "";
+                  }}
+                  className="absolute top-2 right-2 p-1.5 rounded-full hover:bg-rose-100 hover:text-rose-600 dark:hover:bg-rose-900/30 text-muted-foreground transition-colors"
+                  title="Remove file"
+                >
+                  <X size={18} />
+                </button>
               </div>
-              <div>
-                <p className="font-bold text-foreground">
-                  {dragOver ? "Release to upload" : "Drag & drop your .lic file here"}
-                </p>
-                <p className="text-sm text-muted-foreground mt-1">or click to browse files</p>
+            ) : (
+              <div className="flex flex-col items-center gap-3">
+                <div className={cn(
+                  "w-14 h-14 rounded-2xl flex items-center justify-center transition-colors",
+                  dragOver ? "bg-primary/10" : "bg-secondary"
+                )}>
+                  <Upload size={26} className={dragOver ? "text-primary" : "text-muted-foreground"} />
+                </div>
+                <div>
+                  <p className="font-bold text-foreground">
+                    {dragOver ? "Release to upload" : "Drag & drop your .lic file here"}
+                  </p>
+                  <p className="text-sm text-muted-foreground mt-1">or click to browse files</p>
+                </div>
+                <span className="text-xs font-mono bg-secondary border border-border px-3 py-1 rounded-full text-muted-foreground">
+                  .lic files only
+                </span>
               </div>
-              <span className="text-xs font-mono bg-secondary border border-border px-3 py-1 rounded-full text-muted-foreground">
-                .lic files only
-              </span>
-            </div>
+            )}
             <input
               ref={fileInputRef}
               type="file"
@@ -477,20 +673,32 @@ export default function LicensePage() {
               className="hidden"
               onChange={(e) => {
                 const file = e.target.files?.[0];
-                if (file) handleImportFile(file);
-                e.target.value = "";
+                if (file) {
+                  if (!file.name.endsWith(".lic")) {
+                    toast.error("Only .lic files are accepted.");
+                    return;
+                  }
+                  setSelectedFile(file);
+                }
               }}
             />
           </div>
 
           <Button
-            onClick={() => fileInputRef.current?.click()}
+            onClick={() => {
+              if (selectedFile) handleImportFile(selectedFile);
+              else fileInputRef.current?.click();
+            }}
             disabled={importing}
-            className="w-full h-12 gap-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/20 font-semibold"
+            className="w-full h-12 gap-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/20 font-semibold transition-all"
           >
-            {importing
-              ? <><Loader2 size={18} className="animate-spin" /> Importing &amp; Validating...</>
-              : <><Upload size={18} /> Browse &amp; Import License File</>}
+            {importing ? (
+              <><Loader2 size={18} className="animate-spin" /> Importing &amp; Validating...</>
+            ) : selectedFile ? (
+              <><Upload size={18} /> Import License File</>
+            ) : (
+              <><Upload size={18} /> Browse &amp; Import License File</>
+            )}
           </Button>
         </CardContent>
       </Card>
