@@ -6,7 +6,7 @@ import {
   Globe, Mail, Phone, Shield, ShieldCheck,
   Calendar, Tag, Building2, Copyright, RefreshCw,
   Loader2, ExternalLink, Server, Clock, Layers,
-  Info, HeartHandshake, Infinity, Package
+  Info, HeartHandshake, Infinity, Package, Copy
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
