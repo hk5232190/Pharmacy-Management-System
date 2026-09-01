@@ -6,7 +6,7 @@ import datetime
 from utils.hwid import generate_hwid
 from utils.license_engine import validate_license
 from core.exceptions import PMSException
-from api.deps import get_current_user
+from api.deps import get_current_user, get_current_admin_user
 from database import SessionLocal
 from sqlalchemy.orm import Session
 import models
@@ -96,25 +96,46 @@ class LicenseActivationRequest(BaseModel):
     license_key: str
 
 
-@router.post("/activate", summary="Activate License via Key")
-async def activate_license(request: LicenseActivationRequest):
-    """Accepts a JWT license key string, validates it, and saves as active license."""
-    if not request.license_key.strip():
-        raise HTTPException(status_code=400, detail="License key is required")
-
-    cleaned_key = "".join(request.license_key.split())
-    content = cleaned_key.encode("utf-8")
+@router.post("/activate", summary="Activate License via File Upload")
+async def activate_license(file: UploadFile = File(...)):
+    """Accepts a .lic file, validates it, and saves as active license."""
+    if not file.filename.endswith(".lic"):
+        raise HTTPException(status_code=400, detail="Invalid file type. Only .lic files are allowed.")
 
     try:
-        license_data = validate_license(content)
+        content = await file.read()
+        if not content:
+            raise HTTPException(status_code=400, detail="The license file is empty.")
+
+        payload = validate_license(content)
         os.makedirs(LICENSE_DIR, exist_ok=True)
         with open(ACTIVE_LICENSE_PATH, "wb") as f:
             f.write(content)
-        return {"status": "success", "message": "License activated successfully", "data": license_data}
+            
+        client_name = payload.get("client_name") or payload.get("sub") or "N/A"
+        license_type = payload.get("type", "Unknown")
+        exp = payload.get("exp")
+        
+        import datetime
+        if exp and license_type != "Lifetime":
+            try:
+                expiry_date = datetime.datetime.fromtimestamp(float(exp), tz=datetime.timezone.utc).isoformat()
+            except Exception:
+                expiry_date = str(exp)
+        else:
+            expiry_date = None
+
+        formatted_data = {
+            "client_name": client_name,
+            "license_type": license_type,
+            "expiry_date": expiry_date,
+        }
+            
+        return {"status": "success", "message": "License activated successfully", "data": formatted_data}
     except PMSException as e:
         raise HTTPException(status_code=400, detail=e.message)
     except Exception:
-        raise HTTPException(status_code=500, detail="Failed to process license key")
+        raise HTTPException(status_code=500, detail="Failed to process license file")
 
 
 @router.get("/status", summary="Quick License Status Check")
@@ -287,15 +308,13 @@ def get_key_reference(
 @router.post("/import", summary="Import New or Renewed License File")
 async def import_license_file(
     file: UploadFile = File(...),
-    current_user: models.User = Depends(get_current_user)
+    current_user: models.User = Depends(get_current_admin_user)
 ):
     """
     Admin-only: Upload a .lic file directly. 
     Validates it before replacing the active license.
     Creates a backup of the previous license before overwriting.
     """
-    if current_user.Role != "Admin":
-        raise HTTPException(status_code=403, detail="Only administrators can import a new license.")
 
     if not file.filename.endswith(".lic"):
         raise HTTPException(status_code=400, detail="Invalid file type. Only .lic files are accepted.")

@@ -59,7 +59,7 @@ def validate_license(token: str) -> dict:
         logger.error(f"License validation failed unexpectedly: {e}")
         raise TamperedLicenseError()
 
-def generate_test_license(hwid: str, license_type: str = "Subscription", days_valid: int = 365, start_date: datetime.datetime = None, end_date: datetime.datetime = None) -> str:
+def generate_test_license(hwid: str, license_type: str = "Subscription", days_valid: int = 365, start_date: datetime.datetime = None, end_date: datetime.datetime = None, client_name: str = "Licensed User") -> str:
     """
     Generates a test license .lic file for local development.
     Uses the private key which would normally be kept secret by the vendor.
@@ -71,6 +71,7 @@ def generate_test_license(hwid: str, license_type: str = "Subscription", days_va
     payload = {
         "hwid": hwid,
         "type": license_type,
+        "client_name": client_name,
         "iat": iat,
     }
     
