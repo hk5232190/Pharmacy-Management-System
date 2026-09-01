@@ -277,6 +277,10 @@ export default function LicensePage() {
         toast.success("New license imported and activated successfully!");
         setSelectedFile(null);
         if (fileInputRef.current) fileInputRef.current.value = "";
+        // ── Sync LicenseExpiryBar: clear any stale dismissal and signal a refresh ──
+        sessionStorage.removeItem("license_expiry_bar_dismissed");
+        window.dispatchEvent(new CustomEvent("license_renewed"));
+        // ─────────────────────────────────────────────────────────────────────────
         await fetchInfo();
         await handleValidate();
       } else {

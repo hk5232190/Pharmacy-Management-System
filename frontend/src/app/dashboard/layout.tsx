@@ -3,6 +3,7 @@ import { Header } from "@/components/layout/header";
 import { InventorySettingsProvider } from "@/contexts/InventorySettingsContext";
 import { AutoLockWrapper } from "@/components/layout/auto-lock-wrapper";
 import { SessionTimeoutWrapper } from "@/components/layout/session-timeout-wrapper";
+import { LicenseExpiryBar } from "@/components/layout/license-expiry-bar";
 
 export default function DashboardLayout({
   children,
@@ -20,6 +21,7 @@ export default function DashboardLayout({
             <div className="print:hidden">
               <Header />
             </div>
+            <LicenseExpiryBar />
             <main className="flex-1 overflow-y-auto print:overflow-visible">
               <InventorySettingsProvider>
                 {children}
