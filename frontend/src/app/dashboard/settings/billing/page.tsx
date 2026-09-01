@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { Save, RefreshCw, Receipt, ShieldAlert, DollarSign, Calculator, Settings2 } from "lucide-react";
 import { useSystemPreferences } from "@/contexts/SystemPreferencesContext";
+import { SaveButton } from "@/components/ui/save-button";
 
 interface BillingSettings {
   SettingsId?: number;
@@ -330,10 +331,7 @@ export default function BillingSettingsPage() {
             </div>
             
             <div className="pt-6">
-              <Button onClick={handleSave} disabled={isSaving} className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-lg shadow-blue-600/25 hover:shadow-blue-600/40 transition-all duration-300 font-semibold text-base">
-                {isSaving ? <RefreshCw className="w-5 h-5 mr-2 animate-spin" /> : <Save className="w-5 h-5 mr-2" />}
-                {isSaving ? "Saving..." : "Save Settings"}
-              </Button>
+              <SaveButton isSaving={isSaving} onClick={handleSave} className="w-full" label="Save Settings" />
             </div>
             
           </CardContent>

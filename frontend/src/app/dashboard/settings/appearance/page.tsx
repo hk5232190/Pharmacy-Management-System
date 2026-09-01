@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { Save, RefreshCw, Volume2, Bell, LayoutDashboard } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useSystemPreferences } from "@/contexts/SystemPreferencesContext";
+import { SaveButton } from "@/components/ui/save-button";
 import { useAudio } from "@/hooks/use-audio";
 
 interface SystemPreferences {
@@ -208,10 +209,7 @@ export default function AppearanceSettingsPage() {
               <Button variant="ghost" onClick={() => fetchSettings()} disabled={isSaving} className="h-12 px-6 rounded-xl transition-colors">
                 Cancel Changes
               </Button>
-              <Button onClick={handleSave} disabled={isSaving} className="h-12 min-w-[140px] px-6 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-600/25 hover:shadow-indigo-600/40 transition-all duration-300 font-semibold border-0">
-                {isSaving ? <RefreshCw className="w-5 h-5 mr-2 animate-spin" /> : <Save className="w-5 h-5 mr-2" />}
-                {isSaving ? "Saving..." : "Save Changes"}
-              </Button>
+              <SaveButton isSaving={isSaving} onClick={handleSave} className="min-w-[140px] px-6" />
             </div>
 
           </CardContent>

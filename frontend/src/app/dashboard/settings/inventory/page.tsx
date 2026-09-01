@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { Save, RefreshCw, Box, AlertTriangle, Barcode, Settings2 } from "lucide-react";
 import { useInventorySettings } from "@/contexts/InventorySettingsContext";
+import { SaveButton } from "@/components/ui/save-button";
 
 interface InventorySettings {
   SettingsId?: number;
@@ -306,10 +307,7 @@ export default function InventorySettingsPage() {
             </div>
             
             <div className="pt-4 border-t border-slate-200 dark:border-slate-800">
-              <Button onClick={handleSave} disabled={isSaving} className="w-full h-12 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-600/25 hover:shadow-indigo-600/40 transition-all duration-300 font-semibold text-base border-0">
-                {isSaving ? <RefreshCw className="w-5 h-5 mr-2 animate-spin" /> : <Save className="w-5 h-5 mr-2" />}
-                {isSaving ? "Saving..." : "Save Settings"}
-              </Button>
+              <SaveButton isSaving={isSaving} onClick={handleSave} className="w-full" label="Save Settings" />
             </div>
             
           </CardContent>

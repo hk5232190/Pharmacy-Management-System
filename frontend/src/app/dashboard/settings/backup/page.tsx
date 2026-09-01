@@ -13,6 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { SaveButton } from "@/components/ui/save-button";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 interface BackupSettings {
@@ -331,13 +332,7 @@ export default function BackupDataManagementSettingsPage() {
           </div>
         </CardContent>
         <CardFooter className="border-t border-slate-100 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-900/10 p-5 flex justify-end">
-          <Button
-            onClick={handleSave}
-            disabled={isSaving}
-            className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/20 font-semibold px-8 h-12 rounded-xl transition-all"
-          >
-            {isSaving ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Saving…</> : <><CheckCircle2 className="mr-2 h-5 w-5" /> Save Configuration</>}
-          </Button>
+          <SaveButton isSaving={isSaving} onClick={handleSave} className="px-8" label="Save Configuration" />
         </CardFooter>
       </Card>
 

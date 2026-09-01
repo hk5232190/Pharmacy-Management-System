@@ -41,14 +41,23 @@ async function fetchAPI(endpoint: string, options: FetchOptions = {}) {
     headers
   });
 
-  const data = await response.json();
-  
-  // Return consistent format so components don't have to guess
+  // Handle global 401 Unauthorized securely before attempting to parse JSON
+  if (response.status === 401) {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem("access_token");
+      sessionStorage.removeItem("access_token");
+      window.location.href = '/login?reason=session_expired';
+    }
+    return { success: false, error: "Session expired" };
+  }
+
+  const data = await response.json().catch(() => ({}));
+
   // If response was not ok, make sure data has success=false
   if (!response.ok) {
     return {
       success: false,
-      error: data.detail?.[0]?.msg || data.detail || data.error || "An unknown error occurred"
+      error: data?.detail?.[0]?.msg || data?.detail || data?.error || "An unknown error occurred"
     };
   }
 

@@ -1317,7 +1317,7 @@ function BackupRestorePageInner({
                       <div className="flex items-start space-x-3">
                         <Checkbox 
                           id="compressAuto" 
-                          checked={settings.CompressBackup} 
+                          checked={settings.CompressBackup ?? false} 
                           onCheckedChange={(c) => setSettings({ ...settings, CompressBackup: c as boolean })} 
                           disabled={!settings.IsAutoBackupEnabled}
                           className="mt-0.5"
@@ -1331,7 +1331,7 @@ function BackupRestorePageInner({
                       <div className="flex items-start space-x-3">
                         <Checkbox 
                           id="autoVerify" 
-                          checked={settings.AutoVerify} 
+                          checked={settings.AutoVerify ?? false} 
                           onCheckedChange={(c) => setSettings({ ...settings, AutoVerify: c as boolean })} 
                           disabled={!settings.IsAutoBackupEnabled}
                           className="mt-0.5 data-[state=checked]:bg-green-600 data-[state=checked]:text-white data-[state=checked]:border-green-600"
@@ -1354,7 +1354,7 @@ function BackupRestorePageInner({
                   <div className="flex items-start space-x-3 pl-1">
                     <Checkbox 
                       id="startupBackup" 
-                      checked={settings.BackupOnStartup} 
+                      checked={settings.BackupOnStartup ?? false} 
                       onCheckedChange={(c) => setSettings({ ...settings, BackupOnStartup: c as boolean })} 
                       className="mt-0.5"
                     />

@@ -8,7 +8,7 @@ import os
 import pathlib
 
 from api.deps import get_db, get_current_user
-from models import User
+from models import User, SecuritySettings
 from core.security import verify_password, create_access_token, get_password_hash_and_salt
 from core.exceptions import AuthenticationError, ValidationError
 from core.logger import logger
@@ -60,14 +60,36 @@ def login_for_access_token(
     if not user.IsActive:
         raise AuthenticationError("Inactive user")
 
-    # Set expiry duration based on remember me
+    # Set expiry duration based on remember me and security settings
     if remember_me:
         access_token_expires = timedelta(days=REMEMBER_ME_EXPIRE_DAYS)
+    else:
+        # Fetch dynamic session timeout from SecuritySettings
+        sec_settings = db.query(SecuritySettings).first()
+        if sec_settings and sec_settings.SessionTimeoutEnabled:
+            access_token_expires = timedelta(minutes=sec_settings.SessionTimeoutMinutes)
+        else:
+            access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        
+    access_token = create_access_token(
+        data={"sub": str(user.UserId)}, expires_delta=access_token_expires
+    )
+    return {"access_token": access_token, "token_type": "bearer"}
+
+@router.post("/refresh", response_model=Token, summary="Refresh Access Token")
+def refresh_access_token(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    # Fetch dynamic session timeout from SecuritySettings
+    sec_settings = db.query(SecuritySettings).first()
+    if sec_settings and sec_settings.SessionTimeoutEnabled:
+        access_token_expires = timedelta(minutes=sec_settings.SessionTimeoutMinutes)
     else:
         access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
         
     access_token = create_access_token(
-        data={"sub": str(user.UserId)}, expires_delta=access_token_expires
+        data={"sub": str(current_user.UserId)}, expires_delta=access_token_expires
     )
     return {"access_token": access_token, "token_type": "bearer"}
 

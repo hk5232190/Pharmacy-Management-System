@@ -1048,8 +1048,8 @@ function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTa
                               )}
                             </div>
                           </td>
-                          <td className="px-4 py-3 text-right tabular-nums">{formatCurrency(item.PurchasePrice.toFixed(2))}</td>
-                          <td className="px-4 py-3 text-right tabular-nums">{formatCurrency(item.SellingPrice.toFixed(2))}</td>
+                          <td className="px-4 py-3 text-right tabular-nums">{formatCurrency(item.PurchasePrice)}</td>
+                          <td className="px-4 py-3 text-right tabular-nums">{formatCurrency(item.SellingPrice)}</td>
                           <td className="px-4 py-3 text-right font-bold tabular-nums">{item.CurrentStock}</td>
                           <td className="px-4 py-3 text-right text-muted-foreground tabular-nums">{item.MinStock}</td>
                           <td className="px-4 py-3">
@@ -1572,7 +1572,7 @@ function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTa
                       <tr><td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">No stock movements found for the selected criteria.</td></tr>
                     ) : (
                       pagedMovements.map((mov, idx) => (
-                        <tr key={mov.MovementId || idx} className="hover:bg-secondary/10 transition-colors">
+                        <tr key={idx} className="hover:bg-secondary/10 transition-colors">
                           <td className="px-4 py-3 text-center font-medium text-muted-foreground">{(safePage - 1) * movPageSize + idx + 1}</td>
                           <td className="px-4 py-3 text-muted-foreground whitespace-nowrap text-xs">
                             {new Date(mov.Date).toLocaleString('en-GB', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit', hour12: true }).toUpperCase()}
@@ -1786,8 +1786,8 @@ function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTa
                     })()}
                   </div>
                 </div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Purchase Price</span> <span className="font-medium">{formatCurrency(selectedBatch.PurchasePrice.toFixed(2))}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Selling Price</span> <span className="font-medium">{formatCurrency(selectedBatch.SellingPrice.toFixed(2))}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Purchase Price</span> <span className="font-medium">{formatCurrency(selectedBatch.PurchasePrice)}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Selling Price</span> <span className="font-medium">{formatCurrency(selectedBatch.SellingPrice)}</span></div>
               </div>
             </div>
 

@@ -41,6 +41,10 @@ class SecuritySettingsUpdate(BaseModel):
     SessionTimeoutEnabled: bool
     SessionTimeoutMinutes: int
 
+class AuditLogRequest(BaseModel):
+    event: str
+    description: str
+
 class SafeResetRequest(BaseModel):
     password: str
     confirmation_phrase: str   # Must be exactly "RESET ALL DATA"
@@ -205,7 +209,15 @@ def check_integrity(
 
 LOG_PATTERN = re.compile(r"^(\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2},\d{3})\s-\s(.*?)\s-\s(.*?)\s-\s(.*)$")
 
-@router.get("/logs")
+@router.post("/audit-log", summary="Write to audit log")
+def write_audit_log(
+    req: AuditLogRequest,
+    current_user: User = Depends(get_current_user)
+):
+    logger.info(f"AUDIT: [{req.event}] {req.description} (User: {current_user.Username})")
+    return {"message": "Logged"}
+
+@router.get("/logs", summary="Get system logs")
 def get_application_logs(
     level: str = "ALL",
     search: str = "",

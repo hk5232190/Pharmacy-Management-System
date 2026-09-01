@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { useProfile } from "@/contexts/ProfileContext";
 import { UploadCloud, Save, RefreshCw, Info, Image as ImageIcon, CheckCircle2, ShieldCheck, MapPin, Building } from "lucide-react";
 import Cropper from "react-easy-crop";
+import { SaveButton } from "@/components/ui/save-button";
 import getCroppedImg from "@/lib/cropImage";
 
 interface PharmacyProfile {
@@ -59,7 +60,7 @@ export default function PharmacyProfilePage() {
     fetchProfile();
   }, []);
 
-  const getAuthHeaders = () => {
+  const getAuthHeaders = (): Record<string, string> => {
     const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
     return token ? { "Authorization": `Bearer ${token}` } : {};
   };
@@ -330,10 +331,7 @@ export default function PharmacyProfilePage() {
                 <Button variant="outline" onClick={fetchProfile} className="w-full md:w-auto px-6 h-12 rounded-xl border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 font-semibold shadow-sm transition-all">
                   <RefreshCw className="w-4 h-4 mr-2" /> Reset
                 </Button>
-                <Button onClick={handleSave} disabled={isSaving} className="w-full md:w-auto px-8 h-12 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-600/25 hover:shadow-indigo-600/40 transition-all duration-300 font-semibold text-base border-0">
-                  {isSaving ? <RefreshCw className="w-5 h-5 mr-2 animate-spin" /> : <Save className="w-5 h-5 mr-2" />} 
-                  {isSaving ? "Saving..." : "Save Changes"}
-                </Button>
+                <SaveButton isSaving={isSaving} onClick={handleSave} className="w-full md:w-auto" />
               </div>
             </div>
           </CardContent>

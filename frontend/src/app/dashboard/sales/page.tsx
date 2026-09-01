@@ -1564,7 +1564,7 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
                               <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-500 hover:bg-slate-100" onClick={() => handleReprint(item.InvoiceNumber, item.CashierName || "", item.PaymentMethod)} title="Reprint">
                                 <Printer className="w-4 h-4" />
                               </Button>
-                              <Button variant="ghost" size="icon" className="h-7 w-7 text-rose-500 hover:bg-rose-50" onClick={() => { setActiveTab('return'); setReturnInvoiceNo(item.InvoiceNumber); }} title="Return">
+                              <Button variant="ghost" size="icon" className="h-7 w-7 text-rose-500 hover:bg-rose-50" onClick={() => { onTabChange('return'); setReturnInvoiceNo(item.InvoiceNumber); }} title="Return">
                                 <ArrowLeft className="w-4 h-4" />
                               </Button>
                             </div>

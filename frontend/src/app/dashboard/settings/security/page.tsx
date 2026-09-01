@@ -20,6 +20,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { SaveButton } from "@/components/ui/save-button";
 
 const API = "http://127.0.0.1:8000/api/v1";
 
@@ -215,8 +216,21 @@ export default function SecurityMaintenancePage() {
         method: "PUT", headers: authHeaders(), body: JSON.stringify(secSettings)
       });
       if (res.ok) {
+        // Refresh token immediately to apply new timeout to current session
+        const refreshRes = await fetch(`${API}/auth/refresh`, { method: "POST", headers: authHeaders() });
+        if (refreshRes.ok) {
+          const data = await refreshRes.json();
+          if (localStorage.getItem("access_token")) {
+            localStorage.setItem("access_token", data.access_token);
+          } else {
+            sessionStorage.setItem("access_token", data.access_token);
+          }
+        }
         toast.success("Auto Lock & Session Timeout updated successfully.");
         setSavedSecSettings(secSettings);
+        // Notify other components/tabs that settings updated
+        localStorage.setItem("security_settings_updated", Date.now().toString());
+        window.dispatchEvent(new Event("security_settings_updated"));
       } else toast.error("Failed to save settings.");
     } catch { toast.error("Error saving settings."); }
     finally { setIsSavingSecSettings(false); }
@@ -483,9 +497,7 @@ export default function SecurityMaintenancePage() {
             </div>
           </CardContent>
           <CardFooter className="border-t pt-4 flex justify-end bg-slate-50/50 dark:bg-slate-900/30 rounded-b-xl">
-            <Button onClick={handleSaveSecSettings} disabled={isSavingSecSettings} className="bg-blue-600 hover:bg-blue-700 text-white w-36">
-              {isSavingSecSettings ? <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Saving…</> : "Save Settings"}
-            </Button>
+            <SaveButton isSaving={isSavingSecSettings} onClick={handleSaveSecSettings} className="w-36" label="Save Settings" />
           </CardFooter>
         </Card>
 

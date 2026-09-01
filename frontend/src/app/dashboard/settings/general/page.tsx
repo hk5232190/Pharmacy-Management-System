@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { toast } from "sonner";
 import { Save, RefreshCw, Image as ImageIcon, ImageOff, Upload, Building2, MonitorSmartphone, Eye } from "lucide-react";
 import { useProfile } from "@/contexts/ProfileContext";
+import { SaveButton } from "@/components/ui/save-button";
 import Cropper from "react-easy-crop";
 import getCroppedImg from "@/lib/cropImage";
 
@@ -326,9 +327,7 @@ export default function GeneralSettingsPage() {
             </div>
 
             <div className="border-t border-slate-100 dark:border-slate-800/80 pt-6 flex justify-end gap-3 mt-4">
-              <Button onClick={handleSaveProfileText} disabled={isSavingProfile} className="bg-indigo-600 hover:bg-indigo-700 min-w-[140px] rounded-full shadow-lg shadow-indigo-600/25 hover:shadow-indigo-600/40 hover:-translate-y-0.5 transition-all duration-300">
-                {isSavingProfile ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />} Save Changes
-              </Button>
+              <SaveButton isSaving={isSavingProfile} onClick={handleSaveProfileText} />
             </div>
 
           </CardContent>
@@ -426,9 +425,7 @@ export default function GeneralSettingsPage() {
               <Button variant="link" size="sm" onClick={() => setGeneral(DEFAULT_GENERAL)} className="text-[13px] text-slate-500 hover:text-emerald-600 dark:hover:text-emerald-400 h-auto p-0 font-medium transition-colors">
                 Reset texts to default
               </Button>
-              <Button onClick={handleSaveGeneralText} disabled={isSavingGeneral} className="bg-indigo-600 hover:bg-indigo-700 min-w-[140px] rounded-full shadow-lg shadow-indigo-600/25 hover:shadow-indigo-600/40 hover:-translate-y-0.5 transition-all duration-300">
-                {isSavingGeneral ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />} Save Changes
-              </Button>
+              <SaveButton isSaving={isSavingGeneral} onClick={handleSaveGeneralText} />
             </div>
 
           </CardContent>

@@ -1377,3 +1377,69 @@ NoneType: None
 2026-09-01 09:42:25,661 - pms - INFO - Clear Temp Data | User: admin | Deleted 0 files | Reclaimed: 0.00 KB
 2026-09-01 09:42:54,136 - pms - INFO - Safe Data Reset | SUCCESS | User: admin | Snapshot: pre_reset_snapshot_20260901_094254.sqlite
 2026-09-01 10:06:44,377 - pms - INFO - AUDIT: User admin updated Pharmacy Branding (Name/Profile).
+2026-09-01 10:50:13,173 - pms - INFO - Security Settings Updated | User: admin | AutoLock: True (1m) | SessionTimeout: True (12m)
+2026-09-01 10:50:18,750 - pms - INFO - Security Settings Updated | User: admin | AutoLock: True (1m) | SessionTimeout: True (12m)
+2026-09-01 10:54:21,229 - pms - INFO - Security Settings Updated | User: admin | AutoLock: True (1m) | SessionTimeout: True (12m)
+2026-09-01 11:28:21,768 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-01 11:28:21,799 - apscheduler.scheduler - INFO - Scheduler started
+2026-09-01 11:33:44,055 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-01 11:33:44,102 - apscheduler.scheduler - INFO - Scheduler started
+2026-09-01 11:34:13,148 - pms - INFO - Security Settings Updated | User: admin | AutoLock: True (1m) | SessionTimeout: True (12m)
+2026-09-01 11:38:30,145 - pms - INFO - AUDIT: [SCREEN_LOCKED] Screen automatically locked due to inactivity (User: admin)
+2026-09-01 11:39:55,796 - pms - INFO - AUDIT: [SCREEN_UNLOCKED] Screen unlocked successfully by user (User: admin)
+2026-09-01 11:40:00,618 - pms - INFO - Security Settings Updated | User: admin | AutoLock: True (1m) | SessionTimeout: True (12m)
+2026-09-01 11:41:00,819 - pms - INFO - AUDIT: [SCREEN_LOCKED] Screen automatically locked due to inactivity (User: admin)
+2026-09-01 11:42:19,013 - pms - INFO - AUDIT: [SCREEN_UNLOCKED] Screen unlocked successfully by user (User: admin)
+2026-09-01 11:42:28,923 - pms - INFO - Security Settings Updated | User: admin | AutoLock: True (10m) | SessionTimeout: True (12m)
+2026-09-01 11:42:43,603 - pms - INFO - Security Settings Updated | User: admin | AutoLock: True (10m) | SessionTimeout: True (10m)
+2026-09-01 11:43:00,091 - pms - INFO - Security Settings Updated | User: admin | AutoLock: True (1m) | SessionTimeout: True (10m)
+2026-09-01 11:44:54,310 - pms - INFO - Security Settings Updated | User: admin | AutoLock: True (1m) | SessionTimeout: True (10m)
+2026-09-01 11:46:21,501 - pms - INFO - Security Settings Updated | User: admin | AutoLock: True (1m) | SessionTimeout: True (10m)
+2026-09-01 11:46:54,810 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-01 11:46:54,841 - apscheduler.scheduler - INFO - Scheduler started
+2026-09-01 11:47:16,933 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-01 11:47:17,011 - apscheduler.scheduler - INFO - Scheduler started
+2026-09-01 11:47:26,256 - pms - INFO - Security Settings Updated | User: admin | AutoLock: True (1m) | SessionTimeout: True (10m)
+2026-09-01 11:49:47,567 - pms - INFO - AUDIT: [SCREEN_LOCKED] Screen automatically locked due to inactivity (User: admin)
+2026-09-01 11:50:04,955 - pms - INFO - AUDIT: [SCREEN_UNLOCKED] Screen unlocked successfully by user (User: admin)
+2026-09-01 11:51:25,493 - pms - INFO - AUDIT: [SCREEN_LOCKED] Screen automatically locked due to inactivity (User: admin)
+2026-09-01 11:52:17,667 - pms - INFO - AUDIT: [SCREEN_UNLOCKED] Screen unlocked successfully by user (User: admin)
+2026-09-01 11:52:33,517 - pms - INFO - Security Settings Updated | User: admin | AutoLock: True (10m) | SessionTimeout: True (10m)
+2026-09-01 11:52:37,415 - pms - INFO - Security Settings Updated | User: admin | AutoLock: True (10m) | SessionTimeout: True (1m)
+2026-09-01 11:54:05,894 - pms - INFO - AUDIT: [SCREEN_LOCKED] Screen automatically locked due to inactivity (User: admin)
+2026-09-01 11:54:15,501 - pms - INFO - AUDIT: [SCREEN_UNLOCKED] Screen unlocked successfully by user (User: admin)
+2026-09-01 11:54:17,378 - pms - INFO - Security Settings Updated | User: admin | AutoLock: True (10m) | SessionTimeout: True (1m)
+2026-09-01 11:54:27,874 - pms - INFO - Security Settings Updated | User: admin | AutoLock: True (10m) | SessionTimeout: True (1m)
+2026-09-01 11:55:55,516 - pms - INFO - AUDIT: [SCREEN_LOCKED] Screen automatically locked due to inactivity (User: admin)
+2026-09-01 11:56:23,185 - pms - INFO - AUDIT: [SCREEN_UNLOCKED] Screen unlocked successfully by user (User: admin)
+2026-09-01 12:13:30,154 - pms - INFO - AUDIT: [SCREEN_LOCKED] Screen automatically locked due to inactivity (User: admin)
+2026-09-01 12:18:17,081 - pms - INFO - AUDIT: [SCREEN_UNLOCKED] Screen unlocked successfully by user (User: admin)
+2026-09-01 12:18:32,191 - pms - INFO - Security Settings Updated | User: admin | AutoLock: True (30m) | SessionTimeout: True (1m)
+2026-09-01 12:18:43,552 - pms - INFO - Security Settings Updated | User: admin | AutoLock: True (30m) | SessionTimeout: True (30m)
+2026-09-01 12:27:06,954 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-01 12:27:06,988 - apscheduler.scheduler - INFO - Scheduler started
+2026-09-01 12:27:25,321 - pms - INFO - Security Settings Updated | User: admin | AutoLock: True (30m) | SessionTimeout: True (1m)
+2026-09-01 12:30:12,622 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-01 12:30:12,650 - apscheduler.scheduler - INFO - Scheduler started
+2026-09-01 12:30:36,480 - pms - INFO - Security Settings Updated | User: admin | AutoLock: True (30m) | SessionTimeout: True (1m)
+2026-09-01 12:58:59,625 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-01 12:58:59,686 - apscheduler.scheduler - INFO - Scheduler started
+2026-09-01 13:00:59,524 - pms - ERROR - PMSException caught: Session expired. Please log in again. (status: 401) | Path: /api/v1/auth/me
+2026-09-01 13:01:45,461 - pms - INFO - Security Settings Updated | User: admin | AutoLock: True (30m) | SessionTimeout: True (2m)
+2026-09-01 13:01:50,690 - pms - INFO - Security Settings Updated | User: admin | AutoLock: True (30m) | SessionTimeout: True (20m)
+2026-09-01 13:04:50,150 - pms - INFO - Security Settings Updated | User: admin | AutoLock: True (30m) | SessionTimeout: True (20m)
+2026-09-01 13:09:13,502 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-01 13:09:13,595 - apscheduler.scheduler - INFO - Scheduler started
+2026-09-01 13:18:02,268 - pms - INFO - Security Settings Updated | User: admin | AutoLock: True (30m) | SessionTimeout: True (1m)
+2026-09-01 13:20:10,393 - pms - ERROR - PMSException caught: Session expired. Please log in again. (status: 401) | Path: /api/v1/security/settings
+2026-09-01 13:20:22,717 - pms - ERROR - PMSException caught: Session expired. Please log in again. (status: 401) | Path: /api/v1/security/settings
+2026-09-01 13:20:39,583 - pms - ERROR - PMSException caught: Session expired. Please log in again. (status: 401) | Path: /api/v1/security/settings
+2026-09-01 13:20:47,202 - pms - ERROR - PMSException caught: Session expired. Please log in again. (status: 401) | Path: /api/v1/auth/me
+2026-09-01 13:21:04,963 - pms - INFO - Security Settings Updated | User: admin | AutoLock: True (30m) | SessionTimeout: True (1m)
+2026-09-01 13:24:59,038 - pms - INFO - Safe Data Reset | SUCCESS | User: admin | Snapshot: pre_reset_snapshot_20260901_132458.sqlite
+2026-09-01 13:25:08,365 - pms - ERROR - PMSException caught: Session expired. Please log in again. (status: 401) | Path: /api/v1/auth/me
+2026-09-01 13:25:48,679 - pms - INFO - Security Settings Updated | User: admin | AutoLock: True (30m) | SessionTimeout: True (480m)
+2026-09-01 13:25:58,495 - pms - INFO - Database Optimization | User: admin | Reclaimed: 0 bytes
+2026-09-01 13:26:09,361 - pms - INFO - Clear Temp Data | User: admin | Deleted 0 files | Reclaimed: 0.00 KB
+2026-09-01 13:26:33,189 - pms - INFO - Security Settings Updated | User: admin | AutoLock: True (30m) | SessionTimeout: True (480m)
+2026-09-01 13:34:25,593 - pms - INFO - Security Settings Updated | User: admin | AutoLock: True (30m) | SessionTimeout: True (1m)

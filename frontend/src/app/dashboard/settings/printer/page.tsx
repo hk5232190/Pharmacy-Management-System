@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Save, RefreshCw, Printer, Usb, Receipt, Code, CheckCircle2, Server } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { SaveButton } from "@/components/ui/save-button";
 
 interface PrinterSettings {
   SettingsId?: number;
@@ -313,7 +314,7 @@ export default function PrinterSettingsPage() {
               </div>
             </div>
 
-            <Accordion type="single" collapsible="true" className="w-full">
+            <Accordion className="w-full">
               <AccordionItem value="advanced-hex">
                 <AccordionTrigger className="text-sm font-semibold text-slate-600 dark:text-slate-400">
                   Advanced Custom Hex Sequences
@@ -466,10 +467,7 @@ export default function PrinterSettingsPage() {
             </div>
 
             <div className="space-y-3 pt-6 border-t border-slate-100 dark:border-slate-800">
-              <Button onClick={handleSave} disabled={isSaving} className="w-full h-12 rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/25 hover:shadow-blue-600/40 transition-all duration-300 font-semibold text-base border-0">
-                {isSaving ? <RefreshCw className="w-5 h-5 mr-2 animate-spin" /> : <Save className="w-5 h-5 mr-2" />}
-                {isSaving ? "Saving..." : "Save Settings"}
-              </Button>
+              <SaveButton isSaving={isSaving} onClick={handleSave} className="w-full" label="Save Settings" />
               <div className="grid grid-cols-2 gap-3">
                 <Button onClick={handleTestPrint} disabled={isTesting} variant="outline" className="h-11 rounded-xl border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 shadow-sm transition-all font-semibold">
                   {isTesting ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Printer className="w-4 h-4 mr-2 text-indigo-600" />}
