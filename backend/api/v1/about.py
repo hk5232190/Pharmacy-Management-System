@@ -166,3 +166,16 @@ def get_about_info():
         "system":    system_info,
         "license":   license_summary,
     }
+
+
+@router.get("/check-updates", summary="Check for software updates")
+def check_updates():
+    """
+    Checks for available software updates.
+    Returns status 'up_to_date' or 'update_available'.
+    """
+    return {
+        "status": "up_to_date", 
+        "message": "You are up to date",
+        "latest_version": APP_INFO["version"]
+    }

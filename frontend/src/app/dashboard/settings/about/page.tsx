@@ -182,8 +182,24 @@ function LicenseStatusBadge({ status, type, expiryDate, remainingDays, isLifetim
 export default function AboutPage() {
   const [data, setData] = useState<AboutData | null>(null);
   const [loading, setLoading] = useState(false);
+  const [checkingUpdates, setCheckingUpdates] = useState(false);
+  const [updateStatus, setUpdateStatus] = useState<string | null>(null);
 
   useEffect(() => { fetchAbout(); }, []);
+
+  const handleCheckUpdates = async () => {
+    setCheckingUpdates(true);
+    try {
+      const res = await fetch("http://127.0.0.1:8000/api/v1/about/check-updates");
+      if (!res.ok) throw new Error("Failed");
+      const data = await res.json();
+      setUpdateStatus(data.message || (data.status === "up_to_date" ? "You are up to date" : "Update Available"));
+    } catch {
+      toast.error("Failed to check for updates.");
+    } finally {
+      setCheckingUpdates(false);
+    }
+  };
 
   const fetchAbout = async () => {
     setLoading(true);
@@ -230,7 +246,7 @@ export default function AboutPage() {
       </div>
 
       {/* ── Hero Banner ── */}
-      <div className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-primary/10 via-background to-secondary/30 p-8">
+      <div className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-primary/10 via-background to-secondary/30 p-8 flex items-center justify-between gap-6 flex-wrap">
         {/* Decorative circles */}
         <div className="absolute -top-10 -right-10 w-48 h-48 rounded-full bg-primary/5 blur-2xl pointer-events-none" />
         <div className="absolute -bottom-10 -left-10 w-36 h-36 rounded-full bg-primary/5 blur-2xl pointer-events-none" />
@@ -266,8 +282,31 @@ export default function AboutPage() {
                 <Database size={15} />
                 <span>{app.database_engine}</span>
               </div>
+              <button
+                onClick={() => {
+                  const specs = `${app.software_short} Pro v${app.version} | Build ${app.build_number} | ${app.database_engine}`;
+                  navigator.clipboard.writeText(specs);
+                  toast.success("System specs copied to clipboard");
+                }}
+                className="ml-2 flex items-center gap-1 text-xs font-semibold text-primary bg-primary/10 hover:bg-primary/20 px-2.5 py-1 rounded-md transition-colors"
+                title="Copy Specs"
+              >
+                <Copy size={12} /> Copy Specs
+              </button>
             </div>
           </div>
+        </div>
+        
+        <div className="relative shrink-0 text-right flex flex-col items-end gap-2">
+          <Button onClick={handleCheckUpdates} disabled={checkingUpdates} variant="outline" className="gap-2 bg-background/50 backdrop-blur-sm border-primary/20 hover:bg-primary/5">
+            {checkingUpdates ? <Loader2 size={16} className="animate-spin text-primary" /> : <RefreshCw size={16} className="text-primary" />}
+            Check for Updates
+          </Button>
+          {updateStatus && (
+            <div className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/30 px-3 py-1 rounded-full border border-emerald-200 dark:border-emerald-800 animate-in fade-in zoom-in duration-300">
+              {updateStatus}
+            </div>
+          )}
         </div>
       </div>
 
@@ -292,10 +331,11 @@ export default function AboutPage() {
           <InfoRow label="Country"    value={developer.country} />
           <InfoRow label="Website"    value={developer.website.replace(/^https?:\/\//, '')} href={developer.website} />
           <InfoRow label="Email"      value={developer.email} href={`mailto:${developer.email}`} />
+          <InfoRow label="WhatsApp Support" value={support.whatsapp} href={`https://wa.me/${support.whatsapp.replace(/[^0-9]/g, '')}`} />
           <div className="mt-3 pt-3 border-t border-border">
             <div className="flex items-start gap-2 text-xs text-muted-foreground">
               <Copyright size={13} className="mt-0.5 shrink-0" />
-              <span className="font-medium">{developer.copyright}</span>
+              <span className="font-medium">© {new Date().getFullYear()} {developer.company_name}. All rights reserved.</span>
             </div>
             <p className="text-xs text-muted-foreground mt-1.5 ml-5">{developer.license_type_text}</p>
           </div>
@@ -372,41 +412,8 @@ export default function AboutPage() {
         </p>
       </SectionCard>
 
-      {/* ── Support / Contact ── */}
-      <SectionCard icon={HeartHandshake} title="Support & Contact Information">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <a
-            href={`mailto:${support.support_email}`}
-            className="group flex items-center gap-3 p-4 rounded-xl border border-border hover:border-primary/50 hover:bg-primary/5 transition-all"
-          >
-            <div className="w-9 h-9 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center shrink-0 group-hover:bg-primary/10 transition-colors">
-              <Mail size={17} className="text-blue-600 dark:text-blue-400 group-hover:text-primary" />
-            </div>
-            <div>
-              <p className="text-xs font-bold text-foreground">Email Support</p>
-              <p className="text-xs text-muted-foreground mt-0.5 break-all">{support.support_email}</p>
-            </div>
-          </a>
-
-          <a
-            href={`tel:${support.phone}`}
-            className="group flex items-center gap-3 p-4 rounded-xl border border-border hover:border-primary/50 hover:bg-primary/5 transition-all"
-          >
-            <div className="w-9 h-9 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center shrink-0 group-hover:bg-primary/10 transition-colors">
-              <Phone size={17} className="text-emerald-600 dark:text-emerald-400 group-hover:text-primary" />
-            </div>
-            <div>
-              <p className="text-xs font-bold text-foreground">Phone / WhatsApp</p>
-              <p className="text-xs text-muted-foreground mt-0.5">{support.phone}</p>
-            </div>
-          </a>
-        </div>
-      </SectionCard>
-
-      {/* ── Copyright Footer ── */}
+      {/* ── Footer ── */}
       <div className="text-center py-4 space-y-1">
-        <p className="text-sm font-semibold text-muted-foreground">{developer.copyright}</p>
-        <p className="text-xs text-muted-foreground">{developer.license_type_text}</p>
         <div className="flex items-center justify-center gap-2 mt-2">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
           <span className="text-xs text-muted-foreground font-medium">
