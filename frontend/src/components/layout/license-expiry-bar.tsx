@@ -49,7 +49,7 @@ function getExpiryTier(info: LicenseInfo): ExpiryTier | null {
   if (days <= 3) {
     return {
       level: "critical",
-      isDismissible: false,
+      isDismissible: true,
       headline: `License expires ${dayLabel}`,
       Icon: ShieldX,
       card: "bg-gradient-to-r from-rose-600 via-rose-500 to-red-500 dark:from-rose-700 dark:via-rose-600 dark:to-red-600 border-rose-400/30 shadow-[0_4px_20px_rgba(225,29,72,0.30)]",
@@ -58,7 +58,7 @@ function getExpiryTier(info: LicenseInfo): ExpiryTier | null {
       badge: "bg-white/20 text-white border-white/25",
       renewBtn: "bg-white text-rose-600 hover:bg-rose-50 shadow-sm",
       viewBtn: "bg-white/10 text-white hover:bg-white/20 border border-white/30",
-      dismissCls: "",
+      dismissCls: "text-white/60 hover:text-white hover:bg-white/15",
       headlineCls: "text-white",
       pulse: true,
     };
