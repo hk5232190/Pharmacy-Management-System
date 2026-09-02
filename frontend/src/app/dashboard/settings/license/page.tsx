@@ -27,7 +27,7 @@ interface LicenseInfo {
   /** Active pharmacy name from DB — used as Client / Licensee display value. */
   pharmacy_name: string | null;
   license_id: string | null;
-  hardware_id: string;
+  mac_address: string;
   key_reference: string;
   is_lifetime: boolean;
   license_file_info: {
@@ -192,7 +192,7 @@ export default function LicensePage() {
   const [loading, setLoading] = useState(false);
   const [validating, setValidating] = useState(false);
   const [importing, setImporting] = useState(false);
-  const [copiedHwid, setCopiedHwid] = useState(false);
+  const [copiedMac, setCopiedMac] = useState(false);
   const [copiedKey, setCopiedKey] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -293,11 +293,11 @@ export default function LicensePage() {
     }
   };
 
-  const copyToClipboard = (text: string, type: "hwid" | "key") => {
+  const copyToClipboard = (text: string, type: "mac" | "key") => {
     navigator.clipboard.writeText(text).then(() => {
-      if (type === "hwid") {
-        setCopiedHwid(true);
-        setTimeout(() => setCopiedHwid(false), 2000);
+      if (type === "mac") {
+        setCopiedMac(true);
+        setTimeout(() => setCopiedMac(false), 2000);
       } else {
         setCopiedKey(true);
         setTimeout(() => setCopiedKey(false), 2000);
@@ -438,28 +438,28 @@ export default function LicensePage() {
           <Card className="border-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none overflow-hidden ring-1 ring-slate-200/60 dark:ring-slate-800 transition-all duration-500 hover:shadow-[0_8px_30px_rgb(59,130,246,0.08)] rounded-2xl">
             <CardHeader className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-r from-blue-50/80 to-transparent dark:from-transparent dark:to-transparent flex flex-row items-center gap-2 space-y-0">
               <Cpu size={18} className="text-blue-600 dark:text-blue-400 drop-shadow-sm" />
-              <CardTitle className="font-bold text-base text-blue-700 dark:text-blue-400">Hardware ID</CardTitle>
+              <CardTitle className="font-bold text-base text-blue-700 dark:text-blue-400">MAC Address</CardTitle>
             </CardHeader>
             <CardContent className="p-5 space-y-4">
               <div>
                 <p className="text-xs text-muted-foreground font-medium mb-2">
-                  Generated from SHA-256(CPU ID + Motherboard UUID + MAC Address)
+                  Physical network adapter MAC address used for license binding
                 </p>
                 <div className="bg-secondary/50 border border-border rounded-xl p-3 font-mono text-sm text-foreground break-all">
-                  {info?.hardware_id || "—"}
+                  {info?.mac_address || "—"}
                 </div>
               </div>
               <Button
-                id="copy-hardware-id-btn"
-                onClick={() => copyToClipboard(info?.hardware_id || "", "hwid")}
+                id="copy-mac-address-btn"
+                onClick={() => copyToClipboard(info?.mac_address || "", "mac")}
                 variant="outline"
                 className={cn(
                   "w-full gap-2 h-10 transition-all duration-200",
-                  copiedHwid && "border-emerald-400 text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/20",
+                  copiedMac && "border-emerald-400 text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/20",
                 )}
-                disabled={!info?.hardware_id}
+                disabled={!info?.mac_address}
               >
-                {copiedHwid ? <><Check size={15} className="text-emerald-500" /> Copied!</> : <><Copy size={15} /> Copy Hardware ID</>}
+                {copiedMac ? <><Check size={15} className="text-emerald-500" /> Copied!</> : <><Copy size={15} /> Copy MAC Address</>}
               </Button>
             </CardContent>
           </Card>
@@ -566,7 +566,7 @@ export default function LicensePage() {
             <>
               <CheckRow label="License file exists on disk" ok={validation.file_exists} />
               <CheckRow label="Digital signature is authentic (RSA-256)" ok={validation.signature_valid} />
-              <CheckRow label="Hardware ID matches this machine" ok={validation.hardware_match} />
+              <CheckRow label="MAC Address matches this machine" ok={validation.hardware_match} />
               <CheckRow label="License has not expired" ok={validation.not_expired} />
               <div className={cn(
                 "mt-4 mb-3 flex items-center gap-3 px-4 py-3 rounded-xl border text-sm font-semibold",

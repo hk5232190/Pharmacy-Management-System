@@ -7,7 +7,7 @@ import { Shield, Key, Copy, CheckCircle2, ArrowRight, Upload, FileText, X } from
 import { useRouter } from "next/navigation";
 
 export default function ActivatePage() {
-  const [hwid, setHwid] = useState("");
+  const [mac, setMac] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -25,16 +25,16 @@ export default function ActivatePage() {
   };
 
   useEffect(() => {
-    // Fetch HWID on mount
-    fetch("http://127.0.0.1:8000/api/v1/license/hwid")
+    // Fetch MAC Address on mount
+    fetch("http://127.0.0.1:8000/api/v1/license/mac")
       .then((res) => res.json())
-      .then((data) => setHwid(data.hwid))
-      .catch(() => setError("Failed to fetch Hardware ID from backend. Is the server running?"));
+      .then((data) => setMac(data.mac))
+      .catch(() => setError("Failed to fetch MAC Address from backend. Is the server running?"));
   }, []);
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(hwid);
-    alert("Hardware ID copied to clipboard!");
+    navigator.clipboard.writeText(mac);
+    alert("MAC Address copied to clipboard!");
   };
 
   const handleActivate = async () => {
@@ -109,12 +109,12 @@ export default function ActivatePage() {
             {/* HWID Section */}
             <div className="space-y-2">
               <label className="text-sm font-bold text-foreground flex justify-between items-center">
-                Your Hardware ID
+                Your MAC Address
                 <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider bg-secondary px-2 py-0.5 rounded-full">Required</span>
               </label>
               <div className="flex gap-2 group">
                 <div className="flex-1 bg-secondary/40 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 text-[13px] font-mono text-slate-700 dark:text-slate-300 truncate shadow-inner">
-                  {hwid || "Loading..."}
+                  {mac || "Loading..."}
                 </div>
                 <Button variant="outline" onClick={handleCopy} className="border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 hover:border-indigo-200 dark:hover:text-indigo-400 dark:hover:bg-indigo-900/20 h-auto px-4 rounded-xl transition-all">
                   <Copy size={16} />
@@ -215,7 +215,7 @@ export default function ActivatePage() {
 
             <Button 
               onClick={handleActivate}
-              disabled={isLoading || !hwid || !selectedFile}
+              disabled={isLoading || !mac || !selectedFile}
               className="w-full h-[54px] text-[15px] font-bold mt-6 shadow-xl shadow-indigo-500/20 hover:shadow-indigo-500/40 hover:-translate-y-0.5 transition-all duration-200 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white border-0"
             >
               {isLoading ? "Verifying..." : "Activate Software"} <Key className="ml-2" size={18} />

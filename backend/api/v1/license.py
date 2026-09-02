@@ -3,7 +3,7 @@ import os
 import json
 import stat
 import datetime
-from utils.hwid import generate_hwid
+from utils.hwid import get_primary_mac
 from utils.license_engine import validate_license
 from core.exceptions import PMSException
 from api.deps import get_current_user, get_current_admin_user
@@ -69,23 +69,32 @@ def _remaining_days(exp_ts) -> int | None:
 
 # ─── Existing Endpoints (preserved) ─────────────────────────────────────────
 
-@router.get("/hwid", summary="Get Hardware ID")
-def get_hardware_id():
-    """Computes and returns the Hardware ID: SHA256(CPU_ID + MB_UUID + MAC)."""
-    hwid = generate_hwid()
-    return {"hwid": hwid}
+@router.get("/mac", summary="Get MAC Address (for license binding)")
+def get_mac_address():
+    """Returns the physical MAC address of this machine used for license binding."""
+    mac = get_primary_mac()
+    return {"mac": mac}
 
 
-@router.get("/hardware-id", summary="Get Hardware Fingerprint (Canonical)")
+@router.get("/hwid", summary="Get MAC Address (backward-compat alias)")
+def get_hardware_id_alias():
+    """
+    Backward-compatible alias — now returns MAC address.
+    Use GET /mac for new integrations.
+    """
+    mac = get_primary_mac()
+    return {"hwid": mac, "mac": mac}
+
+
+@router.get("/hardware-id", summary="Get MAC Address (Canonical)")
 def get_hardware_fingerprint():
     """
-    Dedicated endpoint: returns the machine hardware fingerprint used for
-    license binding. Derived from SHA-256(CPU ID + Motherboard UUID + MAC Address).
+    Returns the MAC address used for license binding on this machine.
     """
-    hwid = generate_hwid()
+    mac = get_primary_mac()
     return {
-        "hardware_id": hwid,
-        "generated_from": "SHA-256(CPU ID + Motherboard UUID + MAC Address)",
+        "mac_address": mac,
+        "generated_from": "Physical network adapter MAC address",
     }
 
 
@@ -168,7 +177,7 @@ def get_license_info(db: Session = Depends(get_db)):
     Key reference is always masked server-side for security.
     Use GET /key-reference (authenticated) to obtain the full value.
     """
-    hwid = generate_hwid()
+    mac = get_primary_mac()
 
     # ── Pharmacy name from DB (Client / Licensee binding) ────────────────────
     pharmacy_name: str | None = None
@@ -180,7 +189,7 @@ def get_license_info(db: Session = Depends(get_db)):
         pass  # Non-fatal; fall back to license payload value
 
     base = {
-        "hardware_id": hwid,
+        "mac_address": mac,
         "license_file_info": _file_info(ACTIVE_LICENSE_PATH) if os.path.exists(ACTIVE_LICENSE_PATH) else {},
         # Masked key — full value never transmitted in standard status payload
         "key_reference": _key_reference(ACTIVE_LICENSE_PATH) if os.path.exists(ACTIVE_LICENSE_PATH) else "N/A",
@@ -248,7 +257,7 @@ def get_license_info(db: Session = Depends(get_db)):
             "total_days": total_days,
             "pharmacy_name": pharmacy_name or client_name,
             "status": "Active",
-            "validation_message": "License is valid and verified against this hardware.",
+            "validation_message": "License is valid and verified against this machine's MAC address.",
             "license_type": license_type,
             "activation_date": activation_date,
             "expiry_date": expiry_date if not is_lifetime else "Never (Lifetime)",
