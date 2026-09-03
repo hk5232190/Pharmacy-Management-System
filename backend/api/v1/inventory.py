@@ -6,7 +6,13 @@ from datetime import datetime, timedelta, date
 
 from models import StockBatch, Medicine, Category, Company, Supplier, PurchaseItem, Purchase, PurchaseReturnItem, PurchaseReturn, StockAdjustment, AuditLog, SaleItem, Sale, InventorySettings
 from schemas.base import BaseResponse
-from schemas.inventory import StockAdjustmentCreate, StockAdjustmentResponse, StockMovementResponse, AuditLogResponse
+from schemas.inventory import (
+    StockAdjustmentCreate,
+    StockAdjustmentResponse,
+    StockMovementResponse,
+    AuditLogResponse,
+    StockBatchUpdate
+)
 from api.deps import get_current_user, get_db
 
 router = APIRouter()
@@ -231,6 +237,127 @@ def adjust_stock(
         db.commit()
 
         return {"success": True, "message": f"Stock successfully {adjustment_in.AdjustmentType.lower()}d."}
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.put("/stock/{batch_id}", summary="Update batch and stock details")
+def update_stock_batch(
+    batch_id: int,
+    batch_in: StockBatchUpdate,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    try:
+        inv_settings = db.query(InventorySettings).first()
+        allow_negative = inv_settings.AllowNegativeStock if inv_settings else False
+
+        batch = None
+        medicine = None
+
+        if batch_id > 0:
+            batch = db.query(StockBatch).filter(StockBatch.BatchId == batch_id).with_for_update().first()
+            if not batch:
+                raise HTTPException(status_code=404, detail="Stock batch not found")
+            medicine = batch.medicine
+        else:
+            med_id = batch_in.MedicineId or abs(batch_id)
+            medicine = db.query(Medicine).filter(Medicine.MedicineId == med_id).first()
+            if not medicine:
+                raise HTTPException(status_code=404, detail="Medicine not found")
+
+        # Update Medicine details (RackNumber, ReorderLevel)
+        if medicine:
+            if batch_in.RackNumber is not None:
+                medicine.RackNumber = batch_in.RackNumber.strip() if batch_in.RackNumber.strip() else None
+            if batch_in.MinStock is not None:
+                medicine.ReorderLevel = max(0, int(batch_in.MinStock))
+
+        # If existing batch
+        if batch:
+            if batch_in.BatchCode is not None and batch_in.BatchCode.strip():
+                batch.BatchCode = batch_in.BatchCode.strip()
+            if batch_in.ExpiryDate is not None:
+                batch.ExpiryDate = batch_in.ExpiryDate
+            if batch_in.PurchasePrice is not None:
+                batch.CostPrice = max(0.0, float(batch_in.PurchasePrice))
+            if batch_in.SellingPrice is not None:
+                batch.SellingPrice = max(0.0, float(batch_in.SellingPrice))
+
+            # Stock quantity change
+            if batch_in.CurrentStock is not None and int(batch_in.CurrentStock) != batch.Quantity:
+                new_qty = int(batch_in.CurrentStock)
+                if new_qty < 0 and not allow_negative:
+                    raise HTTPException(status_code=400, detail="Stock quantity cannot be negative")
+
+                diff = new_qty - batch.Quantity
+                adj_type = "Increase" if diff > 0 else "Decrease"
+                adj_qty = abs(diff)
+                prev_qty = batch.Quantity
+                batch.Quantity = new_qty
+
+                new_adj = StockAdjustment(
+                    BatchId=batch.BatchId,
+                    UserId=current_user.UserId,
+                    AdjustmentType=adj_type,
+                    Quantity=adj_qty,
+                    PreviousQuantity=prev_qty,
+                    NewQuantity=new_qty,
+                    Reason="Current Stock Manual Edit"
+                )
+                db.add(new_adj)
+
+                audit_log = AuditLog(
+                    UserId=current_user.UserId,
+                    Action="STOCK_BATCH_EDIT",
+                    Description=f"Batch {batch.BatchCode} for {medicine.BrandName if medicine else 'Medicine'} updated. Stock: {prev_qty} -> {new_qty}"
+                )
+                db.add(audit_log)
+            else:
+                audit_log = AuditLog(
+                    UserId=current_user.UserId,
+                    Action="STOCK_BATCH_EDIT",
+                    Description=f"Batch {batch.BatchCode} details updated for {medicine.BrandName if medicine else 'Medicine'}."
+                )
+                db.add(audit_log)
+
+        elif batch_in.CurrentStock is not None and int(batch_in.CurrentStock) > 0:
+            # Create a new batch if this was an out-of-stock medicine without batches
+            batch_code = batch_in.BatchCode.strip() if batch_in.BatchCode and batch_in.BatchCode.strip() else f"B-{medicine.MedicineId}-1"
+            new_batch = StockBatch(
+                MedicineId=medicine.MedicineId,
+                BatchCode=batch_code,
+                Quantity=int(batch_in.CurrentStock),
+                CostPrice=batch_in.PurchasePrice if batch_in.PurchasePrice is not None else float(medicine.DefaultCostPrice or 0),
+                SellingPrice=batch_in.SellingPrice if batch_in.SellingPrice is not None else float(medicine.DefaultSellingPrice or 0),
+                ExpiryDate=batch_in.ExpiryDate or (date.today() + timedelta(days=365)),
+                ReceivedDate=datetime.utcnow()
+            )
+            db.add(new_batch)
+            db.flush()
+
+            new_adj = StockAdjustment(
+                BatchId=new_batch.BatchId,
+                UserId=current_user.UserId,
+                AdjustmentType="Increase",
+                Quantity=int(batch_in.CurrentStock),
+                PreviousQuantity=0,
+                NewQuantity=int(batch_in.CurrentStock),
+                Reason="Initial Stock Entry"
+            )
+            db.add(new_adj)
+
+            audit_log = AuditLog(
+                UserId=current_user.UserId,
+                Action="STOCK_BATCH_CREATE",
+                Description=f"Created initial batch {new_batch.BatchCode} with {batch_in.CurrentStock} units for {medicine.BrandName}."
+            )
+            db.add(audit_log)
+
+        db.commit()
+        return {"success": True, "message": "Stock batch updated successfully"}
     except HTTPException:
         raise
     except Exception as e:

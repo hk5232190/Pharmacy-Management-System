@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import Optional, List
-from datetime import datetime
+from datetime import datetime, date
 
 class StockAdjustmentCreate(BaseModel):
     BatchId: int
@@ -70,4 +70,15 @@ class ExpiryPagedResponse(BaseModel):
     page: int
     page_size: int
     kpi_summary: ExpiryKpiSummary
+
+class StockBatchUpdate(BaseModel):
+    BatchCode: Optional[str] = None
+    ExpiryDate: Optional[date] = None
+    PurchasePrice: Optional[float] = None
+    SellingPrice: Optional[float] = None
+    CurrentStock: Optional[int] = None
+    RackNumber: Optional[str] = None
+    MinStock: Optional[int] = None
+    MedicineId: Optional[int] = None
+
 

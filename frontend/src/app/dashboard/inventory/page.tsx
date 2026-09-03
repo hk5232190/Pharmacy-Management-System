@@ -192,6 +192,20 @@ function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTa
   const [adjustData, setAdjustData] = useState({ BatchId: 0, Type: "Increase", Quantity: "", Reason: "", Notes: "" });
   const [adjustBatchLabel, setAdjustBatchLabel] = useState("");
 
+  // Edit Stock Batch Modal state
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingBatch, setEditingBatch] = useState<StockBatch | null>(null);
+  const [editFormData, setEditFormData] = useState({
+    BatchCode: "",
+    ExpiryDate: "",
+    PurchasePrice: "",
+    SellingPrice: "",
+    CurrentStock: "",
+    RackNumber: "",
+    MinStock: "",
+  });
+  const [editLoading, setEditLoading] = useState(false);
+
   // Adjustment History Pagination & Filters
   const [adjSearchQuery, setAdjSearchQuery] = useState("");
   const [adjTypeFilter, setAdjTypeFilter] = useState("All");
@@ -633,6 +647,80 @@ function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTa
     setIsAdjustModalOpen(true);
   };
 
+  const openEditModal = (batch: StockBatch) => {
+    setEditingBatch(batch);
+    let expDateStr = "";
+    if (batch.ExpiryDate) {
+      try {
+        const d = new Date(batch.ExpiryDate);
+        if (!isNaN(d.getTime())) {
+          expDateStr = d.toISOString().split("T")[0];
+        }
+      } catch {
+        expDateStr = "";
+      }
+    }
+
+    setEditFormData({
+      BatchCode: batch.BatchCode === "—" ? "" : (batch.BatchCode || ""),
+      ExpiryDate: expDateStr,
+      PurchasePrice: String(batch.PurchasePrice ?? ""),
+      SellingPrice: String(batch.SellingPrice ?? ""),
+      CurrentStock: String(batch.CurrentStock ?? "0"),
+      RackNumber: batch.RackNumber === "—" ? "" : (batch.RackNumber || ""),
+      MinStock: String(batch.MinStock ?? ""),
+    });
+    setIsEditModalOpen(true);
+  };
+
+  const handleSaveEditBatch = async () => {
+    if (!editingBatch) return;
+
+    if (!editFormData.BatchCode.trim() && editingBatch.BatchId > 0) {
+      return triggerNotification('warning', 'AlertTriggerErrors', "Batch Code cannot be empty");
+    }
+    if (!editFormData.ExpiryDate && editingBatch.BatchId > 0) {
+      return triggerNotification('warning', 'AlertTriggerErrors', "Expiry Date is required");
+    }
+    if (isNaN(Number(editFormData.PurchasePrice)) || Number(editFormData.PurchasePrice) < 0) {
+      return triggerNotification('warning', 'AlertTriggerErrors', "Please enter a valid Purchase Price");
+    }
+    if (isNaN(Number(editFormData.SellingPrice)) || Number(editFormData.SellingPrice) < 0) {
+      return triggerNotification('warning', 'AlertTriggerErrors', "Please enter a valid Selling Price");
+    }
+    if (isNaN(Number(editFormData.CurrentStock)) || Number(editFormData.CurrentStock) < 0) {
+      return triggerNotification('warning', 'AlertTriggerErrors', "Please enter a valid Current Stock quantity");
+    }
+
+    setEditLoading(true);
+    try {
+      const res = await apiClient.put(`/inventory/stock/${editingBatch.BatchId}`, {
+        BatchCode: editFormData.BatchCode.trim(),
+        ExpiryDate: editFormData.ExpiryDate || null,
+        PurchasePrice: Number(editFormData.PurchasePrice),
+        SellingPrice: Number(editFormData.SellingPrice),
+        CurrentStock: Number(editFormData.CurrentStock),
+        RackNumber: editFormData.RackNumber.trim(),
+        MinStock: editFormData.MinStock ? Number(editFormData.MinStock) : 0,
+        MedicineId: editingBatch.MedicineId,
+      });
+
+      if (res.success) {
+        toast.success(res.message || "Stock batch updated successfully");
+        triggerNotification('success', 'AlertTriggerSale', res.message || "Stock batch updated successfully");
+        setIsEditModalOpen(false);
+        setEditingBatch(null);
+        fetchData();
+      } else {
+        triggerNotification('error', 'AlertTriggerErrors', res.message || res.detail || "Failed to update stock batch");
+      }
+    } catch (err: any) {
+      triggerNotification('error', 'AlertTriggerErrors', err.response?.data?.detail || err.message || "An error occurred");
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
   const exportToCSV = (data: any[], filename: string) => {
     if (!data || data.length === 0) return toast.error("No data to export");
     
@@ -1068,7 +1156,11 @@ function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTa
                               <button onClick={() => setSelectedBatch(item)} className="p-1.5 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-md transition-colors">
                                 <Eye className="h-4 w-4" />
                               </button>
-                              <button className="p-1.5 text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-md transition-colors">
+                              <button
+                                title="Edit batch and stock details"
+                                onClick={() => openEditModal(item)}
+                                className="p-1.5 text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-md transition-colors"
+                              >
                                 <Edit className="h-4 w-4" />
                               </button>
                               <button
@@ -1816,16 +1908,23 @@ function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTa
 
           </div>
           
-          <div className="p-4 border-t border-border grid grid-cols-2 gap-3 bg-slate-50/50 dark:bg-secondary/20">
-            <Button onClick={() => openAdjustmentModal(selectedBatch)} className="w-full bg-blue-600 hover:bg-blue-700 text-white">
-              <Edit className="h-4 w-4 mr-2" /> Adjust Stock
+          <div className="p-4 border-t border-border grid grid-cols-3 gap-2 bg-slate-50/50 dark:bg-secondary/20">
+            <Button onClick={() => openAdjustmentModal(selectedBatch)} className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs px-2">
+              <Edit className="h-3.5 w-3.5 mr-1" /> Adjust Stock
             </Button>
             <Button
               variant="outline"
-              className="w-full bg-white dark:bg-card"
+              className="w-full bg-white dark:bg-card text-amber-600 hover:text-amber-700 border-amber-200 dark:border-amber-900/50 hover:bg-amber-50 dark:hover:bg-amber-950/30 text-xs px-2"
+              onClick={() => selectedBatch && openEditModal(selectedBatch)}
+            >
+              <Edit className="h-3.5 w-3.5 mr-1" /> Edit Batch
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full bg-white dark:bg-card text-xs px-2"
               onClick={() => selectedBatch && goToHistoryForBatch(selectedBatch.BatchCode)}
             >
-              <History className="h-4 w-4 mr-2" /> View History
+              <History className="h-3.5 w-3.5 mr-1" /> View History
             </Button>
           </div>
         </div>
@@ -1981,6 +2080,183 @@ function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTa
               <Button variant="outline" onClick={() => setIsAdjustModalOpen(false)}>Cancel</Button>
               <Button onClick={handleStockAdjustment} className="bg-primary hover:bg-primary/90 text-white shadow-sm">
                 Confirm Adjustment
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- EDIT STOCK BATCH MODAL --- */}
+      {isEditModalOpen && editingBatch && (
+        <div className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-card w-full max-w-xl rounded-2xl shadow-2xl border border-border flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 max-h-[90vh]">
+            <div className="px-6 py-4 border-b border-border flex justify-between items-center bg-slate-50/50 dark:bg-secondary/20">
+              <div>
+                <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center text-amber-600 dark:text-amber-400">
+                    <Edit className="h-4 w-4" />
+                  </div>
+                  Edit Stock Batch
+                </h2>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Update batch code, expiry date, prices, shelf location, and stock level
+                </p>
+              </div>
+              <button
+                onClick={() => { setIsEditModalOpen(false); setEditingBatch(null); }}
+                className="p-2 rounded-full hover:bg-secondary transition-colors"
+              >
+                <X className="h-5 w-5 text-muted-foreground" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4 overflow-y-auto custom-scrollbar flex-1">
+              {/* Medicine Context Card */}
+              <div className="p-3.5 bg-slate-50 dark:bg-secondary/30 rounded-xl border border-border/80 flex flex-col gap-1.5">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-bold text-sm text-foreground">{editingBatch.MedicineName}</span>
+                  <span className="font-mono text-xs px-2 py-0.5 bg-background rounded border border-border text-muted-foreground">
+                    {editingBatch.CodeBarcode}
+                  </span>
+                </div>
+                <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                  <span>Category: <strong className="text-foreground">{editingBatch.CategoryName}</strong></span>
+                  <span>•</span>
+                  <span>Company: <strong className="text-foreground">{editingBatch.CompanyName}</strong></span>
+                  {editingBatch.SupplierName && editingBatch.SupplierName !== "Unknown" && (
+                    <>
+                      <span>•</span>
+                      <span>Supplier: <strong className="text-foreground">{editingBatch.SupplierName}</strong></span>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Batch Code */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-foreground">
+                    Batch Code <span className="text-rose-500">*</span>
+                  </label>
+                  <Input
+                    placeholder="e.g. BATCH-001"
+                    className="h-9 font-mono text-sm bg-background"
+                    value={editFormData.BatchCode}
+                    onChange={(e) => setEditFormData({ ...editFormData, BatchCode: e.target.value })}
+                  />
+                </div>
+
+                {/* Expiry Date */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-foreground">
+                    Expiry Date <span className="text-rose-500">*</span>
+                  </label>
+                  <Input
+                    type="date"
+                    className="h-9 text-sm bg-background"
+                    value={editFormData.ExpiryDate}
+                    onChange={(e) => setEditFormData({ ...editFormData, ExpiryDate: e.target.value })}
+                  />
+                </div>
+
+                {/* Purchase Price */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-foreground">
+                    Purchase Price (Cost) <span className="text-rose-500">*</span>
+                  </label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="0.00"
+                    className="h-9 text-sm bg-background"
+                    value={editFormData.PurchasePrice}
+                    onChange={(e) => setEditFormData({ ...editFormData, PurchasePrice: e.target.value })}
+                  />
+                </div>
+
+                {/* Selling Price */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-foreground">
+                    Selling Price (Retail) <span className="text-rose-500">*</span>
+                  </label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="0.00"
+                    className="h-9 text-sm bg-background"
+                    value={editFormData.SellingPrice}
+                    onChange={(e) => setEditFormData({ ...editFormData, SellingPrice: e.target.value })}
+                  />
+                </div>
+
+                {/* Current Stock */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-foreground">
+                    Current Stock (Quantity) <span className="text-rose-500">*</span>
+                  </label>
+                  <Input
+                    type="number"
+                    step="1"
+                    min="0"
+                    placeholder="0"
+                    className="h-9 text-sm bg-background font-bold"
+                    value={editFormData.CurrentStock}
+                    onChange={(e) => setEditFormData({ ...editFormData, CurrentStock: e.target.value })}
+                  />
+                  {editingBatch && Number(editFormData.CurrentStock) !== editingBatch.CurrentStock && (
+                    <p className="text-[10px] text-amber-600 dark:text-amber-400 font-medium">
+                      Stock will adjust from {editingBatch.CurrentStock} to {editFormData.CurrentStock || 0}
+                    </p>
+                  )}
+                </div>
+
+                {/* Min Stock (Reorder Level) */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-foreground">
+                    Min Stock (Reorder Alert)
+                  </label>
+                  <Input
+                    type="number"
+                    step="1"
+                    min="0"
+                    placeholder="e.g. 10"
+                    className="h-9 text-sm bg-background"
+                    value={editFormData.MinStock}
+                    onChange={(e) => setEditFormData({ ...editFormData, MinStock: e.target.value })}
+                  />
+                </div>
+
+                {/* Rack Number / Shelf */}
+                <div className="space-y-1.5 sm:col-span-2">
+                  <label className="text-xs font-semibold text-foreground">
+                    Rack / Shelf Number
+                  </label>
+                  <Input
+                    placeholder="e.g. Rack A-12 / Shelf 3"
+                    className="h-9 text-sm bg-background"
+                    value={editFormData.RackNumber}
+                    onChange={(e) => setEditFormData({ ...editFormData, RackNumber: e.target.value })}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 border-t border-border bg-slate-50/50 dark:bg-secondary/20 flex justify-end gap-3">
+              <Button
+                variant="outline"
+                disabled={editLoading}
+                onClick={() => { setIsEditModalOpen(false); setEditingBatch(null); }}
+              >
+                Cancel
+              </Button>
+              <Button
+                disabled={editLoading}
+                onClick={handleSaveEditBatch}
+                className="bg-amber-600 hover:bg-amber-700 text-white shadow-sm"
+              >
+                {editLoading ? "Saving Changes..." : "Save Changes"}
               </Button>
             </div>
           </div>

@@ -3,7 +3,7 @@
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ChevronRight, Pill, Grid2X2, Building2, Truck, Users, RefreshCcw, Check } from "lucide-react";
+import { ChevronRight, Pill, Grid2X2, Building2, Truck, Users, RefreshCcw, Check, ArrowUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { apiClient } from "@/lib/api-client";
@@ -24,13 +24,52 @@ interface MastersCounts {
   customers: number;
 }
 
-// ── KPI Card — matches Inventory Management design ─────────────────────────
-const accentMap: Record<string, { border: string; icon: string; text: string; bg: string }> = {
-  blue:    { border: "border-l-blue-500",    icon: "text-blue-500",    text: "text-blue-600 dark:text-blue-400",       bg: "bg-blue-50 dark:bg-blue-900/20" },
-  emerald: { border: "border-l-emerald-500", icon: "text-emerald-500", text: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-900/20" },
-  purple:  { border: "border-l-purple-500",  icon: "text-purple-500",  text: "text-purple-600 dark:text-purple-400",   bg: "bg-purple-50 dark:bg-purple-900/20" },
-  orange:  { border: "border-l-orange-500",  icon: "text-orange-500",  text: "text-orange-600 dark:text-orange-400",   bg: "bg-orange-50 dark:bg-orange-900/20" },
-  cyan:    { border: "border-l-cyan-500",    icon: "text-cyan-500",    text: "text-cyan-600 dark:text-cyan-400",       bg: "bg-cyan-50 dark:bg-cyan-900/20" },
+// ── KPI Card — balanced proportions ─────────────────────────────────────────
+const accentMap: Record<
+  string,
+  {
+    border: string;
+    icon: string;
+    text: string;
+    bg: string;
+    iconBorder: string;
+  }
+> = {
+  blue: {
+    border: "border-l-blue-500",
+    icon: "text-blue-600 dark:text-blue-400",
+    text: "text-blue-700 dark:text-blue-400",
+    bg: "bg-blue-50/80 dark:bg-blue-950/40",
+    iconBorder: "border-blue-100 dark:border-blue-900/30",
+  },
+  emerald: {
+    border: "border-l-emerald-500",
+    icon: "text-emerald-600 dark:text-emerald-400",
+    text: "text-emerald-700 dark:text-emerald-400",
+    bg: "bg-emerald-50/80 dark:bg-emerald-950/40",
+    iconBorder: "border-emerald-100 dark:border-emerald-900/30",
+  },
+  purple: {
+    border: "border-l-purple-500",
+    icon: "text-purple-600 dark:text-purple-400",
+    text: "text-purple-700 dark:text-purple-400",
+    bg: "bg-purple-50/80 dark:bg-purple-950/40",
+    iconBorder: "border-purple-100 dark:border-purple-900/30",
+  },
+  orange: {
+    border: "border-l-orange-500",
+    icon: "text-orange-600 dark:text-orange-400",
+    text: "text-orange-700 dark:text-orange-400",
+    bg: "bg-orange-50/80 dark:bg-orange-950/40",
+    iconBorder: "border-orange-100 dark:border-orange-900/30",
+  },
+  cyan: {
+    border: "border-l-cyan-500",
+    icon: "text-cyan-600 dark:text-cyan-400",
+    text: "text-cyan-700 dark:text-cyan-400",
+    bg: "bg-cyan-50/80 dark:bg-cyan-950/40",
+    iconBorder: "border-cyan-100 dark:border-cyan-900/30",
+  },
 };
 
 function MastersKPICard({
@@ -51,19 +90,37 @@ function MastersKPICard({
   const card = (
     <div
       className={cn(
-        "relative bg-white dark:bg-card rounded-xl border border-border border-l-4 shadow-sm p-4 flex flex-col gap-3 overflow-hidden transition-all hover:shadow-md",
+        "group relative bg-white dark:bg-card rounded-xl border border-border/80 border-l-[4px] shadow-xs hover:shadow-md transition-all duration-200 p-4 sm:p-4.5 flex flex-col justify-between min-h-[142px] overflow-hidden",
         a.border,
-        href && "cursor-pointer hover:scale-[1.02] active:scale-95"
+        href && "cursor-pointer hover:border-border hover:-translate-y-0.5 active:translate-y-0"
       )}
     >
-      {/* Icon block */}
-      <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center shrink-0", a.bg)}>
-        <Icon size={22} className={a.icon} />
+      {/* Icon block & hover affordance */}
+      <div className="flex items-center justify-between">
+        <div
+          className={cn(
+            "w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border transition-transform duration-200 group-hover:scale-105 shadow-2xs",
+            a.bg,
+            a.iconBorder
+          )}
+        >
+          <Icon size={20} className={a.icon} />
+        </div>
+        {href && (
+          <span className="text-muted-foreground/30 group-hover:text-muted-foreground/75 transition-colors p-1 rounded-md">
+            <ArrowUpRight className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+          </span>
+        )}
       </div>
+
       {/* Metric */}
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-0.5">{title}</p>
-        <p className={cn("text-2xl font-extrabold leading-none tabular-nums", a.text)}>{value}</p>
+      <div className="mt-3">
+        <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground/80 mb-1 truncate" title={title}>
+          {title}
+        </p>
+        <p className={cn("text-2xl font-black leading-none tabular-nums tracking-tight", a.text)}>
+          {value}
+        </p>
       </div>
     </div>
   );
