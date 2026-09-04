@@ -119,7 +119,7 @@ export default function InventorySettingsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-3">
                 <Label className="text-sm font-semibold">Low Stock Threshold (Units)</Label>
-                <Input type="number" name="LowStockThreshold" value={settings.LowStockThreshold} onChange={handleChange} className="rounded-xl bg-slate-50/50 dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 focus-visible:ring-amber-500/30 focus-visible:border-amber-500 transition-all shadow-sm" />
+                <Input type="number" name="LowStockThreshold" value={settings.LowStockThreshold} onChange={handleChange} className="rounded-xl bg-slate-50/70 dark:bg-secondary/30 border-border focus-visible:ring-amber-500/30 focus-visible:border-amber-500 transition-all shadow-sm" />
                 <p className="text-xs text-muted-foreground">Warn when stock falls below this amount.</p>
               </div>
               <div className="space-y-3">
@@ -135,7 +135,7 @@ export default function InventorySettingsPage() {
                     }
                   }}
                 >
-                  <SelectTrigger className="rounded-xl bg-slate-50/50 dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 focus:ring-amber-500/30 focus:border-amber-500 transition-all shadow-sm">
+                  <SelectTrigger className="rounded-xl bg-slate-50/70 dark:bg-secondary/30 border-border focus:ring-amber-500/30 focus:border-amber-500 transition-all shadow-sm">
                     <SelectValue placeholder="Select alert horizon" />
                   </SelectTrigger>
                   <SelectContent className="rounded-xl">
@@ -150,7 +150,7 @@ export default function InventorySettingsPage() {
                   <Input 
                     type="number" 
                     min="1"
-                    className="mt-2 rounded-xl bg-slate-50/50 dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 focus-visible:ring-amber-500/30 focus-visible:border-amber-500 transition-all shadow-sm"
+                    className="mt-2 rounded-xl bg-slate-50/70 dark:bg-secondary/30 border-border focus-visible:ring-amber-500/30 focus-visible:border-amber-500 transition-all shadow-sm"
                     placeholder="Enter custom days" 
                     value={settings.ExpiryAlertDays}
                     onChange={(e) => setSettings({...settings, ExpiryAlertDays: parseInt(e.target.value) || 0})}
@@ -227,7 +227,7 @@ export default function InventorySettingsPage() {
                 value={settings.DefaultUnit} 
                 onValueChange={(val) => setSettings({...settings, DefaultUnit: val})}
               >
-                <SelectTrigger className="rounded-xl bg-slate-50/50 dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 focus:ring-indigo-500/30 focus:border-indigo-500 transition-all shadow-sm">
+                <SelectTrigger className="rounded-xl bg-slate-50/70 dark:bg-secondary/30 border-border focus:ring-indigo-500/30 focus:border-indigo-500 transition-all shadow-sm">
                   <SelectValue placeholder="Select default unit" />
                 </SelectTrigger>
                 <SelectContent className="rounded-xl">
@@ -244,7 +244,7 @@ export default function InventorySettingsPage() {
 
             <div className="space-y-3">
               <Label className="text-sm font-semibold">Default Retail Profit Margin (%)</Label>
-              <Input type="number" name="DefaultProfitMargin" value={settings.DefaultProfitMargin} onChange={handleChange} step="0.1" className="rounded-xl bg-slate-50/50 dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 focus-visible:ring-indigo-500/30 focus-visible:border-indigo-500 transition-all shadow-sm" />
+              <Input type="number" name="DefaultProfitMargin" value={settings.DefaultProfitMargin} onChange={handleChange} step="0.1" className="rounded-xl bg-slate-50/70 dark:bg-secondary/30 border-border focus-visible:ring-indigo-500/30 focus-visible:border-indigo-500 transition-all shadow-sm" />
               <p className="text-xs text-muted-foreground">Auto-calculates sell price on purchase entry.</p>
             </div>
 

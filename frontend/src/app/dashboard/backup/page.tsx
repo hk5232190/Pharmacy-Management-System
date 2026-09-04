@@ -34,7 +34,7 @@ const accentMap: Record<string, { border: string; icon: string; text: string; bg
   amber:   { border: "border-l-amber-500",   icon: "text-amber-500",   text: "text-amber-600 dark:text-amber-400",   bg: "bg-amber-50 dark:bg-amber-900/20" },
   indigo:  { border: "border-l-indigo-500",  icon: "text-indigo-500",  text: "text-indigo-600 dark:text-indigo-400",  bg: "bg-indigo-50 dark:bg-indigo-900/20" },
   rose:    { border: "border-l-rose-500",    icon: "text-rose-500",    text: "text-rose-600 dark:text-rose-400",    bg: "bg-rose-50 dark:bg-rose-900/20" },
-  slate:   { border: "border-l-slate-400",   icon: "text-slate-400",   text: "text-slate-500 dark:text-slate-400",   bg: "bg-slate-100 dark:bg-slate-800/40" },
+  slate:   { border: "border-l-slate-400",   icon: "text-slate-400",   text: "text-slate-500 dark:text-slate-400",   bg: "bg-slate-100 dark:bg-secondary/40" },
 };
 
 function KPICard({ title, value, icon, accent = "blue", children }: { title: string; value: React.ReactNode; icon: React.ReactNode; accent?: string; children?: React.ReactNode }) {
@@ -588,7 +588,7 @@ function BackupRestorePageInner({
           icon={<HardDrive className="h-6 w-6" />}
           accent="blue"
         >
-          <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full mb-1.5">
+          <div className="w-full bg-slate-100 dark:bg-secondary/40 h-1.5 rounded-full mb-1.5">
             <div className="bg-blue-500 h-1.5 rounded-full w-[5%]"></div>
           </div>
           <p className="text-xs text-muted-foreground">Current Active Database</p>
@@ -716,7 +716,7 @@ function BackupRestorePageInner({
           {/* Manual Backup Tab */}
           {activeTab === "manual" && (
             <Card className="shadow-sm border-border/60 overflow-hidden">
-              <CardHeader className="bg-slate-50/50 dark:bg-slate-900/20 border-b pb-4">
+              <CardHeader className="bg-slate-50/50 dark:bg-secondary/20 border-b pb-4">
                 <CardTitle className="text-lg flex items-center">
                   <DownloadCloud className="h-5 w-5 mr-2 text-blue-500" />
                   Create Manual Backup
@@ -733,7 +733,7 @@ function BackupRestorePageInner({
                           id="backupName" 
                           value={backupName} 
                           onChange={(e) => setBackupName(e.target.value)} 
-                          className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 transition-colors focus:bg-white"
+                          className="bg-slate-50/70 dark:bg-secondary/30 border-border transition-colors focus:bg-white"
                         />
                         <Edit2 className="absolute right-3 top-2.5 h-4 w-4 text-muted-foreground opacity-50 group-hover:opacity-100 transition-opacity" />
                       </div>
@@ -745,9 +745,9 @@ function BackupRestorePageInner({
                           id="backupLocation" 
                           value={backupLocation} 
                           onChange={(e) => setBackupLocation(e.target.value)} 
-                          className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 font-mono text-sm"
+                          className="bg-slate-50/70 dark:bg-secondary/30 border-border font-mono text-sm"
                         />
-                        <Button variant="outline" onClick={handleBrowseFolder} type="button" className="shrink-0 hover:bg-slate-100 dark:hover:bg-slate-800">
+                        <Button variant="outline" onClick={handleBrowseFolder} type="button" className="shrink-0 hover:bg-secondary">
                           <FolderOpen className="mr-2 h-4 w-4 text-blue-500"/> Browse
                         </Button>
                       </div>
@@ -761,14 +761,14 @@ function BackupRestorePageInner({
                         <p className="text-xs text-muted-foreground">Fetching available disk space...</p>
                       )}
                     </div>
-                    <div className="bg-blue-50/80 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/50 text-blue-700 dark:text-blue-300 p-3.5 rounded-lg flex items-start text-sm shadow-sm">
+                    <div className="bg-blue-50/50 dark:bg-secondary/30 border border-blue-200/40 dark:border-border text-blue-700 dark:text-blue-300 p-3.5 rounded-lg flex items-start text-sm shadow-sm">
                       <Info className="h-5 w-5 mr-2.5 shrink-0 mt-0.5 text-blue-500" />
                       <p className="leading-relaxed">Ensure the selected location has enough free space to comfortably store the new backup file.</p>
                     </div>
                   </div>
 
                   {/* Right Column: Info & Options */}
-                  <div className="space-y-6 bg-slate-50 dark:bg-slate-900/30 p-5 rounded-xl border border-slate-100 dark:border-slate-800">
+                  <div className="space-y-6 bg-slate-50/50 dark:bg-secondary/20 p-5 rounded-xl border border-border">
                     <div>
                       <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200 mb-4 flex items-center">
                         <Database className="h-4 w-4 mr-2 text-purple-500" />
@@ -777,7 +777,7 @@ function BackupRestorePageInner({
                       <div className="space-y-3 text-sm">
                         <div className="flex justify-between items-center py-1 border-b border-border/40">
                           <span className="text-muted-foreground">Database Engine</span>
-                          <span className="font-semibold bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-xs">SQLite</span>
+                          <span className="font-semibold bg-slate-100 dark:bg-secondary/40 px-2 py-0.5 rounded text-xs">SQLite</span>
                         </div>
                         <div className="flex justify-between items-center py-1 border-b border-border/40">
                           <span className="text-muted-foreground">App Version</span>
@@ -785,7 +785,7 @@ function BackupRestorePageInner({
                         </div>
                         <div className="flex justify-between items-center py-1">
                           <span className="text-muted-foreground">SQLite Version</span>
-                          <span className="font-mono text-xs font-semibold bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-blue-600 dark:text-blue-400">
+                          <span className="font-mono text-xs font-semibold bg-slate-100 dark:bg-secondary/40 px-2 py-0.5 rounded text-blue-600 dark:text-blue-400">
                             {dbInfo?.version
                               ? dbInfo.version
                               : <span className="text-muted-foreground italic">Loading...</span>}
@@ -799,7 +799,7 @@ function BackupRestorePageInner({
                         <Settings className="h-4 w-4 mr-2 text-slate-500" />
                         Backup Options
                       </h4>
-                      <div className="space-y-3 bg-white dark:bg-slate-950 p-3 rounded-lg border border-slate-100 dark:border-slate-800">
+                      <div className="space-y-3 bg-white dark:bg-card p-3 rounded-lg border border-border">
                         <div className="flex items-center space-x-2.5">
                           <Checkbox id="includeDb" checked disabled className="opacity-70" />
                           <Label htmlFor="includeDb" className="text-sm font-medium cursor-not-allowed text-muted-foreground">Include Database (Required)</Label>
@@ -815,7 +815,7 @@ function BackupRestorePageInner({
 
                 {/* Progress bar shown while backing up */}
                 {isBackingUp && (
-                  <div className="border rounded-md p-4 bg-slate-50 dark:bg-slate-900 mt-4 space-y-2">
+                  <div className="border rounded-md p-4 bg-slate-50/50 dark:bg-secondary/20 mt-4 space-y-2">
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-sm font-medium flex items-center gap-2">
                         <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
@@ -823,7 +823,7 @@ function BackupRestorePageInner({
                       </span>
                       <span className="text-xs text-muted-foreground">{Math.round(backupProgress)}%</span>
                     </div>
-                    <div className="w-full bg-slate-200 dark:bg-slate-700 h-2 rounded-full overflow-hidden">
+                    <div className="w-full bg-secondary h-2 rounded-full overflow-hidden">
                       <div
                         className="bg-blue-500 h-2 rounded-full transition-all duration-300"
                         style={{ width: `${backupProgress}%` }}
@@ -833,7 +833,7 @@ function BackupRestorePageInner({
                   </div>
                 )}
               </CardContent>
-              <CardFooter className="flex justify-center border-t border-border/40 p-5 bg-slate-50/50 dark:bg-slate-900/20">
+              <CardFooter className="flex justify-center border-t border-border/40 p-5 bg-slate-50/50 dark:bg-secondary/20">
                 <Button 
                   size="lg" 
                   onClick={handleCreateBackup} 
@@ -881,9 +881,9 @@ function BackupRestorePageInner({
                         placeholder="e.g. ./backups/Backup_2026_08_28_162415.zip" 
                         value={restoreFilePath} 
                         onChange={(e) => setRestoreFilePath(e.target.value)} 
-                        className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 font-mono text-sm"
+                        className="bg-slate-50/70 dark:bg-secondary/30 border-border font-mono text-sm"
                       />
-                      <Button variant="outline" onClick={handleBrowseFile} type="button" className="shrink-0 hover:bg-slate-100 dark:hover:bg-slate-800">
+                      <Button variant="outline" onClick={handleBrowseFile} type="button" className="shrink-0 hover:bg-secondary">
                         <FolderOpen className="mr-2 h-4 w-4 text-blue-500"/> Browse
                       </Button>
                     </div>
@@ -902,7 +902,7 @@ function BackupRestorePageInner({
                         placeholder="Enter your admin password" 
                         value={adminPassword} 
                         onChange={(e) => setAdminPassword(e.target.value)}
-                        className="pr-10 bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800" 
+                        className="pr-10 bg-slate-50/70 dark:bg-secondary/30 border-border" 
                       />
                       <button 
                         type="button" 
@@ -942,7 +942,7 @@ function BackupRestorePageInner({
                   </div>
                 )}
               </CardContent>
-              <CardFooter className="flex justify-center border-t border-border/40 p-5 bg-slate-50/50 dark:bg-slate-900/20">
+              <CardFooter className="flex justify-center border-t border-border/40 p-5 bg-slate-50/50 dark:bg-secondary/20">
                 <Button 
                   size="lg"
                   onClick={() => {
@@ -980,7 +980,7 @@ function BackupRestorePageInner({
                     <div className="mb-2 text-slate-700 dark:text-slate-300 font-medium">
                       You are about to restore the database from:
                     </div>
-                    <div className="bg-slate-100 dark:bg-slate-900 p-2 rounded text-xs break-all mb-4">
+                    <div className="bg-slate-100 dark:bg-secondary/40 p-2 rounded text-xs break-all mb-4">
                       {restoreFilePath}
                     </div>
                     <div className="bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-300 p-3 rounded-lg border border-red-200 dark:border-red-800 text-sm">
@@ -1020,7 +1020,7 @@ function BackupRestorePageInner({
               </CardHeader>
               
               {/* Filters Toolbar */}
-              <div className="flex flex-col sm:flex-row justify-between items-center bg-slate-50 dark:bg-slate-900/30 p-4 border-b border-t gap-4">
+              <div className="flex flex-col sm:flex-row justify-between items-center bg-slate-50/50 dark:bg-secondary/20 p-4 border-b border-t border-border gap-4">
                 <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
                   {["All", "Manual", "Automatic"].map(type => (
                     <Button 
@@ -1061,7 +1061,7 @@ function BackupRestorePageInner({
               <CardContent className="p-0">
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm text-left text-muted-foreground">
-                    <thead className="text-xs text-slate-700 uppercase bg-slate-50 dark:bg-slate-900/50 dark:text-slate-300 border-b">
+                    <thead className="text-xs uppercase bg-secondary/40 text-muted-foreground border-b border-border">
                       <tr>
                         <th className="px-4 py-3 font-semibold w-12">#</th>
                         <th className="px-4 py-3 font-semibold">Date</th>
@@ -1098,7 +1098,7 @@ function BackupRestorePageInner({
                         return (
                           <>
                             {paginatedHistory.map((backup, index) => (
-                              <tr key={backup.BackupId} className="border-b dark:border-slate-800 last:border-0 hover:bg-slate-50 dark:hover:bg-slate-900/30 transition-colors">
+                              <tr key={backup.BackupId} className="border-b border-border last:border-0 hover:bg-slate-50/50 dark:hover:bg-secondary/30 transition-colors">
                                 <td className="px-4 py-3 text-slate-500">{(historyPage - 1) * historyPageSize + index + 1}</td>
                                 <td className="px-4 py-3 font-medium text-slate-900 dark:text-white whitespace-nowrap">
                                   {format(new Date(backup.CreatedAt + "Z"), "dd MMM yyyy, hh:mm a")}
@@ -1130,7 +1130,7 @@ function BackupRestorePageInner({
                                     <Button variant="ghost" size="sm" className="h-8 px-2 text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20" onClick={() => handleVerifyBackup(backup.BackupId)} title="Verify">
                                       <CheckCircle2 className="h-4 w-4" />
                                     </Button>
-                                    <Button variant="ghost" size="sm" className="h-8 px-2 text-slate-600 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800" onClick={() => handleOpenFolder(backup.BackupId)} title="Open Folder">
+                                    <Button variant="ghost" size="sm" className="h-8 px-2 text-slate-600 hover:text-slate-700 hover:bg-secondary" onClick={() => handleOpenFolder(backup.BackupId)} title="Open Folder">
                                       <FolderOpen className="h-4 w-4" />
                                     </Button>
                                     <Button variant="ghost" size="sm" className="h-8 px-2 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20" onClick={() => handleDeleteBackup(backup.BackupId)} title="Delete">
@@ -1186,7 +1186,7 @@ function BackupRestorePageInner({
           {activeTab === "settings" && (
             <Card className="shadow-sm border-border/60 overflow-hidden relative">
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-indigo-500"></div>
-              <CardHeader className="bg-slate-50/50 dark:bg-slate-900/20 border-b border-border/40 pb-5">
+              <CardHeader className="bg-slate-50/50 dark:bg-secondary/20 border-b border-border/40 pb-5">
                 <CardTitle className="text-lg flex items-center text-slate-800 dark:text-slate-200">
                   <Settings className="h-5 w-5 mr-2 text-blue-600 dark:text-blue-400" />
                   Automatic Backup Settings
@@ -1201,8 +1201,8 @@ function BackupRestorePageInner({
                 <div className={cn(
                   "p-4 rounded-xl border transition-all duration-300 flex items-start space-x-3",
                   settings.IsAutoBackupEnabled 
-                    ? "bg-blue-50/80 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 shadow-sm" 
-                    : "bg-slate-50 dark:bg-slate-900/30 border-slate-200 dark:border-slate-800"
+                    ? "bg-blue-50/50 dark:bg-secondary/30 border border-blue-200/40 dark:border-border shadow-sm" 
+                    : "bg-slate-50/50 dark:bg-secondary/20 border-border"
                 )}>
                   <div className="mt-0.5">
                     <Checkbox 
@@ -1243,7 +1243,7 @@ function BackupRestorePageInner({
                       <div className="space-y-2">
                         <Label className="text-slate-600 dark:text-slate-400">Backup Frequency</Label>
                         <select 
-                          className="flex h-10 w-full rounded-md border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 px-3 py-2 text-sm ring-offset-background focus:ring-2 focus:ring-blue-500 outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                          className="flex h-10 w-full rounded-md border border-border bg-slate-50/70 dark:bg-secondary/30 px-3 py-2 text-sm ring-offset-background focus:ring-2 focus:ring-blue-500 outline-none disabled:cursor-not-allowed disabled:opacity-50"
                           value={settings.BackupFrequency}
                           onChange={(e) => setSettings({ ...settings, BackupFrequency: e.target.value })}
                           disabled={!settings.IsAutoBackupEnabled}
@@ -1260,7 +1260,7 @@ function BackupRestorePageInner({
                           value={settings.BackupTime}
                           onChange={(e) => setSettings({ ...settings, BackupTime: e.target.value })}
                           disabled={!settings.IsAutoBackupEnabled}
-                          className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800"
+                          className="bg-slate-50/70 dark:bg-secondary/30 border-border"
                         />
                       </div>
                     </div>
@@ -1280,9 +1280,9 @@ function BackupRestorePageInner({
                             value={settings.BackupLocation} 
                             onChange={(e) => setSettings({ ...settings, BackupLocation: e.target.value })} 
                             disabled={!settings.IsAutoBackupEnabled}
-                            className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 font-mono text-sm"
+                            className="bg-slate-50/70 dark:bg-secondary/30 border-border font-mono text-sm"
                           />
-                          <Button variant="outline" type="button" onClick={handleBrowseSettingsFolder} disabled={!settings.IsAutoBackupEnabled} className="shrink-0 hover:bg-slate-100 dark:hover:bg-slate-800">
+                          <Button variant="outline" type="button" onClick={handleBrowseSettingsFolder} disabled={!settings.IsAutoBackupEnabled} className="shrink-0 hover:bg-secondary">
                             <FolderOpen className="mr-2 h-4 w-4 text-blue-500"/> Browse
                           </Button>
                         </div>
@@ -1297,7 +1297,7 @@ function BackupRestorePageInner({
                           value={settings.RetentionCount}
                           onChange={(e) => setSettings({ ...settings, RetentionCount: parseInt(e.target.value) || 7 })}
                           disabled={!settings.IsAutoBackupEnabled}
-                          className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 max-w-[200px]"
+                          className="bg-slate-50/70 dark:bg-secondary/30 border-border max-w-[200px]"
                         />
                         <p className="text-xs text-muted-foreground mt-1 flex items-center">
                           <Info className="h-3.5 w-3.5 mr-1" />
@@ -1365,7 +1365,7 @@ function BackupRestorePageInner({
                   </div>
                 </div>
               </CardContent>
-              <CardFooter className="flex justify-center border-t border-border/40 p-5 bg-slate-50/50 dark:bg-slate-900/20">
+              <CardFooter className="flex justify-center border-t border-border/40 p-5 bg-slate-50/50 dark:bg-secondary/20">
                 <Button 
                   size="lg"
                   onClick={handleSaveSettings} 
@@ -1387,7 +1387,7 @@ function BackupRestorePageInner({
         {activeTab !== "history" && (
           <div className="space-y-6">
             <Card className="h-full shadow-sm border-border/60">
-              <CardHeader className="pb-3 border-b border-border/40 bg-slate-50/50 dark:bg-slate-900/20">
+              <CardHeader className="pb-3 border-b border-border/40 bg-slate-50/50 dark:bg-secondary/20">
                 <div className="flex justify-between items-center">
                   <CardTitle className="text-lg font-bold flex items-center">
                     <History className="h-5 w-5 mr-2 text-indigo-500" />
@@ -1397,7 +1397,7 @@ function BackupRestorePageInner({
                     <div className="relative group">
                       <Search className="absolute left-2.5 top-2 h-4 w-4 text-muted-foreground opacity-50 group-focus-within:opacity-100 transition-opacity" />
                       <Input 
-                        className="h-8 w-[180px] pl-8 text-xs bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 rounded-full" 
+                        className="h-8 w-[180px] pl-8 text-xs bg-white dark:bg-secondary/30 border-border rounded-full" 
                         placeholder="Search backups..." 
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
@@ -1413,8 +1413,8 @@ function BackupRestorePageInner({
                     <span className="text-sm font-medium">Loading history...</span>
                   </div>
                 ) : backupHistory.filter(b => b.BackupName.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 ? (
-                  <div className="text-center py-12 flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900/20 rounded-xl border border-dashed border-slate-200 dark:border-slate-800 m-2">
-                    <div className="bg-slate-100 dark:bg-slate-800 p-3 rounded-full mb-3">
+                  <div className="text-center py-12 flex flex-col items-center justify-center bg-slate-50/50 dark:bg-secondary/20 rounded-xl border border-dashed border-border m-2">
+                    <div className="bg-slate-100 dark:bg-secondary/40 p-3 rounded-full mb-3">
                       <Database className="h-6 w-6 text-slate-400" />
                     </div>
                     <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300">No backups found</h4>
@@ -1427,7 +1427,7 @@ function BackupRestorePageInner({
                       className={cn(
                         "relative group border rounded-lg p-3 transition-all cursor-pointer",
                         selectedBackupId === backup.BackupId 
-                          ? "border-blue-500 bg-blue-50/20 dark:bg-blue-900/10 shadow-sm"
+                          ? "border-primary bg-primary/5 dark:bg-secondary/40 shadow-sm"
                           : "hover:border-blue-400 dark:hover:border-blue-500 bg-white dark:bg-card"
                       )}
                       onMouseEnter={() => setHoveredBackupId(backup.BackupId)}
@@ -1442,7 +1442,7 @@ function BackupRestorePageInner({
                       <div className="flex items-start gap-2.5 pointer-events-none">
                         <div className={cn(
                           "p-1.5 rounded-md shrink-0 mt-0.5",
-                          selectedBackupId === backup.BackupId ? "bg-blue-100 dark:bg-blue-900/40" : "bg-blue-50 dark:bg-blue-900/20"
+                          selectedBackupId === backup.BackupId ? "bg-primary/20 text-primary" : "bg-secondary/60 text-muted-foreground"
                         )}>
                           <Database className="h-4 w-4 text-blue-600" />
                         </div>
@@ -1514,7 +1514,7 @@ function BackupRestorePageInner({
       {/* ── Verify Modal ─────────────────────────────────────────────────── */}
       {isVerifyModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-6 rounded-xl shadow-xl w-full max-w-lg">
+          <div className="bg-card border border-border p-6 rounded-xl shadow-xl w-full max-w-lg">
             <h3 className="text-xl font-bold mb-2 flex items-center">
               <ShieldCheck className="mr-2 h-6 w-6 text-blue-500" /> Deep Verification Engine
             </h3>
@@ -1524,7 +1524,7 @@ function BackupRestorePageInner({
             
             <div className="space-y-4">
               {/* Checksum Stage */}
-              <div className="flex items-start space-x-4 p-3 rounded-lg border bg-slate-50 dark:bg-slate-900/50">
+              <div className="flex items-start space-x-4 p-3 rounded-lg border bg-slate-50/50 dark:bg-secondary/30">
                 <div className="mt-0.5">
                   {isVerifying && !verificationReport ? <Loader2 className="h-5 w-5 animate-spin text-blue-500" /> : 
                    verificationReport?.report?.checksum?.status === "Passed" ? <CheckCircle2 className="h-5 w-5 text-green-500" /> : 
@@ -1539,7 +1539,7 @@ function BackupRestorePageInner({
               </div>
 
               {/* Integrity Stage */}
-              <div className="flex items-start space-x-4 p-3 rounded-lg border bg-slate-50 dark:bg-slate-900/50">
+              <div className="flex items-start space-x-4 p-3 rounded-lg border bg-slate-50/50 dark:bg-secondary/30">
                 <div className="mt-0.5">
                   {isVerifying && !verificationReport ? <Loader2 className="h-5 w-5 animate-spin text-blue-500" /> : 
                    verificationReport?.report?.integrity?.status === "Passed" ? <CheckCircle2 className="h-5 w-5 text-green-500" /> : 
@@ -1555,7 +1555,7 @@ function BackupRestorePageInner({
               </div>
 
               {/* Schema Stage */}
-              <div className="flex items-start space-x-4 p-3 rounded-lg border bg-slate-50 dark:bg-slate-900/50">
+              <div className="flex items-start space-x-4 p-3 rounded-lg border bg-slate-50/50 dark:bg-secondary/30">
                 <div className="mt-0.5">
                   {isVerifying && !verificationReport ? <Loader2 className="h-5 w-5 animate-spin text-blue-500" /> : 
                    verificationReport?.report?.schema?.status === "Passed" ? <CheckCircle2 className="h-5 w-5 text-green-500" /> : 

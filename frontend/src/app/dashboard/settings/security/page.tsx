@@ -433,7 +433,7 @@ export default function SecurityMaintenancePage() {
               </div>
             )}
           </CardContent>
-          <CardFooter className="border-t pt-4 flex justify-end bg-slate-50/50 dark:bg-slate-900/30 rounded-b-xl">
+          <CardFooter className="border-t border-border pt-4 flex justify-end bg-slate-50/50 dark:bg-secondary/20 rounded-b-xl">
             <Button onClick={handleChangePassword} disabled={isChangingPwd || newPwd !== confirmPwd} className="bg-blue-600 hover:bg-blue-700 text-white w-40">
               {isChangingPwd ? <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Saving…</> : <><Key className="h-4 w-4 mr-2" /> Change Password</>}
             </Button>
@@ -496,7 +496,7 @@ export default function SecurityMaintenancePage() {
               </div>
             </div>
           </CardContent>
-          <CardFooter className="border-t pt-4 flex justify-end bg-slate-50/50 dark:bg-slate-900/30 rounded-b-xl">
+          <CardFooter className="border-t border-border pt-4 flex justify-end bg-slate-50/50 dark:bg-secondary/20 rounded-b-xl">
             <SaveButton isSaving={isSavingSecSettings} onClick={handleSaveSecSettings} className="w-36" label="Save Settings" />
           </CardFooter>
         </Card>
@@ -507,13 +507,13 @@ export default function SecurityMaintenancePage() {
             <SectionHeader icon={Wrench} title="Database Optimization" description="Run VACUUM to reclaim space and ANALYZE to rebuild query statistics." color="green" />
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-sm text-blue-700 dark:text-blue-300 flex items-start gap-2">
+            <div className="p-3 bg-blue-50/50 dark:bg-secondary/30 rounded-lg text-sm text-blue-700 dark:text-blue-400 border border-border flex items-start gap-2">
               <Database className="h-4 w-4 shrink-0 mt-0.5" />
               <p>Optimization rebuilds the database file to reclaim deleted space and update query planner statistics. This is safe to run while the system is active.</p>
             </div>
             {optimizeResult && (
               <div className="border rounded-lg overflow-hidden">
-                <div className="bg-slate-50 dark:bg-slate-900 px-4 py-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">Optimization Result</div>
+                <div className="bg-slate-50/50 dark:bg-secondary/20 px-4 py-2 text-xs font-semibold text-muted-foreground border-b border-border uppercase tracking-wider">Optimization Result</div>
                 <div className="grid grid-cols-3 divide-x text-center">
                   {[
                     { label: "Before", value: formatBytes(optimizeResult.before_size_bytes) },
@@ -529,7 +529,7 @@ export default function SecurityMaintenancePage() {
               </div>
             )}
           </CardContent>
-          <CardFooter className="border-t pt-4 flex justify-end bg-slate-50/50 dark:bg-slate-900/30 rounded-b-xl">
+          <CardFooter className="border-t border-border pt-4 flex justify-end bg-slate-50/50 dark:bg-secondary/20 rounded-b-xl">
             <Button onClick={handleOptimize} disabled={isOptimizing || isCheckingIntegrity} className="bg-green-600 hover:bg-green-700 text-white w-48">
               {isOptimizing ? <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Optimizing…</> : <><Wrench className="h-4 w-4 mr-2" /> Run Optimization</>}
             </Button>
@@ -580,7 +580,7 @@ export default function SecurityMaintenancePage() {
               </div>
             )}
           </CardContent>
-          <CardFooter className="border-t pt-4 flex justify-end bg-slate-50/50 dark:bg-slate-900/30 rounded-b-xl">
+          <CardFooter className="border-t border-border pt-4 flex justify-end bg-slate-50/50 dark:bg-secondary/20 rounded-b-xl">
             <Button onClick={handleIntegrityCheck} disabled={isCheckingIntegrity || isOptimizing} className="bg-amber-600 hover:bg-amber-700 text-white w-48">
               {isCheckingIntegrity ? <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Checking…</> : <><HeartPulse className="h-4 w-4 mr-2" /> Run Check</>}
             </Button>
@@ -630,7 +630,7 @@ export default function SecurityMaintenancePage() {
           </div>
         </CardHeader>
         <CardContent className="pt-4">
-          <div className="rounded-lg border bg-slate-950 dark:bg-slate-900 overflow-hidden">
+          <div className="rounded-lg border border-border bg-black/40 dark:bg-black/50 overflow-hidden">
             {isLoadingLogs ? (
               <div className="flex items-center justify-center py-12 text-slate-400">
                 <Loader2 className="h-6 w-6 animate-spin mr-2" /> Loading logs…
@@ -689,7 +689,7 @@ export default function SecurityMaintenancePage() {
               </div>
             )}
           </CardContent>
-          <CardFooter className="border-t pt-4 flex justify-end bg-slate-50/50 dark:bg-slate-900/30 rounded-b-xl">
+          <CardFooter className="border-t border-border pt-4 flex justify-end bg-slate-50/50 dark:bg-secondary/20 rounded-b-xl">
             <Button onClick={handleClearTemp} disabled={isClearingTemp} className="w-48 bg-slate-700 hover:bg-slate-800 text-white">
               {isClearingTemp ? <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Clearing…</> : <><Trash2 className="h-4 w-4 mr-2" /> Clear Temp Files</>}
             </Button>

@@ -242,7 +242,7 @@ export default function MyProfileSettingsPage() {
                   value={fullName}
                   onChange={e => setFullName(e.target.value)}
                   placeholder="e.g. Imran Khan"
-                  className="rounded-xl bg-slate-50/50 dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 focus-visible:ring-indigo-500/30 focus-visible:border-indigo-500 transition-all shadow-sm"
+                  className="rounded-xl bg-slate-50/70 dark:bg-secondary/30 border-border focus-visible:ring-indigo-500/30 focus-visible:border-indigo-500 transition-all shadow-sm"
                 />
               </div>
               
@@ -251,7 +251,7 @@ export default function MyProfileSettingsPage() {
                 <Input 
                   value={username}
                   disabled
-                  className="rounded-xl bg-slate-50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 cursor-not-allowed text-slate-500 shadow-sm"
+                  className="rounded-xl bg-slate-50/70 dark:bg-secondary/30 border-border cursor-not-allowed text-slate-500 shadow-sm"
                   placeholder="admin"
                 />
                 <p className="text-[11px] text-slate-500">Username cannot be changed.</p>
@@ -269,7 +269,7 @@ export default function MyProfileSettingsPage() {
                     setEmail(e.target.value);
                     if (errors.email) setErrors(prev => ({ ...prev, email: undefined }));
                   }}
-                  className={`rounded-xl bg-slate-50/50 dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 focus-visible:ring-indigo-500/30 focus-visible:border-indigo-500 transition-all shadow-sm ${errors.email ? "border-red-500 focus-visible:ring-red-500/30" : ""}`}
+                  className={`rounded-xl bg-slate-50/70 dark:bg-secondary/30 border-border focus-visible:ring-indigo-500/30 focus-visible:border-indigo-500 transition-all shadow-sm ${errors.email ? "border-red-500 focus-visible:ring-red-500/30" : ""}`}
                   placeholder="e.g. user@example.com"
                 />
               </div>
@@ -282,7 +282,7 @@ export default function MyProfileSettingsPage() {
                 <Input 
                   value={phoneNumber}
                   onChange={handlePhoneChange}
-                  className={`rounded-xl bg-slate-50/50 dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 focus-visible:ring-indigo-500/30 focus-visible:border-indigo-500 transition-all shadow-sm ${errors.phone ? "border-red-500 focus-visible:ring-red-500/30" : ""}`}
+                  className={`rounded-xl bg-slate-50/70 dark:bg-secondary/30 border-border focus-visible:ring-indigo-500/30 focus-visible:border-indigo-500 transition-all shadow-sm ${errors.phone ? "border-red-500 focus-visible:ring-red-500/30" : ""}`}
                   placeholder="03XX-XXXXXXX"
                 />
               </div>
@@ -317,7 +317,7 @@ export default function MyProfileSettingsPage() {
                   />
                   
                   <div className="flex flex-wrap gap-2.5">
-                    <Button variant="outline" onClick={() => photoInputRef.current?.click()} className="text-sm rounded-xl border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all">
+                    <Button variant="outline" onClick={() => photoInputRef.current?.click()} className="text-sm rounded-xl border-border hover:bg-secondary transition-all">
                       <Upload className="w-4 h-4 mr-2 text-indigo-500" /> {user.profile_photo_path ? 'Replace Photo' : 'Select Photo'}
                     </Button>
                     
@@ -333,7 +333,7 @@ export default function MyProfileSettingsPage() {
                       </Button>
                     )}
                   </div>
-                  <p className="text-[13px] text-slate-500 font-medium bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-100 dark:border-slate-800 inline-block">
+                  <p className="text-[13px] text-slate-500 font-medium bg-slate-50/50 dark:bg-secondary/20 p-3 rounded-xl border border-border inline-block">
                     Supported formats: PNG, JPG, WEBP. Max size: 5MB.
                   </p>
                 </div>
@@ -362,12 +362,12 @@ export default function MyProfileSettingsPage() {
       {/* Crop Modal for Profile Photo */}
       {isCropping && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-xl shadow-2xl overflow-hidden flex flex-col border border-slate-200 dark:border-slate-800">
+          <div className="bg-card w-full max-w-lg rounded-xl shadow-2xl overflow-hidden flex flex-col border border-border">
             <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
               <h3 className="font-semibold text-slate-800 dark:text-slate-200">Crop Profile Photo</h3>
               <Button variant="ghost" size="sm" onClick={() => setIsCropping(false)} className="h-8">Cancel</Button>
             </div>
-            <div className="relative w-full h-[400px] bg-slate-100 dark:bg-slate-950">
+            <div className="relative w-full h-[400px] bg-slate-100 dark:bg-secondary/20">
               {cropImageSrc && (
                 <Cropper
                   image={cropImageSrc}
@@ -383,7 +383,7 @@ export default function MyProfileSettingsPage() {
                 />
               )}
             </div>
-            <div className="p-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-900/50">
+            <div className="p-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-secondary/20">
               <div className="flex items-center gap-4 w-1/2">
                  <Label className="text-xs text-slate-500 font-semibold uppercase">Zoom</Label>
                  <input 

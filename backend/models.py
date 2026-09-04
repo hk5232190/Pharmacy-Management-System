@@ -430,3 +430,19 @@ class GeneralSettings(Base):
     LoginBrandingName = Column(String(255), nullable=False, default="PMS Software")
     LoginSubheading = Column(String(255), nullable=False, default="Pharmacy Management System")
     LoginBackgroundPath = Column(String(500), nullable=True)
+
+class Notification(Base):
+    __tablename__ = "notifications"
+
+    NotificationId = Column(Integer, primary_key=True, autoincrement=True)
+    Type = Column(String(50), nullable=False, index=True) # OUT_OF_STOCK, LOW_STOCK, EXPIRING_SOON, EXPIRED_MEDICINE, LICENSE_ALERT, BACKUP_SUCCESS, BACKUP_FAILED, SYSTEM_ALERT
+    Title = Column(String(200), nullable=False)
+    Message = Column(Text, nullable=False)
+    Priority = Column(String(20), nullable=False, default="Normal") # Low, Normal, High, Critical
+    RelatedModule = Column(String(50), nullable=True) # inventory, license, backup, security, sales
+    RelatedRecordId = Column(String(100), nullable=True) # e.g. MedicineId, BatchId, BackupId
+    EntityKey = Column(String(150), nullable=True, index=True) # Key for deduplication & stateful auto-resolution
+    ActionUrl = Column(String(255), nullable=True) # Frontend URL to navigate on click
+    IsRead = Column(Boolean, default=False, nullable=False, index=True)
+    CreatedAt = Column(DateTime, server_default=func.now(), nullable=False, index=True)
+

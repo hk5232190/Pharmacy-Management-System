@@ -125,11 +125,11 @@ export default function BillingSettingsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-3">
                 <Label className="text-sm font-semibold">Currency Code (e.g. USD, EUR, PKR)</Label>
-                <Input name="Currency" value={settings.Currency} onChange={handleChange} placeholder="PKR" className="rounded-xl bg-slate-50/50 dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 focus-visible:ring-blue-500/30 focus-visible:border-blue-500 transition-all shadow-sm" />
+                <Input name="Currency" value={settings.Currency} onChange={handleChange} placeholder="PKR" className="rounded-xl bg-slate-50/70 dark:bg-secondary/30 border-border focus-visible:ring-blue-500/30 focus-visible:border-blue-500 transition-all shadow-sm" />
               </div>
               <div className="space-y-3">
                 <Label className="text-sm font-semibold">Currency Symbol</Label>
-                <Input name="CurrencySymbol" value={settings.CurrencySymbol} onChange={handleChange} placeholder="Rs" className="rounded-xl bg-slate-50/50 dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 focus-visible:ring-blue-500/30 focus-visible:border-blue-500 transition-all shadow-sm" />
+                <Input name="CurrencySymbol" value={settings.CurrencySymbol} onChange={handleChange} placeholder="Rs" className="rounded-xl bg-slate-50/70 dark:bg-secondary/30 border-border focus-visible:ring-blue-500/30 focus-visible:border-blue-500 transition-all shadow-sm" />
               </div>
             </div>
             <div className="pt-2 space-y-3">
@@ -141,7 +141,7 @@ export default function BillingSettingsPage() {
                   setSettings({...settings, Currency: cur, CurrencySymbol: sym});
                 }}
               >
-                <SelectTrigger className="w-full md:w-1/2 rounded-xl bg-slate-50/50 dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 focus-visible:ring-blue-500/30 focus-visible:border-blue-500 transition-all shadow-sm">
+                <SelectTrigger className="w-full md:w-1/2 rounded-xl bg-slate-50/70 dark:bg-secondary/30 border-border focus-visible:ring-blue-500/30 focus-visible:border-blue-500 transition-all shadow-sm">
                   <SelectValue placeholder="Select Currency" />
                 </SelectTrigger>
                 <SelectContent>
@@ -174,7 +174,7 @@ export default function BillingSettingsPage() {
             </div>
             <div className={`space-y-3 transition-opacity ${!settings.TaxEnabled ? 'opacity-50 pointer-events-none' : ''}`}>
               <Label className="text-sm font-semibold">Default Tax Rate (%)</Label>
-              <Input type="number" step="0.01" name="DefaultTaxRate" value={settings.DefaultTaxRate} onChange={handleChange} disabled={!settings.TaxEnabled} className="rounded-xl bg-slate-50/50 dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 focus-visible:ring-emerald-500/30 focus-visible:border-emerald-500 transition-all shadow-sm" />
+              <Input type="number" step="0.01" name="DefaultTaxRate" value={settings.DefaultTaxRate} onChange={handleChange} disabled={!settings.TaxEnabled} className="rounded-xl bg-slate-50/70 dark:bg-secondary/30 border-border focus-visible:ring-emerald-500/30 focus-visible:border-emerald-500 transition-all shadow-sm" />
             </div>
 
             <div className="flex items-center justify-between p-5 bg-slate-50/80 dark:bg-slate-900/40 rounded-xl border border-slate-200/60 dark:border-slate-800 mt-8">
@@ -186,8 +186,8 @@ export default function BillingSettingsPage() {
             </div>
             <div className={`space-y-3 transition-opacity ${!settings.DiscountEnabled ? 'opacity-50 pointer-events-none' : ''}`}>
               <Label className="text-sm font-semibold">Absolute Max Discount (%)</Label>
-              <Input type="number" step="0.01" name="MaxDiscountPercentage" value={settings.MaxDiscountPercentage} onChange={handleChange} disabled={!settings.DiscountEnabled} className="rounded-xl bg-slate-50/50 dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 focus-visible:ring-emerald-500/30 focus-visible:border-emerald-500 transition-all shadow-sm" />
-              <p className="text-sm text-slate-500 font-medium bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-100 dark:border-slate-800 mt-2 block">
+              <Input type="number" step="0.01" name="MaxDiscountPercentage" value={settings.MaxDiscountPercentage} onChange={handleChange} disabled={!settings.DiscountEnabled} className="rounded-xl bg-slate-50/70 dark:bg-secondary/30 border-border focus-visible:ring-emerald-500/30 focus-visible:border-emerald-500 transition-all shadow-sm" />
+              <p className="text-sm text-slate-500 font-medium bg-slate-50/50 dark:bg-secondary/20 p-3 rounded-xl border border-border mt-2 block">
                 The POS will physically prevent any discount above this percentage.
               </p>
             </div>
@@ -212,7 +212,7 @@ export default function BillingSettingsPage() {
             </div>
             <div className={`space-y-3 transition-opacity ${!settings.RequireAdminPinForDiscount ? 'opacity-50 pointer-events-none' : ''}`}>
               <Label className="text-sm font-semibold">Admin PIN Discount Threshold (%)</Label>
-              <Input type="number" step="0.01" name="AdminDiscountThreshold" value={settings.AdminDiscountThreshold} onChange={handleChange} disabled={!settings.RequireAdminPinForDiscount} className="rounded-xl bg-slate-50/50 dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 focus-visible:ring-red-500/30 focus-visible:border-red-500 transition-all shadow-sm" />
+              <Input type="number" step="0.01" name="AdminDiscountThreshold" value={settings.AdminDiscountThreshold} onChange={handleChange} disabled={!settings.RequireAdminPinForDiscount} className="rounded-xl bg-slate-50/70 dark:bg-secondary/30 border-border focus-visible:ring-red-500/30 focus-visible:border-red-500 transition-all shadow-sm" />
               <p className="text-sm text-slate-500 font-medium bg-red-50/50 dark:bg-red-950/30 p-3 rounded-xl border border-red-100 dark:border-red-900 mt-2 block">
                 If a cashier attempts a discount greater than {settings.AdminDiscountThreshold}%, an Admin PIN will be required.
               </p>
@@ -232,11 +232,11 @@ export default function BillingSettingsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-3">
                 <Label className="text-sm font-semibold">Invoice Number Prefix</Label>
-                <Input name="InvoicePrefix" value={settings.InvoicePrefix} onChange={handleChange} placeholder="INV-" className="rounded-xl bg-slate-50/50 dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 focus-visible:ring-indigo-500/30 focus-visible:border-indigo-500 transition-all shadow-sm" />
+                <Input name="InvoicePrefix" value={settings.InvoicePrefix} onChange={handleChange} placeholder="INV-" className="rounded-xl bg-slate-50/70 dark:bg-secondary/30 border-border focus-visible:ring-indigo-500/30 focus-visible:border-indigo-500 transition-all shadow-sm" />
               </div>
               <div className="space-y-3">
                 <Label className="text-sm font-semibold">Next Invoice Number</Label>
-                <Input type="number" name="NextInvoiceNumber" value={settings.NextInvoiceNumber} onChange={handleChange} className="rounded-xl bg-slate-50/50 dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 focus-visible:ring-indigo-500/30 focus-visible:border-indigo-500 transition-all shadow-sm" />
+                <Input type="number" name="NextInvoiceNumber" value={settings.NextInvoiceNumber} onChange={handleChange} className="rounded-xl bg-slate-50/70 dark:bg-secondary/30 border-border focus-visible:ring-indigo-500/30 focus-visible:border-indigo-500 transition-all shadow-sm" />
               </div>
             </div>
 
@@ -246,7 +246,7 @@ export default function BillingSettingsPage() {
                 value={settings.DefaultPaymentMethod} 
                 onValueChange={(val) => setSettings({...settings, DefaultPaymentMethod: val})}
               >
-                <SelectTrigger className="rounded-xl bg-slate-50/50 dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 focus-visible:ring-indigo-500/30 focus-visible:border-indigo-500 transition-all shadow-sm">
+                <SelectTrigger className="rounded-xl bg-slate-50/70 dark:bg-secondary/30 border-border focus-visible:ring-indigo-500/30 focus-visible:border-indigo-500 transition-all shadow-sm">
                   <SelectValue placeholder="Select default payment" />
                 </SelectTrigger>
                 <SelectContent>
@@ -281,7 +281,7 @@ export default function BillingSettingsPage() {
       {/* Right Column: Previews */}
       <div className="space-y-6 sticky top-0 self-start">
         <Card className="border-0 shadow-[0_8px_30px_rgb(0,0,0,0.06)] dark:shadow-none overflow-hidden ring-1 ring-slate-200/60 dark:ring-slate-800 rounded-2xl">
-          <CardHeader className="bg-slate-50/80 dark:bg-slate-900/40 pb-5 border-b border-slate-100 dark:border-slate-800">
+          <CardHeader className="bg-slate-50/50 dark:bg-secondary/20 pb-5 border-b border-border">
             <CardTitle className="text-base font-bold flex items-center gap-2">
               <Receipt className="w-5 h-5 text-slate-600 dark:text-slate-400" /> Live System Preview
             </CardTitle>
@@ -309,11 +309,11 @@ export default function BillingSettingsPage() {
             <div className="space-y-3">
               <p className="text-slate-500 font-medium">POS Rules Summary:</p>
               <ul className="space-y-3">
-                <li className="flex justify-between items-center bg-slate-50 dark:bg-slate-900/50 p-2.5 rounded-lg border border-slate-100 dark:border-slate-800">
+                <li className="flex justify-between items-center bg-slate-50/50 dark:bg-secondary/20 p-2.5 rounded-lg border border-border">
                   <span className="text-slate-600 dark:text-slate-400 font-medium">Default Tax</span>
                   <span className="font-bold">{settings.TaxEnabled ? `${settings.DefaultTaxRate}%` : "Disabled"}</span>
                 </li>
-                <li className="flex justify-between items-center bg-slate-50 dark:bg-slate-900/50 p-2.5 rounded-lg border border-slate-100 dark:border-slate-800">
+                <li className="flex justify-between items-center bg-slate-50/50 dark:bg-secondary/20 p-2.5 rounded-lg border border-border">
                   <span className="text-slate-600 dark:text-slate-400 font-medium">Max Discount</span>
                   <span className="font-bold">{settings.DiscountEnabled ? `${settings.MaxDiscountPercentage}%` : "Disabled"}</span>
                 </li>
@@ -323,7 +323,7 @@ export default function BillingSettingsPage() {
                     {settings.RequireAdminPinForDiscount ? `> ${settings.AdminDiscountThreshold}%` : "Off"}
                   </span>
                 </li>
-                <li className="flex justify-between items-center bg-slate-50 dark:bg-slate-900/50 p-2.5 rounded-lg border border-slate-100 dark:border-slate-800">
+                <li className="flex justify-between items-center bg-slate-50/50 dark:bg-secondary/20 p-2.5 rounded-lg border border-border">
                   <span className="text-slate-600 dark:text-slate-400 font-medium">Default Payment</span>
                   <span className="font-bold text-indigo-600 dark:text-indigo-400">{settings.DefaultPaymentMethod}</span>
                 </li>

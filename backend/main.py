@@ -8,7 +8,7 @@ from core.exceptions import (
     general_exception_handler
 )
 
-from api.v1 import license, auth, category, company, supplier, customer, medicine, purchase, purchase_return, inventory, sales, dashboard, reports, backup, backup_settings, settings as pms_settings, security, about, system
+from api.v1 import license, auth, category, company, supplier, customer, medicine, purchase, purchase_return, inventory, sales, dashboard, reports, backup, backup_settings, settings as pms_settings, security, about, system, notification
 
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -61,6 +61,7 @@ api_router.include_router(pms_settings.router, prefix="/settings", tags=["Settin
 api_router.include_router(security.router)
 api_router.include_router(about.router, prefix="/about", tags=["About"])
 api_router.include_router(system.router, prefix="/system", tags=["System Diagnostics"])
+api_router.include_router(notification.router, prefix="/notifications", tags=["Notifications"])
 
 app.include_router(api_router)
 
@@ -136,6 +137,20 @@ async def startup_event():
                 db.commit()
         except Exception as e:
             logger.error(f"Migration error for CurrencySymbol: {e}")
+
+        # Ensure notifications table exists
+        try:
+            from database import engine
+            from models import Notification
+            Notification.__table__.create(bind=engine, checkfirst=True)
+            logger.info("Verified notifications table in database.")
+
+            # Trigger initial condition sync
+            from utils.notification_service import sync_system_notifications
+            sync_system_notifications(db)
+            logger.info("Completed startup system notifications synchronization.")
+        except Exception as e:
+            logger.error(f"Error initializing notifications on startup: {e}")
 
         db_settings = db.query(BackupSettings).first()
         if db_settings:

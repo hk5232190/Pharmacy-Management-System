@@ -399,14 +399,14 @@ function ReportsPageInner({
       </div>
 
       {/* ── Tabs ───────────────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-start p-1.5 mb-6 bg-slate-100/80 dark:bg-slate-800/50 rounded-xl w-max max-w-full border border-slate-200/50 dark:border-slate-700/50 overflow-x-auto custom-scrollbar print:hidden">
+      <div className="flex items-center justify-start p-1.5 mb-6 bg-slate-100/80 dark:bg-secondary/40 rounded-xl w-max max-w-full border border-border overflow-x-auto custom-scrollbar print:hidden">
         <button
           onClick={() => { if (activeTab !== 'sales') { setData(dataCache[getCacheKey('sales')] || null); onTabChange('sales'); } }}
           className={cn(
             "flex items-center px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 whitespace-nowrap",
             activeTab === "sales"
-              ? "bg-blue-600 dark:bg-white text-white dark:text-slate-900 shadow-md ring-1 ring-blue-700/50 dark:ring-slate-800/50"
-              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50"
+              ? "bg-primary text-primary-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground hover:bg-slate-200/50 dark:hover:bg-secondary/60"
           )}
         >
           <TrendingUp className="mr-2 h-4 w-4" />
@@ -417,8 +417,8 @@ function ReportsPageInner({
           className={cn(
             "flex items-center px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 whitespace-nowrap",
             activeTab === "purchases"
-              ? "bg-blue-600 dark:bg-white text-white dark:text-slate-900 shadow-md ring-1 ring-blue-700/50 dark:ring-slate-800/50"
-              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50"
+              ? "bg-primary text-primary-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground hover:bg-slate-200/50 dark:hover:bg-secondary/60"
           )}
         >
           <PackageSearch className="mr-2 h-4 w-4" />
@@ -429,8 +429,8 @@ function ReportsPageInner({
           className={cn(
             "flex items-center px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 whitespace-nowrap",
             activeTab === "inventory"
-              ? "bg-blue-600 dark:bg-white text-white dark:text-slate-900 shadow-md ring-1 ring-blue-700/50 dark:ring-slate-800/50"
-              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50"
+              ? "bg-primary text-primary-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground hover:bg-slate-200/50 dark:hover:bg-secondary/60"
           )}
         >
           <FileSpreadsheet className="mr-2 h-4 w-4" />
@@ -441,8 +441,8 @@ function ReportsPageInner({
           className={cn(
             "flex items-center px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 whitespace-nowrap",
             activeTab === "medicine"
-              ? "bg-blue-600 dark:bg-white text-white dark:text-slate-900 shadow-md ring-1 ring-blue-700/50 dark:ring-slate-800/50"
-              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50"
+              ? "bg-primary text-primary-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground hover:bg-slate-200/50 dark:hover:bg-secondary/60"
           )}
         >
           <Activity className="mr-2 h-4 w-4" />
@@ -453,8 +453,8 @@ function ReportsPageInner({
           className={cn(
             "flex items-center px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 whitespace-nowrap ml-1",
             activeTab === "financial"
-              ? "bg-amber-50 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300 shadow-md ring-1 ring-amber-200/50 dark:ring-amber-500/30"
-              : "text-amber-600 dark:text-amber-500 hover:bg-amber-100 dark:hover:bg-amber-950/40 hover:text-amber-800 dark:hover:text-amber-400"
+              ? "bg-primary text-primary-foreground shadow-sm"
+              : "text-amber-600 dark:text-amber-400 hover:bg-amber-100/50 dark:hover:bg-secondary/60"
           )}
         >
           <DollarSign className="mr-2 h-4 w-4" />
@@ -708,7 +708,7 @@ function ReportsPageInner({
 
               {/* Row 3: Sales Summary Table */}
               <Card className="border border-border shadow-sm rounded-xl overflow-hidden">
-                <div className="p-4 border-b border-border bg-slate-50 dark:bg-slate-900 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div className="p-4 border-b border-border bg-slate-50/50 dark:bg-secondary/20 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                   <h3 className="font-semibold text-lg">Sales Summary</h3>
                   <div className="flex gap-2 items-center w-full sm:w-auto flex-wrap">
                     <div className="relative w-full sm:w-64">
@@ -738,7 +738,7 @@ function ReportsPageInner({
                 </div>
                 <div className="overflow-x-auto relative">
                   <table className="w-full text-sm text-left">
-                    <thead className="bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 border-b border-border">
+                    <thead className="bg-secondary/40 text-muted-foreground border-b border-border">
                       <tr>
                         <th className="px-4 py-3 font-medium w-12">#</th>
                         <th className="px-4 py-3 font-medium">Invoice No.</th>
@@ -770,7 +770,7 @@ function ReportsPageInner({
                           <>
                             {paginatedTransactions.length > 0 ? (
                               paginatedTransactions.map((t: any, idx: number) => (
-                                <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 cursor-pointer" onClick={() => setSelectedInvoice(t)}>
+                                <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-secondary/30 cursor-pointer" onClick={() => setSelectedInvoice(t)}>
                                   <td className="px-4 py-3 text-muted-foreground">{startIndex + idx + 1}</td>
                                   <td className="px-4 py-3 font-medium text-blue-600">{t.InvoiceNo}</td>
                                   <td className="px-4 py-3">{new Date(t.TransactionDate).toLocaleDateString()}</td>
@@ -796,7 +796,7 @@ function ReportsPageInner({
                             )}
                             {/* Sticky Footer */}
                             {filteredSalesTransactions.length > 0 && (
-                              <tr className="bg-slate-50 dark:bg-slate-900/90 border-t-2 border-border font-semibold sticky bottom-0">
+                              <tr className="bg-slate-50/80 dark:bg-secondary/50 border-t-2 border-border font-semibold sticky bottom-0">
                                 <td colSpan={6} className="px-4 py-3 text-right">Totals (Filtered):</td>
                                 <td className="px-4 py-3 text-right tabular-nums text-foreground">{formatCurrency(totalGrandTotal)}</td>
                                 <td className="px-4 py-3 text-right tabular-nums text-emerald-600">{formatCurrency(totalProfit)}</td>
@@ -1063,7 +1063,7 @@ function ReportsPageInner({
             <div className="space-y-6">
 
               <Card className="border border-border shadow-sm rounded-xl overflow-hidden">
-                <div className="p-4 border-b border-border bg-slate-50 dark:bg-slate-900 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div className="p-4 border-b border-border bg-slate-50/50 dark:bg-secondary/20 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                   <h3 className="font-semibold text-lg">Current Stock Valuation</h3>
                   <div className="flex gap-2 items-center w-full sm:w-auto flex-wrap">
                     <div className="relative w-full sm:w-64">
@@ -1089,7 +1089,7 @@ function ReportsPageInner({
                 </div>
                 <div className="overflow-x-auto max-h-[500px]">
                   <table className="w-full text-sm text-left relative">
-                    <thead className="bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 border-b border-border sticky top-0 z-10 shadow-sm">
+                    <thead className="bg-secondary/40 text-muted-foreground border-b border-border sticky top-0 z-10 shadow-sm">
                       <tr>
                         <th className="px-4 py-3 font-medium text-left w-12">#</th>
                         <th className="px-4 py-3 font-medium text-left">Medicine</th>
@@ -1133,7 +1133,7 @@ function ReportsPageInner({
                         const rows = paginatedStock.map((t: any, idx: number) => {
                           const margin = (t.TotalRetailValue || 0) - (t.TotalCostValue || 0);
                           return (
-                            <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
+                            <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-secondary/30">
                               <td className="px-4 py-3 text-muted-foreground">{startIndex + idx + 1}</td>
                               <td className="px-4 py-3 font-medium text-foreground text-left">{t.MedicineName}</td>
                               <td className="px-4 py-3 text-muted-foreground text-left">{t.Category}</td>
@@ -1164,7 +1164,7 @@ function ReportsPageInner({
                               </tr>
                             )}
                             {filteredStock.length > 0 && (
-                              <tr className="bg-slate-100 dark:bg-slate-800/80 border-t-2 border-slate-200 dark:border-slate-700 sticky bottom-0 z-10">
+                              <tr className="bg-slate-100 dark:bg-secondary/50 border-t-2 border-border sticky bottom-0 z-10">
                                 <td colSpan={4} className="px-4 py-3 text-right font-bold text-foreground uppercase text-xs tracking-wider">Filtered Totals:</td>
                                 <td className="px-4 py-3 text-right font-bold tabular-nums text-foreground">{sumQty}</td>
                                 <td colSpan={2}></td>
@@ -1224,12 +1224,12 @@ function ReportsPageInner({
 
               {data.movement_items && (
                 <Card className="border border-border shadow-sm rounded-xl overflow-hidden">
-                  <div className="p-4 border-b border-border bg-slate-50 dark:bg-slate-900 flex justify-between items-center">
+                  <div className="p-4 border-b border-border bg-slate-50/50 dark:bg-secondary/20 flex justify-between items-center">
                     <h3 className="font-semibold text-lg">Stock Movement Details (Period)</h3>
                   </div>
                   <div className="overflow-x-auto max-h-96">
                     <table className="w-full text-sm text-left">
-                      <thead className="bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 border-b border-border sticky top-0">
+                      <thead className="bg-secondary/40 text-muted-foreground border-b border-border sticky top-0">
                         <tr>
                           <th className="px-4 py-3 font-medium w-12">#</th>
                           <th className="px-4 py-3 font-medium">Medicine</th>
@@ -1268,7 +1268,7 @@ function ReportsPageInner({
                             const calculatedCloseStock = (t.StartingStock || 0) + (t.PurchasedQty || 0) - (t.SoldQty || 0) + (t.AdjustedQty || 0) - (t.ExpiredQty || 0);
 
                             return (
-                              <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
+                              <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-secondary/30">
                                 <td className="px-4 py-3 text-muted-foreground">{startIndex + idx + 1}</td>
                                 <td className="px-4 py-3 font-medium text-foreground text-left">{t.MedicineName}</td>
                                 <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">{t.StartingStock || 0}</td>
@@ -1291,7 +1291,7 @@ function ReportsPageInner({
                                 </tr>
                               )}
                               {data.movement_items.length > 0 && (
-                                <tr className="bg-slate-100 dark:bg-slate-800/80 border-t-2 border-slate-200 dark:border-slate-700 sticky bottom-0 z-10">
+                                <tr className="bg-slate-100 dark:bg-secondary/50 border-t-2 border-border sticky bottom-0 z-10">
                                   <td colSpan={2} className="px-4 py-3 text-right font-bold text-foreground uppercase text-xs tracking-wider">Totals:</td>
                                   <td className="px-4 py-3 text-right font-bold tabular-nums text-muted-foreground">{sumStart}</td>
                                   <td className="px-4 py-3 text-right font-bold tabular-nums text-emerald-600">+{sumPurchased}</td>
@@ -1516,7 +1516,7 @@ function ReportsPageInner({
             <div className="space-y-6">
 
               <Card className="border border-border shadow-sm rounded-xl overflow-hidden">
-                <div className="p-4 border-b border-border bg-slate-50 dark:bg-slate-900 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div className="p-4 border-b border-border bg-slate-50/50 dark:bg-secondary/20 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                   <h3 className="font-semibold text-lg">Purchase Summary</h3>
                   <div className="flex gap-2 items-center w-full sm:w-auto flex-wrap">
                     <div className="relative w-full sm:w-64">
@@ -1542,7 +1542,7 @@ function ReportsPageInner({
                 </div>
                 <div className="overflow-x-auto max-h-[500px]">
                   <table className="w-full text-sm text-left relative">
-                    <thead className="bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 border-b border-border sticky top-0 z-10 shadow-sm">
+                    <thead className="bg-secondary/40 text-muted-foreground border-b border-border sticky top-0 z-10 shadow-sm">
                       <tr>
                         <th className="px-4 py-3 font-medium text-left w-12">#</th>
                         <th className="px-4 py-3 font-medium">Invoice No.</th>
@@ -1595,7 +1595,7 @@ function ReportsPageInner({
                           const balance = t.GrandTotal - paid;
 
                           return (
-                            <tr key={idx} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/80 cursor-pointer transition-colors" onClick={() => setSelectedPurchaseTransaction(t)}>
+                            <tr key={idx} className="hover:bg-slate-50/80 dark:hover:bg-secondary/30 cursor-pointer transition-colors" onClick={() => setSelectedPurchaseTransaction(t)}>
                               <td className="px-4 py-3 text-muted-foreground">{startIndex + idx + 1}</td>
                               <td className="px-4 py-3 font-medium text-blue-600">{t.InvoiceNo}</td>
                               <td className="px-4 py-3 whitespace-nowrap">{new Date(t.PurchaseDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
@@ -1625,7 +1625,7 @@ function ReportsPageInner({
                               </tr>
                             )}
                             {rows.length > 0 && (
-                              <tr className="bg-slate-100 dark:bg-slate-800/80 border-t-2 border-slate-200 dark:border-slate-700 sticky bottom-0 z-10">
+                              <tr className="bg-slate-100 dark:bg-secondary/50 border-t-2 border-border sticky bottom-0 z-10">
                                 <td colSpan={4} className="px-4 py-3 text-right font-bold text-foreground uppercase text-xs tracking-wider">Filtered Totals:</td>
                                 <td className="px-4 py-3 text-right font-bold tabular-nums text-foreground">{totalItems}</td>
                                 <td className="px-4 py-3 text-right font-bold tabular-nums text-foreground">{totalQty}</td>
@@ -1699,7 +1699,7 @@ function ReportsPageInner({
                     </DialogDescription>
                   </DialogHeader>
                   <div className="py-2">
-                    <div className="bg-slate-50 dark:bg-slate-900 rounded-xl p-4 mb-4 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm border border-border">
+                    <div className="bg-slate-50/50 dark:bg-secondary/20 rounded-xl p-4 mb-4 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm border border-border">
                       <div>
                         <p className="text-muted-foreground text-xs uppercase tracking-wider mb-1">Status</p>
                         <p className="font-semibold">{selectedPurchaseTransaction?.Status}</p>
@@ -1723,7 +1723,7 @@ function ReportsPageInner({
                     </h4>
                     <div className="border border-border rounded-lg overflow-hidden shadow-sm">
                       <table className="w-full text-sm text-left">
-                        <thead className="bg-slate-100 dark:bg-slate-900/50 text-slate-500 border-b border-border">
+                        <thead className="bg-secondary/40 text-muted-foreground border-b border-border">
                           <tr>
                             <th className="px-4 py-3 font-medium">Detailed Batch View</th>
                           </tr>
@@ -1760,7 +1760,7 @@ function ReportsPageInner({
             amber: { border: "border-l-amber-500", iconCls: "text-amber-500", text: "text-amber-600 dark:text-amber-400", bg: "bg-amber-50 dark:bg-amber-900/20" },
             indigo: { border: "border-l-indigo-500", iconCls: "text-indigo-500", text: "text-indigo-600 dark:text-indigo-400", bg: "bg-indigo-50 dark:bg-indigo-900/20" },
             orange: { border: "border-l-orange-500", iconCls: "text-orange-500", text: "text-orange-600 dark:text-orange-400", bg: "bg-orange-50 dark:bg-orange-900/20" },
-            slate: { border: "border-l-slate-500", iconCls: "text-slate-500", text: "text-slate-700 dark:text-slate-300", bg: "bg-slate-100 dark:bg-slate-800" },
+            slate: { border: "border-l-slate-500", iconCls: "text-slate-500", text: "text-slate-700 dark:text-slate-300", bg: "bg-slate-100 dark:bg-secondary/40" },
           };
           const a = accentMap[accent] ?? accentMap.blue;
           return (
@@ -1790,8 +1790,8 @@ function ReportsPageInner({
 
             <div className="grid grid-cols-1 gap-6">
               <Card className="border border-border shadow-sm rounded-xl overflow-hidden">
-                <div className="p-4 border-b border-border bg-slate-50 dark:bg-slate-900 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-                  <div className="flex space-x-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
+                <div className="p-4 border-b border-border bg-slate-50/50 dark:bg-secondary/20 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+                  <div className="flex space-x-2 bg-slate-100 dark:bg-secondary/40 p-1 rounded-lg border border-border/60">
                     <Button variant={activeMedicineTab === 'expiry' ? 'default' : 'ghost'} size="sm" onClick={() => { onMedicineTabChange('expiry'); setMedicineCurrentPage(1); }}>
                       <AlertTriangle className="w-4 h-4 mr-2" /> Expiry Alerts
                     </Button>
@@ -1836,7 +1836,7 @@ function ReportsPageInner({
 
                     {activeMedicineTab === 'expiry' && (
                       <>
-                        <thead className="bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 border-b border-border sticky top-0">
+                        <thead className="bg-secondary/40 text-muted-foreground border-b border-border sticky top-0">
                           <tr>
                             <th className="px-4 py-3 font-medium text-left w-12">#</th>
                             <th className="px-4 py-3 font-medium text-left">Medicine</th>
@@ -1851,7 +1851,7 @@ function ReportsPageInner({
                         <tbody className="divide-y divide-border">
                           {data.expiry_items && data.expiry_items.length > 0 ? (
                             data.expiry_items.map((t: any, idx: number) => (
-                              <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
+                              <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-secondary/30">
                                 <td className="px-4 py-3 text-muted-foreground">{idx + 1}</td>
                                 <td className="px-4 py-3 font-medium text-foreground text-left">{t.MedicineName}</td>
                                 <td className="px-4 py-3 text-left">{t.BatchCode}</td>
@@ -1876,7 +1876,7 @@ function ReportsPageInner({
 
                     {activeMedicineTab === 'low_stock' && (
                       <>
-                        <thead className="bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 border-b border-border sticky top-0">
+                        <thead className="bg-secondary/40 text-muted-foreground border-b border-border sticky top-0">
                           <tr>
                             <th className="px-4 py-3 font-medium text-left w-12">#</th>
                             <th className="px-4 py-3 font-medium text-left">Medicine</th>
@@ -1891,7 +1891,7 @@ function ReportsPageInner({
                         <tbody className="divide-y divide-border">
                           {data.low_stock_items && data.low_stock_items.length > 0 ? (
                             data.low_stock_items.map((t: any, idx: number) => (
-                              <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
+                              <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-secondary/30">
                                 <td className="px-4 py-3 text-muted-foreground">{idx + 1}</td>
                                 <td className="px-4 py-3 font-medium text-foreground text-left">{t.MedicineName}</td>
                                 <td className="px-4 py-3 text-left">{t.Category}</td>
@@ -1911,7 +1911,7 @@ function ReportsPageInner({
 
                     {activeMedicineTab === 'moving' && (
                       <>
-                        <thead className="bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 border-b border-border sticky top-0">
+                        <thead className="bg-secondary/40 text-muted-foreground border-b border-border sticky top-0">
                           <tr>
                             <th className="px-4 py-3 font-medium text-left w-12">#</th>
                             <th className="px-4 py-3 font-medium text-left">Medicine</th>
@@ -1926,7 +1926,7 @@ function ReportsPageInner({
                         <tbody className="divide-y divide-border">
                           {data.movement_items && data.movement_items.length > 0 ? (
                             data.movement_items.map((t: any, idx: number) => (
-                              <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
+                              <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-secondary/30">
                                 <td className="px-4 py-3 text-muted-foreground">{idx + 1}</td>
                                 <td className="px-4 py-3 font-medium text-foreground text-left">{t.MedicineName}</td>
                                 <td className="px-4 py-3 text-left">{t.Category}</td>
@@ -1956,7 +1956,7 @@ function ReportsPageInner({
                 </div>
 
                 {data.pagination && (
-                  <div className="flex items-center justify-between px-4 py-3 border-t border-border bg-slate-50 dark:bg-slate-900/50">
+                  <div className="flex items-center justify-between px-4 py-3 border-t border-border bg-slate-50/50 dark:bg-secondary/20">
                     <div className="text-sm text-muted-foreground">
                       Showing <span className="font-medium">{(data.pagination.page - 1) * data.pagination.page_size + 1}</span> to <span className="font-medium">{Math.min(data.pagination.page * data.pagination.page_size, data.pagination.total)}</span> of <span className="font-medium">{data.pagination.total}</span> entries
                     </div>
@@ -2125,7 +2125,7 @@ function ReportsPageInner({
                   <p className="text-sm text-slate-600 mt-1">Reporting Period: {timeframe === 'custom' && dateRange ? `${dateRange.start} to ${dateRange.end}` : timeframe.replace('_', ' ').toUpperCase()}</p>
                 </div>
 
-                <div className="p-4 border-b border-border bg-slate-50 dark:bg-slate-900 flex justify-between items-center print:hidden">
+                <div className="p-4 border-b border-border bg-slate-50/50 dark:bg-secondary/20 flex justify-between items-center print:hidden">
                   <h3 className="font-semibold text-lg flex items-center">
                     <FileSpreadsheet className="w-5 h-5 mr-2 text-primary" />
                     Profit & Loss Statement
@@ -2142,54 +2142,54 @@ function ReportsPageInner({
                   <table className="w-full text-sm text-left">
                     <tbody className="divide-y divide-border">
                       {/* 1. Revenue (Income) Section */}
-                      <tr className="bg-slate-50 dark:bg-slate-900/50">
+                      <tr className="bg-slate-50/50 dark:bg-secondary/30">
                         <td colSpan={2} className="px-6 py-2.5 font-bold text-foreground">1. Revenue (Income)</td>
                       </tr>
-                      <tr className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
+                      <tr className="hover:bg-slate-50/50 dark:hover:bg-secondary/30">
                         <td className="px-6 py-2.5 text-muted-foreground pl-10">Gross Sales Revenue</td>
                         <td className="px-6 py-2.5 text-right font-medium text-emerald-600 dark:text-emerald-400">+ {formatCurrency(data?.summary?.GrossSales || '0.00')}</td>
                       </tr>
-                      <tr className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
+                      <tr className="hover:bg-slate-50/50 dark:hover:bg-secondary/30">
                         <td className="px-6 py-2.5 text-muted-foreground pl-10">Less: Sales Returns & Refunds</td>
                         <td className="px-6 py-2.5 text-right font-medium text-rose-600 dark:text-rose-400">- {formatCurrency(data?.summary?.SalesReturns || '0.00')}</td>
                       </tr>
-                      <tr className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
+                      <tr className="hover:bg-slate-50/50 dark:hover:bg-secondary/30">
                         <td className="px-6 py-2.5 text-muted-foreground pl-10">Less: Discounts Given</td>
                         <td className="px-6 py-2.5 text-right font-medium text-rose-600 dark:text-rose-400">- {formatCurrency(data?.summary?.DiscountsApplied || '0.00')}</td>
                       </tr>
-                      <tr className="border-t-2 border-border bg-blue-50/30 dark:bg-blue-900/10">
+                      <tr className="border-t-2 border-border bg-blue-50/30 dark:bg-secondary/30">
                         <td className="px-6 py-3 font-bold text-right text-blue-700 dark:text-blue-400">Subtotal: Net Revenue</td>
                         <td className="px-6 py-3 text-right font-bold text-blue-700 dark:text-blue-400">{formatCurrency(data?.summary?.TotalRevenue || '0.00')}</td>
                       </tr>
 
                       {/* 2. Cost of Goods Sold (COGS) Section */}
-                      <tr className="bg-slate-50 dark:bg-slate-900/50">
+                      <tr className="bg-slate-50/50 dark:bg-secondary/30">
                         <td colSpan={2} className="px-6 py-2.5 font-bold text-foreground">2. Cost of Goods Sold (COGS)</td>
                       </tr>
-                      <tr className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
+                      <tr className="hover:bg-slate-50/50 dark:hover:bg-secondary/30">
                         <td className="px-6 py-2.5 text-muted-foreground pl-10">Direct Cost of Sold Medicines</td>
                         <td className="px-6 py-2.5 text-right font-medium text-rose-600 dark:text-rose-400">- {formatCurrency(data?.summary?.TotalCOGS || '0.00')}</td>
                       </tr>
-                      <tr className="border-t-2 border-border bg-slate-100 dark:bg-slate-800/50">
+                      <tr className="border-t-2 border-border bg-slate-100 dark:bg-secondary/40">
                         <td className="px-6 py-3 font-bold text-right text-foreground">Subtotal: Gross Profit</td>
                         <td className="px-6 py-3 text-right font-bold text-foreground">{formatCurrency(data?.summary?.GrossProfit || '0.00')}</td>
                       </tr>
 
                       {/* 3. Expenses & Operational Losses Section */}
-                      <tr className="bg-slate-50 dark:bg-slate-900/50">
+                      <tr className="bg-slate-50/50 dark:bg-secondary/30">
                         <td colSpan={2} className="px-6 py-2.5 font-bold text-foreground">3. Expenses & Operational Losses</td>
                       </tr>
-                      <tr className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
+                      <tr className="hover:bg-slate-50/50 dark:hover:bg-secondary/30">
                         <td className="px-6 py-2.5 text-muted-foreground pl-10">Inventory Expiry & Write-Offs</td>
                         <td className="px-6 py-2.5 text-right font-medium text-rose-600 dark:text-rose-400">- {formatCurrency(data?.summary?.InventoryLoss || '0.00')}</td>
                       </tr>
-                      <tr className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
+                      <tr className="hover:bg-slate-50/50 dark:hover:bg-secondary/30">
                         <td className="px-6 py-2.5 text-muted-foreground pl-10">Operating Expenses (Rent, Utilities, etc.)</td>
                         <td className="px-6 py-2.5 text-right font-medium text-rose-600 dark:text-rose-400">- {formatCurrency(data?.summary?.TotalExpenses || '0.00')}</td>
                       </tr>
 
                       {/* 4. Final Summary Footer */}
-                      <tr className="border-t-4 border-double border-border bg-slate-100 dark:bg-slate-900/80">
+                      <tr className="border-t-4 border-double border-border bg-slate-100 dark:bg-secondary/50">
                         <td className="px-6 py-5 font-black text-lg text-right">NET PROFIT / LOSS</td>
                         <td className={`px-6 py-5 text-right font-black text-2xl ${data?.summary?.NetProfit >= 0 ? 'text-emerald-600 dark:text-emerald-500' : 'text-rose-600 dark:text-rose-500'}`}>
                           {data?.summary?.NetProfit >= 0 ? '+ ' : '- '}{formatCurrency(Math.abs(data?.summary?.NetProfit || 0))}
@@ -2243,7 +2243,7 @@ function ReportsPageInner({
                   {selectedInvoice.Status}
                 </span>
               </div>
-              <div className="col-span-2 bg-slate-50 dark:bg-slate-900 rounded-lg p-4 mt-2 flex justify-between items-center border border-border">
+              <div className="col-span-2 bg-slate-50/50 dark:bg-secondary/20 rounded-lg p-4 mt-2 flex justify-between items-center border border-border">
                 <div>
                   <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Profit</p>
                   <p className="font-bold text-emerald-600 text-xl">{formatCurrency(selectedInvoice.Profit || 0)}</p>

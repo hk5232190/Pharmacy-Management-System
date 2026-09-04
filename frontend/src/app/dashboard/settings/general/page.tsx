@@ -271,7 +271,7 @@ export default function GeneralSettingsPage() {
                   value={profile.PharmacyName}
                   onChange={e => setProfile({...profile, PharmacyName: e.target.value})}
                   placeholder="e.g. Wellness Pharmacy"
-                  className="rounded-xl bg-slate-50/50 dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 focus-visible:ring-indigo-500/30 focus-visible:border-indigo-500 transition-all shadow-sm"
+                  className="rounded-xl bg-slate-50/70 dark:bg-secondary/30 border-border focus-visible:ring-indigo-500/30 focus-visible:border-indigo-500 transition-all shadow-sm"
                 />
               </div>
             </div>
@@ -303,7 +303,7 @@ export default function GeneralSettingsPage() {
                   />
                   
                   <div className="flex flex-wrap gap-2.5">
-                    <Button variant="outline" onClick={() => logoInputRef.current?.click()} className="text-sm rounded-xl border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all">
+                    <Button variant="outline" onClick={() => logoInputRef.current?.click()} className="text-sm rounded-xl border-border hover:bg-secondary transition-all">
                       <Upload className="w-4 h-4 mr-2 text-indigo-500" /> {profile.LogoPath ? 'Replace Logo' : 'Select Logo'}
                     </Button>
                     
@@ -319,7 +319,7 @@ export default function GeneralSettingsPage() {
                       </Button>
                     )}
                   </div>
-                  <p className="text-[13px] text-slate-500 font-medium bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-100 dark:border-slate-800 inline-block">
+                  <p className="text-[13px] text-slate-500 font-medium bg-slate-50/50 dark:bg-secondary/20 p-3 rounded-xl border border-border inline-block">
                     Supported formats: PNG, JPG, WEBP. Max size: 5MB.
                   </p>
                 </div>
@@ -357,7 +357,7 @@ export default function GeneralSettingsPage() {
                   value={general.LoginBrandingName}
                   onChange={e => setGeneral({...general, LoginBrandingName: e.target.value})}
                   placeholder="e.g. PMS Software"
-                  className="rounded-xl bg-slate-50/50 dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 focus-visible:ring-emerald-500/30 focus-visible:border-emerald-500 transition-all shadow-sm"
+                  className="rounded-xl bg-slate-50/70 dark:bg-secondary/30 border-border focus-visible:ring-emerald-500/30 focus-visible:border-emerald-500 transition-all shadow-sm"
                 />
               </div>
               <div className="space-y-3">
@@ -366,7 +366,7 @@ export default function GeneralSettingsPage() {
                   value={general.LoginSubheading}
                   onChange={e => setGeneral({...general, LoginSubheading: e.target.value})}
                   placeholder="e.g. Pharmacy Management System"
-                  className="rounded-xl bg-slate-50/50 dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 focus-visible:ring-emerald-500/30 focus-visible:border-emerald-500 transition-all shadow-sm"
+                  className="rounded-xl bg-slate-50/70 dark:bg-secondary/30 border-border focus-visible:ring-emerald-500/30 focus-visible:border-emerald-500 transition-all shadow-sm"
                 />
               </div>
             </div>
@@ -398,7 +398,7 @@ export default function GeneralSettingsPage() {
                   />
                   
                   <div className="flex flex-wrap gap-2.5">
-                    <Button variant="outline" onClick={() => bgInputRef.current?.click()} className="text-sm flex-1 rounded-xl border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all">
+                    <Button variant="outline" onClick={() => bgInputRef.current?.click()} className="text-sm flex-1 rounded-xl border-border hover:bg-secondary transition-all">
                       <Upload className="w-4 h-4 mr-2 text-emerald-500" /> {general.LoginBackgroundPath ? 'Replace Banner' : 'Select Banner'}
                     </Button>
                     
@@ -414,7 +414,7 @@ export default function GeneralSettingsPage() {
                       </Button>
                     )}
                   </div>
-                  <p className="text-[13px] text-slate-500 font-medium bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-100 dark:border-slate-800 mt-2 block text-center">
+                  <p className="text-[13px] text-slate-500 font-medium bg-slate-50/50 dark:bg-secondary/20 p-3 rounded-xl border border-border mt-2 block text-center">
                     Recommended size: 1080x1080 or larger. Max size: 5MB.
                   </p>
                 </div>
@@ -437,12 +437,12 @@ export default function GeneralSettingsPage() {
     {/* Crop Modal for Logo */}
     {isCropping && (
       <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-        <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-xl shadow-2xl overflow-hidden flex flex-col border border-slate-200 dark:border-slate-800">
+        <div className="bg-card w-full max-w-lg rounded-xl shadow-2xl overflow-hidden flex flex-col border border-border">
           <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
             <h3 className="font-semibold text-slate-800 dark:text-slate-200">Crop Logo</h3>
             <Button variant="ghost" size="sm" onClick={() => setIsCropping(false)} className="h-8">Cancel</Button>
           </div>
-          <div className="relative w-full h-[400px] bg-slate-100 dark:bg-slate-950">
+          <div className="relative w-full h-[400px] bg-slate-100 dark:bg-secondary/20">
             {cropImageSrc && (
               <Cropper
                 image={cropImageSrc}
@@ -456,7 +456,7 @@ export default function GeneralSettingsPage() {
               />
             )}
           </div>
-          <div className="p-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-900/50">
+          <div className="p-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-secondary/20">
             <div className="flex items-center gap-4 w-1/2">
                <Label className="text-xs text-slate-500 font-semibold uppercase">Zoom</Label>
                <input 
@@ -479,7 +479,7 @@ export default function GeneralSettingsPage() {
     {/* Login Screen Preview Modal */}
     {showLoginPreview && (
       <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 xl:p-12">
-        <div className="bg-white dark:bg-slate-900 w-full max-w-5xl h-[80vh] rounded-xl shadow-2xl overflow-hidden flex flex-col border border-slate-200 dark:border-slate-800 relative">
+        <div className="bg-card w-full max-w-5xl h-[80vh] rounded-xl shadow-2xl overflow-hidden flex flex-col border border-border relative">
           
           <div className="absolute top-4 right-4 z-10">
             <Button variant="outline" onClick={() => setShowLoginPreview(false)} className="bg-white/80 hover:bg-white text-slate-800 border-0 shadow-sm backdrop-blur-md">Close Preview</Button>

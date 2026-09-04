@@ -149,8 +149,8 @@ function LicenseStatusBadge({ status, type, expiryDate, remainingDays, isLifetim
 }) {
   let tier = "invalid";
   if (status === "Active") {
-    if (isLifetime || (remainingDays !== null && remainingDays > 14)) tier = "active";
-    else if (remainingDays !== null && remainingDays <= 14) tier = "warning";
+    if (isLifetime || (remainingDays != null && remainingDays > 14)) tier = "active";
+    else if (remainingDays != null && remainingDays <= 14) tier = "warning";
   }
 
   const styles = {

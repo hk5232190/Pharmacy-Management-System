@@ -219,7 +219,7 @@ export default function PrinterSettingsPage() {
                     value={settings.SelectedPrinterName} 
                     onValueChange={(val) => setSettings({...settings, SelectedPrinterName: val})}
                   >
-                    <SelectTrigger className="flex-1 rounded-xl bg-slate-50/50 dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 focus:ring-blue-500/30 focus:border-blue-500 transition-all shadow-sm">
+                    <SelectTrigger className="flex-1 rounded-xl bg-slate-50/70 dark:bg-secondary/30 border-border focus:ring-blue-500/30 focus:border-blue-500 transition-all shadow-sm">
                       <SelectValue placeholder="Select OS printer..." />
                     </SelectTrigger>
                     <SelectContent className="rounded-xl">
@@ -236,7 +236,7 @@ export default function PrinterSettingsPage() {
                       )}
                     </SelectContent>
                   </Select>
-                  <Button variant="outline" size="icon" onClick={fetchOsPrinters} disabled={isLoadingPrinters} title="Refresh OS Printers" className="rounded-xl border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800">
+                  <Button variant="outline" size="icon" onClick={fetchOsPrinters} disabled={isLoadingPrinters} title="Refresh OS Printers" className="rounded-xl border-border hover:bg-secondary">
                     <RefreshCw className={`w-4 h-4 ${isLoadingPrinters ? 'animate-spin' : ''}`} />
                   </Button>
                 </div>
@@ -249,7 +249,7 @@ export default function PrinterSettingsPage() {
                   value={settings.ConnectionPort} 
                   onValueChange={(val) => setSettings({...settings, ConnectionPort: val})}
                 >
-                  <SelectTrigger className="rounded-xl bg-slate-50/50 dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 focus:ring-blue-500/30 focus:border-blue-500 transition-all shadow-sm">
+                  <SelectTrigger className="rounded-xl bg-slate-50/70 dark:bg-secondary/30 border-border focus:ring-blue-500/30 focus:border-blue-500 transition-all shadow-sm">
                     <SelectValue placeholder="Select port" />
                   </SelectTrigger>
                   <SelectContent className="rounded-xl">
@@ -269,7 +269,7 @@ export default function PrinterSettingsPage() {
                   value={settings.PrinterType} 
                   onValueChange={(val) => setSettings({...settings, PrinterType: val})}
                 >
-                  <SelectTrigger className="rounded-xl bg-slate-50/50 dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 focus:ring-blue-500/30 focus:border-blue-500 transition-all shadow-sm">
+                  <SelectTrigger className="rounded-xl bg-slate-50/70 dark:bg-secondary/30 border-border focus:ring-blue-500/30 focus:border-blue-500 transition-all shadow-sm">
                     <SelectValue placeholder="Select type" />
                   </SelectTrigger>
                   <SelectContent className="rounded-xl">
@@ -284,7 +284,7 @@ export default function PrinterSettingsPage() {
                   value={settings.PaperSize} 
                   onValueChange={(val) => setSettings({...settings, PaperSize: val})}
                 >
-                  <SelectTrigger className="rounded-xl bg-slate-50/50 dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 focus:ring-blue-500/30 focus:border-blue-500 transition-all shadow-sm">
+                  <SelectTrigger className="rounded-xl bg-slate-50/70 dark:bg-secondary/30 border-border focus:ring-blue-500/30 focus:border-blue-500 transition-all shadow-sm">
                     <SelectValue placeholder="Select size" />
                   </SelectTrigger>
                   <SelectContent className="rounded-xl">
@@ -386,7 +386,7 @@ export default function PrinterSettingsPage() {
                 onChange={handleChange} 
                 placeholder="Thank you for shopping!"
                 rows={3}
-                className="rounded-xl bg-slate-50/50 dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 focus-visible:ring-indigo-500/30 focus-visible:border-indigo-500 transition-all shadow-sm resize-none"
+                className="rounded-xl bg-slate-50/70 dark:bg-secondary/30 border-border focus-visible:ring-indigo-500/30 focus-visible:border-indigo-500 transition-all shadow-sm resize-none"
               />
             </div>
           </CardContent>
@@ -397,7 +397,7 @@ export default function PrinterSettingsPage() {
       {/* Right Column: Previews & Actions */}
       <div className="space-y-6">
         <Card className="border-0 shadow-[0_8px_30px_rgb(0,0,0,0.06)] dark:shadow-none overflow-hidden ring-1 ring-slate-200/60 dark:ring-slate-800 rounded-2xl lg:sticky lg:top-6">
-          <CardHeader className="bg-slate-50/50 dark:bg-slate-900/20 pb-5 border-b border-slate-100 dark:border-slate-800">
+          <CardHeader className="bg-slate-50/50 dark:bg-secondary/20 pb-5 border-b border-border">
             <CardTitle className="text-base font-bold flex items-center gap-2 text-slate-900 dark:text-white">
               <CheckCircle2 className="w-5 h-5 text-green-500" /> Live Receipt Preview
             </CardTitle>

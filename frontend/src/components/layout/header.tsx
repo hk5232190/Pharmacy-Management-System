@@ -14,6 +14,7 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { useProfile } from "@/contexts/ProfileContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSystemPreferences } from "@/contexts/SystemPreferencesContext";
+import { NotificationDropdown } from "@/components/layout/notification-dropdown";
 
 const SEARCH_ITEMS = [
   { title: "Dashboard", desc: "Overview & analytics", icon: LayoutDashboard, href: "/dashboard", category: "Pages" },
@@ -207,10 +208,7 @@ export function Header() {
           </div>
         )}
         <ThemeToggle />
-        <button className="relative p-2 text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-secondary">
-          <Bell className="w-[1.2rem] h-[1.2rem]" />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-destructive rounded-full border-2 border-card" />
-        </button>
+        <NotificationDropdown />
         <div className="w-[1px] h-6 bg-border mx-0.5" />
         <DropdownMenu>
           <DropdownMenuTrigger className="flex items-center gap-2.5 hover:bg-secondary p-1.5 pr-3 rounded-full transition-colors outline-none focus:ring-2 focus:ring-primary/20">

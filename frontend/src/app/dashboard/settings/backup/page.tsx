@@ -190,8 +190,8 @@ export default function BackupDataManagementSettingsPage() {
           <div className={cn(
             "p-4 rounded-xl border transition-all duration-300 flex items-start space-x-3",
             settings.IsAutoBackupEnabled
-              ? "bg-blue-50/80 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 shadow-sm"
-              : "bg-slate-50 dark:bg-slate-900/30 border-slate-200 dark:border-slate-800"
+              ? "bg-blue-50/50 dark:bg-secondary/30 border border-blue-200/40 dark:border-border shadow-sm"
+              : "bg-slate-50/50 dark:bg-secondary/20 border-border"
           )}>
             <Checkbox
               id="autoBackup"
@@ -225,7 +225,7 @@ export default function BackupDataManagementSettingsPage() {
               <div className="space-y-1.5">
                 <Label className="text-slate-600 dark:text-slate-400 text-xs font-semibold uppercase tracking-wide">Backup Frequency</Label>
                 <select
-                  className="flex h-10 w-full rounded-md border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                  className="flex h-10 w-full rounded-md border border-border bg-slate-50/70 dark:bg-secondary/30 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
                   value={settings.BackupFrequency}
                   onChange={(e) => setSettings(s => ({ ...s, BackupFrequency: e.target.value }))}
                   disabled={!settings.IsAutoBackupEnabled}
@@ -242,7 +242,7 @@ export default function BackupDataManagementSettingsPage() {
                   value={settings.BackupTime}
                   onChange={(e) => setSettings(s => ({ ...s, BackupTime: e.target.value }))}
                   disabled={!settings.IsAutoBackupEnabled}
-                  className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800"
+                  className="bg-slate-50/70 dark:bg-secondary/30 border-border"
                 />
               </div>
             </div>
@@ -255,7 +255,7 @@ export default function BackupDataManagementSettingsPage() {
                   value={settings.BackupLocation}
                   onChange={(e) => setSettings(s => ({ ...s, BackupLocation: e.target.value }))}
                   disabled={!settings.IsAutoBackupEnabled}
-                  className="font-mono text-sm bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800"
+                  className="font-mono text-sm bg-slate-50/70 dark:bg-secondary/30 border-border"
                 />
                 <Button variant="outline" type="button" onClick={handleBrowse} disabled={!settings.IsAutoBackupEnabled} className="shrink-0">
                   <FolderOpen className="mr-2 h-4 w-4 text-blue-500" /> Browse
@@ -278,7 +278,7 @@ export default function BackupDataManagementSettingsPage() {
                 value={settings.RetentionCount}
                 onChange={(e) => setSettings(s => ({ ...s, RetentionCount: parseInt(e.target.value) || 7 }))}
                 disabled={!settings.IsAutoBackupEnabled}
-                className="max-w-[120px] bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800"
+                className="max-w-[120px] bg-slate-50/70 dark:bg-secondary/30 border-border"
               />
               <span className="text-sm text-muted-foreground">maximum backups to keep (older ones are deleted automatically)</span>
             </div>
@@ -331,7 +331,7 @@ export default function BackupDataManagementSettingsPage() {
             </div>
           </div>
         </CardContent>
-        <CardFooter className="border-t border-slate-100 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-900/10 p-5 flex justify-end">
+        <CardFooter className="border-t border-border bg-slate-50/30 dark:bg-secondary/20 p-5 flex justify-end">
           <SaveButton isSaving={isSaving} onClick={handleSave} className="px-8" label="Save Configuration" />
         </CardFooter>
       </Card>
@@ -355,7 +355,7 @@ export default function BackupDataManagementSettingsPage() {
                 { label: "Database Size", value: formatBytes(dbInfo.size_bytes) },
                 { label: "Total Backups", value: `${dbInfo.total_backups} backup${dbInfo.total_backups !== 1 ? "s" : ""}` },
               ].map(({ label, value }) => (
-                <div key={label} className="bg-slate-50 dark:bg-slate-900 rounded-lg p-4 border border-slate-200 dark:border-slate-800">
+                <div key={label} className="bg-slate-50/50 dark:bg-secondary/20 rounded-lg p-4 border border-border">
                   <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400 mb-1">{label}</p>
                   <p className="text-sm font-bold text-slate-800 dark:text-slate-200">{value}</p>
                 </div>
@@ -399,7 +399,7 @@ export default function BackupDataManagementSettingsPage() {
               </div>
             </div>
           ) : (
-            <div className="flex items-start gap-3 p-4 rounded-xl bg-slate-50 dark:bg-slate-900/30 border border-slate-200 dark:border-slate-800">
+            <div className="flex items-start gap-3 p-4 rounded-xl bg-slate-50/50 dark:bg-secondary/20 border border-border">
               <Info className="h-5 w-5 text-slate-400 shrink-0 mt-0.5" />
               <p className="text-sm text-muted-foreground">No health check has been run yet. Click below to check.</p>
             </div>
@@ -419,7 +419,7 @@ export default function BackupDataManagementSettingsPage() {
       </Card>
 
       {/* ── Link to full module ─────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between p-4 rounded-xl border border-dashed border-blue-200 dark:border-blue-800 bg-blue-50/50 dark:bg-blue-900/10">
+      <div className="flex items-center justify-between p-4 rounded-xl border border-dashed border-border bg-secondary/20">
         <div>
           <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">Need to create, restore, or browse backup history?</p>
           <p className="text-xs text-muted-foreground mt-0.5">Use the dedicated Backup &amp; Restore module for full backup management.</p>
