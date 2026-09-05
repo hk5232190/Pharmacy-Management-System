@@ -102,8 +102,8 @@ def fetch_sales_report_data(
     payment_method: str = None
 ):
     base_query = db.query(models.Sale).filter(
-        func.date(models.Sale.TransactionDate) >= start_date,
-        func.date(models.Sale.TransactionDate) <= end_date
+        func.date(models.Sale.TransactionDate, 'localtime') >= start_date,
+        func.date(models.Sale.TransactionDate, 'localtime') <= end_date
     )
     if customer_id and customer_id != "all":
         base_query = base_query.filter(models.Sale.CustomerId == customer_id)
@@ -111,13 +111,19 @@ def fetch_sales_report_data(
         base_query = base_query.filter(models.Sale.PaymentMethod == payment_method)
 
     completed_sales = base_query.filter(models.Sale.Status == 'Completed').all()
-    # Assuming Sales Returns/Refunds are marked as 'Returned' or tracked elsewhere. 
-    # For now, let's say 'Returned' status means full return.
-    returned_sales = base_query.filter(models.Sale.Status == 'Returned').all()
-
+    # Returns from SaleReturn model
+    returns_query = db.query(models.SaleReturn).filter(
+        func.date(models.SaleReturn.ReturnDate, 'localtime') >= start_date,
+        func.date(models.SaleReturn.ReturnDate, 'localtime') <= end_date
+    )
+    if customer_id and customer_id != "all":
+        returns_query = returns_query.join(models.Sale).filter(models.Sale.CustomerId == customer_id)
+    
+    returned_sales = returns_query.all()
+    
     total_gross_sales = sum(float(s.GrandTotal or 0.0) for s in completed_sales)
-    total_returns = sum(float(s.GrandTotal or 0.0) for s in returned_sales)
-    net_sales = total_gross_sales - total_returns
+    total_returns = sum(float(r.TotalRefundAmount or 0.0) for r in returned_sales)
+    net_sales = sum(float(s.NetAmount or 0.0) for s in completed_sales)
 
     # Calculate COGS dynamically — pre-fetch all relevant batches to avoid N+1 queries
     all_batch_ids = list({item.BatchId for sale in completed_sales for item in sale.items})
@@ -127,7 +133,7 @@ def fetch_sales_report_data(
         for item in sale.items:
             batch = batch_map.get(item.BatchId)
             if batch:
-                total_cogs += (item.Quantity * float(batch.CostPrice or 0.0))
+                total_cogs += ((item.Quantity - item.ReturnedQuantity) * float(batch.CostPrice or 0.0))
 
     net_profit = net_sales - total_cogs
     profit_margin = (net_profit / net_sales * 100) if net_sales > 0 else 0.0
@@ -159,7 +165,7 @@ def fetch_sales_report_data(
             TotalQty=total_qty,
             Discount=s.DiscountAmount,
             Tax=s.TaxAmount,
-            GrandTotal=float(s.GrandTotal or 0.0),
+            GrandTotal=float(s.NetAmount or 0.0),
             PaymentMethod=s.PaymentMethod,
             Status=s.Status
         ))
@@ -182,9 +188,9 @@ def fetch_sales_report_data(
     for s in completed_sales:
         period = s.TransactionDate.strftime(fmt)
         if period in trend_dict:
-            trend_dict[period]["sales"] += float(s.GrandTotal or 0.0)
+            trend_dict[period]["sales"] += float(s.NetAmount or 0.0)
             sale_cogs = sum(
-                i.Quantity * float(batch_map[i.BatchId].CostPrice or 0.0)
+                (i.Quantity - i.ReturnedQuantity) * float(batch_map[i.BatchId].CostPrice or 0.0)
                 for i in s.items if i.BatchId in batch_map
             )
             trend_dict[period]["cogs"] += sale_cogs
@@ -283,8 +289,8 @@ def fetch_purchase_report_data(
     supplier_id: str = None
 ):
     base_query = db.query(models.Purchase).filter(
-        func.date(models.Purchase.PurchaseDate) >= start_date,
-        func.date(models.Purchase.PurchaseDate) <= end_date
+        func.date(models.Purchase.PurchaseDate, 'localtime') >= start_date,
+        func.date(models.Purchase.PurchaseDate, 'localtime') <= end_date
     )
     if supplier_id and supplier_id != "all":
         base_query = base_query.filter(models.Purchase.SupplierId == supplier_id)
@@ -292,8 +298,8 @@ def fetch_purchase_report_data(
     completed_purchases = base_query.all()
     # Calculate Purchase Returns correctly using the PurchaseReturn model
     returns_query = db.query(models.PurchaseReturn).filter(
-        func.date(models.PurchaseReturn.ReturnDate) >= start_date,
-        func.date(models.PurchaseReturn.ReturnDate) <= end_date
+        func.date(models.PurchaseReturn.ReturnDate, 'localtime') >= start_date,
+        func.date(models.PurchaseReturn.ReturnDate, 'localtime') <= end_date
     )
     if supplier_id and supplier_id != "all":
         returns_query = returns_query.filter(models.PurchaseReturn.SupplierId == supplier_id)
@@ -329,7 +335,7 @@ def fetch_purchase_report_data(
             TotalQty=total_qty,
             Discount=p.TotalDiscount,
             Tax=p.TotalTax,
-            GrandTotal=float(p.GrandTotal or 0.0),
+            GrandTotal=float(p.NetAmount or 0.0),
             Status=p.PaymentStatus
         ))
 
@@ -351,7 +357,7 @@ def fetch_purchase_report_data(
     for p in completed_purchases:
         period = p.PurchaseDate.strftime(fmt)
         if period in trend_dict:
-            trend_dict[period] += float(p.GrandTotal or 0.0)
+            trend_dict[period] += float(p.NetAmount or 0.0)
 
     trend_data = []
     for d in date_seq:
@@ -361,7 +367,7 @@ def fetch_purchase_report_data(
     supp_dict = {}
     for p in completed_purchases:
         s_name = p.supplier.Name if p.supplier else 'Unknown'
-        supp_dict[s_name] = supp_dict.get(s_name, 0) + float(p.GrandTotal or 0.0)
+        supp_dict[s_name] = supp_dict.get(s_name, 0) + float(p.NetAmount or 0.0)
     suppliers = [SupplierStats(name=k, value=v) for k, v in supp_dict.items()]
 
     # Top Medicines — pre-fetch all medicines in one query to avoid N+1
@@ -532,18 +538,18 @@ def fetch_inventory_report_data(
     
     if start_date and end_date:
         purchases = db.query(models.PurchaseItem).join(models.Purchase).filter(
-            func.date(models.Purchase.PurchaseDate) >= start_date,
-            func.date(models.Purchase.PurchaseDate) <= end_date
+            func.date(models.Purchase.PurchaseDate, 'localtime') >= start_date,
+            func.date(models.Purchase.PurchaseDate, 'localtime') <= end_date
         ).all()
         
         sales = db.query(models.SaleItem).join(models.Sale).filter(
-            func.date(models.Sale.TransactionDate) >= start_date,
-            func.date(models.Sale.TransactionDate) <= end_date
+            func.date(models.Sale.TransactionDate, 'localtime') >= start_date,
+            func.date(models.Sale.TransactionDate, 'localtime') <= end_date
         ).all()
         
         adjustments = db.query(models.StockAdjustment).filter(
-            func.date(models.StockAdjustment.AdjustmentDate) >= start_date,
-            func.date(models.StockAdjustment.AdjustmentDate) <= end_date
+            func.date(models.StockAdjustment.AdjustmentDate, 'localtime') >= start_date,
+            func.date(models.StockAdjustment.AdjustmentDate, 'localtime') <= end_date
         ).all()
         
         # We don't have an explicit 'expired qty' in the movement tables, 
@@ -814,8 +820,8 @@ def fetch_medicine_report_data(
     
     if start_date and end_date:
         q_sales = q_sales.filter(
-            func.date(models.Sale.TransactionDate) >= start_date,
-            func.date(models.Sale.TransactionDate) <= end_date
+            func.date(models.Sale.TransactionDate, 'localtime') >= start_date,
+            func.date(models.Sale.TransactionDate, 'localtime') <= end_date
         )
     
     sales_data = q_sales.group_by(models.StockBatch.MedicineId).all()
@@ -955,14 +961,14 @@ def fetch_financial_report_data(
 ):
     # 1. Sales Data (Revenue & Discounts & Returns & COGS)
     completed_sales = db.query(models.Sale).filter(
-        func.date(models.Sale.TransactionDate) >= start_date,
-        func.date(models.Sale.TransactionDate) <= end_date,
+        func.date(models.Sale.TransactionDate, 'localtime') >= start_date,
+        func.date(models.Sale.TransactionDate, 'localtime') <= end_date,
         models.Sale.Status == 'Completed'
     ).all()
     
     returned_sales = db.query(models.SaleReturn).filter(
-        func.date(models.SaleReturn.ReturnDate) >= start_date,
-        func.date(models.SaleReturn.ReturnDate) <= end_date
+        func.date(models.SaleReturn.ReturnDate, 'localtime') >= start_date,
+        func.date(models.SaleReturn.ReturnDate, 'localtime') <= end_date
     ).all()
     
     gross_sales = sum(float(s.SubTotal or 0.0) for s in completed_sales)
@@ -976,7 +982,7 @@ def fetch_financial_report_data(
         for item in sale.items:
             batch = db.query(models.StockBatch).filter(models.StockBatch.BatchId == item.BatchId).first()
             if batch:
-                total_cogs += (item.Quantity * float(batch.CostPrice or 0.0))
+                total_cogs += ((item.Quantity - item.ReturnedQuantity) * float(batch.CostPrice or 0.0))
                 
     # 2. Inventory Loss / Expiry Write-Off
     today = date.today()

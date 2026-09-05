@@ -56,6 +56,7 @@ class PurchaseItemResponse(BaseModel):
     MedicineId: int
     BatchCode: str
     Quantity: int
+    ReturnedQuantity: int = 0
     FreeQty: int
     CostPrice: float
     SellingPrice: float
@@ -83,6 +84,8 @@ class PurchaseResponse(BaseModel):
     TotalDiscount: float
     TotalTax: float
     GrandTotal: float
+    ReturnedAmount: float = 0
+    NetAmount: float = 0
     PaidAmount: float
     RemainingBalance: float
     PurchaseDate: datetime

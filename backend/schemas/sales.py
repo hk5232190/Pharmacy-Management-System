@@ -92,6 +92,8 @@ class SaleHistoryItem(BaseModel):
     CashierName: str
     PaymentMethod: str
     GrandTotal: float
+    ReturnedAmount: float = 0.0
+    NetAmount: float = 0.0
     PaidAmount: float
     Status: str
 

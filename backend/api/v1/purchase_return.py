@@ -2,8 +2,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
 from typing import List
+from decimal import Decimal
 
-from models import PurchaseReturn, PurchaseReturnItem, StockBatch, Supplier, Medicine, Purchase, InventorySettings
+from models import PurchaseReturn, PurchaseReturnItem, StockBatch, Supplier, Medicine, Purchase, PurchaseItem, InventorySettings
 from schemas.purchase_return import PurchaseReturnCreate, PurchaseReturnResponse
 from schemas.base import BaseResponse
 from api.deps import get_current_user, get_db
@@ -35,6 +36,18 @@ def create_purchase_return(
         inv_settings = db.query(InventorySettings).first()
         allow_negative = inv_settings.AllowNegativeStock if inv_settings else False
         
+        # Update Purchase Record
+        purchase = db.query(Purchase).filter(Purchase.PurchaseId == return_in.PurchaseId).first()
+        if not purchase:
+            db.rollback()
+            raise HTTPException(status_code=404, detail="Purchase record not found")
+            
+        purchase.ReturnedAmount += Decimal(str(return_in.TotalRefundAmount))
+        purchase.NetAmount -= Decimal(str(return_in.TotalRefundAmount))
+        if purchase.NetAmount <= 0 and purchase.GrandTotal > 0:
+            purchase.PaymentStatus = 'Returned'
+        
+        
         for item in return_in.items:
             medicine = db.query(Medicine).filter(Medicine.MedicineId == item.MedicineId).first()
             if not medicine:
@@ -50,6 +63,16 @@ def create_purchase_return(
                 ReturnReason=item.ReturnReason
             )
             db.add(new_item)
+            
+            # Update original PurchaseItem
+            purchase_item = db.query(PurchaseItem).filter(
+                PurchaseItem.PurchaseId == purchase.PurchaseId,
+                PurchaseItem.MedicineId == item.MedicineId,
+                PurchaseItem.BatchCode == item.BatchCode
+            ).first()
+            if purchase_item:
+                purchase_item.ReturnedQuantity += item.ReturnQuantity
+            
             
             # Deduct from StockBatch
             existing_batch = db.query(StockBatch).filter(
@@ -81,7 +104,7 @@ def create_purchase_return(
             existing_batch.Quantity -= item.ReturnQuantity
                 
         if return_in.SettlementType == "Adjust in Supplier Balance":
-            supplier.CurrentBalance -= return_in.TotalRefundAmount
+            supplier.CurrentBalance -= Decimal(str(return_in.TotalRefundAmount))
             
         db.commit()
         db.refresh(new_return)

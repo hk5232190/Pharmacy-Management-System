@@ -138,6 +138,7 @@ from schemas.sales import SaleCreate
 from models import SaleItem, AuditLog
 from core.exceptions import ValidationError
 import datetime as dt
+from decimal import Decimal
 
 @router.post("/", response_model=BaseResponse[dict], summary="Complete a sale")
 def complete_sale(
@@ -176,6 +177,7 @@ def complete_sale(
             DiscountAmount=sale_data.DiscountAmount,
             TaxAmount=sale_data.TaxAmount,
             GrandTotal=sale_data.GrandTotal,
+            NetAmount=sale_data.GrandTotal,
             PaidAmount=sale_data.PaidAmount,
             PaymentMethod=sale_data.PaymentMethod,
             Status="Completed" if sale_data.PaidAmount >= sale_data.GrandTotal else "Pending",
@@ -398,7 +400,7 @@ def get_sales_kpi(db: Session = Depends(get_db)):
         end_utc = end_of_today.astimezone().astimezone(timezone.utc).replace(tzinfo=None)
         
         # Today's Sales
-        todays_sales = db.query(func.sum(Sale.GrandTotal)).filter(
+        todays_sales = db.query(func.sum(Sale.NetAmount)).filter(
             Sale.TransactionDate >= start_utc,
             Sale.TransactionDate <= end_utc,
             Sale.Status == "Completed"
@@ -718,7 +720,17 @@ def process_sales_return(
             )
             db.add(ri)
             
+            # Update original SaleItem
+            orig_item.ReturnedQuantity += ret_item.ReturnQuantity
+            
         new_return.TotalRefundAmount = total_refund
+        
+        # Update parent Sale
+        sale.ReturnedAmount += Decimal(str(total_refund))
+        sale.NetAmount -= Decimal(str(total_refund))
+        if sale.NetAmount <= 0 and sale.GrandTotal > 0:
+            sale.Status = 'Returned'
+
 
         # Customer Balance Credit
         if return_data.RefundMode == "Balance" and sale.CustomerId:

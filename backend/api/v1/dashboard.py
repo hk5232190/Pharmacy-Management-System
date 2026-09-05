@@ -21,35 +21,37 @@ def get_dashboard_summary(
 
     # --- Today's Business ---
     # Filtered Sales
-    today_sales = db.query(func.sum(models.Sale.GrandTotal)).filter(
-        func.date(models.Sale.TransactionDate) >= filter_start,
-        func.date(models.Sale.TransactionDate) <= filter_end,
+    today_sales = db.query(func.sum(models.Sale.NetAmount)).filter(
+        func.date(models.Sale.TransactionDate, 'localtime') >= filter_start,
+        func.date(models.Sale.TransactionDate, 'localtime') <= filter_end,
         models.Sale.Status == "Completed"
     ).scalar() or 0.0
 
     # Filtered Purchases
-    today_purchases_gross = db.query(func.sum(models.Purchase.GrandTotal)).filter(
-        func.date(models.Purchase.PurchaseDate) >= filter_start,
-        func.date(models.Purchase.PurchaseDate) <= filter_end
+    today_purchases_gross = db.query(func.sum(models.Purchase.NetAmount)).filter(
+        func.date(models.Purchase.PurchaseDate, 'localtime') >= filter_start,
+        func.date(models.Purchase.PurchaseDate, 'localtime') <= filter_end
     ).scalar() or 0.0
 
     today_returns = db.query(func.sum(models.PurchaseReturn.TotalRefundAmount)).filter(
-        func.date(models.PurchaseReturn.ReturnDate) >= filter_start,
-        func.date(models.PurchaseReturn.ReturnDate) <= filter_end
+        func.date(models.PurchaseReturn.ReturnDate, 'localtime') >= filter_start,
+        func.date(models.PurchaseReturn.ReturnDate, 'localtime') <= filter_end
     ).scalar() or 0.0
 
     today_purchases = float(today_purchases_gross)
 
     # Filtered COGS
     today_cogs = db.query(
-        func.sum(models.SaleItem.Quantity * models.StockBatch.CostPrice)
+        func.sum((models.SaleItem.Quantity - models.SaleItem.ReturnedQuantity) * models.StockBatch.CostPrice)
+    ).select_from(
+        models.SaleItem
     ).join(
         models.StockBatch, models.SaleItem.BatchId == models.StockBatch.BatchId
     ).join(
         models.Sale, models.SaleItem.SalesId == models.Sale.SalesId
     ).filter(
-        func.date(models.Sale.TransactionDate) >= filter_start,
-        func.date(models.Sale.TransactionDate) <= filter_end,
+        func.date(models.Sale.TransactionDate, 'localtime') >= filter_start,
+        func.date(models.Sale.TransactionDate, 'localtime') <= filter_end,
         models.Sale.Status == "Completed"
     ).scalar() or 0.0
 
@@ -57,12 +59,12 @@ def get_dashboard_summary(
 
     # Filtered Transactions
     today_sales_count = db.query(models.Sale).filter(
-        func.date(models.Sale.TransactionDate) >= filter_start,
-        func.date(models.Sale.TransactionDate) <= filter_end
+        func.date(models.Sale.TransactionDate, 'localtime') >= filter_start,
+        func.date(models.Sale.TransactionDate, 'localtime') <= filter_end
     ).count()
     today_purchases_count = db.query(models.Purchase).filter(
-        func.date(models.Purchase.PurchaseDate) >= filter_start,
-        func.date(models.Purchase.PurchaseDate) <= filter_end
+        func.date(models.Purchase.PurchaseDate, 'localtime') >= filter_start,
+        func.date(models.Purchase.PurchaseDate, 'localtime') <= filter_end
     ).count()
     transactions_today = today_sales_count + today_purchases_count
 
@@ -89,12 +91,12 @@ def get_dashboard_summary(
         models.Medicine.IsActive == True
     ).count()
 
-    # Out of Stock (quantity == 0 or no batches)
-    # Medicines that either have no batches or their total sum is 0
-    medicines_with_stock = db.query(models.Medicine).outerjoin(
+    # Out of Stock (quantity == 0)
+    # Medicines that have batches but their total sum is 0
+    medicines_with_stock = db.query(models.Medicine).join(
         medicine_stocks, models.Medicine.MedicineId == medicine_stocks.c.MedicineId
     ).filter(
-        (medicine_stocks.c.total_qty == None) | (medicine_stocks.c.total_qty == 0),
+        medicine_stocks.c.total_qty == 0,
         models.Medicine.IsActive == True
     ).count()
     out_of_stock_count = medicines_with_stock
@@ -118,16 +120,18 @@ def get_dashboard_summary(
     ).count()
 
     # --- Overall Financial Summary ---
-    total_sales = db.query(func.sum(models.Sale.GrandTotal)).filter(
+    total_sales = db.query(func.sum(models.Sale.NetAmount)).filter(
         models.Sale.Status == "Completed"
     ).scalar() or 0.0
 
-    total_purchases_gross = db.query(func.sum(models.Purchase.GrandTotal)).scalar() or 0.0
+    total_purchases_gross = db.query(func.sum(models.Purchase.NetAmount)).scalar() or 0.0
     total_returns = db.query(func.sum(models.PurchaseReturn.TotalRefundAmount)).scalar() or 0.0
     total_purchases = float(total_purchases_gross)
 
     total_cogs = db.query(
-        func.sum(models.SaleItem.Quantity * models.StockBatch.CostPrice)
+        func.sum((models.SaleItem.Quantity - models.SaleItem.ReturnedQuantity) * models.StockBatch.CostPrice)
+    ).select_from(
+        models.SaleItem
     ).join(
         models.StockBatch, models.SaleItem.BatchId == models.StockBatch.BatchId
     ).join(
@@ -228,11 +232,11 @@ def get_dashboard_charts(
 
     # 1. Sales Trend
     sales_results = db.query(
-        func.strftime(fmt, models.Sale.TransactionDate).label('period'),
-        func.sum(models.Sale.GrandTotal).label('total')
+        func.strftime(fmt, models.Sale.TransactionDate, 'localtime').label('period'),
+        func.sum(models.Sale.NetAmount).label('total')
     ).filter(
-        func.date(models.Sale.TransactionDate) >= start_date,
-        func.date(models.Sale.TransactionDate) <= end_date,
+        func.date(models.Sale.TransactionDate, 'localtime') >= start_date,
+        func.date(models.Sale.TransactionDate, 'localtime') <= end_date,
         models.Sale.Status == "Completed"
     ).group_by('period').all()
     for row in sales_results:
@@ -241,38 +245,29 @@ def get_dashboard_charts(
 
     # 2. Purchase Trend
     purchase_results = db.query(
-        func.strftime(fmt, models.Purchase.PurchaseDate).label('period'),
-        func.sum(models.Purchase.GrandTotal).label('total')
+        func.strftime(fmt, models.Purchase.PurchaseDate, 'localtime').label('period'),
+        func.sum(models.Purchase.NetAmount).label('total')
     ).filter(
-        func.date(models.Purchase.PurchaseDate) >= start_date,
-        func.date(models.Purchase.PurchaseDate) <= end_date
+        func.date(models.Purchase.PurchaseDate, 'localtime') >= start_date,
+        func.date(models.Purchase.PurchaseDate, 'localtime') <= end_date
     ).group_by('period').all()
     for row in purchase_results:
         if row.period in purchase_dict:
             purchase_dict[row.period] += float(row.total or 0.0)
 
-    purchase_return_results = db.query(
-        func.strftime(fmt, models.PurchaseReturn.ReturnDate).label('period'),
-        func.sum(models.PurchaseReturn.TotalRefundAmount).label('total')
-    ).filter(
-        func.date(models.PurchaseReturn.ReturnDate) >= start_date,
-        func.date(models.PurchaseReturn.ReturnDate) <= end_date
-    ).group_by('period').all()
-    for row in purchase_return_results:
-        if row.period in purchase_dict:
-            purchase_dict[row.period] -= float(row.total or 0.0)
-
     # 3. Profit Trend (COGS based)
     cogs_results = db.query(
-        func.strftime(fmt, models.Sale.TransactionDate).label('period'),
-        func.sum(models.SaleItem.Quantity * models.StockBatch.CostPrice).label('total_cogs')
+        func.strftime(fmt, models.Sale.TransactionDate, 'localtime').label('period'),
+        func.sum((models.SaleItem.Quantity - models.SaleItem.ReturnedQuantity) * models.StockBatch.CostPrice).label('total_cogs')
+    ).select_from(
+        models.SaleItem
     ).join(
         models.StockBatch, models.SaleItem.BatchId == models.StockBatch.BatchId
     ).join(
         models.Sale, models.SaleItem.SalesId == models.Sale.SalesId
     ).filter(
-        func.date(models.Sale.TransactionDate) >= start_date,
-        func.date(models.Sale.TransactionDate) <= end_date,
+        func.date(models.Sale.TransactionDate, 'localtime') >= start_date,
+        func.date(models.Sale.TransactionDate, 'localtime') <= end_date,
         models.Sale.Status == "Completed"
     ).group_by('period').all()
     
@@ -301,8 +296,8 @@ def get_dashboard_charts(
     ).join(
         models.Sale, models.SaleItem.SalesId == models.Sale.SalesId
     ).filter(
-        func.date(models.Sale.TransactionDate) >= start_date,
-        func.date(models.Sale.TransactionDate) <= end_date,
+        func.date(models.Sale.TransactionDate, 'localtime') >= start_date,
+        func.date(models.Sale.TransactionDate, 'localtime') <= end_date,
         models.Sale.Status == "Completed"
     ).group_by(models.Medicine.BrandName).order_by(func.sum(models.SaleItem.Quantity).desc()).limit(10).all()
 
@@ -322,8 +317,8 @@ def get_dashboard_charts(
     ).join(
         models.Sale, models.SaleItem.SalesId == models.Sale.SalesId
     ).filter(
-        func.date(models.Sale.TransactionDate) >= start_date,
-        func.date(models.Sale.TransactionDate) <= end_date,
+        func.date(models.Sale.TransactionDate, 'localtime') >= start_date,
+        func.date(models.Sale.TransactionDate, 'localtime') <= end_date,
         models.Sale.Status == "Completed"
     ).group_by(func.coalesce(models.Category.CategoryName, 'Uncategorized')).all()
 
@@ -338,10 +333,10 @@ def get_dashboard_charts(
     monthly_purchases_dict = {m: 0.0 for m in twelve_months_seq}
 
     m_sales = db.query(
-        func.strftime('%Y-%m', models.Sale.TransactionDate).label('month'),
+        func.strftime('%Y-%m', models.Sale.TransactionDate, 'localtime').label('month'),
         func.sum(models.Sale.GrandTotal).label('total')
     ).filter(
-        func.date(models.Sale.TransactionDate) >= twelve_months_ago,
+        func.date(models.Sale.TransactionDate, 'localtime') >= twelve_months_ago,
         models.Sale.Status == "Completed"
     ).group_by('month').all()
     for row in m_sales:
@@ -349,10 +344,10 @@ def get_dashboard_charts(
             monthly_sales_dict[row.month] = float(row.total or 0.0)
 
     m_purchases = db.query(
-        func.strftime('%Y-%m', models.Purchase.PurchaseDate).label('month'),
+        func.strftime('%Y-%m', models.Purchase.PurchaseDate, 'localtime').label('month'),
         func.sum(models.Purchase.GrandTotal).label('total')
     ).filter(
-        func.date(models.Purchase.PurchaseDate) >= twelve_months_ago
+        func.date(models.Purchase.PurchaseDate, 'localtime') >= twelve_months_ago
     ).group_by('month').all()
     for row in m_purchases:
         if row.month in monthly_purchases_dict:
@@ -384,8 +379,8 @@ def get_dashboard_widgets(
     
     # 1. Recent Sales
     sales = db.query(models.Sale).filter(
-        func.date(models.Sale.TransactionDate) >= filter_start,
-        func.date(models.Sale.TransactionDate) <= filter_end
+        func.date(models.Sale.TransactionDate, 'localtime') >= filter_start,
+        func.date(models.Sale.TransactionDate, 'localtime') <= filter_end
     ).order_by(models.Sale.TransactionDate.desc()).limit(10).all()
     recent_sales = []
     for s in sales:

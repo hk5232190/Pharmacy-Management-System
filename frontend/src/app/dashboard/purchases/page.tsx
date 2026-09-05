@@ -627,8 +627,8 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
         {activeTab === "history" && (() => {
           const todayTotal = purchaseHistory
             .filter(p => new Date(p.PurchaseDate).toDateString() === new Date().toDateString())
-            .reduce((acc, curr) => acc + curr.GrandTotal, 0);
-          const allTimeTotal = purchaseHistory.reduce((acc, curr) => acc + curr.GrandTotal, 0);
+            .reduce((acc, curr) => acc + (curr.NetAmount !== undefined ? curr.NetAmount : curr.GrandTotal), 0);
+          const allTimeTotal = purchaseHistory.reduce((acc, curr) => acc + (curr.NetAmount !== undefined ? curr.NetAmount : curr.GrandTotal), 0);
           const processedReturns = summaryData?.total_returns_count ?? returnsHistory.length;
           const balanceDue = summaryData?.total_balance_due ?? purchaseHistory.reduce((acc, curr) => acc + Math.max(0, curr.GrandTotal - curr.PaidAmount), 0);
           const totalInvoices = summaryData?.total_invoices_count ?? purchaseHistory.length;
@@ -1093,9 +1093,11 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
                     </tr>
                   ) : (
                     paginatedHistory.map((inv, index) => {
-                      const balance = Math.max(0, (inv.GrandTotal || 0) - (inv.PaidAmount || 0));
+                      const effectiveTotal = inv.NetAmount !== undefined ? inv.NetAmount : inv.GrandTotal;
+                      const balance = Math.max(0, effectiveTotal - (inv.PaidAmount || 0));
                       let dynamicStatus = "";
-                      if (balance <= 0) dynamicStatus = "Paid";
+                      if (inv.PaymentStatus === "Returned" || effectiveTotal === 0) dynamicStatus = "Returned";
+                      else if (balance <= 0) dynamicStatus = "Paid";
                       else if ((inv.PaidAmount || 0) > 0) dynamicStatus = "Partial";
                       else dynamicStatus = "Unpaid";
                       
@@ -1112,7 +1114,10 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
                            {(inv as any).SupplierInvNo && <div className="text-xs text-slate-500 mt-0.5">Ref: {(inv as any).SupplierInvNo}</div>}
                         </td>
                         <td className="px-6 py-3">{inv.SupplierName || 'Unknown Supplier'}</td>
-                        <td className="px-6 py-3 text-right font-semibold">₨ {formatNumber(Number(inv.GrandTotal || 0))}</td>
+                        <td className="px-6 py-3 text-right font-semibold">
+                          ₨ {formatNumber(Number(effectiveTotal || 0))}
+                          {(inv as any).ReturnedAmount > 0 && <div className="text-[10px] text-rose-500 font-normal">-₨ {formatNumber(Number((inv as any).ReturnedAmount))} (Ret)</div>}
+                        </td>
                         <td className="px-6 py-3 text-right text-emerald-600">₨ {formatNumber(Number(inv.PaidAmount || 0))}</td>
                         <td className="px-6 py-3 text-right">
                           {balance > 0 ? (
@@ -1125,6 +1130,7 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
                           <span className={cn(
                             "px-2 py-1 rounded-full text-xs font-medium",
                             dynamicStatus === "Paid" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" :
+                            dynamicStatus === "Returned" ? "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400" :
                             dynamicStatus === "Partial" ? "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400" :
                             "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400"
                           )}>

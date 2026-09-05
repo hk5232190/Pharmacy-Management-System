@@ -35,6 +35,7 @@ def create_purchase(
             TotalDiscount=purchase_in.TotalDiscount,
             TotalTax=purchase_in.TotalTax,
             GrandTotal=purchase_in.GrandTotal,
+            NetAmount=purchase_in.GrandTotal,
             PaidAmount=purchase_in.PaidAmount,
             RemainingBalance=purchase_in.RemainingBalance,
             PurchaseDate=purchase_in.PurchaseDate
@@ -118,7 +119,7 @@ def get_purchase_summary(
     today = date.today()
 
     # Today's gross purchases
-    today_purchases_gross = db.query(func.sum(Purchase.GrandTotal)).filter(
+    today_purchases_gross = db.query(func.sum(Purchase.NetAmount)).filter(
         func.date(Purchase.PurchaseDate) == today
     ).scalar() or 0.0
 
@@ -130,7 +131,7 @@ def get_purchase_summary(
     today_purchase_amount = float(today_purchases_gross)
 
     # All-time gross purchases
-    total_purchases_gross = db.query(func.sum(Purchase.GrandTotal)).scalar() or 0.0
+    total_purchases_gross = db.query(func.sum(Purchase.NetAmount)).scalar() or 0.0
 
     # All-time returns
     total_returns_amount = db.query(func.sum(PurchaseReturn.TotalRefundAmount)).scalar() or 0.0

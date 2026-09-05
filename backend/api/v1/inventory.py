@@ -54,7 +54,7 @@ def get_inventory_summary(
             Medicine.MedicineId,
             Medicine.ReorderLevel,
             func.coalesce(func.sum(StockBatch.Quantity), 0).label("total_qty")
-        ).outerjoin(StockBatch, Medicine.MedicineId == StockBatch.MedicineId)\
+        ).join(StockBatch, Medicine.MedicineId == StockBatch.MedicineId)\
          .filter(Medicine.IsActive == True)\
          .group_by(Medicine.MedicineId, Medicine.ReorderLevel).all()
         
@@ -108,7 +108,7 @@ def get_stock_list(
             StockBatch, 
             Category, 
             Company
-        ).outerjoin(StockBatch, Medicine.MedicineId == StockBatch.MedicineId)\
+        ).join(StockBatch, Medicine.MedicineId == StockBatch.MedicineId)\
          .outerjoin(Category, Medicine.CategoryId == Category.CategoryId)\
          .outerjoin(Company, Medicine.CompanyId == Company.CompanyId)
         

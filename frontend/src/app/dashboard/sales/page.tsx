@@ -1535,9 +1535,11 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
                     <tr><td colSpan={9} className="py-8 text-center text-muted-foreground">No invoices found matching criteria.</td></tr>
                   ) : (
                     historyItems.map((item, index) => {
-                      const balanceDue = Math.max(0, item.GrandTotal - (item.PaidAmount || 0));
+                      const effectiveTotal = item.NetAmount !== undefined ? item.NetAmount : item.GrandTotal;
+                      const balanceDue = Math.max(0, effectiveTotal - (item.PaidAmount || 0));
                       let statusBadge = { label: "Unpaid", color: "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-400" };
-                      if (balanceDue === 0) statusBadge = { label: "Paid", color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400" };
+                      if (item.Status === "Returned" || effectiveTotal === 0) statusBadge = { label: "Returned", color: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400" };
+                      else if (balanceDue === 0) statusBadge = { label: "Paid", color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400" };
                       else if ((item.PaidAmount || 0) > 0) statusBadge = { label: "Partial", color: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400" };
                       
                       return (
@@ -1546,7 +1548,10 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
                           <td className="px-3 py-3 font-medium text-muted-foreground">{item.TransactionDate}</td>
                           <td className="px-3 py-3 font-mono font-bold text-foreground">{item.InvoiceNumber}</td>
                           <td className="px-3 py-3">{item.CustomerName}</td>
-                          <td className="px-3 py-3 text-right font-bold">{formatCurrency(item.GrandTotal)}</td>
+                          <td className="px-3 py-3 text-right font-bold">
+                            {formatCurrency(effectiveTotal)}
+                            {item.ReturnedAmount > 0 && <div className="text-[10px] text-rose-500 font-normal">-{formatCurrency(item.ReturnedAmount)} (Ret)</div>}
+                          </td>
                           <td className="px-3 py-3 text-right font-medium text-emerald-600">{formatCurrency(item.PaidAmount || 0)}</td>
                           <td className={cn("px-3 py-3 text-right font-bold", balanceDue > 0 ? "text-rose-500" : "text-muted-foreground")}>
                             {formatCurrency(balanceDue)}

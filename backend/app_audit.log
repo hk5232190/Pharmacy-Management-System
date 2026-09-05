@@ -1589,3 +1589,187 @@ NoneType: None
 2026-09-05 21:37:23,165 - apscheduler.scheduler - INFO - Scheduler started
 2026-09-05 21:37:23,196 - pms - INFO - Verified notifications table in database.
 2026-09-05 21:37:23,541 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-05 22:42:50,082 - pms - INFO - AUDIT: [SCREEN_LOCKED] Screen automatically locked due to inactivity (User: admin)
+2026-09-06 00:15:01,395 - pms - INFO - AUDIT: [SCREEN_UNLOCKED] Screen unlocked successfully by user (User: admin)
+2026-09-06 00:45:50,089 - pms - INFO - AUDIT: [SCREEN_LOCKED] Screen automatically locked due to inactivity (User: admin)
+2026-09-06 01:21:09,371 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-06 01:21:09,401 - apscheduler.scheduler - INFO - Scheduler started
+2026-09-06 01:21:09,429 - pms - INFO - Verified notifications table in database.
+2026-09-06 01:21:09,612 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-06 01:22:03,656 - pms - INFO - AUDIT: [SCREEN_UNLOCKED] Screen unlocked successfully by user (User: admin)
+2026-09-06 02:04:42,084 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-06 02:04:42,149 - apscheduler.scheduler - INFO - Scheduler started
+2026-09-06 02:04:42,165 - pms - INFO - Verified notifications table in database.
+2026-09-06 02:04:42,499 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-06 02:04:56,212 - pms - ERROR - Unhandled Exception caught: Don't know how to join to <Mapper at 0x1bab3e6ba10; StockBatch>. Please use the .select_from() method to establish an explicit left side, as well as providing an explicit ON clause if not present already to help resolve the ambiguity. | Path: /api/v1/dashboard/summary
+NoneType: None
+2026-09-06 02:04:57,207 - pms - ERROR - Unhandled Exception caught: Don't know how to join to <Mapper at 0x1bab3e6ba10; StockBatch>. Please use the .select_from() method to establish an explicit left side, as well as providing an explicit ON clause if not present already to help resolve the ambiguity. | Path: /api/v1/dashboard/summary
+NoneType: None
+2026-09-06 02:05:29,618 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-06 02:05:29,675 - apscheduler.scheduler - INFO - Scheduler started
+2026-09-06 02:05:29,707 - pms - INFO - Verified notifications table in database.
+2026-09-06 02:05:30,451 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-06 02:05:33,550 - pms - ERROR - Unhandled Exception caught: Don't know how to join to <Mapper at 0x159ff21ba10; StockBatch>. Please use the .select_from() method to establish an explicit left side, as well as providing an explicit ON clause if not present already to help resolve the ambiguity. | Path: /api/v1/dashboard/summary
+NoneType: None
+2026-09-06 02:05:33,734 - pms - ERROR - Unhandled Exception caught: Don't know how to join to <Mapper at 0x159ff21ba10; StockBatch>. Please use the .select_from() method to establish an explicit left side, as well as providing an explicit ON clause if not present already to help resolve the ambiguity. | Path: /api/v1/dashboard/summary
+NoneType: None
+2026-09-06 02:05:37,361 - pms - ERROR - Unhandled Exception caught: Don't know how to join to <Mapper at 0x159ff21ba10; StockBatch>. Please use the .select_from() method to establish an explicit left side, as well as providing an explicit ON clause if not present already to help resolve the ambiguity. | Path: /api/v1/dashboard/summary
+NoneType: None
+2026-09-06 02:05:37,439 - pms - ERROR - Unhandled Exception caught: Don't know how to join to <Mapper at 0x159ff21ba10; StockBatch>. Please use the .select_from() method to establish an explicit left side, as well as providing an explicit ON clause if not present already to help resolve the ambiguity. | Path: /api/v1/dashboard/summary
+NoneType: None
+2026-09-06 02:06:34,590 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-06 02:06:34,617 - apscheduler.scheduler - INFO - Scheduler started
+2026-09-06 02:06:34,636 - pms - INFO - Verified notifications table in database.
+2026-09-06 02:06:35,246 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-06 02:06:40,815 - pms - ERROR - Unhandled Exception caught: Don't know how to join to <Mapper at 0x23deee9ba10; StockBatch>. Please use the .select_from() method to establish an explicit left side, as well as providing an explicit ON clause if not present already to help resolve the ambiguity. | Path: /api/v1/dashboard/summary
+NoneType: None
+2026-09-06 02:06:40,888 - pms - ERROR - Unhandled Exception caught: Don't know how to join to <Mapper at 0x23deee9ba10; StockBatch>. Please use the .select_from() method to establish an explicit left side, as well as providing an explicit ON clause if not present already to help resolve the ambiguity. | Path: /api/v1/dashboard/summary
+NoneType: None
+2026-09-06 02:09:53,402 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-06 02:09:53,457 - apscheduler.scheduler - INFO - Scheduler started
+2026-09-06 02:09:53,473 - pms - INFO - Verified notifications table in database.
+2026-09-06 02:09:53,931 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-06 02:10:00,075 - pms - ERROR - Unhandled Exception caught: Don't know how to join to <Mapper at 0x220fcd4ba10; StockBatch>. Please use the .select_from() method to establish an explicit left side, as well as providing an explicit ON clause if not present already to help resolve the ambiguity. | Path: /api/v1/dashboard/summary
+NoneType: None
+2026-09-06 02:10:00,181 - pms - ERROR - Unhandled Exception caught: Don't know how to join to <Mapper at 0x220fcd4ba10; StockBatch>. Please use the .select_from() method to establish an explicit left side, as well as providing an explicit ON clause if not present already to help resolve the ambiguity. | Path: /api/v1/dashboard/summary
+NoneType: None
+2026-09-06 02:10:55,184 - pms - ERROR - Unhandled Exception caught: Don't know how to join to <Mapper at 0x220fcd4ba10; StockBatch>. Please use the .select_from() method to establish an explicit left side, as well as providing an explicit ON clause if not present already to help resolve the ambiguity. | Path: /api/v1/dashboard/summary
+NoneType: None
+2026-09-06 02:10:55,220 - pms - ERROR - Unhandled Exception caught: Don't know how to join to <Mapper at 0x220fcd4ba10; StockBatch>. Please use the .select_from() method to establish an explicit left side, as well as providing an explicit ON clause if not present already to help resolve the ambiguity. | Path: /api/v1/dashboard/summary
+NoneType: None
+2026-09-06 02:10:57,974 - pms - ERROR - Unhandled Exception caught: Don't know how to join to <Mapper at 0x220fcd4ba10; StockBatch>. Please use the .select_from() method to establish an explicit left side, as well as providing an explicit ON clause if not present already to help resolve the ambiguity. | Path: /api/v1/dashboard/summary
+NoneType: None
+2026-09-06 02:10:58,043 - pms - ERROR - Unhandled Exception caught: Don't know how to join to <Mapper at 0x220fcd4ba10; StockBatch>. Please use the .select_from() method to establish an explicit left side, as well as providing an explicit ON clause if not present already to help resolve the ambiguity. | Path: /api/v1/dashboard/summary
+NoneType: None
+2026-09-06 02:11:08,488 - pms - ERROR - Unhandled Exception caught: Don't know how to join to <Mapper at 0x220fcd4ba10; StockBatch>. Please use the .select_from() method to establish an explicit left side, as well as providing an explicit ON clause if not present already to help resolve the ambiguity. | Path: /api/v1/dashboard/summary
+NoneType: None
+2026-09-06 02:11:08,584 - pms - ERROR - Unhandled Exception caught: Don't know how to join to <Mapper at 0x220fcd4ba10; StockBatch>. Please use the .select_from() method to establish an explicit left side, as well as providing an explicit ON clause if not present already to help resolve the ambiguity. | Path: /api/v1/dashboard/summary
+NoneType: None
+2026-09-06 02:11:10,799 - pms - ERROR - Unhandled Exception caught: Don't know how to join to <Mapper at 0x220fcd4ba10; StockBatch>. Please use the .select_from() method to establish an explicit left side, as well as providing an explicit ON clause if not present already to help resolve the ambiguity. | Path: /api/v1/dashboard/summary
+NoneType: None
+2026-09-06 02:11:10,925 - pms - ERROR - Unhandled Exception caught: Don't know how to join to <Mapper at 0x220fcd4ba10; StockBatch>. Please use the .select_from() method to establish an explicit left side, as well as providing an explicit ON clause if not present already to help resolve the ambiguity. | Path: /api/v1/dashboard/summary
+NoneType: None
+2026-09-06 02:11:20,058 - pms - ERROR - Unhandled Exception caught: Don't know how to join to <Mapper at 0x220fcd4ba10; StockBatch>. Please use the .select_from() method to establish an explicit left side, as well as providing an explicit ON clause if not present already to help resolve the ambiguity. | Path: /api/v1/dashboard/summary
+NoneType: None
+2026-09-06 02:11:20,129 - pms - ERROR - Unhandled Exception caught: Don't know how to join to <Mapper at 0x220fcd4ba10; StockBatch>. Please use the .select_from() method to establish an explicit left side, as well as providing an explicit ON clause if not present already to help resolve the ambiguity. | Path: /api/v1/dashboard/summary
+NoneType: None
+2026-09-06 02:11:52,000 - pms - ERROR - Unhandled Exception caught: Don't know how to join to <Mapper at 0x220fcd4ba10; StockBatch>. Please use the .select_from() method to establish an explicit left side, as well as providing an explicit ON clause if not present already to help resolve the ambiguity. | Path: /api/v1/dashboard/summary
+NoneType: None
+2026-09-06 02:11:52,068 - pms - ERROR - Unhandled Exception caught: Don't know how to join to <Mapper at 0x220fcd4ba10; StockBatch>. Please use the .select_from() method to establish an explicit left side, as well as providing an explicit ON clause if not present already to help resolve the ambiguity. | Path: /api/v1/dashboard/summary
+NoneType: None
+2026-09-06 02:12:38,496 - pms - ERROR - Unhandled Exception caught: Don't know how to join to <Mapper at 0x220fcd4ba10; StockBatch>. Please use the .select_from() method to establish an explicit left side, as well as providing an explicit ON clause if not present already to help resolve the ambiguity. | Path: /api/v1/dashboard/summary
+NoneType: None
+2026-09-06 02:12:38,530 - pms - ERROR - Unhandled Exception caught: Don't know how to join to <Mapper at 0x220fcd4ba10; StockBatch>. Please use the .select_from() method to establish an explicit left side, as well as providing an explicit ON clause if not present already to help resolve the ambiguity. | Path: /api/v1/dashboard/summary
+NoneType: None
+2026-09-06 02:13:32,939 - pms - ERROR - Unhandled Exception caught: Don't know how to join to <Mapper at 0x220fcd4ba10; StockBatch>. Please use the .select_from() method to establish an explicit left side, as well as providing an explicit ON clause if not present already to help resolve the ambiguity. | Path: /api/v1/dashboard/summary
+NoneType: None
+2026-09-06 02:13:33,014 - pms - ERROR - Unhandled Exception caught: Don't know how to join to <Mapper at 0x220fcd4ba10; StockBatch>. Please use the .select_from() method to establish an explicit left side, as well as providing an explicit ON clause if not present already to help resolve the ambiguity. | Path: /api/v1/dashboard/summary
+NoneType: None
+2026-09-06 02:15:00,278 - pms - ERROR - Unhandled Exception caught: Don't know how to join to <Mapper at 0x220fcd4ba10; StockBatch>. Please use the .select_from() method to establish an explicit left side, as well as providing an explicit ON clause if not present already to help resolve the ambiguity. | Path: /api/v1/dashboard/summary
+NoneType: None
+2026-09-06 02:15:00,353 - pms - ERROR - Unhandled Exception caught: Don't know how to join to <Mapper at 0x220fcd4ba10; StockBatch>. Please use the .select_from() method to establish an explicit left side, as well as providing an explicit ON clause if not present already to help resolve the ambiguity. | Path: /api/v1/dashboard/summary
+NoneType: None
+2026-09-06 02:15:10,376 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-06 02:15:10,388 - apscheduler.scheduler - INFO - Scheduler started
+2026-09-06 02:15:10,393 - pms - INFO - Verified notifications table in database.
+2026-09-06 02:15:10,510 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-06 02:16:56,722 - pms - ERROR - Unhandled Exception caught: Don't know how to join to <Mapper at 0x220fcd4ba10; StockBatch>. Please use the .select_from() method to establish an explicit left side, as well as providing an explicit ON clause if not present already to help resolve the ambiguity. | Path: /api/v1/dashboard/summary
+NoneType: None
+2026-09-06 02:16:56,783 - pms - ERROR - Unhandled Exception caught: Don't know how to join to <Mapper at 0x220fcd4ba10; StockBatch>. Please use the .select_from() method to establish an explicit left side, as well as providing an explicit ON clause if not present already to help resolve the ambiguity. | Path: /api/v1/dashboard/summary
+NoneType: None
+2026-09-06 02:16:59,400 - pms - ERROR - Unhandled Exception caught: Don't know how to join to <Mapper at 0x220fcd4ba10; StockBatch>. Please use the .select_from() method to establish an explicit left side, as well as providing an explicit ON clause if not present already to help resolve the ambiguity. | Path: /api/v1/dashboard/summary
+NoneType: None
+2026-09-06 02:16:59,471 - pms - ERROR - Unhandled Exception caught: Don't know how to join to <Mapper at 0x220fcd4ba10; StockBatch>. Please use the .select_from() method to establish an explicit left side, as well as providing an explicit ON clause if not present already to help resolve the ambiguity. | Path: /api/v1/dashboard/summary
+NoneType: None
+2026-09-06 02:17:29,970 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-06 02:17:29,993 - apscheduler.scheduler - INFO - Scheduler started
+2026-09-06 02:17:30,009 - pms - INFO - Verified notifications table in database.
+2026-09-06 02:17:30,261 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-06 02:17:35,069 - pms - ERROR - Unhandled Exception caught: Don't know how to join to <Mapper at 0x27cacdbba10; StockBatch>. Please use the .select_from() method to establish an explicit left side, as well as providing an explicit ON clause if not present already to help resolve the ambiguity. | Path: /api/v1/dashboard/summary
+NoneType: None
+2026-09-06 02:17:35,539 - pms - ERROR - Unhandled Exception caught: Don't know how to join to <Mapper at 0x27cacdbba10; StockBatch>. Please use the .select_from() method to establish an explicit left side, as well as providing an explicit ON clause if not present already to help resolve the ambiguity. | Path: /api/v1/dashboard/summary
+NoneType: None
+2026-09-06 02:17:39,726 - pms - ERROR - Unhandled Exception caught: Don't know how to join to <Mapper at 0x27cacdbba10; StockBatch>. Please use the .select_from() method to establish an explicit left side, as well as providing an explicit ON clause if not present already to help resolve the ambiguity. | Path: /api/v1/dashboard/summary
+NoneType: None
+2026-09-06 02:17:39,802 - pms - ERROR - Unhandled Exception caught: Don't know how to join to <Mapper at 0x27cacdbba10; StockBatch>. Please use the .select_from() method to establish an explicit left side, as well as providing an explicit ON clause if not present already to help resolve the ambiguity. | Path: /api/v1/dashboard/summary
+NoneType: None
+2026-09-06 02:17:59,950 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-06 02:17:59,991 - apscheduler.scheduler - INFO - Scheduler started
+2026-09-06 02:18:00,007 - pms - INFO - Verified notifications table in database.
+2026-09-06 02:18:00,343 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-06 02:18:08,297 - pms - ERROR - Unhandled Exception caught: Don't know how to join to <Mapper at 0x1683cbaba10; StockBatch>. Please use the .select_from() method to establish an explicit left side, as well as providing an explicit ON clause if not present already to help resolve the ambiguity. | Path: /api/v1/dashboard/summary
+NoneType: None
+2026-09-06 02:18:08,372 - pms - ERROR - Unhandled Exception caught: Don't know how to join to <Mapper at 0x1683cbaba10; StockBatch>. Please use the .select_from() method to establish an explicit left side, as well as providing an explicit ON clause if not present already to help resolve the ambiguity. | Path: /api/v1/dashboard/summary
+NoneType: None
+2026-09-06 02:19:32,595 - pms - ERROR - Unhandled Exception caught: Don't know how to join to <Mapper at 0x1683cbaba10; StockBatch>. Please use the .select_from() method to establish an explicit left side, as well as providing an explicit ON clause if not present already to help resolve the ambiguity. | Path: /api/v1/dashboard/summary
+NoneType: None
+2026-09-06 02:19:36,359 - pms - ERROR - Unhandled Exception caught: Don't know how to join to <Mapper at 0x1683cbaba10; StockBatch>. Please use the .select_from() method to establish an explicit left side, as well as providing an explicit ON clause if not present already to help resolve the ambiguity. | Path: /api/v1/dashboard/summary
+NoneType: None
+2026-09-06 02:19:36,434 - pms - ERROR - Unhandled Exception caught: Don't know how to join to <Mapper at 0x1683cbaba10; StockBatch>. Please use the .select_from() method to establish an explicit left side, as well as providing an explicit ON clause if not present already to help resolve the ambiguity. | Path: /api/v1/dashboard/summary
+NoneType: None
+2026-09-06 02:20:50,525 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-06 02:20:50,615 - apscheduler.scheduler - INFO - Scheduler started
+2026-09-06 02:20:50,649 - pms - INFO - Verified notifications table in database.
+2026-09-06 02:20:51,036 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-06 02:22:42,363 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-06 02:22:42,391 - apscheduler.scheduler - INFO - Scheduler started
+2026-09-06 02:22:42,406 - pms - INFO - Verified notifications table in database.
+2026-09-06 02:22:42,730 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-06 02:25:12,579 - pms - INFO - Safe Data Reset | SUCCESS | User: admin | Snapshot: pre_reset_snapshot_20260906_022512.sqlite
+2026-09-06 02:25:14,537 - pms - INFO - Clear Temp Data | User: admin | Deleted 0 files | Reclaimed: 0.00 KB
+2026-09-06 02:25:48,418 - pms - INFO - AUDIT: User admin imported 5 categories. Skipped: 0. Errors: 0
+2026-09-06 02:26:33,506 - pms - INFO - Safe Data Reset | SUCCESS | User: admin | Snapshot: pre_reset_snapshot_20260906_022633.sqlite
+2026-09-06 02:26:34,373 - pms - INFO - Clear Temp Data | User: admin | Deleted 0 files | Reclaimed: 0.00 KB
+2026-09-06 02:26:34,942 - pms - INFO - Clear Temp Data | User: admin | Deleted 0 files | Reclaimed: 0.00 KB
+2026-09-06 02:26:53,476 - pms - INFO - AUDIT: User admin imported 5 categories. Skipped: 0. Errors: 0
+2026-09-06 02:27:00,526 - pms - INFO - AUDIT: User admin imported 5 companies. Skipped: 0. Errors: 0
+2026-09-06 02:27:08,268 - pms - INFO - AUDIT: User admin imported 5 suppliers. Skipped: 0. Errors: 0
+2026-09-06 02:27:14,022 - pms - INFO - AUDIT: User admin imported 5 customers. Skipped: 0. Errors: 0
+2026-09-06 02:29:28,466 - pms - INFO - Safe Data Reset | SUCCESS | User: admin | Snapshot: pre_reset_snapshot_20260906_022928.sqlite
+2026-09-06 02:29:30,468 - pms - INFO - Clear Temp Data | User: admin | Deleted 0 files | Reclaimed: 0.00 KB
+2026-09-06 02:33:57,903 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-06 02:33:57,925 - apscheduler.scheduler - INFO - Scheduler started
+2026-09-06 02:33:57,933 - pms - INFO - Verified notifications table in database.
+2026-09-06 02:33:58,197 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-06 02:34:21,706 - pms - INFO - AUDIT: User admin imported 5 categories. Skipped: 0. Errors: 0
+2026-09-06 02:34:28,947 - pms - INFO - AUDIT: User admin imported 5 companies. Skipped: 0. Errors: 0
+2026-09-06 02:34:34,790 - pms - INFO - AUDIT: User admin imported 5 suppliers. Skipped: 0. Errors: 0
+2026-09-06 02:34:40,427 - pms - INFO - AUDIT: User admin imported 5 customers. Skipped: 0. Errors: 0
+2026-09-06 02:38:50,836 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-06 02:38:50,872 - apscheduler.scheduler - INFO - Scheduler started
+2026-09-06 02:38:50,883 - pms - INFO - Verified notifications table in database.
+2026-09-06 02:38:51,166 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-06 02:44:34,537 - pms - INFO - AUDIT: User admin Deleted notification #6 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Calpol').
+2026-09-06 02:44:35,639 - pms - INFO - AUDIT: User admin Deleted notification #5 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Betnovate').
+2026-09-06 02:44:36,528 - pms - INFO - AUDIT: User admin Deleted notification #4 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Amoxil 500mg').
+2026-09-06 02:44:37,070 - pms - INFO - AUDIT: User admin Deleted notification #2 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Gaviscon').
+2026-09-06 02:45:01,080 - pms - INFO - AUDIT: User admin Deleted notification #1 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Amoxil 500mg').
+2026-09-06 02:45:01,717 - pms - INFO - AUDIT: User admin Deleted notification #2 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Gaviscon').
+2026-09-06 02:45:01,997 - pms - INFO - AUDIT: User admin Deleted notification #3 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Betnovate').
+2026-09-06 02:45:02,300 - pms - INFO - AUDIT: User admin Deleted notification #4 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Calpol').
+2026-09-06 02:45:12,893 - pms - INFO - AUDIT: User admin Deleted notification #4 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Calpol').
+2026-09-06 02:45:13,981 - pms - INFO - AUDIT: User admin Deleted notification #3 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Betnovate').
+2026-09-06 02:45:14,652 - pms - INFO - AUDIT: User admin Deleted notification #2 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Gaviscon').
+2026-09-06 02:45:15,301 - pms - INFO - AUDIT: User admin Deleted notification #1 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Amoxil 500mg').
+2026-09-06 02:48:13,330 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-06 02:48:13,358 - apscheduler.scheduler - INFO - Scheduler started
+2026-09-06 02:48:13,385 - pms - INFO - Verified notifications table in database.
+2026-09-06 02:48:13,690 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-06 02:55:07,259 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-06 02:55:07,296 - apscheduler.scheduler - INFO - Scheduler started
+2026-09-06 02:55:07,348 - pms - INFO - Verified notifications table in database.
+2026-09-06 02:55:07,768 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-06 02:58:23,213 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-06 02:58:23,263 - apscheduler.scheduler - INFO - Scheduler started
+2026-09-06 02:58:23,277 - pms - INFO - Verified notifications table in database.
+2026-09-06 02:58:23,544 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-06 03:36:00,105 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-06 03:36:00,152 - apscheduler.scheduler - INFO - Scheduler started
+2026-09-06 03:36:00,166 - pms - INFO - Verified notifications table in database.
+2026-09-06 03:36:00,462 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-06 03:41:06,588 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-06 03:41:06,608 - apscheduler.scheduler - INFO - Scheduler started
+2026-09-06 03:41:06,619 - pms - INFO - Verified notifications table in database.
+2026-09-06 03:41:06,838 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-06 03:43:27,607 - pms - INFO - Safe Data Reset | SUCCESS | User: admin | Snapshot: pre_reset_snapshot_20260906_034327.sqlite
+2026-09-06 03:43:29,523 - pms - INFO - Clear Temp Data | User: admin | Deleted 0 files | Reclaimed: 0.00 KB
