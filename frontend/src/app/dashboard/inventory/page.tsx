@@ -803,10 +803,9 @@ function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTa
           // Check if it looks like an ISO date (e.g. 2026-08-26T20:05:50)
           if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(val)) {
             const date = new Date(val.endsWith('Z') ? val : val + 'Z');
-            return date.toLocaleString('en-GB', { 
-              day: '2-digit', month: 'short', year: 'numeric', 
-              hour: '2-digit', minute: '2-digit', hour12: true 
-            }).toUpperCase();
+            const d = date.toLocaleDateString('en-GB').replaceAll('/', '-');
+            const t = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+            return `${d} ${t}`;
           }
         }
         
@@ -818,7 +817,7 @@ function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTa
     doc.setFontSize(16);
     doc.text(`Inventory Report - ${title}`, 14, 20);
     doc.setFontSize(10);
-    doc.text(`Generated on: ${new Date().toLocaleString('en-GB', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit', hour12:true }).toUpperCase()}`, 14, 28);
+    doc.text(`Generated on: ${new Date().toLocaleDateString('en-GB').replaceAll('/', '-')} ${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}`, 14, 28);
 
     autoTable(doc, {
       head: [formattedHeaders],

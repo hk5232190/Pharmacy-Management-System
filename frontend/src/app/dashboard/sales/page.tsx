@@ -772,7 +772,7 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
     
     doc.setFontSize(10);
     doc.setTextColor(100, 116, 139);
-    doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 30);
+    doc.text(`Generated on: ${new Date().toLocaleDateString('en-GB').replaceAll('/', '-')} ${new Date().toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit', hour12: true})}`, 14, 30);
     
     const tableColumn = ["Date & Time", "Invoice No.", "Customer", "Total Amount", "Paid", "Balance Due", "Status"];
     const tableRows = historyItems.map(item => [

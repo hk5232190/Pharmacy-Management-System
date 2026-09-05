@@ -1499,7 +1499,7 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
                 <div className="md:text-right">
                   <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Purchase Info</h3>
                   <div className="space-y-1">
-                    <p className="text-sm text-slate-600 dark:text-slate-400">Date: <span className="font-semibold text-slate-900 dark:text-slate-200">{new Date(printData.PurchaseDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span></p>
+                    <p className="text-sm text-slate-600 dark:text-slate-400">Date: <span className="font-semibold text-slate-900 dark:text-slate-200">{new Date(printData.PurchaseDate).toLocaleDateString('en-GB').replaceAll('/', '-')}</span></p>
                     <p className="text-sm text-slate-600 dark:text-slate-400">Status: <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">Completed</span></p>
                   </div>
                 </div>
@@ -1604,7 +1604,7 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
             <div className="text-right">
               <h2 className="text-4xl font-black text-slate-200 tracking-tighter uppercase">{printData.IsReturn ? "Debit Note" : "Invoice"}</h2>
               <p className="text-sm font-semibold text-slate-800 mt-2">No: <span className="text-slate-600 font-mono">{printData.InvoiceNumber}</span></p>
-              <p className="text-sm font-semibold text-slate-800">Date: <span className="text-slate-600 font-mono">{new Date(printData.PurchaseDate).toLocaleDateString('en-GB')}</span></p>
+              <p className="text-sm font-semibold text-slate-800">Date: <span className="text-slate-600 font-mono">{new Date(printData.PurchaseDate).toLocaleDateString('en-GB').replaceAll('/', '-')}</span></p>
             </div>
           </div>
           

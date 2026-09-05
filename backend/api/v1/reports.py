@@ -290,11 +290,18 @@ def fetch_purchase_report_data(
         base_query = base_query.filter(models.Purchase.SupplierId == supplier_id)
 
     completed_purchases = base_query.all()
-    # Assuming Purchase Returns are tracked via PaymentStatus or elsewhere
-    returned_purchases = base_query.filter(models.Purchase.PaymentStatus == 'Returned').all()
+    # Calculate Purchase Returns correctly using the PurchaseReturn model
+    returns_query = db.query(models.PurchaseReturn).filter(
+        func.date(models.PurchaseReturn.ReturnDate) >= start_date,
+        func.date(models.PurchaseReturn.ReturnDate) <= end_date
+    )
+    if supplier_id and supplier_id != "all":
+        returns_query = returns_query.filter(models.PurchaseReturn.SupplierId == supplier_id)
+        
+    returned_purchases = returns_query.all()
 
     total_gross_purchases = sum(float(p.GrandTotal or 0.0) for p in completed_purchases)
-    total_returns = sum(float(p.GrandTotal or 0.0) for p in returned_purchases)
+    total_returns = sum(float(r.TotalRefundAmount or 0.0) for r in returned_purchases)
     net_purchases = total_gross_purchases - total_returns
 
     total_invoices = len(completed_purchases)
@@ -1430,7 +1437,7 @@ def export_sales_report_pdf(req: dict = Body(...), db: Session = Depends(get_db)
     elements = []
     styles = getSampleStyleSheet()
     
-    elements.extend(build_premium_header("Sales Report", f"Period: {sd} to {ed}"))
+    elements.extend(build_premium_header("Sales Report", f"Period: {sd.strftime('%d-%m-%Y')} to {ed.strftime('%d-%m-%Y')}"))
     
     kpi_data = [
         ("Gross Sales", f"Rs. {report_data.summary.TotalGrossSales}", "#3B82F6"),
@@ -1448,7 +1455,7 @@ def export_sales_report_pdf(req: dict = Body(...), db: Session = Depends(get_db)
     for t in report_data.transactions:
         data.append([
             t.InvoiceNo, 
-            t.TransactionDate.strftime("%Y-%m-%d %H:%M"),
+            t.TransactionDate.strftime("%d-%m-%Y %I:%M %p"),
             t.CustomerName[:15], # Truncate long names for PDF fit
             str(t.MedicinesSold),
             str(t.TotalQty),
@@ -1494,7 +1501,7 @@ def export_purchase_report_pdf(req: dict = Body(...), db: Session = Depends(get_
     elements = []
     styles = getSampleStyleSheet()
     
-    elements.extend(build_premium_header("Purchase Report", f"Period: {sd} to {ed}"))
+    elements.extend(build_premium_header("Purchase Report", f"Period: {sd.strftime('%d-%m-%Y')} to {ed.strftime('%d-%m-%Y')}"))
     
     kpi_data = [
         ("Gross Purchases", f"Rs. {report_data.summary.TotalGrossPurchases}", "#3B82F6"),
@@ -1512,7 +1519,7 @@ def export_purchase_report_pdf(req: dict = Body(...), db: Session = Depends(get_
     for t in report_data.transactions:
         data.append([
             t.InvoiceNo, 
-            t.PurchaseDate.strftime("%Y-%m-%d %H:%M"),
+            t.PurchaseDate.strftime("%d-%m-%Y %I:%M %p"),
             t.SupplierName[:15],
             str(t.MedicinesPurchased),
             str(t.TotalQty),
@@ -1558,7 +1565,7 @@ def export_inventory_report_pdf(req: dict = Body(...), db: Session = Depends(get
     elements = []
     styles = getSampleStyleSheet()
     
-    elements.extend(build_premium_header("Inventory Report", f"As of: {ed}"))
+    elements.extend(build_premium_header("Inventory Report", f"As of: {ed.strftime('%d-%m-%Y')}"))
     
     kpi_data = [
         ("Total Items", str(report_data.summary.TotalItemsInStock), "#6366F1"),
@@ -1629,7 +1636,7 @@ def export_medicine_report_pdf(req: dict = Body(...), db: Session = Depends(get_
         'moving': 'Medicine Performance Report'
     }
     
-    elements.extend(build_premium_header(title_map.get(req.report_type, "Medicine Report"), f"Period: {sd} to {ed}" if req.report_type == 'moving' else f"Snapshot As Of: {ed}"))
+    elements.extend(build_premium_header(title_map.get(req.report_type, "Medicine Report"), f"Period: {sd.strftime('%d-%m-%Y')} to {ed.strftime('%d-%m-%Y')}" if req.report_type == 'moving' else f"Snapshot As Of: {ed.strftime('%d-%m-%Y')}"))
     
     kpi_data = [
         ("Total Expired Batches", str(report_data.summary.TotalExpiredBatches), "#EF4444"),
@@ -1649,7 +1656,7 @@ def export_medicine_report_pdf(req: dict = Body(...), db: Session = Depends(get_
                 t.BatchCode,
                 t.SupplierName[:15] if getattr(t, 'SupplierName', None) else '-',
                 str(t.Quantity),
-                t.ExpiryDate.strftime("%Y-%m-%d") if getattr(t, 'ExpiryDate', None) else 'N/A',
+                t.ExpiryDate.strftime("%d-%m-%Y") if getattr(t, 'ExpiryDate', None) else 'N/A',
                 str(t.DaysToExpiry),
                 t.Status
             ])
@@ -1721,7 +1728,7 @@ def export_financial_report_pdf(req: dict = Body(...), db: Session = Depends(get
     elements = []
     styles = getSampleStyleSheet()
     
-    elements.extend(build_premium_header("Profit & Loss Statement", f"Period: {sd} to {ed}"))
+    elements.extend(build_premium_header("Profit & Loss Statement", f"Period: {sd.strftime('%d-%m-%Y')} to {ed.strftime('%d-%m-%Y')}"))
     
     kpi_data = [
         ("Net Revenue", f"Rs. {report_data.summary.TotalRevenue}", "#3B82F6"),

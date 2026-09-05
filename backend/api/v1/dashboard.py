@@ -38,7 +38,7 @@ def get_dashboard_summary(
         func.date(models.PurchaseReturn.ReturnDate) <= filter_end
     ).scalar() or 0.0
 
-    today_purchases = float(today_purchases_gross) - float(today_returns)
+    today_purchases = float(today_purchases_gross)
 
     # Filtered COGS
     today_cogs = db.query(
@@ -124,7 +124,7 @@ def get_dashboard_summary(
 
     total_purchases_gross = db.query(func.sum(models.Purchase.GrandTotal)).scalar() or 0.0
     total_returns = db.query(func.sum(models.PurchaseReturn.TotalRefundAmount)).scalar() or 0.0
-    total_purchases = float(total_purchases_gross) - float(total_returns)
+    total_purchases = float(total_purchases_gross)
 
     total_cogs = db.query(
         func.sum(models.SaleItem.Quantity * models.StockBatch.CostPrice)

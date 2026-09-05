@@ -127,7 +127,7 @@ def get_purchase_summary(
         func.date(PurchaseReturn.ReturnDate) == today
     ).scalar() or 0.0
 
-    today_purchase_amount = float(today_purchases_gross) - float(today_returns_amount)
+    today_purchase_amount = float(today_purchases_gross)
 
     # All-time gross purchases
     total_purchases_gross = db.query(func.sum(Purchase.GrandTotal)).scalar() or 0.0
@@ -135,7 +135,7 @@ def get_purchase_summary(
     # All-time returns
     total_returns_amount = db.query(func.sum(PurchaseReturn.TotalRefundAmount)).scalar() or 0.0
 
-    total_purchase_amount = float(total_purchases_gross) - float(total_returns_amount)
+    total_purchase_amount = float(total_purchases_gross)
 
     # Gross counts (do not subtract returns from invoice counts)
     total_invoices_count = db.query(Purchase).count()

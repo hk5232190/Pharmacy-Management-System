@@ -873,9 +873,9 @@ function ReportsPageInner({
                 <div className="text-right">
                   <h2 className="text-xl font-bold text-slate-800 uppercase tracking-wide">Sales Performance Report</h2>
                   <p className="text-sm text-gray-600 mt-1">
-                    Period: {timeframe === 'custom' && dateRange ? `${new Date(dateRange.start).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })} - ${new Date(dateRange.end).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}` : timeframe.replace(/_/g, ' ').toUpperCase()}
+                    Period: {timeframe === 'custom' && dateRange ? `${new Date(dateRange.start).toLocaleDateString('en-GB').replaceAll('/', '-')} - ${new Date(dateRange.end).toLocaleDateString('en-GB').replaceAll('/', '-')}` : timeframe.replace(/_/g, ' ').toUpperCase()}
                   </p>
-                  <p className="text-xs text-gray-400 mt-0.5">Generated: {new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">Generated: {new Date().toLocaleDateString('en-GB').replaceAll('/', '-')} {new Date().toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit', hour12: true})}</p>
                 </div>
               </div>
 
@@ -2122,7 +2122,7 @@ function ReportsPageInner({
                 <div className="hidden print:block text-center mb-6 border-b-2 border-slate-800 pb-4">
                   <h1 className="text-3xl font-black text-slate-900 uppercase tracking-widest">CarePlus Pharmacy</h1>
                   <h2 className="text-xl font-bold text-slate-800 mt-2">Profit & Loss Statement</h2>
-                  <p className="text-sm text-slate-600 mt-1">Reporting Period: {timeframe === 'custom' && dateRange ? `${dateRange.start} to ${dateRange.end}` : timeframe.replace('_', ' ').toUpperCase()}</p>
+                  <p className="text-sm text-slate-600 mt-1">Reporting Period: {timeframe === 'custom' && dateRange ? `${new Date(dateRange.start).toLocaleDateString('en-GB').replaceAll('/', '-')} to ${new Date(dateRange.end).toLocaleDateString('en-GB').replaceAll('/', '-')}` : timeframe.replace('_', ' ').toUpperCase()}</p>
                 </div>
 
                 <div className="p-4 border-b border-border bg-slate-50/50 dark:bg-secondary/20 flex justify-between items-center print:hidden">
