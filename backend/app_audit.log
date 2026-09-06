@@ -1773,3 +1773,25 @@ NoneType: None
 2026-09-06 03:41:06,838 - pms - INFO - Completed startup system notifications synchronization.
 2026-09-06 03:43:27,607 - pms - INFO - Safe Data Reset | SUCCESS | User: admin | Snapshot: pre_reset_snapshot_20260906_034327.sqlite
 2026-09-06 03:43:29,523 - pms - INFO - Clear Temp Data | User: admin | Deleted 0 files | Reclaimed: 0.00 KB
+2026-09-06 15:02:51,099 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-06 15:02:51,155 - apscheduler.scheduler - INFO - Scheduler started
+2026-09-06 15:02:51,193 - pms - INFO - Verified notifications table in database.
+2026-09-06 15:02:51,564 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-06 15:30:01,250 - pms - INFO - AUDIT: User admin imported 5 categories. Skipped: 0. Errors: 0
+2026-09-06 15:30:07,256 - pms - INFO - AUDIT: User admin imported 5 companies. Skipped: 0. Errors: 0
+2026-09-06 15:30:12,516 - pms - INFO - AUDIT: User admin imported 5 suppliers. Skipped: 0. Errors: 0
+2026-09-06 15:30:20,272 - pms - INFO - AUDIT: User admin imported 5 customers. Skipped: 0. Errors: 0
+2026-09-06 16:46:25,158 - pms - INFO - AUDIT: [SCREEN_LOCKED] Screen automatically locked due to inactivity (User: admin)
+2026-09-06 16:48:17,715 - pms - INFO - AUDIT: [SCREEN_UNLOCKED] Screen unlocked successfully by user (User: admin)
+2026-09-06 17:20:46,908 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-06 17:20:46,943 - apscheduler.scheduler - INFO - Scheduler started
+2026-09-06 17:20:46,996 - pms - INFO - Verified notifications table in database.
+2026-09-06 17:20:47,333 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-06 17:44:23,422 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-06 17:44:23,470 - apscheduler.scheduler - INFO - Scheduler started
+2026-09-06 17:44:23,648 - pms - INFO - Verified notifications table in database.
+2026-09-06 17:44:24,220 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-06 18:00:36,108 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-06 18:00:36,191 - apscheduler.scheduler - INFO - Scheduler started
+2026-09-06 18:00:36,276 - pms - INFO - Verified notifications table in database.
+2026-09-06 18:00:36,893 - pms - INFO - Completed startup system notifications synchronization.

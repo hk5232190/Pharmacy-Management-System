@@ -8,12 +8,10 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { apiClient } from "@/lib/api-client";
 
-const TABS = [
+const MEDICINES_TABS = [
   { name: "Medicines", icon: Pill, href: "/dashboard/masters/medicines" },
   { name: "Categories", icon: Grid2X2, href: "/dashboard/masters/categories" },
   { name: "Companies", icon: Building2, href: "/dashboard/masters/companies" },
-  { name: "Suppliers", icon: Truck, href: "/dashboard/masters/suppliers" },
-  { name: "Customers", icon: Users, href: "/dashboard/masters/customers" },
 ];
 
 interface MastersCounts {
@@ -160,8 +158,7 @@ export default function MastersLayout({ children }: { children: React.ReactNode 
     fetchCounts();
   }, []);
 
-  // Re-fetch counts whenever the active tab changes so additions/deletions
-  // in one tab are reflected in the summary strip immediately.
+  // Re-fetch counts whenever the active tab changes
   useEffect(() => {
     fetchCounts();
   }, [pathname]);
@@ -203,22 +200,58 @@ export default function MastersLayout({ children }: { children: React.ReactNode 
     }
   };
 
+  const isSuppliers = pathname.startsWith("/dashboard/masters/suppliers");
+  const isCustomers = pathname.startsWith("/dashboard/masters/customers");
+
+  // Determine section title and subtitle
+  let title = "Medicines";
+  let description = "Create and maintain medicines catalog, drug categories, and pharmaceutical companies.";
+
+  if (isSuppliers) {
+    title = "Suppliers";
+    description = "Manage vendor contacts, tax details, and supply partner accounts.";
+  } else if (isCustomers) {
+    title = "Customers";
+    description = "Manage patient and customer records, loyalty points, and contact profiles.";
+  }
+
   return (
     <div className="p-6 md:p-8 space-y-6">
 
       {/* Page Header */}
       <div className="flex flex-col md:flex-row justify-between items-start gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Masters</h1>
+          <h1 className="text-3xl font-bold text-foreground">{title}</h1>
           <p className="text-muted-foreground mt-1 text-[15px]">
-            Create and maintain all reference data used throughout the pharmacy system.
+            {description}
           </p>
           
           {/* Breadcrumbs */}
           <div className="flex items-center text-sm text-slate-500 mt-4">
             <Link href="/dashboard" className="hover:text-primary transition-colors">Dashboard</Link>
             <ChevronRight className="w-4 h-4 mx-1" />
-            <span className="text-foreground font-medium">Masters</span>
+            
+            {isSuppliers ? (
+              <span className="text-foreground font-medium">Suppliers</span>
+            ) : isCustomers ? (
+              <span className="text-foreground font-medium">Customers</span>
+            ) : (
+              <>
+                <Link href="/dashboard/masters/medicines" className="hover:text-primary transition-colors">Medicines</Link>
+                {pathname.startsWith("/dashboard/masters/categories") && (
+                  <>
+                    <ChevronRight className="w-4 h-4 mx-1" />
+                    <span className="text-foreground font-medium">Categories</span>
+                  </>
+                )}
+                {pathname.startsWith("/dashboard/masters/companies") && (
+                  <>
+                    <ChevronRight className="w-4 h-4 mx-1" />
+                    <span className="text-foreground font-medium">Companies</span>
+                  </>
+                )}
+              </>
+            )}
           </div>
         </div>
 
@@ -241,69 +274,77 @@ export default function MastersLayout({ children }: { children: React.ReactNode 
         </Button>
       </div>
 
-      {/* KPI Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <MastersKPICard
-          icon={Pill}
-          title="Total Medicines"
-          value={counts.medicines.toLocaleString()}
-          accent="blue"
-          href="/dashboard/masters/medicines"
-        />
-        <MastersKPICard
-          icon={Grid2X2}
-          title="Categories"
-          value={counts.categories.toLocaleString()}
-          accent="emerald"
-          href="/dashboard/masters/categories"
-        />
-        <MastersKPICard
-          icon={Building2}
-          title="Companies"
-          value={counts.companies.toLocaleString()}
-          accent="purple"
-          href="/dashboard/masters/companies"
-        />
-        <MastersKPICard
-          icon={Truck}
-          title="Suppliers"
-          value={counts.suppliers.toLocaleString()}
-          accent="orange"
-          href="/dashboard/masters/suppliers"
-        />
-        <MastersKPICard
-          icon={Users}
-          title="Customers"
-          value={counts.customers.toLocaleString()}
-          accent="cyan"
-          href="/dashboard/masters/customers"
-        />
-      </div>
+      {/* Tabs - only rendered in Medicines section */}
+      {!isSuppliers && !isCustomers && (
+        <div className="flex gap-2 border-b border-border pb-px">
+          {MEDICINES_TABS.map(tab => {
+            const isActive = pathname.startsWith(tab.href);
+            return (
+              <Link
+                key={tab.name}
+                href={tab.href}
+                className={cn(
+                  "flex items-center gap-2 px-6 py-3 rounded-t-xl font-semibold text-[15px] transition-all relative border border-transparent",
+                  isActive
+                    ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                    : "bg-card text-muted-foreground border-border hover:bg-secondary/80 hover:text-foreground"
+                )}
+              >
+                <tab.icon size={18} className={cn(isActive ? "" : "text-slate-400")} />
+                {tab.name}
+                {isActive && (
+                  <div className="absolute -bottom-px left-0 w-full h-[2px] bg-primary"></div>
+                )}
+              </Link>
+            );
+          })}
+        </div>
+      )}
 
-      {/* Tabs */}
-      <div className="flex gap-2 border-b border-border pb-px">
-        {TABS.map(tab => {
-          const isActive = pathname.startsWith(tab.href);
-          return (
-            <Link
-              key={tab.name}
-              href={tab.href}
-              className={cn(
-                "flex items-center gap-2 px-6 py-3 rounded-t-xl font-semibold text-[15px] transition-all relative border border-transparent",
-                isActive
-                  ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                  : "bg-card text-muted-foreground border-border hover:bg-secondary/80 hover:text-foreground"
-              )}
-            >
-              <tab.icon size={18} className={cn(isActive ? "" : "text-slate-400")} />
-              {tab.name}
-              {isActive && (
-                <div className="absolute -bottom-px left-0 w-full h-[2px] bg-primary"></div>
-              )}
-            </Link>
-          );
-        })}
-      </div>
+      {/* KPI Summary Cards */}
+      {isSuppliers ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          <MastersKPICard
+            icon={Truck}
+            title="Total Suppliers"
+            value={counts.suppliers.toLocaleString()}
+            accent="orange"
+          />
+        </div>
+      ) : isCustomers ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          <MastersKPICard
+            icon={Users}
+            title="Total Customers"
+            value={counts.customers.toLocaleString()}
+            accent="cyan"
+          />
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <MastersKPICard
+            icon={Pill}
+            title="Total Medicines"
+            value={counts.medicines.toLocaleString()}
+            accent="blue"
+            href="/dashboard/masters/medicines"
+          />
+          <MastersKPICard
+            icon={Grid2X2}
+            title="Categories"
+            value={counts.categories.toLocaleString()}
+            accent="emerald"
+            href="/dashboard/masters/categories"
+          />
+          <MastersKPICard
+            icon={Building2}
+            title="Companies"
+            value={counts.companies.toLocaleString()}
+            accent="purple"
+            href="/dashboard/masters/companies"
+          />
+        </div>
+      )}
 
       {/* Main Tab Content */}
       <div key={refreshKey} className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">

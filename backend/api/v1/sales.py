@@ -519,6 +519,11 @@ def get_sales_history(
                 else:
                     status = "Partially Returned"
                     
+            ret_amt = float(getattr(sale, "ReturnedAmount", 0) or 0)
+            net_amt = float(sale.NetAmount) if (getattr(sale, "NetAmount", None) is not None and float(sale.NetAmount) > 0) else float(sale.GrandTotal - ret_amt)
+            if ret_amt >= float(sale.GrandTotal) and float(sale.GrandTotal) > 0:
+                net_amt = 0.0
+
             results.append(SaleHistoryItem(
                 SalesId=sale.SalesId,
                 InvoiceNumber=sale.InvoiceNumber,
@@ -527,6 +532,8 @@ def get_sales_history(
                 CashierName=sale.user.Username if sale.user else "Unknown",
                 PaymentMethod=sale.PaymentMethod,
                 GrandTotal=float(sale.GrandTotal),
+                ReturnedAmount=ret_amt,
+                NetAmount=net_amt,
                 PaidAmount=float(sale.PaidAmount),
                 Status=status
             ))

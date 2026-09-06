@@ -914,9 +914,30 @@ function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTa
           </Button>
         </div>
 
-        {/* KPI Cards */}
+        {/* Tabs & Actions */}
+        <div className="flex flex-col xl:flex-row justify-between items-start xl:items-end gap-4 border-b border-border mb-6">
+          <div className="flex gap-2 w-full xl:w-auto overflow-x-auto custom-scrollbar">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => onTabChange(tab.id)}
+                className={cn(
+                  "px-6 py-2.5 font-medium text-sm rounded-t-lg transition-colors whitespace-nowrap",
+                  activeTab === tab.id 
+                    ? "bg-primary text-primary-foreground" 
+                    : "text-muted-foreground hover:bg-secondary/50"
+                )}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+        </div>
+
+        {/* KPI Cards — below the tabs */}
         {activeTab !== "expiry" && (
-          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-7 gap-4 mb-8">
+          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-7 gap-4 mb-6">
             <KPICard title="Total Medicines"  value={summary.total_medicines}                                                              icon={<Pill           className="h-6 w-6" />} accent="blue"    />
             <KPICard title="Total Stock Qty"  value={summary.total_stock_quantity.toLocaleString()}                                       icon={<Package        className="h-6 w-6" />} accent="emerald" />
             <KPICard title="Inventory Value"  value={`${formatCurrency(summary.inventory_value)}`} icon={<CircleDollarSign className="h-6 w-6" />} accent="purple"  />
@@ -927,9 +948,9 @@ function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTa
           </div>
         )}
 
-        {/* Expiry KPI Cards */}
+        {/* Expiry KPI Cards — below the tabs */}
         {activeTab === "expiry" && expiryKpi && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <div className="bg-white dark:bg-card border-l-4 border-l-rose-500 rounded-xl p-4 shadow-sm">
               <div className="flex justify-between items-start">
                 <div>
@@ -979,27 +1000,6 @@ function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTa
             </div>
           </div>
         )}
-
-        {/* Tabs & Actions */}
-        <div className="flex flex-col xl:flex-row justify-between items-start xl:items-end gap-4 border-b border-border mb-6">
-          <div className="flex gap-2 w-full xl:w-auto overflow-x-auto custom-scrollbar">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => onTabChange(tab.id)}
-                className={cn(
-                  "px-6 py-2.5 font-medium text-sm rounded-t-lg transition-colors whitespace-nowrap",
-                  activeTab === tab.id 
-                    ? "bg-primary text-primary-foreground" 
-                    : "text-muted-foreground hover:bg-secondary/50"
-                )}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-
-        </div>
 
         {/* Current Stock Tab Content */}
         {activeTab === "current" && (

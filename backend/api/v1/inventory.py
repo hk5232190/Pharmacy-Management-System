@@ -17,6 +17,7 @@ from api.deps import get_current_user, get_db
 
 router = APIRouter()
 
+@router.get("/kpi", summary="Get inventory summary KPIs (alias)")
 @router.get("/summary", summary="Get inventory summary KPIs")
 def get_inventory_summary(
     db: Session = Depends(get_db),
@@ -28,8 +29,8 @@ def get_inventory_summary(
         
         # Total Stock Quantity & Inventory Value
         stock_agg = db.query(
-            func.sum(StockBatch.Quantity).label("total_qty"),
-            func.sum(StockBatch.Quantity * StockBatch.CostPrice).label("total_value")
+            func.coalesce(func.sum(StockBatch.Quantity), 0).label("total_qty"),
+            func.coalesce(func.sum(StockBatch.Quantity * StockBatch.CostPrice), 0).label("total_value")
         ).first()
         
         total_stock_quantity = int(stock_agg.total_qty or 0)
@@ -48,29 +49,22 @@ def get_inventory_summary(
             StockBatch.ExpiryDate <= alert_days_from_now
         ).count()
         
-        # Low Stock & Out of Stock
-        # We need to aggregate quantity per medicine and compare with ReorderLevel
-        medicine_stocks = db.query(
-            Medicine.MedicineId,
-            Medicine.ReorderLevel,
-            func.coalesce(func.sum(StockBatch.Quantity), 0).label("total_qty")
-        ).join(StockBatch, Medicine.MedicineId == StockBatch.MedicineId)\
-         .filter(Medicine.IsActive == True)\
-         .group_by(Medicine.MedicineId, Medicine.ReorderLevel).all()
-        
-        low_stock_items = sum(1 for m in medicine_stocks if 0 < m.total_qty <= (m.ReorderLevel if m.ReorderLevel and m.ReorderLevel > 0 else low_stock_threshold))
-        out_of_stock_medicines = sum(1 for m in medicine_stocks if m.total_qty == 0)
-        
-        # Overstock Items (arbitrary rule: Stock > 3 * ReorderLevel)
-        overstock_query = text('''
-            SELECT COUNT(*) FROM (
-                SELECT m.MedicineId, SUM(b.Quantity) as total_qty, m.ReorderLevel
-                FROM medicines m
-                JOIN stock_batches b ON m.MedicineId = b.MedicineId
-                GROUP BY m.MedicineId
-            ) AS sub WHERE total_qty > (ReorderLevel * 3) AND ReorderLevel > 0
-        ''')
-        overstock_items = db.execute(overstock_query).scalar() or 0
+        # Batch-level stock calculations aligned with the UI stock table
+        batch_stocks = db.query(
+            StockBatch.Quantity,
+            Medicine.ReorderLevel
+        ).join(Medicine, StockBatch.MedicineId == Medicine.MedicineId)\
+         .filter(Medicine.IsActive == True).all()
+
+        out_of_stock_medicines = sum(1 for b in batch_stocks if b.Quantity <= 0)
+        low_stock_items = sum(
+            1 for b in batch_stocks 
+            if 0 < b.Quantity <= (b.ReorderLevel if b.ReorderLevel and b.ReorderLevel > 0 else low_stock_threshold)
+        )
+        overstock_items = sum(
+            1 for b in batch_stocks
+            if b.ReorderLevel and b.ReorderLevel > 0 and b.Quantity > (b.ReorderLevel * 3)
+        )
         
         return {
             "success": True,

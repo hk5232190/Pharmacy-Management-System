@@ -17,18 +17,18 @@ import { useSystemPreferences } from "@/contexts/SystemPreferencesContext";
 import { NotificationDropdown } from "@/components/layout/notification-dropdown";
 
 const SEARCH_ITEMS = [
-  { title: "Dashboard", desc: "Overview & analytics", icon: LayoutDashboard, href: "/dashboard", category: "Pages" },
-  { title: "Medicines", desc: "Manage medicine catalog", icon: Pill, href: "/dashboard/masters/medicines", category: "Master Data" },
-  { title: "Categories", desc: "Medicine categories", icon: Grid2X2, href: "/dashboard/masters/categories", category: "Master Data" },
-  { title: "Companies", desc: "Pharmaceutical companies", icon: Building2, href: "/dashboard/masters/companies", category: "Master Data" },
-  { title: "Suppliers", desc: "Manage suppliers", icon: Truck, href: "/dashboard/masters/suppliers", category: "Master Data" },
-  { title: "Customers", desc: "Customer records", icon: Users, href: "/dashboard/masters/customers", category: "Master Data" },
-  { title: "Purchases", desc: "Purchase orders & invoices", icon: ShoppingCart, href: "/dashboard/purchases", category: "Pages" },
-  { title: "Inventory", desc: "Stock & inventory tracking", icon: Package, href: "/dashboard/inventory", category: "Pages" },
-  { title: "Sales & POS Billing", desc: "Point of sale & billing", icon: TrendingUp, href: "/dashboard/sales", category: "Pages" },
-  { title: "Reports", desc: "Analytics & export reports", icon: BarChart3, href: "/dashboard/reports", category: "Pages" },
-  { title: "Backup & Restore", desc: "Database backup", icon: Database, href: "/dashboard/backup", category: "Pages" },
-  { title: "Settings", desc: "System preferences", icon: Settings, href: "/dashboard/settings", category: "Pages" },
+  { title: "Dashboard", desc: "Overview & analytics", icon: LayoutDashboard, href: "/dashboard", category: "Modules" },
+  { title: "Sales & POS Billing", desc: "Point of sale & billing", icon: TrendingUp, href: "/dashboard/sales", category: "Modules" },
+  { title: "Purchases", desc: "Purchase orders & invoices", icon: ShoppingCart, href: "/dashboard/purchases", category: "Modules" },
+  { title: "Inventory", desc: "Stock & inventory tracking", icon: Package, href: "/dashboard/inventory", category: "Modules" },
+  { title: "Medicines", desc: "Manage medicine catalog", icon: Pill, href: "/dashboard/masters/medicines", category: "Medicines" },
+  { title: "Categories", desc: "Medicine categories", icon: Grid2X2, href: "/dashboard/masters/categories", category: "Medicines" },
+  { title: "Companies", desc: "Pharmaceutical companies", icon: Building2, href: "/dashboard/masters/companies", category: "Medicines" },
+  { title: "Suppliers", desc: "Manage suppliers", icon: Truck, href: "/dashboard/masters/suppliers", category: "Modules" },
+  { title: "Customers", desc: "Customer records", icon: Users, href: "/dashboard/masters/customers", category: "Modules" },
+  { title: "Reports", desc: "Analytics & export reports", icon: BarChart3, href: "/dashboard/reports", category: "Modules" },
+  { title: "Backup & Restore", desc: "Database backup", icon: Database, href: "/dashboard/backup", category: "Modules" },
+  { title: "Settings", desc: "System preferences", icon: Settings, href: "/dashboard/settings", category: "Modules" },
 ];
 
 function getGreeting(): string {
@@ -155,7 +155,7 @@ export function Header() {
                     <p className="text-sm text-muted-foreground">No results found</p>
                   </div>
                 ) : (
-                  ["Pages", "Master Data"].map(cat => {
+                  ["Modules", "Medicines"].map(cat => {
                     const items = filtered.filter(i => i.category === cat);
                     if (items.length === 0) return null;
                     return (

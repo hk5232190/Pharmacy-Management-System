@@ -1145,8 +1145,13 @@ function ReportsPageInner({
                               <td className="px-4 py-3 text-right font-medium tabular-nums text-emerald-600">{formatCurrency(t.TotalRetailValue)}</td>
                               <td className="px-4 py-3 text-right font-medium tabular-nums text-blue-600">{formatCurrency(margin)}</td>
                               <td className="px-4 py-3 text-left">
-                                <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${t.Status === 'Active' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400'
-                                  }`}>
+                                <span className={cn(
+                                  "px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap",
+                                  (t.Status === 'In Stock' || t.Status === 'Active') ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' :
+                                  t.Status === 'Overstock' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' :
+                                  t.Status === 'Low Stock' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' :
+                                  'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400'
+                                )}>
                                   {t.Status}
                                 </span>
                               </td>

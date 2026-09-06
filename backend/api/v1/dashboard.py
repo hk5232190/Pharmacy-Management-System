@@ -82,24 +82,22 @@ def get_dashboard_summary(
         func.sum(models.StockBatch.Quantity).label('total_qty')
     ).group_by(models.StockBatch.MedicineId).subquery()
 
-    # Low Stock (quantity > 0 but <= reorder level)
-    low_stock_count = db.query(models.Medicine).join(
-        medicine_stocks, models.Medicine.MedicineId == medicine_stocks.c.MedicineId
+    # Low Stock (batches with quantity > 0 but <= reorder level)
+    low_stock_count = db.query(models.StockBatch).join(
+        models.Medicine, models.StockBatch.MedicineId == models.Medicine.MedicineId
     ).filter(
-        medicine_stocks.c.total_qty > 0,
-        medicine_stocks.c.total_qty <= models.Medicine.ReorderLevel,
+        models.StockBatch.Quantity > 0,
+        models.StockBatch.Quantity <= func.coalesce(func.nullif(models.Medicine.ReorderLevel, 0), 10),
         models.Medicine.IsActive == True
     ).count()
 
-    # Out of Stock (quantity == 0)
-    # Medicines that have batches but their total sum is 0
-    medicines_with_stock = db.query(models.Medicine).join(
-        medicine_stocks, models.Medicine.MedicineId == medicine_stocks.c.MedicineId
+    # Out of Stock (batches with quantity <= 0)
+    out_of_stock_count = db.query(models.StockBatch).join(
+        models.Medicine, models.StockBatch.MedicineId == models.Medicine.MedicineId
     ).filter(
-        medicine_stocks.c.total_qty == 0,
+        models.StockBatch.Quantity <= 0,
         models.Medicine.IsActive == True
     ).count()
-    out_of_stock_count = medicines_with_stock
 
     # Expiring Soon
     expiry_threshold = today + timedelta(days=settings.EXPIRY_ALERT_DAYS)

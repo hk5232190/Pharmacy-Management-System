@@ -6,7 +6,8 @@ import {
   Search, Plus, Save, Printer, Eye, X, Trash2, Calendar,
   ArrowDownToLine, CreditCard, ChevronLeft, ChevronRight,
   RefreshCcw,
-  Check
+  Check,
+  ArrowLeft
 } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -67,6 +68,7 @@ interface PurchaseHistory {
   SupplierName: string;
   PurchaseDate: string;
   GrandTotal: number;
+  NetAmount?: number;
   PaidAmount: number;
   PaymentStatus: string;
   items: HistoryItem[];
@@ -623,7 +625,26 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
           </Button>
         </div>
 
-        {/* Stats Cards — only visible on History tab */}
+        {/* Tabs */}
+        <div className="flex gap-2 border-b border-border mb-6">
+          <button              onClick={() => onTabChange("invoice")}
+            className={cn("px-6 py-2.5 font-medium text-sm rounded-t-lg transition-colors", activeTab === "invoice" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary/50")}
+          >
+            Purchase Invoice
+          </button>
+          <button              onClick={() => onTabChange("history")}
+            className={cn("px-6 py-2.5 font-medium text-sm rounded-t-lg transition-colors", activeTab === "history" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary/50")}
+          >
+            Purchase History
+          </button>
+          <button              onClick={() => onTabChange("returns")}
+            className={cn("px-6 py-2.5 font-medium text-sm rounded-t-lg transition-colors", activeTab === "returns" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary/50")}
+          >
+            Purchase Returns
+          </button>
+        </div>
+
+        {/* Stats Cards — below the tabs, visible on History tab */}
         {activeTab === "history" && (() => {
           const todayTotal = purchaseHistory
             .filter(p => new Date(p.PurchaseDate).toDateString() === new Date().toDateString())
@@ -674,26 +695,6 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
             </div>
           );
         })()}
-
-
-        {/* Tabs */}
-        <div className="flex gap-2 border-b border-border mb-6">
-          <button              onClick={() => onTabChange("invoice")}
-            className={cn("px-6 py-2.5 font-medium text-sm rounded-t-lg transition-colors", activeTab === "invoice" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary/50")}
-          >
-            Purchase Invoice
-          </button>
-          <button              onClick={() => onTabChange("history")}
-            className={cn("px-6 py-2.5 font-medium text-sm rounded-t-lg transition-colors", activeTab === "history" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary/50")}
-          >
-            Purchase History
-          </button>
-          <button              onClick={() => onTabChange("returns")}
-            className={cn("px-6 py-2.5 font-medium text-sm rounded-t-lg transition-colors", activeTab === "returns" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary/50")}
-          >
-            Purchase Returns
-          </button>
-        </div>
 
         {/* --- INVOICE TAB --- */}
         {activeTab === "invoice" && (
@@ -1093,10 +1094,15 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
                     </tr>
                   ) : (
                     paginatedHistory.map((inv, index) => {
-                      const effectiveTotal = inv.NetAmount !== undefined ? inv.NetAmount : inv.GrandTotal;
+                      const retAmt = Number((inv as any).ReturnedAmount || 0);
+                      const effectiveTotal = (inv.NetAmount !== undefined && inv.NetAmount !== null && Number(inv.NetAmount) > 0)
+                        ? Number(inv.NetAmount)
+                        : (retAmt > 0 ? Math.max(0, Number(inv.GrandTotal || 0) - retAmt) : Number(inv.GrandTotal || 0));
                       const balance = Math.max(0, effectiveTotal - (inv.PaidAmount || 0));
+                      
+                      const isReturned = inv.PaymentStatus === "Returned" || (retAmt > 0 && retAmt >= Number(inv.GrandTotal || 0));
                       let dynamicStatus = "";
-                      if (inv.PaymentStatus === "Returned" || effectiveTotal === 0) dynamicStatus = "Returned";
+                      if (isReturned) dynamicStatus = "Returned";
                       else if (balance <= 0) dynamicStatus = "Paid";
                       else if ((inv.PaidAmount || 0) > 0) dynamicStatus = "Partial";
                       else dynamicStatus = "Unpaid";
@@ -1138,7 +1144,7 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
                           </span>
                         </td>
                         <td className="px-6 py-3 text-center" onClick={(e) => e.stopPropagation()}>
-                          <div className="flex items-center justify-center gap-2">
+                          <div className="flex items-center justify-center gap-1.5">
                             <Button 
                               variant="ghost" 
                               size="sm" 
@@ -1159,6 +1165,26 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
                               title="Print Invoice"
                             >
                               <Printer className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              disabled={isReturned}
+                              className={cn(
+                                "h-8 w-8 p-0 transition-all",
+                                isReturned
+                                  ? "text-slate-400 dark:text-slate-600 opacity-25 blur-[0.4px] cursor-not-allowed hover:bg-transparent"
+                                  : "text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20"
+                              )}
+                              onClick={() => {
+                                if (!isReturned) {
+                                  handleReturnInvoiceSelect(inv.PurchaseId.toString());
+                                  onTabChange("returns");
+                                }
+                              }}
+                              title={isReturned ? "Already Returned" : "Return"}
+                            >
+                              <ArrowLeft className="h-4 w-4" />
                             </Button>
                           </div>
                         </td>

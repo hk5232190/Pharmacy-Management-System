@@ -459,7 +459,7 @@ def fetch_inventory_report_data(
     expired_valuation = 0.0
     
     # Pre-fetch medicines to avoid N+1 and get Category info
-    medicines_db = db.query(models.Medicine).all()
+    medicines_db = db.query(models.Medicine).filter(models.Medicine.IsActive == True).all()
     medicine_map = {m.MedicineId: m for m in medicines_db}
     
     categories = db.query(models.Category).all()
@@ -488,16 +488,32 @@ def fetch_inventory_report_data(
         val_cost = qty * cost
         val_retail = qty * sell
         
+        min_stock = med.ReorderLevel if med.ReorderLevel and med.ReorderLevel > 0 else low_stock_threshold
+        max_stock = (min_stock * 3) if min_stock > 0 else None
+
         if is_expired:
             expired_valuation += val_cost
             status = 'Expired'
+        elif qty <= 0:
+            status = 'Out of Stock'
+        elif qty <= min_stock:
+            status = 'Low Stock'
+            total_cost_value += val_cost
+            total_retail_value += val_retail
+            med_stock_map[b.MedicineId] += qty
+        elif max_stock is not None and qty > max_stock:
+            status = 'Overstock'
+            total_cost_value += val_cost
+            total_retail_value += val_retail
+            med_stock_map[b.MedicineId] += qty
         else:
             total_cost_value += val_cost
             total_retail_value += val_retail
-            status = 'Active'
+            status = 'In Stock'
             med_stock_map[b.MedicineId] += qty
             
-            # Category Valuation (only active sellable)
+        # Category Valuation (only active sellable)
+        if not is_expired and qty > 0:
             cat_name = cat_map[med.CategoryId].CategoryName if med.CategoryId in cat_map else 'Unknown'
             category_valuation_map[cat_name] = category_valuation_map.get(cat_name, 0.0) + val_cost
             
@@ -514,12 +530,8 @@ def fetch_inventory_report_data(
             Status=status
         ))
     
-    for m in medicines_db:
-        qty = med_stock_map[m.MedicineId]
-        if qty == 0:
-            out_of_stock_count += 1
-        elif qty <= (m.ReorderLevel if m.ReorderLevel and m.ReorderLevel > 0 else low_stock_threshold):
-            low_stock_count += 1
+    low_stock_count = sum(1 for item in stock_items if item.Status == 'Low Stock')
+    out_of_stock_count = sum(1 for item in stock_items if item.Status == 'Out of Stock')
             
     summary = InventoryReportSummary(
         TotalCostValue=total_cost_value,

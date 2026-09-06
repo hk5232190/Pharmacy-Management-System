@@ -908,49 +908,6 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
           </Button>
         </div>
 
-        {/* KPI Cards — hidden on Sales Return tab */}
-        {activeTab !== 'return' && (() => {
-          const salesCards = [
-            { label: "Today's Sales",   val: `${formatCurrency(kpis.todaysSales)}`,     icon: ShoppingCart, accent: "blue" },
-            { label: "Total Revenue",   val: `${formatCurrency(kpis.totalRevenue)}`,     icon: FileText,     accent: "emerald" },
-            { label: "Total Invoices",  val: kpis.totalInvoices.toString(),               icon: FileText,     accent: "indigo" },
-            { label: "Items Sold Today",val: kpis.itemsSoldToday.toString(),              icon: ShoppingCart, accent: "amber" },
-            { label: "Pending Payments",val: `${formatCurrency(kpis.pendingPayments)}`,  icon: FileText,     accent: "rose" },
-          ];
-
-          const accentMap: Record<string, { border: string; iconCls: string; text: string; bg: string }> = {
-            blue:    { border: "border-l-blue-500",    iconCls: "text-blue-500",    text: "text-blue-600 dark:text-blue-400",       bg: "bg-blue-50 dark:bg-blue-900/20" },
-            emerald: { border: "border-l-emerald-500", iconCls: "text-emerald-500", text: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-900/20" },
-            indigo:  { border: "border-l-indigo-500",  iconCls: "text-indigo-500",  text: "text-indigo-600 dark:text-indigo-400",   bg: "bg-indigo-50 dark:bg-indigo-900/20" },
-            amber:   { border: "border-l-amber-500",   iconCls: "text-amber-500",   text: "text-amber-600 dark:text-amber-400",     bg: "bg-amber-50 dark:bg-amber-900/20" },
-            rose:    { border: "border-l-rose-500",    iconCls: "text-rose-500",    text: "text-rose-600 dark:text-rose-400",       bg: "bg-rose-50 dark:bg-rose-900/20" },
-          };
-
-          return (
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-              {salesCards.map(({ label, val, icon: Icon, accent }) => {
-                const a = accentMap[accent];
-                return (
-                  <div
-                    key={label}
-                    className={cn(
-                      "relative bg-white dark:bg-card rounded-xl border border-border border-l-4 shadow-sm p-4 flex flex-col gap-3 overflow-hidden transition-all hover:shadow-md",
-                      a.border
-                    )}
-                  >
-                    <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center shrink-0", a.bg)}>
-                      <Icon className={cn("w-5 h-5", a.iconCls)} />
-                    </div>
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-0.5">{label}</p>
-                      <p className={cn("text-2xl font-extrabold leading-none tabular-nums truncate", a.text)}>{val}</p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          );
-        })()}
 
 
         {/* Action Tabs */}
@@ -981,57 +938,8 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
         {activeTab === 'pos' && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-            {/* Left Column (Customer & Invoice) */}
-            <div className="lg:col-span-3 space-y-6">
-              <div className="bg-white dark:bg-card rounded-xl border border-border shadow-sm p-4">
-                <h3 className="font-semibold text-foreground mb-4">1. Customer & Invoice</h3>
-
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-xs font-medium text-muted-foreground mb-1 block">Invoice No.</label>
-                    <Input readOnly value={invoiceNo} className="bg-secondary/30 font-mono text-sm" placeholder="Generating..." />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="text-xs font-medium text-muted-foreground mb-1 block">Sale Date</label>
-                      <Input readOnly value={new Date().toLocaleDateString('en-GB')} className="bg-secondary/30 text-sm" />
-                    </div>
-                    <div>
-                      <label className="text-xs font-medium text-muted-foreground mb-1 block">Time</label>
-                      <Input readOnly value={new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })} className="bg-secondary/30 text-sm" />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="text-xs font-medium text-muted-foreground mb-1 block">Customer <span className="text-[10px] bg-secondary px-1 py-0.5 rounded ml-1">F4</span></label>
-                    <div className="flex gap-2">
-                      <select
-                        id="customer-select"
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                        value={selectedCustomerId}
-                        onChange={e => setSelectedCustomerId(e.target.value)}
-                      >
-                        <option value="walkin">Walk-in Customer</option>
-                        {customers.map((c: any) => (
-                          <option key={c.CustomerId} value={c.CustomerId}>{c.Name} {c.Phone ? `(${c.Phone})` : ''}</option>
-                        ))}
-                      </select>
-                      <Button onClick={() => setIsAddCustomerOpen(true)} variant="outline" size="icon" className="shrink-0" title="Add New Customer"><Plus className="w-4 h-4" /></Button>
-                    </div>
-                  </div>
-
-
-                  <div>
-                    <label className="text-xs font-medium text-muted-foreground mb-1 block">Salesperson</label>
-                    <Input value={salesperson} onChange={(e) => setSalesperson(e.target.value)} className="text-sm" placeholder="Enter salesperson name" />
-                  </div>
-                </div>
-              </div>
-            </div>
-
             {/* Middle Column (Search & Cart) */}
-            <div className="lg:col-span-6 space-y-6 flex flex-col">
+            <div className="lg:col-span-9 space-y-6 flex flex-col">
               <div className="bg-white dark:bg-card rounded-xl border border-border shadow-sm p-4 relative z-20">
                 <h3 className="font-semibold text-foreground mb-3 flex justify-between items-center">
                   2. Search Medicine
@@ -1535,10 +1443,18 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
                     <tr><td colSpan={9} className="py-8 text-center text-muted-foreground">No invoices found matching criteria.</td></tr>
                   ) : (
                     historyItems.map((item, index) => {
-                      const effectiveTotal = item.NetAmount !== undefined ? item.NetAmount : item.GrandTotal;
+                      const retAmt = Number(item.ReturnedAmount || 0);
+                      const effectiveTotal = (item.NetAmount !== undefined && item.NetAmount !== null && Number(item.NetAmount) > 0)
+                        ? Number(item.NetAmount)
+                        : (retAmt > 0 ? Math.max(0, Number(item.GrandTotal || 0) - retAmt) : Number(item.GrandTotal || 0));
                       const balanceDue = Math.max(0, effectiveTotal - (item.PaidAmount || 0));
+                      
+                      const isReturned = item.Status === "Returned" || item.Status === "Fully Refunded" || (retAmt > 0 && retAmt >= Number(item.GrandTotal || 0));
+                      const isPartiallyReturned = item.Status === "Partially Returned" || (retAmt > 0 && retAmt < Number(item.GrandTotal || 0));
+
                       let statusBadge = { label: "Unpaid", color: "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-400" };
-                      if (item.Status === "Returned" || effectiveTotal === 0) statusBadge = { label: "Returned", color: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400" };
+                      if (isReturned) statusBadge = { label: "Returned", color: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400" };
+                      else if (isPartiallyReturned) statusBadge = { label: "Partial Return", color: "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-400" };
                       else if (balanceDue === 0) statusBadge = { label: "Paid", color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400" };
                       else if ((item.PaidAmount || 0) > 0) statusBadge = { label: "Partial", color: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400" };
                       
@@ -1569,7 +1485,24 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
                               <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-500 hover:bg-slate-100" onClick={() => handleReprint(item.InvoiceNumber, item.CashierName || "", item.PaymentMethod)} title="Reprint">
                                 <Printer className="w-4 h-4" />
                               </Button>
-                              <Button variant="ghost" size="icon" className="h-7 w-7 text-rose-500 hover:bg-rose-50" onClick={() => { onTabChange('return'); setReturnInvoiceNo(item.InvoiceNumber); }} title="Return">
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                disabled={isReturned}
+                                className={cn(
+                                  "h-7 w-7 transition-all",
+                                  isReturned
+                                    ? "text-slate-400 dark:text-slate-600 opacity-25 blur-[0.4px] cursor-not-allowed hover:bg-transparent"
+                                    : "text-rose-500 hover:bg-rose-50"
+                                )}
+                                onClick={() => { 
+                                  if (!isReturned) {
+                                    onTabChange('return'); 
+                                    setReturnInvoiceNo(item.InvoiceNumber); 
+                                  }
+                                }} 
+                                title={isReturned ? "Already Returned" : "Return"}
+                              >
                                 <ArrowLeft className="w-4 h-4" />
                               </Button>
                             </div>

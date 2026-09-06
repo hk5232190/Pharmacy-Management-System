@@ -6,44 +6,40 @@ import { useProfile } from "@/contexts/ProfileContext";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
-  Layers,
-  ShoppingCart,
   TrendingUp,
+  ShoppingCart,
   Package,
-  Wallet,
-  BarChart3,
-  Settings,
-  Wrench,
-  ChevronDown,
-  ChevronRight,
   Pill,
-  Grid2X2,
-  Building2,
   Truck,
   Users,
-  PlusSquare,
+  BarChart3,
   Database,
+  Settings,
+  ChevronDown,
+  ChevronRight,
+  PlusSquare,
   LogOut
 } from "lucide-react";
 import { useState } from "react";
 
-const NAV_ITEMS = [
+interface NavItem {
+  title: string;
+  icon: any;
+  href: string;
+  activePrefixes?: string[];
+  subItems?: { title: string; icon: any; href: string }[];
+}
+
+const NAV_ITEMS: NavItem[] = [
   {
     title: "Dashboard",
     icon: LayoutDashboard,
     href: "/dashboard",
   },
   {
-    title: "Master Data",
-    icon: Layers,
-    href: "/dashboard/masters",
-    subItems: [
-      { title: "Medicines", icon: Pill, href: "/dashboard/masters/medicines" },
-      { title: "Categories", icon: Grid2X2, href: "/dashboard/masters/categories" },
-      { title: "Companies", icon: Building2, href: "/dashboard/masters/companies" },
-      { title: "Suppliers", icon: Truck, href: "/dashboard/masters/suppliers" },
-      { title: "Customers", icon: Users, href: "/dashboard/masters/customers" },
-    ]
+    title: "Sales & POS Billing",
+    icon: TrendingUp,
+    href: "/dashboard/sales",
   },
   {
     title: "Purchases",
@@ -56,9 +52,24 @@ const NAV_ITEMS = [
     href: "/dashboard/inventory",
   },
   {
-    title: "Sales & POS Billing",
-    icon: TrendingUp,
-    href: "/dashboard/sales",
+    title: "Medicines",
+    icon: Pill,
+    href: "/dashboard/masters/medicines",
+    activePrefixes: [
+      "/dashboard/masters/medicines",
+      "/dashboard/masters/categories",
+      "/dashboard/masters/companies",
+    ],
+  },
+  {
+    title: "Suppliers",
+    icon: Truck,
+    href: "/dashboard/masters/suppliers",
+  },
+  {
+    title: "Customers",
+    icon: Users,
+    href: "/dashboard/masters/customers",
   },
   {
     title: "Reports",
@@ -74,7 +85,7 @@ const NAV_ITEMS = [
     title: "Settings",
     icon: Settings,
     href: "/dashboard/settings",
-  }
+  },
 ];
 
 export function Sidebar() {
@@ -142,8 +153,11 @@ export function Sidebar() {
       <div className="flex-1 overflow-y-auto py-4 custom-scrollbar">
         <nav className="space-y-1 px-3">
           {NAV_ITEMS.map((item) => {
-            const isActive = pathname === item.href;
-            const isSectionActive = item.href !== "/dashboard" && pathname.startsWith(item.href);
+            const isExact = pathname === item.href;
+            const isPrefixMatch = item.activePrefixes
+              ? item.activePrefixes.some((p) => pathname.startsWith(p))
+              : (item.href !== "/dashboard" && pathname.startsWith(item.href));
+            const isItemActive = isExact || isPrefixMatch;
             const hasSubItems = item.subItems && item.subItems.length > 0;
             const isOpen = openStates[item.title];
 
@@ -154,13 +168,13 @@ export function Sidebar() {
                     onClick={() => toggleOpen(item.title)}
                     className={cn(
                       "w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 group",
-                      isSectionActive 
+                      isItemActive 
                         ? "text-white" 
                         : "text-slate-400 hover:text-slate-200 hover:bg-white/5"
                     )}
                   >
                     <div className="flex items-center gap-3">
-                      <item.icon className={cn("w-5 h-5", isSectionActive ? "text-white" : "text-slate-500 group-hover:text-slate-400")} />
+                      <item.icon className={cn("w-5 h-5", isItemActive ? "text-white" : "text-slate-500 group-hover:text-slate-400")} />
                       {item.title}
                     </div>
                     {isOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
@@ -170,12 +184,12 @@ export function Sidebar() {
                     href={item.href}
                     className={cn(
                       "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 group",
-                      (isActive || isSectionActive) 
+                      isItemActive 
                         ? "bg-slate-200 text-slate-900 shadow-sm" 
                         : "text-slate-400 hover:text-slate-200 hover:bg-white/5"
                     )}
                   >
-                    <item.icon className={cn("w-5 h-5", (isActive || isSectionActive) ? "text-slate-900" : "text-slate-500 group-hover:text-slate-400")} />
+                    <item.icon className={cn("w-5 h-5", isItemActive ? "text-slate-900" : "text-slate-500 group-hover:text-slate-400")} />
                     {item.title}
                   </Link>
                 )}
