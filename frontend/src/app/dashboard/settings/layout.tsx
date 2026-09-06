@@ -31,6 +31,7 @@ export default function SettingsLayout({ children }: { children: ReactNode }) {
     { name: "Printer & Receipt Settings", href: "/dashboard/settings/printer", icon: Printer },
     { name: "Notification Settings", href: "/dashboard/settings/appearance", icon: Bell },
     { name: "Security & Maintenance", href: "/dashboard/settings/security", icon: Shield },
+    { name: "Backup & Restore", href: "/dashboard/settings/backup-restore", icon: Database },
     { name: "License Information", href: "/dashboard/settings/license", icon: ShieldCheck },
     { name: "About Software", href: "/dashboard/settings/about", icon: Info },
   ];

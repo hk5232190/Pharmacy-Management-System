@@ -27,7 +27,7 @@ const SEARCH_ITEMS = [
   { title: "Suppliers", desc: "Manage suppliers", icon: Truck, href: "/dashboard/masters/suppliers", category: "Modules" },
   { title: "Customers", desc: "Customer records", icon: Users, href: "/dashboard/masters/customers", category: "Modules" },
   { title: "Reports", desc: "Analytics & export reports", icon: BarChart3, href: "/dashboard/reports", category: "Modules" },
-  { title: "Backup & Restore", desc: "Database backup", icon: Database, href: "/dashboard/backup", category: "Modules" },
+  { title: "Backup & Restore", desc: "Database backup", icon: Database, href: "/dashboard/settings/backup-restore", category: "Modules" },
   { title: "Settings", desc: "System preferences", icon: Settings, href: "/dashboard/settings", category: "Modules" },
 ];
 

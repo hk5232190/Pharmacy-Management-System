@@ -168,7 +168,7 @@ export default function BackupDataManagementSettingsPage() {
         <h2 className="text-xl font-bold text-slate-900 dark:text-white">Backup &amp; Data Management</h2>
         <p className="text-sm text-muted-foreground mt-1">
           Configure automatic backup preferences and monitor your database health.{" "}
-          <Link href="/dashboard/backup" className="text-blue-600 hover:underline inline-flex items-center gap-1 font-medium">
+          <Link href="/dashboard/settings/backup-restore" className="text-blue-600 hover:underline inline-flex items-center gap-1 font-medium">
             Open Backup &amp; Restore module <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </p>
@@ -424,7 +424,7 @@ export default function BackupDataManagementSettingsPage() {
           <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">Need to create, restore, or browse backup history?</p>
           <p className="text-xs text-muted-foreground mt-0.5">Use the dedicated Backup &amp; Restore module for full backup management.</p>
         </div>
-        <Link href="/dashboard/backup">
+        <Link href="/dashboard/settings/backup-restore">
           <Button className="gap-2 bg-blue-600 hover:bg-blue-700 text-white shrink-0">
             Open Module <ArrowRight className="h-4 w-4" />
           </Button>

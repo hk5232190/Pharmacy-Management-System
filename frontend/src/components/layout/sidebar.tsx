@@ -77,11 +77,6 @@ const NAV_ITEMS: NavItem[] = [
     href: "/dashboard/reports",
   },
   {
-    title: "Backup & Restore",
-    icon: Database,
-    href: "/dashboard/backup",
-  },
-  {
     title: "Settings",
     icon: Settings,
     href: "/dashboard/settings",
