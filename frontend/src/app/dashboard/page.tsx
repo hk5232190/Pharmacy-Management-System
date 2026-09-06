@@ -282,7 +282,7 @@ function DashboardPageInner({ onRefresh, refreshState }: { onRefresh: () => void
             subtitle={`${getTimeframeLabel()} revenue`}
             icon={<DollarSign className="h-5 w-5" />}
             accent="blue"
-            onClick={() => router.push('/dashboard/sales')}
+            onClick={() => router.push('/dashboard/reports?tab=sales')}
           />
           <DashKPICard
             title={`${getTimeframeLabel()} Purchases`}
@@ -290,7 +290,7 @@ function DashboardPageInner({ onRefresh, refreshState }: { onRefresh: () => void
             subtitle={`${getTimeframeLabel()} procurement`}
             icon={<ShoppingCart className="h-5 w-5" />}
             accent="purple"
-            onClick={() => router.push('/dashboard/purchases')}
+            onClick={() => router.push('/dashboard/reports?tab=purchases')}
           />
           <DashKPICard
             title={`${getTimeframeLabel()} Profit`}
@@ -350,7 +350,7 @@ function DashboardPageInner({ onRefresh, refreshState }: { onRefresh: () => void
             subtitle="Lifetime sales turnover"
             icon={<CircleDollarSign className="h-5 w-5" />}
             accent="blue"
-            onClick={() => router.push('/dashboard/reports')}
+            onClick={() => router.push('/dashboard/reports?tab=sales')}
           />
           <DashKPICard
             title="Total Purchases (All Time)"
@@ -358,7 +358,7 @@ function DashboardPageInner({ onRefresh, refreshState }: { onRefresh: () => void
             subtitle="Lifetime supplier purchases"
             icon={<Truck className="h-5 w-5" />}
             accent="indigo"
-            onClick={() => router.push('/dashboard/reports')}
+            onClick={() => router.push('/dashboard/reports?tab=purchases')}
           />
         </div>
       </div>

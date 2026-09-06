@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { apiClient } from "@/lib/api-client";
 import { toast } from "sonner";
 import jsPDF from 'jspdf';
@@ -140,6 +140,11 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
   const [searchResults, setSearchResults] = useState<ProductSearchResponse[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const [selectedSearchIdx, setSelectedSearchIdx] = useState(-1);
+  // ref map: cart item id -> qty input element
+  const qtyInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  // track last added cart item id to focus its qty
+  const lastAddedIdRef = useRef<string | null>(null);
 
   const [cart, setCart] = useState<CartItem[]>([]);
   const [paidAmount, setPaidAmount] = useState<number>(0);
@@ -301,12 +306,13 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
         toast.error(`Cannot add. All batches for ${product.MedicineName} are expired.`);
         return;
       }
-      bestBatch = inventorySettings.EnableFefo ? validBatches[0] : validBatches[validBatches.length - 1]; // very basic FEFO toggle
+      bestBatch = inventorySettings.EnableFefo ? validBatches[0] : validBatches[validBatches.length - 1];
     } else {
       bestBatch = inventorySettings.EnableFefo ? product.Batches[0] : product.Batches[product.Batches.length - 1];
     }
 
     const uniqueId = `${product.MedicineId}-${bestBatch.BatchId}`;
+    lastAddedIdRef.current = uniqueId;
 
     setCart(prev => {
       const existing = prev.find(i => i.id === uniqueId);
@@ -341,7 +347,17 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
 
     setSearchQuery("");
     setSearchResults([]);
+    setSelectedSearchIdx(-1);
     toast.success(`Added ${product.MedicineName}`);
+
+    // Focus qty input of the newly added item after render
+    setTimeout(() => {
+      const qtyEl = qtyInputRefs.current[uniqueId];
+      if (qtyEl) {
+        qtyEl.focus();
+        qtyEl.select();
+      }
+    }, 50);
   };
 
   const calculateLineTotal = (qty: number, price: number, discountPercent: number, taxRate: number) => {
@@ -405,6 +421,28 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
   const totalQtyCount = cart.reduce((sum, item) => sum + item.Quantity, 0);
   const changeDue = Math.max(0, paidAmount - grandTotal);
   const remainingBalance = Math.max(0, grandTotal - paidAmount);
+
+  // Auto-fill paid amount to grand total when cart changes (keeps it up to date)
+  useEffect(() => {
+    if (cart.length > 0) {
+      setPaidAmount(grandTotal);
+    } else {
+      setPaidAmount(0);
+    }
+  }, [grandTotal]);
+
+  // Quick payment preset amounts (exact + slightly lower rounded values)
+  const paymentPresets = useCallback(() => {
+    if (grandTotal <= 0) return [];
+    const presets: number[] = [grandTotal];
+    
+    // Add slightly lower amounts for quick selection
+    if (grandTotal >= 10) presets.push(grandTotal - 10);
+    if (grandTotal >= 20) presets.push(grandTotal - 20);
+    if (grandTotal >= 30) presets.push(grandTotal - 30);
+    
+    return presets.sort((a, b) => b - a).slice(0, 4);
+  }, [grandTotal]);
 
   const verifyAdminPin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -944,39 +982,64 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
                 <h3 className="font-semibold text-foreground mb-3 flex justify-between items-center">
                   2. Search Medicine
                   <div className="text-xs font-normal text-muted-foreground flex items-center gap-1">
-                    <span className="bg-secondary px-1.5 py-0.5 rounded">F2</span> Focus
+                    <span className="bg-secondary px-1.5 py-0.5 rounded">F2</span> Focus &nbsp;·&nbsp;
+                    <span className="bg-secondary px-1.5 py-0.5 rounded">↑↓</span> Navigate &nbsp;·&nbsp;
+                    <span className="bg-secondary px-1.5 py-0.5 rounded">↵</span> Select
                   </div>
                 </h3>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     ref={searchInputRef}
+                    autoFocus
                     placeholder="Search medicine by name, barcode, or code..."
                     className="pl-9 pr-10 text-base py-6"
                     value={searchQuery}
-                    onChange={e => setSearchQuery(e.target.value)}
+                    onChange={e => { setSearchQuery(e.target.value); setSelectedSearchIdx(-1); }}
+                    onKeyDown={e => {
+                      if (searchResults.length === 0) return;
+                      if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        setSelectedSearchIdx(i => Math.min(i + 1, searchResults.length - 1));
+                      } else if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        setSelectedSearchIdx(i => Math.max(i - 1, 0));
+                      } else if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const idx = selectedSearchIdx >= 0 ? selectedSearchIdx : 0;
+                        if (searchResults[idx]) handleSelectProduct(searchResults[idx]);
+                      } else if (e.key === 'Escape') {
+                        setSearchQuery(''); setSearchResults([]); setSelectedSearchIdx(-1);
+                      }
+                    }}
                   />
                   <Barcode className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground cursor-pointer hover:text-foreground transition-colors" />
 
                   {/* Search Dropdown */}
                   {searchQuery.trim().length >= 2 && (
-                    <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-card border border-border rounded-lg shadow-xl overflow-hidden max-h-80 overflow-y-auto">
+                    <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-card border border-border rounded-lg shadow-xl overflow-hidden max-h-80 overflow-y-auto z-30">
                       {isSearching ? (
                         <div className="p-4 text-center text-sm text-muted-foreground">Searching...</div>
                       ) : searchResults.length === 0 ? (
                         <div className="p-4 text-center text-sm text-muted-foreground">No medicines found with available stock.</div>
                       ) : (
                         <ul className="divide-y divide-border">
-                          {searchResults.map((res) => (
+                          {searchResults.map((res, idx) => (
                             <li
                               key={res.MedicineId}
-                              className="p-3 hover:bg-secondary/20 cursor-pointer transition-colors flex justify-between items-center"
+                              className={cn(
+                                "p-3 cursor-pointer transition-colors flex justify-between items-center",
+                                idx === selectedSearchIdx
+                                  ? "bg-blue-50 dark:bg-blue-900/30 border-l-2 border-blue-500"
+                                  : "hover:bg-secondary/20"
+                              )}
+                              onMouseEnter={() => setSelectedSearchIdx(idx)}
                               onClick={() => handleSelectProduct(res)}
                             >
                               <div>
                                 <p className="font-medium text-foreground flex items-center gap-2">
                                   {res.MedicineName}
-
+                                  {idx === selectedSearchIdx && <span className="text-[10px] bg-blue-100 dark:bg-blue-800 text-blue-600 dark:text-blue-300 px-1.5 py-0.5 rounded font-mono">↵ select</span>}
                                 </p>
                                 <p className="text-xs text-muted-foreground">{res.GenericName}</p>
                               </div>
@@ -991,8 +1054,6 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
                     </div>
                   )}
                 </div>
-
-
               </div>
 
               <div className="bg-white dark:bg-card rounded-xl border border-border shadow-sm flex-1 flex flex-col overflow-hidden relative z-10 min-h-[400px]">
@@ -1040,9 +1101,18 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
                                 <button onClick={() => updateCartItem(item.id, 'Quantity', item.Quantity - 1)} className="px-2 bg-secondary/50 hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors">-</button>
                                 <input
                                   type="number"
+                                  ref={el => { qtyInputRefs.current[item.id] = el; }}
                                   className="w-10 text-center bg-transparent border-none focus:ring-0 text-sm h-full"
                                   value={item.Quantity}
                                   onChange={(e) => updateCartItem(item.id, 'Quantity', parseInt(e.target.value) || 1)}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                      e.preventDefault();
+                                      // Refocus search for next item
+                                      searchInputRef.current?.focus();
+                                      searchInputRef.current?.select();
+                                    }
+                                  }}
                                 />
                                 <button onClick={() => updateCartItem(item.id, 'Quantity', item.Quantity + 1)} className="px-2 bg-secondary/50 hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors">+</button>
                               </div>
@@ -1124,13 +1194,43 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
                       <div className="flex items-center gap-1">
                         <span className="text-muted-foreground font-medium">{currencySymbol} </span>
                         <Input
+                          id="paid-amount-input"
                           type="number"
                           className="w-24 h-9 font-bold text-right"
                           value={paidAmount || ""}
                           onChange={(e) => setPaidAmount(parseFloat(e.target.value) || 0)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              document.getElementById('complete-sale-btn')?.click();
+                            }
+                          }}
                         />
                       </div>
                     </div>
+
+                    {/* Quick Payment Presets */}
+                    {cart.length > 0 && paymentPresets().length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 pt-1">
+                        {paymentPresets().map((preset, i) => (
+                          <button
+                            key={preset}
+                            onClick={() => setPaidAmount(preset)}
+                            className={cn(
+                              "flex-1 min-w-[60px] text-xs font-bold py-1.5 px-2 rounded-lg border transition-all duration-150",
+                              paidAmount === preset
+                                ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+                                : preset === grandTotal
+                                  ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-700 hover:bg-emerald-100"
+                                  : "bg-white dark:bg-secondary text-foreground border-border hover:bg-secondary/50"
+                            )}
+                          >
+                            {formatCurrency(preset)}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
                     <div className="flex justify-between items-center">
                       <span className="font-medium text-emerald-600 dark:text-emerald-500">Change Due</span>
                       <span className="font-bold text-emerald-600 dark:text-emerald-500 text-lg">{formatCurrency(changeDue)}</span>

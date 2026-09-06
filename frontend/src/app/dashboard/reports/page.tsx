@@ -23,13 +23,32 @@ import {
 
 const COLORS = ['#0ea5e9', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#64748b'];
 
+import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
+
 export default function ReportsPage() {
-  const { formatCurrency, currencySymbol } = useSystemPreferences();
+  return (
+    <Suspense fallback={<div className="flex h-screen items-center justify-center">Loading reports...</div>}>
+      <ReportsPageContent />
+    </Suspense>
+  );
+}
+
+function ReportsPageContent() {
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get("tab");
+  const initialTab = tabParam && ['sales', 'purchases', 'inventory', 'medicine', 'financial'].includes(tabParam) ? tabParam : "sales";
 
   const [refreshKey, setRefreshKey] = useState(0);
   const [refreshState, setRefreshState] = useState<"idle" | "loading" | "done">("idle");
-  const [activeTab, setActiveTab] = useState("sales");
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [activeMedicineTab, setActiveMedicineTab] = useState("expiry");
+
+  useEffect(() => {
+    if (tabParam && ['sales', 'purchases', 'inventory', 'medicine', 'financial'].includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, [tabParam]);
 
   const handleRefresh = () => {
     if (refreshState === "loading") return;
