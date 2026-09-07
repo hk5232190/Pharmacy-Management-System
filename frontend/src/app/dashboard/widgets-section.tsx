@@ -8,6 +8,7 @@ import { ShoppingCart, AlertTriangle, Clock, ArrowRight, Printer, PackageSearch 
 import Link from "next/link";
 import { useSystemPreferences } from "@/contexts/SystemPreferencesContext";
 import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 interface WidgetsSectionProps {
   timeframe?: string;
@@ -80,8 +81,15 @@ export default function WidgetsSection({ timeframe = 'today', dateRange = null, 
               {data.recent_sales.map((sale: any) => (
                 <li key={sale.sales_id} className="p-4 hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors group">
                   <div className="flex justify-between items-start mb-1">
-                    <span className="font-medium text-sm text-foreground">{sale.invoice_no}</span>
-                    <span className="font-bold text-sm text-green-600 dark:text-green-500">{formatCurrency(sale.amount)}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-sm text-foreground">{sale.invoice_no}</span>
+                      {(sale.status === "Returned" || sale.status === "Fully Refunded") && (
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-400">RETURNED</span>
+                      )}
+                    </div>
+                    <span className={cn("font-bold text-sm", (sale.status === "Returned" || sale.status === "Fully Refunded") ? "text-rose-500 line-through opacity-70" : "text-green-600 dark:text-green-500")}>
+                      {formatCurrency(sale.amount)}
+                    </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-xs text-muted-foreground">{format(new Date(sale.date), "dd/MM/yyyy, hh:mm a")} • {sale.customer}</span>

@@ -149,7 +149,7 @@ export default function MedicinesPage() {
 
   const handleSave = async () => {
     if (!currentMedicine.BrandName?.trim() || !currentMedicine.GenericName?.trim()) {
-      toast.error("Brand Name and Generic Name are required");
+      toast.error("Brand Name and Formula are required");
       return;
     }
     if (!currentMedicine.CategoryId || !currentMedicine.CompanyId) {
@@ -367,7 +367,7 @@ export default function MedicinesPage() {
                 <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-10 text-center">#</TableHead>
                 <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-24">Code</TableHead>
                 <TableHead className="font-semibold text-slate-700 dark:text-slate-300">Medicine Name</TableHead>
-                <TableHead className="font-semibold text-slate-700 dark:text-slate-300">Generic Name</TableHead>
+                <TableHead className="font-semibold text-slate-700 dark:text-slate-300">Formula</TableHead>
                 <TableHead className="font-semibold text-slate-700 dark:text-slate-300">Category</TableHead>
                 <TableHead className="font-semibold text-slate-700 dark:text-slate-300">Company</TableHead>
                 <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-20">Unit</TableHead>
@@ -503,7 +503,7 @@ export default function MedicinesPage() {
             </div>
             
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-foreground">Generic Name *</label>
+              <label className="text-sm font-semibold text-foreground">Formula *</label>
               <Input 
                 value={currentMedicine.GenericName || ""}
                 onChange={e => setCurrentMedicine({...currentMedicine, GenericName: e.target.value})}
@@ -773,7 +773,7 @@ export default function MedicinesPage() {
               <p className="text-base font-medium">{currentMedicine.BrandName}</p>
             </div>
             <div className="space-y-1">
-              <p className="text-sm font-medium text-muted-foreground">Generic Name</p>
+              <p className="text-sm font-medium text-muted-foreground">Formula</p>
               <p className="text-sm">{currentMedicine.GenericName}</p>
             </div>
             
