@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, Suspense } from "react";
 import { apiClient } from "@/lib/api-client";
 import { toast } from "sonner";
 import jsPDF from 'jspdf';
@@ -30,6 +30,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useSystemPreferences } from "@/contexts/SystemPreferencesContext";
 import { useInventorySettings } from "@/contexts/InventorySettingsContext";
+import { useSearchParams } from "next/navigation";
 
 // --- Interfaces ---
 interface SaleInit {
@@ -72,7 +73,19 @@ interface CartItem {
 }
 
 export default function POSBillingPageWrapper() {
+  return (
+    <Suspense fallback={<div className="flex h-screen items-center justify-center">Loading sales module...</div>}>
+      <POSBillingPageContent />
+    </Suspense>
+  );
+}
+
+function POSBillingPageContent() {
   const { formatCurrency, currencySymbol } = useSystemPreferences();
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get("tab");
+  const initialTab = tabParam === 'history' || tabParam === 'return' ? tabParam : 'pos';
+
   const [refreshKey, setRefreshKey] = useState(0);
   const [refreshState, setRefreshState] = useState<"idle" | "loading" | "done">("idle");
   
@@ -86,7 +99,13 @@ export default function POSBillingPageWrapper() {
     }, 400);
   };
 
-  const [activeTab, setActiveTab] = useState<'pos' | 'history' | 'return'>('pos');
+  const [activeTab, setActiveTab] = useState<'pos' | 'history' | 'return'>(initialTab);
+
+  useEffect(() => {
+    if (tabParam === 'history' || tabParam === 'return' || tabParam === 'pos') {
+      setActiveTab(tabParam);
+    }
+  }, [tabParam]);
 
   return <POSBillingPage key={refreshKey} refreshState={refreshState} onRefresh={handleRefresh} activeTab={activeTab} onTabChange={setActiveTab} />;
 }

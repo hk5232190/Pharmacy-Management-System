@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { ShoppingCart, AlertTriangle, Clock, ArrowRight, Printer, PackageSearch } from "lucide-react";
 import Link from "next/link";
 import { useSystemPreferences } from "@/contexts/SystemPreferencesContext";
+import { format } from "date-fns";
 
 interface WidgetsSectionProps {
   timeframe?: string;
@@ -65,7 +66,7 @@ export default function WidgetsSection({ timeframe = 'today', dateRange = null, 
             <ShoppingCart className="w-5 h-5 text-blue-500" />
             Recent Sales
           </div>
-          <Link href="/dashboard/sales" className="text-xs font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1">
+          <Link href="/dashboard/sales?tab=history" className="text-xs font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1">
             View All <ArrowRight className="w-3 h-3" />
           </Link>
         </div>
@@ -83,7 +84,7 @@ export default function WidgetsSection({ timeframe = 'today', dateRange = null, 
                     <span className="font-bold text-sm text-green-600 dark:text-green-500">{formatCurrency(sale.amount)}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-xs text-muted-foreground">{sale.date} • {sale.customer}</span>
+                    <span className="text-xs text-muted-foreground">{format(new Date(sale.date), "dd/MM/yyyy, hh:mm a")} • {sale.customer}</span>
                     <button className="text-xs font-medium text-slate-500 hover:text-primary flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <Printer className="w-3 h-3" /> Reprint
                     </button>

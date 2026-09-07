@@ -13,6 +13,7 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from "recharts";
 import { cn } from "@/lib/utils";
+import { format } from "date-fns";
 import { useSystemPreferences } from "@/contexts/SystemPreferencesContext";
 
 import {
@@ -792,7 +793,7 @@ function ReportsPageInner({
                                 <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-secondary/30 cursor-pointer" onClick={() => setSelectedInvoice(t)}>
                                   <td className="px-4 py-3 text-muted-foreground">{startIndex + idx + 1}</td>
                                   <td className="px-4 py-3 font-medium text-blue-600">{t.InvoiceNo}</td>
-                                  <td className="px-4 py-3">{new Date(t.TransactionDate).toLocaleDateString()}</td>
+                                  <td className="px-4 py-3">{format(new Date(t.TransactionDate), "dd/MM/yyyy")}</td>
                                   <td className="px-4 py-3">{t.CustomerName}</td>
                                   <td className="px-4 py-3 text-right tabular-nums">{t.MedicinesSold}</td>
                                   <td className="px-4 py-3 text-right tabular-nums">{t.TotalQty}</td>
@@ -1622,7 +1623,7 @@ function ReportsPageInner({
                             <tr key={idx} className="hover:bg-slate-50/80 dark:hover:bg-secondary/30 cursor-pointer transition-colors" onClick={() => setSelectedPurchaseTransaction(t)}>
                               <td className="px-4 py-3 text-muted-foreground">{startIndex + idx + 1}</td>
                               <td className="px-4 py-3 font-medium text-blue-600">{t.InvoiceNo}</td>
-                              <td className="px-4 py-3 whitespace-nowrap">{new Date(t.PurchaseDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
+                              <td className="px-4 py-3 whitespace-nowrap">{format(new Date(t.PurchaseDate), "dd/MM/yyyy")}</td>
                               <td className="px-4 py-3 font-medium">{t.SupplierName}</td>
                               <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">{t.MedicinesPurchased}</td>
                               <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">{t.TotalQty}</td>

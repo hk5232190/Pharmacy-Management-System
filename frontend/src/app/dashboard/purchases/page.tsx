@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { apiClient } from "@/lib/api-client";
 import { useSystemPreferences } from "@/contexts/SystemPreferencesContext";
 import { useInventorySettings } from "@/contexts/InventorySettingsContext";
+import { format } from "date-fns";
 
 // --- Types ---
 interface Supplier {
@@ -414,7 +415,11 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
       GrandTotal: grandTotal,
       PaidAmount: paidAmount,
       RemainingBalance: grandTotal - paidAmount,
-      PurchaseDate: new Date(purchaseDate).toISOString(),
+      PurchaseDate: (() => {
+        const now = new Date();
+        const [y, m, d] = purchaseDate.split('-');
+        return new Date(Number(y), Number(m) - 1, Number(d), now.getHours(), now.getMinutes(), now.getSeconds()).toISOString();
+      })(),
       items: items.map(i => ({
         MedicineId: i.MedicineId,
         BatchCode: i.BatchCode,
@@ -1205,7 +1210,7 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
                         onClick={() => setViewingInvoice(inv)}
                       >
                         <td className="px-6 py-3 text-center font-medium text-muted-foreground">{(historyCurrentPage - 1) * historyPageSize + index + 1}</td>
-                        <td className="px-6 py-3 text-muted-foreground">{new Date(inv.PurchaseDate).toLocaleDateString()}</td>
+                        <td className="px-6 py-3 text-muted-foreground">{format(new Date(inv.PurchaseDate), "dd/MM/yyyy, hh:mm a")}</td>
                         <td className="px-6 py-3">
                            <div className="font-medium text-slate-800 dark:text-slate-200">{inv.InvoiceNumber}</div>
                            {(inv as any).SupplierInvNo && <div className="text-xs text-slate-500 mt-0.5">Ref: {(inv as any).SupplierInvNo}</div>}
@@ -1343,7 +1348,7 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
                       <option value="">-- Select an Invoice to Return --</option>
                       {purchaseHistory.map(inv => (
                         <option key={inv.PurchaseId} value={inv.PurchaseId.toString()}>
-                          {inv.InvoiceNumber} - {inv.SupplierName} ({new Date(inv.PurchaseDate).toLocaleDateString()})
+                          {inv.InvoiceNumber} - {inv.SupplierName} ({format(new Date(inv.PurchaseDate), "dd/MM/yyyy, hh:mm a")})
                         </option>
                       ))}
                     </select>
@@ -1444,7 +1449,7 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
                           .map((r, index) => (
                           <tr key={r.ReturnId} className="hover:bg-secondary/10 transition-colors">
                             <td className="px-4 py-2 text-center font-medium text-muted-foreground">{(returnsCurrentPage - 1) * returnsPageSize + index + 1}</td>
-                            <td className="px-4 py-2 text-muted-foreground">{new Date(r.ReturnDate).toLocaleDateString()}</td>
+                            <td className="px-4 py-2 text-muted-foreground">{format(new Date(r.ReturnDate), "dd/MM/yyyy, hh:mm a")}</td>
                             <td className="px-4 py-2 font-medium">{r.ReturnInvoiceNumber}</td>
                             <td className="px-4 py-2 text-slate-600">{r.OriginalInvoiceNumber || "-"}</td>
                             <td className="px-4 py-2">{r.SupplierName}</td>

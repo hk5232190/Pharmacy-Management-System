@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 def utc_to_local_str(dt_obj):
     if not dt_obj:
         return ""
-    return dt_obj.replace(tzinfo=timezone.utc).astimezone().strftime('%Y-%m-%d %I:%M %p')
+    return dt_obj.replace(tzinfo=timezone.utc).astimezone().strftime('%d/%m/%Y, %I:%M %p')
 
 from models import Sale, Medicine, StockBatch, Customer, StockAdjustment, SaleReturn, BillingSettings, InventorySettings
 from schemas.base import BaseResponse
@@ -40,7 +40,12 @@ def init_sale(
             # Generate Invoice Number from settings
             prefix = billing_settings.InvoicePrefix or "INV-"
             next_num = billing_settings.NextInvoiceNumber or 1
-            invoice_no = f"{prefix}{next_num}"
+            
+            while True:
+                invoice_no = f"{prefix}{next_num}"
+                if not db.query(Sale).filter(Sale.InvoiceNumber == invoice_no).first():
+                    break
+                next_num += 1
             
             if billing_settings.TaxEnabled:
                 default_tax_rate = float(billing_settings.DefaultTaxRate)
@@ -162,12 +167,25 @@ def complete_sale(
         if billing_settings:
             prefix = billing_settings.InvoicePrefix or "INV-"
             next_num = billing_settings.NextInvoiceNumber or 1
-            invoice_no = f"{prefix}{next_num}"
+            
+            # Guard against UNIQUE constraint failures (out-of-sync NextInvoiceNumber)
+            while True:
+                invoice_no = f"{prefix}{next_num}"
+                if not db.query(Sale).filter(Sale.InvoiceNumber == invoice_no).first():
+                    break
+                next_num += 1
+                
             billing_settings.NextInvoiceNumber = next_num + 1
         else:
             current_year_month = datetime.now().strftime("%y%m")
             count = db.query(Sale).filter(Sale.InvoiceNumber.like(f"INV-{current_year_month}-%")).count()
-            invoice_no = f"INV-{current_year_month}-{(count + 1):04d}"
+            
+            # Fallback guard
+            while True:
+                invoice_no = f"INV-{current_year_month}-{(count + 1):04d}"
+                if not db.query(Sale).filter(Sale.InvoiceNumber == invoice_no).first():
+                    break
+                count += 1
 
         new_sale = Sale(
             CustomerId=sale_data.CustomerId,
@@ -776,8 +794,9 @@ def process_sales_return(
             bytes_data += b"*** RETURN RECEIPT ***\n\n"
             bytes_data += ALIGN_LEFT
             bytes_data += f"Return No: {ret_invoice_no}\n".encode()
-            bytes_data += f"Orig Inv : {sale.InvoiceNumber}\n".encode()
-            bytes_data += f"Date     : {datetime.now().strftime('%Y-%m-%d %I:%M %p')}\n".encode()
+            bytes_data += f"Invoice No : {sale.InvoiceNumber}\n".encode()
+            bytes_data += f"Date     : {datetime.now().strftime('%d/%m/%Y, %I:%M %p')}\n".encode()
+            bytes_data += f"Customer : {sale.customer.Name if sale.customer else 'Walk-in'}\n".encode()
             bytes_data += b"------------------------------------------\n"
             for ret_item in return_data.Items:
                 if ret_item.ReturnQuantity <= 0: continue

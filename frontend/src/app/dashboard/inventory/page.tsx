@@ -28,6 +28,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { format } from "date-fns";
 import { useProfile } from "@/contexts/ProfileContext";
 import { useRouter } from "next/navigation";
 import { useSystemPreferences } from "@/contexts/SystemPreferencesContext";
@@ -1292,7 +1293,7 @@ function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTa
                       <tr key={adj.AdjustmentId} className="hover:bg-secondary/10 transition-colors">
                         <td className="px-4 py-3 text-center font-medium text-muted-foreground">{(adjCurrentPage - 1) * adjPageSize + index + 1}</td>
                         <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
-                          {new Date(adj.AdjustmentDate).toLocaleString('en-GB', { day:'2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute:'2-digit', hour12: true }).toUpperCase()}
+                          {format(new Date(adj.AdjustmentDate), "dd/MM/yyyy, hh:mm a")}
                         </td>
                         <td className="px-4 py-3 font-semibold text-foreground">{adj.MedicineName}</td>
                         <td className="px-4 py-3 font-mono text-xs">{adj.BatchCode}</td>
@@ -1666,7 +1667,7 @@ function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTa
                         <tr key={idx} className="hover:bg-secondary/10 transition-colors">
                           <td className="px-4 py-3 text-center font-medium text-muted-foreground">{(safePage - 1) * movPageSize + idx + 1}</td>
                           <td className="px-4 py-3 text-muted-foreground whitespace-nowrap text-xs">
-                            {new Date(mov.Date).toLocaleString('en-GB', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit', hour12: true }).toUpperCase()}
+                            {format(new Date(mov.Date), "dd/MM/yyyy, hh:mm a")}
                           </td>
                           <td className="px-4 py-3 font-semibold text-foreground">{mov.MedicineName}</td>
                           <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{mov.BatchCode}</td>

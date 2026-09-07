@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, or_
 from datetime import date, timedelta
 from api.deps import get_db
 import models
@@ -82,12 +82,18 @@ def get_dashboard_summary(
         func.sum(models.StockBatch.Quantity).label('total_qty')
     ).group_by(models.StockBatch.MedicineId).subquery()
 
-    # Low Stock (batches with quantity > 0 but <= reorder level)
-    low_stock_count = db.query(models.StockBatch).join(
-        models.Medicine, models.StockBatch.MedicineId == models.Medicine.MedicineId
+    active_stocks = db.query(
+        models.StockBatch.MedicineId,
+        func.sum(models.StockBatch.Quantity).label('total_qty')
     ).filter(
-        models.StockBatch.Quantity > 0,
-        models.StockBatch.Quantity <= func.coalesce(func.nullif(models.Medicine.ReorderLevel, 0), 10),
+        or_(models.StockBatch.ExpiryDate > today, models.StockBatch.ExpiryDate.is_(None))
+    ).group_by(models.StockBatch.MedicineId).subquery()
+
+    low_stock_count = db.query(models.Medicine).join(
+        active_stocks, models.Medicine.MedicineId == active_stocks.c.MedicineId
+    ).filter(
+        active_stocks.c.total_qty > 0,
+        active_stocks.c.total_qty <= func.coalesce(func.nullif(models.Medicine.ReorderLevel, 0), 10),
         models.Medicine.IsActive == True
     ).count()
 
@@ -402,13 +408,14 @@ def get_dashboard_widgets(
         models.StockBatch.MedicineId,
         func.sum(models.StockBatch.Quantity).label('total_qty')
     ).filter(
-        models.StockBatch.ExpiryDate > today
+        or_(models.StockBatch.ExpiryDate > today, models.StockBatch.ExpiryDate.is_(None))
     ).group_by(models.StockBatch.MedicineId).subquery()
 
     low_stock_meds = db.query(models.Medicine, active_stocks.c.total_qty).join(
         active_stocks, models.Medicine.MedicineId == active_stocks.c.MedicineId
     ).filter(
-        active_stocks.c.total_qty <= models.Medicine.ReorderLevel,
+        active_stocks.c.total_qty > 0,
+        active_stocks.c.total_qty <= func.coalesce(func.nullif(models.Medicine.ReorderLevel, 0), 10),
         models.Medicine.IsActive == True
     ).all()
 
