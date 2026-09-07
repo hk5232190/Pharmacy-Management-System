@@ -106,6 +106,9 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
   const [searchQuery, setSearchQuery] = useState("");
   const [barcodeQuery, setBarcodeQuery] = useState("");
   
+  const searchInputRef = React.useRef<HTMLInputElement>(null);
+  const [selectedSearchIdx, setSelectedSearchIdx] = useState(-1);
+  
   // Invoice Info
   const [invoiceNo, setInvoiceNo] = useState(`PI-${new Date().getFullYear().toString().slice(-2)}${String(new Date().getMonth()+1).padStart(2, '0')}-${Math.floor(1000 + Math.random() * 9000)}`);
   const [purchaseDate, setPurchaseDate] = useState(() => {
@@ -127,6 +130,28 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
   const [totalTax, setTotalTax] = useState(0);
   const [grandTotal, setGrandTotal] = useState(0);
   const [paidAmount, setPaidAmount] = useState(0);
+
+  // Quick payment preset amounts
+  const paymentPresets = React.useCallback(() => {
+    if (grandTotal <= 0) return [];
+    const presets: number[] = [grandTotal];
+    
+    const milestones = [50, 100, 200, 500, 1000, 2000, 5000, 10000];
+    for (const m of milestones) {
+      const rounded = Math.ceil(grandTotal / m) * m;
+      if (rounded > grandTotal && !presets.includes(rounded)) {
+        presets.push(rounded);
+        if (presets.length >= 4) break;
+      }
+    }
+    
+    // Add slightly lower amounts for quick selection
+    if (grandTotal >= 10 && !presets.includes(grandTotal - 10)) presets.push(grandTotal - 10);
+    if (grandTotal >= 20 && !presets.includes(grandTotal - 20)) presets.push(grandTotal - 20);
+    if (grandTotal >= 30 && !presets.includes(grandTotal - 30)) presets.push(grandTotal - 30);
+    
+    return presets.sort((a, b) => b - a).slice(0, 4);
+  }, [grandTotal]);
   
   // --- States for History Tab ---
   const [purchaseHistory, setPurchaseHistory] = useState<PurchaseHistory[]>([]);
@@ -261,6 +286,15 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
     setItems([...items, newItem]);
     setSearchQuery("");
     setMedicines([]);
+    setSelectedSearchIdx(-1);
+    
+    setTimeout(() => {
+      const el = document.getElementById(`batch-${newItem.id}`);
+      if (el) {
+        el.focus();
+        if (el instanceof HTMLInputElement) el.select();
+      }
+    }, 50);
   };
 
   const handleAddByBarcode = async () => {
@@ -728,7 +762,10 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
                     <select
                       className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                       value={supplierId}
-                      onChange={e=>setSupplierId(Number(e.target.value))}
+                      onChange={e=>{
+                        setSupplierId(Number(e.target.value));
+                        setTimeout(() => document.getElementById('search-medicine-input')?.focus(), 100);
+                      }}
                     >
                       <option value={0} disabled>Select Supplier</option>
                       {suppliers.map(s => <option key={s.SupplierId} value={s.SupplierId}>{s.Name}</option>)}
@@ -802,14 +839,42 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
                     <span>Paid</span>
                     <div className="w-24 text-right">
                         <Input
+                          id="paid-amount-input"
                           type="number" min="0" step="0.01" max={grandTotal}
-                          value={paidAmount}
+                          value={paidAmount || ""}
                           onChange={e => setPaidAmount(Number(e.target.value))}
+                          onKeyDown={e => {
+                             if (e.key === 'Enter') {
+                               e.preventDefault();
+                               handleSave(false);
+                             }
+                          }}
                           className="h-7 text-xs px-2 text-right text-emerald-400 font-semibold bg-slate-800 border-slate-600"
                         />
                     </div>
                   </div>
-                  <div className="flex justify-between items-center text-sm text-rose-400">
+                  {/* Quick Payment Presets */}
+                  {items.length > 0 && paymentPresets().length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 justify-end mt-1">
+                      {paymentPresets().map((preset) => (
+                        <button
+                          key={preset}
+                          onClick={() => setPaidAmount(preset)}
+                          className={cn(
+                            "min-w-[50px] text-[11px] font-bold py-1 px-2 rounded border transition-all duration-150",
+                            paidAmount === preset
+                              ? "bg-emerald-600 text-white border-emerald-600"
+                              : preset === grandTotal
+                                ? "bg-emerald-900/40 text-emerald-400 border-emerald-700/50 hover:bg-emerald-800/60"
+                                : "bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700"
+                          )}
+                        >
+                          {formatCurrency(preset)}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  <div className="flex justify-between items-center text-sm text-rose-400 mt-2">
                     <span>Balance Due</span>
                     <span className="font-medium">Rs. {formatNumber(Number(Math.max(0, grandTotal - paidAmount) || 0))}</span>
                   </div>
@@ -842,17 +907,43 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
                   <div className="relative w-full sm:w-64">
                     <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input 
+                      id="search-medicine-input"
+                      ref={searchInputRef}
                       placeholder="Search medicine by name..." 
                       className="h-9 pl-9 text-sm"
                       value={searchQuery}
-                      onChange={e=>setSearchQuery(e.target.value)}
+                      onChange={e=>{
+                        setSearchQuery(e.target.value);
+                        setSelectedSearchIdx(-1);
+                      }}
+                      onKeyDown={e => {
+                        if (e.key === 'ArrowDown') {
+                          e.preventDefault();
+                          setSelectedSearchIdx(prev => (prev < medicines.length - 1 ? prev + 1 : prev));
+                        } else if (e.key === 'ArrowUp') {
+                          e.preventDefault();
+                          setSelectedSearchIdx(prev => (prev > 0 ? prev - 1 : prev));
+                        } else if (e.key === 'Enter') {
+                          e.preventDefault();
+                          if (selectedSearchIdx >= 0 && selectedSearchIdx < medicines.length) {
+                            addMedicineToGrid(medicines[selectedSearchIdx]);
+                          } else if (medicines.length > 0) {
+                            addMedicineToGrid(medicines[0]);
+                          }
+                        }
+                      }}
                     />
                     {medicines.length > 0 && (
                       <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-zinc-900 border border-border rounded-md shadow-lg z-50 max-h-60 overflow-y-auto custom-scrollbar">
-                        {medicines.map(med => (
+                        {medicines.map((med, idx) => (
                           <div 
                             key={med.MedicineId} 
-                            className="px-3 py-2 hover:bg-secondary cursor-pointer border-b border-border last:border-0 text-sm flex justify-between"
+                            className={cn(
+                              "px-3 py-2 cursor-pointer border-b border-border last:border-0 text-sm flex justify-between transition-colors",
+                              selectedSearchIdx === idx 
+                                ? "bg-primary/10 dark:bg-primary/20" 
+                                : "hover:bg-secondary"
+                            )}
                             onClick={() => addMedicineToGrid(med)}
                           >
                             <span className="font-medium text-foreground">{med.BrandName}</span>
@@ -972,7 +1063,7 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
                               type="number" min="1"
                               value={item.Quantity} 
                               onChange={e => updateItem(item.id, 'Quantity', e.target.value)}
-                              onKeyDown={e => handleEnterKey(e, `free-${item.id}`)}
+                              onKeyDown={e => handleEnterKey(e, 'search-medicine-input')}
                               className="h-8 text-xs px-2 text-right"
                             />
                           </td>
@@ -1002,7 +1093,7 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
                               type="number" min="0" max="100"
                               value={item.TaxPercentage} 
                               onChange={e => updateItem(item.id, 'TaxPercentage', e.target.value)}
-                              onKeyDown={e => handleEnterKey(e, 'search-barcode')}
+                              onKeyDown={e => handleEnterKey(e, 'search-medicine-input')}
                               className="h-8 text-xs px-2 text-right"
                             />
                           </td>
