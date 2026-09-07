@@ -3,9 +3,7 @@ import hashlib
 import binascii
 import jwt
 from datetime import datetime, timedelta, timezone
-
-# Use the same private key for JWT signing
-from utils.license_engine import get_private_key, get_public_key
+from core.config import settings
 
 PBKDF2_ITERATIONS = 100000
 SALT_BYTES = 16 # 128-bit salt
@@ -41,19 +39,17 @@ def verify_password(plain_password: str, stored_hash: str, stored_salt: str) -> 
 
 def create_access_token(data: dict, expires_delta: timedelta) -> str:
     """
-    Creates a JWT access token for user sessions signed with RS256.
+    Creates a JWT access token for user sessions signed with HS256 symmetric key.
     """
     to_encode = data.copy()
     expire = datetime.now(timezone.utc) + expires_delta
     to_encode.update({"exp": expire})
     
-    private_key = get_private_key()
-    encoded_jwt = jwt.encode(to_encode, private_key, algorithm="RS256")
+    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
     return encoded_jwt
 
 def decode_access_token(token: str) -> dict:
     """
-    Decodes and verifies a JWT access token using the public key.
+    Decodes and verifies a JWT access token using the symmetric key.
     """
-    public_key = get_public_key()
-    return jwt.decode(token, public_key, algorithms=["RS256"])
+    return jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
