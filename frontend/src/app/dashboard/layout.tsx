@@ -4,6 +4,7 @@ import { InventorySettingsProvider } from "@/contexts/InventorySettingsContext";
 import { AutoLockWrapper } from "@/components/layout/auto-lock-wrapper";
 import { SessionTimeoutWrapper } from "@/components/layout/session-timeout-wrapper";
 import { LicenseExpiryBar } from "@/components/layout/license-expiry-bar";
+import { ExitBackupMounter } from "@/components/layout/exit-backup-mounter";
 
 export default function DashboardLayout({
   children,
@@ -13,6 +14,7 @@ export default function DashboardLayout({
   return (
     <SessionTimeoutWrapper>
       <AutoLockWrapper>
+        <ExitBackupMounter />
         <div className="flex h-screen w-full bg-background overflow-hidden print:h-auto print:overflow-visible print:bg-white">
           <div className="print:hidden shrink-0">
             <Sidebar />

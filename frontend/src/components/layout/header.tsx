@@ -1,7 +1,7 @@
 "use client";
 
 import { ThemeToggle } from "@/components/ui/theme-toggle";
-import { Bell, Calendar, User, Search, X, LayoutDashboard, ShoppingCart, Package, TrendingUp, BarChart3, Settings, Pill, Grid2X2, Building2, Truck, Users, Database } from "lucide-react";
+import { Bell, Calendar, User, Search, X, LayoutDashboard, ShoppingCart, Package, TrendingUp, BarChart3, Settings, Pill, Grid2X2, Building2, Truck, Users, Database, Loader2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,6 +15,8 @@ import { useProfile } from "@/contexts/ProfileContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSystemPreferences } from "@/contexts/SystemPreferencesContext";
 import { NotificationDropdown } from "@/components/layout/notification-dropdown";
+import { toast } from "sonner";
+import { triggerExitBackup } from "@/lib/exit-backup";
 
 const SEARCH_ITEMS = [
   { title: "Dashboard", desc: "Overview & analytics", icon: LayoutDashboard, href: "/dashboard", category: "Modules" },
@@ -109,13 +111,30 @@ export function Header() {
     if (e.key === "Escape")    { setFocused(false); setQuery(""); }
   };
 
-  const handleLogout = () => {
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const handleLogout = async () => {
+    if (isLoggingOut) return;
+    const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
+    setIsLoggingOut(true);
+
+    const result = await triggerExitBackup(token ?? "");
+
+    if (!result.success && result.error) {
+      toast.error(`Backup failed before logout: ${result.error}`, {
+        duration: 5000,
+        description: "Your session will close, but the last backup may be incomplete. Check Backup History.",
+      });
+      await new Promise((r) => setTimeout(r, 2000));
+    }
+
     localStorage.removeItem("access_token");
     sessionStorage.removeItem("access_token");
     router.push("/");
   };
 
   return (
+    <>
     <header className="h-16 flex items-center justify-between px-6 bg-card border-b border-border shadow-sm shrink-0 z-40">
       <div className="flex items-center gap-4 flex-1 min-w-0">
         <div className="flex flex-col shrink-0">
@@ -235,13 +254,38 @@ export function Header() {
               <InfoIcon className="mr-2 w-4 h-4 text-slate-500" /> About Software
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleLogout} className="text-sm cursor-pointer text-destructive focus:bg-destructive/10 focus:text-destructive py-2">
-              <LogOutIcon className="mr-2 w-4 h-4" /> Logout
+            <DropdownMenuItem
+              onClick={handleLogout}
+              disabled={isLoggingOut}
+              className="text-sm cursor-pointer text-destructive focus:bg-destructive/10 focus:text-destructive py-2"
+            >
+              {isLoggingOut ? (
+                <Loader2 className="mr-2 w-4 h-4 animate-spin" />
+              ) : (
+                <LogOutIcon className="mr-2 w-4 h-4" />
+              )}
+              {isLoggingOut ? "Backing up..." : "Logout"}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
     </header>
+
+    {/* Non-dismissible backup loading overlay */}
+    {isLoggingOut && (
+      <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-slate-950/75 backdrop-blur-sm">
+        <div className="bg-card border border-border rounded-2xl p-8 flex flex-col items-center gap-4 shadow-2xl max-w-sm w-full mx-4">
+          <div className="bg-blue-500/10 p-4 rounded-full">
+            <Loader2 className="h-10 w-10 text-blue-500 animate-spin" />
+          </div>
+          <div className="text-center">
+            <p className="text-foreground text-base font-bold">Creating Secure Backup</p>
+            <p className="text-muted-foreground text-sm mt-1">Please wait, do not close the application.</p>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   );
 }
 

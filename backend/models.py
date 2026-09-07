@@ -321,11 +321,12 @@ class BackupSettings(Base):
 
     SettingsId = Column(Integer, primary_key=True, autoincrement=True)
     IsAutoBackupEnabled = Column(Boolean, default=False)
-    BackupFrequency = Column(String(50), default="Daily") # Daily, Weekly, Monthly
-    BackupTime = Column(String(10), default="23:00")
+    BackupFrequency = Column(String(50), default="Daily") # Kept for DB compat; no longer used by scheduler
+    BackupTime = Column(String(10), default="23:00")       # Kept for DB compat; no longer used by scheduler
     BackupLocation = Column(String(500), default="./backups/automatic")
     RetentionCount = Column(Integer, default=7)
     BackupOnStartup = Column(Boolean, default=False)
+    BackupOnExit = Column(Boolean, default=True)           # Backup on logout / window close
     CompressBackup = Column(Boolean, default=True)
     AutoVerify = Column(Boolean, default=False)
 

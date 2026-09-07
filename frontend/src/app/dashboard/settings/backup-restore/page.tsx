@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { 
-  RefreshCw, Settings, Calendar, Database, HardDrive, HeartPulse, 
-  ShieldCheck, Clock, DownloadCloud, RotateCcw, History, Edit2, 
+  RefreshCw, Settings, Database, HardDrive, HeartPulse, 
+  ShieldCheck, DownloadCloud, RotateCcw, History, Edit2, 
   FolderOpen, Info, CheckCircle2, Search, Filter, 
   ArrowRight, Loader2, Trash2, XCircle, PauseCircle, Check, RefreshCcw,
   Eye, EyeOff, AlertTriangle, Lock
@@ -123,11 +123,10 @@ function BackupRestorePageInner({
 
   const [settings, setSettings] = useState({
     IsAutoBackupEnabled: false,
-    BackupFrequency: "Daily",
-    BackupTime: "23:00",
     BackupLocation: "./backups/automatic",
     RetentionCount: 7,
     BackupOnStartup: false,
+    BackupOnExit: true,
     CompressBackup: true,
     AutoVerify: true
   });
@@ -555,7 +554,7 @@ function BackupRestorePageInner({
         <KPICard
           title="Last Backup"
           value={lastBackupValue}
-          icon={<Calendar className="h-6 w-6" />}
+          icon={<Database className="h-6 w-6" />}
           accent={lastBackupAccent}
         >
           {hasEverBacked ? (
@@ -606,7 +605,7 @@ function BackupRestorePageInner({
           accent={autoEnabled ? "emerald" : "slate"}
         >
           <p className="text-xs text-muted-foreground">
-            {autoEnabled ? `${settings.BackupFrequency} at ${settings.BackupTime}` : "Turn on in settings"}
+            {autoEnabled ? (settings.BackupOnExit ? "On exit / logout" : "Startup only") : "Turn on in settings"}
           </p>
         </KPICard>
 
@@ -637,22 +636,20 @@ function BackupRestorePageInner({
           </p>
         </KPICard>
 
-        {/* Next Scheduled — Paused if auto-backup is off */}
+        {/* Backup on Exit status */}
         <KPICard
-          title="Next Scheduled"
-          value={nextScheduledValue}
-          icon={autoEnabled ? <Clock className="h-6 w-6" /> : <PauseCircle className="h-6 w-6" />}
-          accent={nextScheduledAccent}
+          title="Backup on Exit"
+          value={
+            <span className={autoEnabled && settings.BackupOnExit ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500"}>
+              {autoEnabled && settings.BackupOnExit ? "Active" : "Inactive"}
+            </span>
+          }
+          icon={<DownloadCloud className="h-6 w-6" />}
+          accent={autoEnabled && settings.BackupOnExit ? "emerald" : "slate"}
         >
-          {autoEnabled ? (
-            <p className="text-xs text-indigo-600 dark:text-indigo-400 flex items-center font-medium">
-              <Clock className="h-3.5 w-3.5 mr-1" /> {settings.BackupFrequency} at {settings.BackupTime}
-            </p>
-          ) : (
-            <p className="text-xs text-slate-400 flex items-center">
-              <PauseCircle className="h-3.5 w-3.5 mr-1" /> Auto-backup is off
-            </p>
-          )}
+          <p className="text-xs text-muted-foreground">
+            {autoEnabled && settings.BackupOnExit ? "Backs up on logout & close" : "Enable in Backup Settings"}
+          </p>
         </KPICard>
       </div>
 
@@ -977,6 +974,9 @@ function BackupRestorePageInner({
                     Confirm Database Restore
                   </DialogTitle>
                   <DialogDescription className="pt-2">
+                    Please review the backup file before confirming the restore.
+                  </DialogDescription>
+                  <div className="mt-4 text-left">
                     <div className="mb-2 text-slate-700 dark:text-slate-300 font-medium">
                       You are about to restore the database from:
                     </div>
@@ -987,7 +987,7 @@ function BackupRestorePageInner({
                       <span className="font-bold uppercase tracking-wider text-[11px] block mb-1">Critical Warning</span>
                       This action will <strong>completely overwrite</strong> your current database. A safety backup will be created automatically, but any unsaved changes may be lost.
                     </div>
-                  </DialogDescription>
+                  </div>
                 </DialogHeader>
                 <DialogFooter className="mt-4 gap-2 sm:gap-0">
                   <Button variant="outline" onClick={() => setShowRestoreModal(false)} disabled={isRestoring}>
@@ -1217,13 +1217,13 @@ function BackupRestorePageInner({
                       "font-bold text-base cursor-pointer",
                       settings.IsAutoBackupEnabled ? "text-blue-900 dark:text-blue-100" : "text-slate-700 dark:text-slate-300"
                     )}>
-                      Enable Automatic Scheduled Backups
+                      Enable Automatic Backups
                     </Label>
                     <p className={cn(
                       "text-sm mt-1",
                       settings.IsAutoBackupEnabled ? "text-blue-700/80 dark:text-blue-300/80" : "text-muted-foreground"
                     )}>
-                      Turn this on to let the system automatically secure your database in the background.
+                      Automatically back up the database when you log out or close the application.
                     </p>
                   </div>
                 </div>
@@ -1233,38 +1233,6 @@ function BackupRestorePageInner({
                   !settings.IsAutoBackupEnabled ? 'opacity-50 pointer-events-none' : 'opacity-100'
                 )}>
                   
-                  {/* Schedule Section */}
-                  <div className="space-y-4">
-                    <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200 flex items-center border-b border-border/40 pb-2">
-                      <Clock className="h-4 w-4 mr-2 text-indigo-500" />
-                      Backup Schedule
-                    </h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pl-1">
-                      <div className="space-y-2">
-                        <Label className="text-slate-600 dark:text-slate-400">Backup Frequency</Label>
-                        <select 
-                          className="flex h-10 w-full rounded-md border border-border bg-slate-50/70 dark:bg-secondary/30 px-3 py-2 text-sm ring-offset-background focus:ring-2 focus:ring-blue-500 outline-none disabled:cursor-not-allowed disabled:opacity-50"
-                          value={settings.BackupFrequency}
-                          onChange={(e) => setSettings({ ...settings, BackupFrequency: e.target.value })}
-                          disabled={!settings.IsAutoBackupEnabled}
-                        >
-                          <option value="Daily">Daily</option>
-                          <option value="Weekly">Weekly</option>
-                          <option value="Monthly">Monthly</option>
-                        </select>
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-slate-600 dark:text-slate-400">Time of Day</Label>
-                        <Input 
-                          type="time"
-                          value={settings.BackupTime}
-                          onChange={(e) => setSettings({ ...settings, BackupTime: e.target.value })}
-                          disabled={!settings.IsAutoBackupEnabled}
-                          className="bg-slate-50/70 dark:bg-secondary/30 border-border"
-                        />
-                      </div>
-                    </div>
-                  </div>
 
                   {/* Storage Section */}
                   <div className="space-y-4">
@@ -1351,6 +1319,22 @@ function BackupRestorePageInner({
                     <Settings className="h-4 w-4 mr-2 text-slate-500" />
                     System Events
                   </h4>
+
+                  {/* Backup on Exit */}
+                  <div className="flex items-start space-x-3 pl-1">
+                    <Checkbox 
+                      id="exitBackup" 
+                      checked={settings.BackupOnExit ?? true} 
+                      onCheckedChange={(c) => setSettings({ ...settings, BackupOnExit: c as boolean })} 
+                      className="mt-0.5"
+                    />
+                    <div>
+                      <Label htmlFor="exitBackup" className="text-sm font-medium cursor-pointer">Backup on Logout / App Close</Label>
+                      <p className="text-xs text-muted-foreground mt-1">Automatically creates a backup when you log out or close the browser window. A 60-second cooldown prevents duplicate backups.</p>
+                    </div>
+                  </div>
+
+                  {/* Backup on Startup */}
                   <div className="flex items-start space-x-3 pl-1">
                     <Checkbox 
                       id="startupBackup" 
@@ -1360,7 +1344,7 @@ function BackupRestorePageInner({
                     />
                     <div>
                       <Label htmlFor="startupBackup" className="text-sm font-medium cursor-pointer">Backup on Application Startup</Label>
-                      <p className="text-xs text-muted-foreground mt-1">Automatically create a backup when the software starts. (24-hour cooldown prevents spam)</p>
+                      <p className="text-xs text-muted-foreground mt-1">Automatically creates a backup when the software starts. (24-hour cooldown prevents spam)</p>
                     </div>
                   </div>
                 </div>

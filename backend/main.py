@@ -71,98 +71,87 @@ app.add_exception_handler(Exception, general_exception_handler)
 
 import threading
 from datetime import datetime, timedelta
-from apscheduler.schedulers.background import BackgroundScheduler
 
-def run_automatic_backup_job():
+def run_startup_backup_job():
+    """Runs a single automatic backup on application startup (if enabled & cooldown passed)."""
     from database import SessionLocal
-    from api.v1.backup import execute_backup, verify_backup
+    from api.v1.backup import execute_backup
     from models import BackupSettings
     db = SessionLocal()
     try:
         settings = db.query(BackupSettings).first()
         if not settings or not settings.IsAutoBackupEnabled:
             return
-        logger.info("Executing scheduled automatic backup...")
-        record = execute_backup(db, f"AutoBackup_{datetime.now().strftime('%Y_%m_%d_%H%M%S')}", settings.BackupLocation, settings.CompressBackup, "Automatic")
-        
-        if settings.AutoVerify and record and record.Status == "Success":
-            logger.info("AutoVerify enabled. Running deep verification on new automatic backup...")
-            report = verify_backup(record.BackupId, db, current_user=None)
-            logger.info(f"Verification complete. Overall status: {report.get('overall')}")
-            
+        logger.info("Executing startup automatic backup...")
+        execute_backup(
+            db,
+            f"StartupBackup_{datetime.now().strftime('%Y_%m_%d_%H%M%S')}",
+            settings.BackupLocation,
+            settings.CompressBackup,
+            "Automatic"
+        )
     except Exception as e:
-        logger.error(f"Automatic backup failed: {e}")
+        logger.error(f"Startup backup failed: {e}")
     finally:
         db.close()
-
-def schedule_backup_job(settings):
-    if hasattr(app.state, 'scheduler') and app.state.scheduler:
-        try:
-            app.state.scheduler.remove_job("auto_backup_job")
-        except:
-            pass
-        if settings.IsAutoBackupEnabled:
-            try:
-                hour, minute = settings.BackupTime.split(":")
-                if settings.BackupFrequency == "Daily":
-                    app.state.scheduler.add_job(run_automatic_backup_job, 'cron', hour=hour, minute=minute, id="auto_backup_job")
-                elif settings.BackupFrequency == "Weekly":
-                    app.state.scheduler.add_job(run_automatic_backup_job, 'cron', day_of_week='sun', hour=hour, minute=minute, id="auto_backup_job")
-                elif settings.BackupFrequency == "Monthly":
-                    app.state.scheduler.add_job(run_automatic_backup_job, 'cron', day='1', hour=hour, minute=minute, id="auto_backup_job")
-                logger.info(f"Scheduled automatic backup for {settings.BackupFrequency} at {settings.BackupTime}")
-            except Exception as e:
-                logger.error(f"Failed to schedule backup job: {e}")
 
 @app.on_event("startup")
 async def startup_event():
     logger.info(f"Starting {settings.PROJECT_NAME} backend...")
-    
-    app.state.scheduler = BackgroundScheduler()
-    app.state.scheduler.start()
-    app.state.reschedule_backup_job = schedule_backup_job
-    
-    from database import SessionLocal
+
+    from database import SessionLocal, engine
     from models import BackupSettings, BackupHistory
     from sqlalchemy import text
-    
+
     db = SessionLocal()
     try:
+        # ── Inline migrations ────────────────────────────────────────────────
         try:
             result = db.execute(text("PRAGMA table_info(billing_settings)")).fetchall()
             columns = [row[1] for row in result]
             if "CurrencySymbol" not in columns:
-                logger.info("Migrating billing_settings to add CurrencySymbol column.")
+                logger.info("Migrating billing_settings: adding CurrencySymbol column.")
                 db.execute(text("ALTER TABLE billing_settings ADD COLUMN CurrencySymbol VARCHAR(10) DEFAULT 'Rs'"))
                 db.commit()
         except Exception as e:
             logger.error(f"Migration error for CurrencySymbol: {e}")
 
-        # Ensure notifications table exists
+        # Add BackupOnExit column if it doesn't exist (safe for existing DBs)
         try:
-            from database import engine
+            result = db.execute(text("PRAGMA table_info(backup_settings)")).fetchall()
+            columns = [row[1] for row in result]
+            if "BackupOnExit" not in columns:
+                logger.info("Migrating backup_settings: adding BackupOnExit column.")
+                db.execute(text("ALTER TABLE backup_settings ADD COLUMN BackupOnExit BOOLEAN DEFAULT 1"))
+                db.commit()
+        except Exception as e:
+            logger.error(f"Migration error for BackupOnExit: {e}")
+
+        # ── Notifications ────────────────────────────────────────────────────
+        try:
             from models import Notification
             Notification.__table__.create(bind=engine, checkfirst=True)
             logger.info("Verified notifications table in database.")
-
-            # Trigger initial condition sync
             from utils.notification_service import sync_system_notifications
             sync_system_notifications(db)
             logger.info("Completed startup system notifications synchronization.")
         except Exception as e:
             logger.error(f"Error initializing notifications on startup: {e}")
 
+        # ── Backup on Startup ────────────────────────────────────────────────
         db_settings = db.query(BackupSettings).first()
-        if db_settings:
-            schedule_backup_job(db_settings)
-            
-            if db_settings.BackupOnStartup:
-                last_backup = db.query(BackupHistory).filter(BackupHistory.BackupType == "Automatic", BackupHistory.Status == "Success").order_by(BackupHistory.CreatedAt.desc()).first()
-                if not last_backup or datetime.utcnow() - last_backup.CreatedAt > timedelta(hours=24):
-                    logger.info("Triggering Startup Backup (Cooldown passed)...")
-                    threading.Thread(target=run_automatic_backup_job, daemon=True).start()
-                else:
-                    logger.info("Skipping Startup Backup (24-hour cooldown active).")
+        if db_settings and db_settings.BackupOnStartup and db_settings.IsAutoBackupEnabled:
+            last_backup = (
+                db.query(BackupHistory)
+                .filter(BackupHistory.BackupType == "Automatic", BackupHistory.Status == "Success")
+                .order_by(BackupHistory.CreatedAt.desc())
+                .first()
+            )
+            if not last_backup or datetime.utcnow() - last_backup.CreatedAt > timedelta(hours=24):
+                logger.info("Triggering Startup Backup (cooldown passed)...")
+                threading.Thread(target=run_startup_backup_job, daemon=True).start()
+            else:
+                logger.info("Skipping Startup Backup (24-hour cooldown active).")
     finally:
         db.close()
 
@@ -170,4 +159,5 @@ async def startup_event():
 def read_root():
     logger.info("Root endpoint accessed")
     return {"status": "ok", "message": f"{settings.PROJECT_NAME} Backend is running"}
+
 

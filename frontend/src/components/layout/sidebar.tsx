@@ -18,9 +18,12 @@ import {
   ChevronDown,
   ChevronRight,
   PlusSquare,
-  LogOut
+  LogOut,
+  Loader2
 } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
+import { triggerExitBackup } from "@/lib/exit-backup";
 
 interface NavItem {
   title: string;
@@ -88,7 +91,24 @@ export function Sidebar() {
   const router = useRouter();
   const { profile, isLoading } = useProfile();
   
-  const handleLogout = () => {
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const handleLogout = async () => {
+    if (isLoggingOut) return;
+    const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
+    setIsLoggingOut(true);
+
+    const result = await triggerExitBackup(token ?? "");
+
+    if (!result.success && result.error) {
+      toast.error(`Backup failed before logout: ${result.error}`, {
+        duration: 5000,
+        description: "Your session will close, but the last backup may be incomplete. Check Backup History.",
+      });
+      // Give user 2 s to read the toast before navigating away
+      await new Promise((r) => setTimeout(r, 2000));
+    }
+
     localStorage.removeItem("access_token");
     sessionStorage.removeItem("access_token");
     router.push("/");
@@ -222,12 +242,32 @@ export function Sidebar() {
       <div className="p-4 shrink-0 border-t border-white/5 mt-auto">
         <button 
           onClick={handleLogout}
-          className="flex items-center justify-start gap-3 w-full py-2.5 px-4 rounded-xl text-sm font-semibold transition-all duration-300 bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white border border-red-500/20 hover:shadow-[0_0_15px_rgba(239,68,68,0.3)] hover:-translate-y-0.5"
+          disabled={isLoggingOut}
+          className="flex items-center justify-start gap-3 w-full py-2.5 px-4 rounded-xl text-sm font-semibold transition-all duration-300 bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white border border-red-500/20 hover:shadow-[0_0_15px_rgba(239,68,68,0.3)] hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed"
         >
-          <LogOut className="w-4 h-4 shrink-0" /> 
-          Logout
+          {isLoggingOut ? (
+            <Loader2 className="w-4 h-4 shrink-0 animate-spin" />
+          ) : (
+            <LogOut className="w-4 h-4 shrink-0" />
+          )}
+          {isLoggingOut ? "Backing up..." : "Logout"}
         </button>
       </div>
+
+      {/* Non-dismissible backup loading overlay */}
+      {isLoggingOut && (
+        <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-slate-950/75 backdrop-blur-sm">
+          <div className="bg-[#0B1120] border border-white/10 rounded-2xl p-8 flex flex-col items-center gap-4 shadow-2xl max-w-sm w-full mx-4">
+            <div className="bg-blue-500/10 p-4 rounded-full">
+              <Loader2 className="h-10 w-10 text-blue-400 animate-spin" />
+            </div>
+            <div className="text-center">
+              <p className="text-white text-base font-bold">Creating Secure Backup</p>
+              <p className="text-slate-400 text-sm mt-1">Please wait, do not close the application.</p>
+            </div>
+          </div>
+        </div>
+      )}
     </aside>
   );
 }

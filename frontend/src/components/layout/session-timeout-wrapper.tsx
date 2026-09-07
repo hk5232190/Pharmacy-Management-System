@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useCallback } from "react";
+import { fireExitBackupBeacon } from "@/lib/exit-backup";
 
 function parseJwt(token: string) {
   try {
@@ -84,6 +85,10 @@ export function SessionTimeoutWrapper({ children }: { children: React.ReactNode 
 
   // Execute Logout
   const executeLogout = useCallback(() => {
+    const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
+    // Fire-and-forget: session expired silently — user may not be at keyboard.
+    // keepalive fetch survives the redirect; backend records success/failure in BackupHistory.
+    if (token) fireExitBackupBeacon(token);
     localStorage.removeItem("access_token");
     sessionStorage.removeItem("access_token");
     // Broadcast cross-tab logout

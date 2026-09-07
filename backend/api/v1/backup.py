@@ -101,12 +101,24 @@ def execute_backup(db: Session, backup_name: str, backup_location: str, compress
             
         final_file_path = dst_db_path
         
-        # 2. Optionally compress
+        # 2. Optionally compress — write to .tmp first then atomic-rename
+        #    so a hard-killed process never leaves a corrupted .zip on disk
         if compress:
             zip_filename = f"{backup_name}.zip"
             zip_path = backup_dir / zip_filename
-            with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
-                zipf.write(dst_db_path, arcname=db_filename)
+            tmp_zip_path = zip_path.with_suffix(".zip.tmp")
+            try:
+                with zipfile.ZipFile(tmp_zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+                    zipf.write(dst_db_path, arcname=db_filename)
+                os.replace(tmp_zip_path, zip_path)  # atomic on NTFS / ext4
+            except Exception:
+                # Clean up temp file if rename failed
+                if tmp_zip_path.exists():
+                    try:
+                        os.remove(tmp_zip_path)
+                    except OSError:
+                        pass
+                raise
             os.remove(dst_db_path)
             final_file_path = zip_path
             
@@ -125,22 +137,49 @@ def execute_backup(db: Session, backup_name: str, backup_location: str, compress
         )
         db.add(history_record)
         
-        # 5. Retention Logic for Automatic Backups
-        if backup_type == "Automatic":
-            settings = db.query(BackupSettings).first()
-            if settings and settings.RetentionCount > 0:
-                # Find older backups exceeding RetentionCount
-                auto_backups = db.query(BackupHistory).filter(BackupHistory.BackupType == "Automatic").order_by(BackupHistory.CreatedAt.desc()).all()
-                if len(auto_backups) > settings.RetentionCount:
-                    backups_to_delete = auto_backups[settings.RetentionCount:]
-                    for old_backup in backups_to_delete:
-                        old_file_path = Path(old_backup.BackupLocation) / old_backup.BackupName
-                        if old_file_path.exists():
+        # 5. Global Retention Logic (Enforced for all backups per user request)
+        settings = db.query(BackupSettings).first()
+        if settings and settings.RetentionCount > 0:
+            # 1. Clean up old records from database
+            all_backups = db.query(BackupHistory).order_by(BackupHistory.CreatedAt.desc()).all()
+            if len(all_backups) > settings.RetentionCount:
+                backups_to_delete = all_backups[settings.RetentionCount:]
+                for old_backup in backups_to_delete:
+                    old_file_path = Path(old_backup.BackupLocation) / old_backup.BackupName
+                    if old_file_path.exists():
+                        try:
+                            os.remove(old_file_path)
+                        except OSError:
+                            pass # ignore deletion errors for retention
+                    db.delete(old_backup)
+                    
+            # 2. Strict physical disk cleanup (catches orphaned files not in DB)
+            try:
+                backup_dir_path = Path(settings.BackupLocation)
+                if backup_dir_path.exists():
+                    # Find all backup zip files (including manual 'Backup_')
+                    physical_backups = []
+                    for f in backup_dir_path.iterdir():
+                        if f.is_file() and f.suffix == '.zip' and (
+                            f.name.startswith("Backup_") or
+                            f.name.startswith("ExitBackup_") or 
+                            f.name.startswith("AutoBackup_") or 
+                            f.name.startswith("StartupBackup_")
+                        ):
+                            physical_backups.append(f)
+                    
+                    # Sort by modification time, newest first
+                    physical_backups.sort(key=lambda x: x.stat().st_mtime, reverse=True)
+                    
+                    # Delete anything older than the RetentionCount limit
+                    if len(physical_backups) > settings.RetentionCount:
+                        for old_file in physical_backups[settings.RetentionCount:]:
                             try:
-                                os.remove(old_file_path)
+                                os.remove(old_file)
                             except OSError:
-                                pass # ignore deletion errors for retention
-                        db.delete(old_backup)
+                                pass
+            except Exception as e:
+                logger.error(f"Error during physical retention cleanup: {e}")
 
         db.commit()
         db.refresh(history_record)
@@ -352,6 +391,64 @@ def restore_backup(
 
 import time
 import anyio
+from datetime import timedelta
+
+@router.post("/backup-on-exit")
+def backup_on_exit(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Triggered by frontend on user logout or window close.
+    - Skips silently if automatic backups or backup-on-exit are disabled.
+    - Prevents duplicate backups within a 60-second window.
+    - Returns HTTP 500 with detail on failure so the frontend can display an error.
+    """
+    settings = db.query(BackupSettings).first()
+
+    # 1. Feature-gate check
+    if not settings or not settings.IsAutoBackupEnabled or not getattr(settings, 'BackupOnExit', True):
+        return {"skipped": True, "reason": "backup_on_exit_disabled"}
+
+    # 2. Duplicate guard — prevent double-fire from simultaneous beforeunload + logout button
+    cutoff = datetime.utcnow() - timedelta(seconds=60)
+    recent = (
+        db.query(BackupHistory)
+        .filter(
+            BackupHistory.BackupType == "Automatic",
+            BackupHistory.CreatedAt >= cutoff
+        )
+        .first()
+    )
+    if recent:
+        logger.info(f"Backup-on-exit skipped: duplicate request within 60 s (last: {recent.BackupName})")
+        return {"skipped": True, "reason": "duplicate", "last_backup": recent.BackupName}
+
+    # 3. Execute backup — raises on failure (recorded in history by execute_backup)
+    backup_name = f"ExitBackup_{datetime.now().strftime('%Y_%m_%d_%H%M%S')}"
+    try:
+        record = execute_backup(
+            db=db,
+            backup_name=backup_name,
+            backup_location=settings.BackupLocation,
+            compress=settings.CompressBackup,
+            backup_type="Automatic"
+        )
+
+        # 4. Optional deep verification
+        if settings.AutoVerify and record and record.Status == "Success":
+            try:
+                report = verify_backup(record.BackupId, db, current_user=None)
+                logger.info(f"Exit backup verification: {report.get('overall')}")
+            except Exception as ve:
+                logger.warning(f"Exit backup verification failed (backup still saved): {ve}")
+
+        return {"success": True, "backup_name": record.BackupName}
+
+    except Exception as e:
+        # execute_backup already wrote a Failed history record and logged the error
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.delete("/history/{backup_id}")
 def delete_backup(

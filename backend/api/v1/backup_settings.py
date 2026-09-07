@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from api.deps import get_db, get_current_user
 from models import BackupSettings, User
@@ -24,21 +24,17 @@ def get_backup_settings(db: Session = Depends(get_db), current_user: User = Depe
 @router.put("", response_model=BackupSettingsResponse)
 def update_backup_settings(
     update_data: BackupSettingsUpdate,
-    request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     settings = get_or_create_settings(db)
     for key, value in update_data.model_dump().items():
-        setattr(settings, key, value)
-    
+        if hasattr(settings, key):
+            setattr(settings, key, value)
+
     db.commit()
     db.refresh(settings)
-    
-    logger.info(f"Backup Settings Updated | User: {current_user.Username} | AutoBackup: {settings.IsAutoBackupEnabled}")
-    
-    # Trigger APScheduler update
-    if hasattr(request.app.state, "reschedule_backup_job"):
-        request.app.state.reschedule_backup_job(settings)
-        
+
+    logger.info(f"Backup Settings Updated | User: {current_user.Username} | AutoBackup: {settings.IsAutoBackupEnabled} | BackupOnExit: {getattr(settings, 'BackupOnExit', True)}")
+
     return settings
