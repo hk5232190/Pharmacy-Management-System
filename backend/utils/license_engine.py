@@ -1,6 +1,5 @@
 import jwt
 import os
-import datetime
 from cryptography.hazmat.primitives import serialization
 from core.exceptions import LicenseExpiredError, HardwareMismatchError, TamperedLicenseError
 from utils.hwid import get_primary_mac
@@ -8,19 +7,12 @@ from core.logger import logger
 
 KEYS_DIR = os.path.join(os.path.dirname(__file__), "keys")
 PUBLIC_KEY_PATH = os.path.join(KEYS_DIR, "public.pem")
-PRIVATE_KEY_PATH = os.path.join(KEYS_DIR, "private.pem")
 
 def get_public_key():
     if not os.path.exists(PUBLIC_KEY_PATH):
         raise FileNotFoundError("Public key not found. Please ensure the app is correctly built.")
     with open(PUBLIC_KEY_PATH, "rb") as f:
         return serialization.load_pem_public_key(f.read())
-
-def get_private_key():
-    if not os.path.exists(PRIVATE_KEY_PATH):
-        raise FileNotFoundError("Private key not found. This should only be used by the vendor.")
-    with open(PRIVATE_KEY_PATH, "rb") as f:
-        return serialization.load_pem_private_key(f.read(), password=None)
 
 def validate_license(token: str) -> dict:
     """
@@ -73,36 +65,4 @@ def validate_license(token: str) -> dict:
     except Exception as e:
         logger.error(f"License validation failed unexpectedly: {e}")
         raise TamperedLicenseError()
-
-def generate_test_license(
-    mac: str,
-    license_type: str = "Subscription",
-    days_valid: int = 365,
-    start_date: datetime.datetime = None,
-    end_date: datetime.datetime = None,
-    client_name: str = "Licensed User",
-) -> str:
-    """
-    Generates a license .lic file for a given MAC address.
-    Uses the private key which must be kept secret by the vendor.
-    """
-    private_key = get_private_key()
-
-    iat = start_date if start_date else datetime.datetime.now(datetime.timezone.utc)
-
-    payload = {
-        "mac": mac.upper().replace("-", ":"),  # Normalise MAC format in the license
-        "type": license_type,
-        "client_name": client_name,
-        "iat": iat,
-    }
-
-    if license_type != "Lifetime":
-        if end_date:
-            payload["exp"] = end_date
-        else:
-            payload["exp"] = iat + datetime.timedelta(days=days_valid)
-
-    token = jwt.encode(payload, private_key, algorithm="RS256")
-    return token
 
