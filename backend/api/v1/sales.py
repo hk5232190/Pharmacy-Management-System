@@ -121,6 +121,8 @@ def search_product(
         
         inv_settings = db.query(InventorySettings).first()
         enable_fefo = inv_settings.EnableFefo if inv_settings else True
+        prevent_expired = inv_settings.PreventSaleOfExpired if inv_settings else True
+        today = datetime.now().date()
 
         results = []
         for med in medicines:
@@ -129,9 +131,13 @@ def search_product(
                 StockBatch.MedicineId == med.MedicineId,
                 StockBatch.Quantity > 0
             )
+
+            # Block expired batches from appearing in POS search if setting is ON
+            if prevent_expired:
+                batch_query = batch_query.filter(StockBatch.ExpiryDate > today)
             
             if enable_fefo:
-                # FEFO Query Guardrail: Ensure Quantity > 0 is filtered before order_by
+                # FEFO: order by earliest expiry first
                 batch_query = batch_query.order_by(StockBatch.ExpiryDate.asc())
             else:
                 batch_query = batch_query.order_by(StockBatch.ReceivedDate.desc())
@@ -139,7 +145,7 @@ def search_product(
             batches = batch_query.all()
 
             if not batches:
-                continue # Skip medicines with no active stock
+                continue # Skip medicines with no available/valid stock
 
             batch_list = [
                 ProductSearchBatch(
@@ -256,23 +262,43 @@ def complete_sale(
 
             if not batches:
                 if prevent_expired and not allow_negative:
-                    # Let's check if it was because it was expired
+                    # Check if blocked due to expiry and give a clear message
                     any_batch = db.query(StockBatch).filter(StockBatch.MedicineId == item.MedicineId, StockBatch.BatchId == item.BatchId).first()
                     if any_batch and any_batch.ExpiryDate and any_batch.ExpiryDate <= current_date:
                         raise ValidationError(f"Batch {any_batch.BatchCode} for medicine ID {item.MedicineId} is expired. Sale strictly prevented.")
 
                 if allow_negative:
-                    dummy_batch = StockBatch(
-                        MedicineId=item.MedicineId,
-                        BatchCode="NEG-STOCK",
-                        Quantity=0,
-                        CostPrice=0,
-                        SellingPrice=item.UnitPrice,
-                        ExpiryDate=current_date + dt.timedelta(days=365)
-                    )
-                    db.add(dummy_batch)
-                    db.flush()
-                    batches = [dummy_batch]
+                    # Sub-case A: A specific batch was requested (e.g., FEFO off) — reuse it even if qty <= 0
+                    specific_batch = None
+                    if item.BatchId:
+                        specific_batch = db.query(StockBatch).filter(
+                            StockBatch.MedicineId == item.MedicineId,
+                            StockBatch.BatchId == item.BatchId
+                        ).with_for_update().first()
+
+                    if specific_batch:
+                        batches = [specific_batch]
+                    else:
+                        # Sub-case B: No batches exist at all for this medicine.
+                        # Get or create exactly ONE persistent SYS-DEFAULT batch — never create duplicates.
+                        sys_batch = db.query(StockBatch).filter(
+                            StockBatch.MedicineId == item.MedicineId,
+                            StockBatch.BatchCode == "SYS-DEFAULT"
+                        ).with_for_update().first()
+
+                        if not sys_batch:
+                            sys_batch = StockBatch(
+                                MedicineId=item.MedicineId,
+                                BatchCode="SYS-DEFAULT",
+                                Quantity=0,
+                                CostPrice=0,
+                                SellingPrice=item.UnitPrice,
+                                ExpiryDate=current_date + dt.timedelta(days=365)
+                            )
+                            db.add(sys_batch)
+                            db.flush()
+
+                        batches = [sys_batch]
                 else:
                     raise ValidationError(f"No valid stock available for medicine ID {item.MedicineId}")
 
