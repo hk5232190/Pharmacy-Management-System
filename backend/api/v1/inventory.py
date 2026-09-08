@@ -138,6 +138,7 @@ def get_stock_list(
             # Determine Status
             current_stock = batch.Quantity if batch else 0
             min_stock = med.ReorderLevel if med.ReorderLevel and med.ReorderLevel > 0 else low_stock_threshold
+            threshold_source = "Item Setting" if med.ReorderLevel and med.ReorderLevel > 0 else "Global Setting"
             max_stock = (min_stock * 3) if min_stock > 0 else None
             
             if current_stock <= 0:
@@ -166,7 +167,8 @@ def get_stock_list(
                 "PurchasePrice": float(batch.CostPrice) if batch else 0.0,
                 "SellingPrice": float(batch.SellingPrice) if batch else 0.0,
                 "CurrentStock": current_stock,
-                "MinStock": med.ReorderLevel,
+                "MinStock": min_stock,
+                "ThresholdSource": threshold_source,
                 "Status": med_status,
                 "StockValue": float(current_stock * batch.CostPrice) if batch else 0.0,
                 "LastPurchaseDate": batch.ReceivedDate if batch else None,

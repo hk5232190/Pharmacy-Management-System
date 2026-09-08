@@ -59,6 +59,7 @@ interface StockBatch {
   SellingPrice: number;
   CurrentStock: number;
   MinStock: number;
+  ThresholdSource?: string;
   Status: string;
   StockValue: number;
   LastPurchaseDate: string;
@@ -1139,7 +1140,12 @@ function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTa
                           <td className="px-4 py-3 text-right tabular-nums">{formatCurrency(item.PurchasePrice)}</td>
                           <td className="px-4 py-3 text-right tabular-nums">{formatCurrency(item.SellingPrice)}</td>
                           <td className="px-4 py-3 text-right font-bold tabular-nums">{item.CurrentStock}</td>
-                          <td className="px-4 py-3 text-right text-muted-foreground tabular-nums">{item.MinStock}</td>
+                          <td className="px-4 py-3 text-right text-muted-foreground tabular-nums">
+                            <div className="flex flex-col items-end">
+                              <span>{item.MinStock}</span>
+                              <span className="text-[10px] opacity-70">({item.ThresholdSource || "Global Setting"})</span>
+                            </div>
+                          </td>
                           <td className="px-4 py-3">
                             <span className={cn(
                               "px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap",

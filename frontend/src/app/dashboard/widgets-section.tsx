@@ -134,7 +134,9 @@ export default function WidgetsSection({ timeframe = 'today', dateRange = null, 
                     <span className="font-bold text-sm text-orange-600 dark:text-orange-500">{item.current_quantity} left</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-xs text-muted-foreground">Reorder Level: {item.reorder_level}</span>
+                    <span className="text-xs text-muted-foreground">
+                      Threshold: {item.reorder_level} <span className="opacity-70">({item.threshold_source || "Global Setting"})</span>
+                    </span>
                     <Link href="/dashboard/purchases/new" className="text-xs font-medium text-orange-600 hover:text-orange-700 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <PackageSearch className="w-3 h-3" /> Create PO
                     </Link>

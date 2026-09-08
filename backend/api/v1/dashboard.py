@@ -19,6 +19,10 @@ def get_dashboard_summary(
     today = date.today()
     filter_start, filter_end = get_date_range(timeframe, start_date, end_date)
 
+    inv_settings = db.query(models.InventorySettings).first()
+    low_stock_threshold = inv_settings.LowStockThreshold if inv_settings else 10
+    expiry_alert_days = inv_settings.ExpiryAlertDays if inv_settings else 90
+
     # --- Today's Business ---
     # Filtered Sales
     today_sales = db.query(func.sum(models.Sale.NetAmount)).filter(
@@ -93,7 +97,7 @@ def get_dashboard_summary(
         active_stocks, models.Medicine.MedicineId == active_stocks.c.MedicineId
     ).filter(
         active_stocks.c.total_qty > 0,
-        active_stocks.c.total_qty <= func.coalesce(func.nullif(models.Medicine.ReorderLevel, 0), 10),
+        active_stocks.c.total_qty <= func.coalesce(func.nullif(models.Medicine.ReorderLevel, 0), low_stock_threshold),
         models.Medicine.IsActive == True
     ).count()
 
@@ -106,7 +110,7 @@ def get_dashboard_summary(
     ).count()
 
     # Expiring Soon
-    expiry_threshold = today + timedelta(days=settings.EXPIRY_ALERT_DAYS)
+    expiry_threshold = today + timedelta(days=expiry_alert_days)
     expiring_soon_count = db.query(models.StockBatch).filter(
         models.StockBatch.Quantity > 0,
         models.StockBatch.ExpiryDate > today,
@@ -381,6 +385,10 @@ def get_dashboard_widgets(
     today = date.today()
     filter_start, filter_end = get_date_range(timeframe, start_date, end_date)
     
+    inv_settings = db.query(models.InventorySettings).first()
+    low_stock_threshold = inv_settings.LowStockThreshold if inv_settings else 10
+    expiry_alert_days = inv_settings.ExpiryAlertDays if inv_settings else 90
+
     # 1. Recent Sales
     sales = db.query(models.Sale).filter(
         func.date(models.Sale.TransactionDate, 'localtime') >= filter_start,
@@ -415,23 +423,26 @@ def get_dashboard_widgets(
         active_stocks, models.Medicine.MedicineId == active_stocks.c.MedicineId
     ).filter(
         active_stocks.c.total_qty > 0,
-        active_stocks.c.total_qty <= func.coalesce(func.nullif(models.Medicine.ReorderLevel, 0), 10),
+        active_stocks.c.total_qty <= func.coalesce(func.nullif(models.Medicine.ReorderLevel, 0), low_stock_threshold),
         models.Medicine.IsActive == True
     ).all()
 
     low_stock = []
     for med, qty in low_stock_meds:
+        effective_threshold = med.ReorderLevel if med.ReorderLevel and med.ReorderLevel > 0 else low_stock_threshold
+        source = "Item Setting" if med.ReorderLevel and med.ReorderLevel > 0 else "Global Setting"
         low_stock.append({
             "medicine_id": med.MedicineId,
             "name": med.BrandName,
             "current_quantity": int(qty or 0),
-            "reorder_level": med.ReorderLevel
+            "reorder_level": effective_threshold,
+            "threshold_source": source
         })
 
     # 3. Expiry Alerts (ExpiryDate <= today + settings.EXPIRY_ALERT_DAYS AND Quantity > 0 AND ExpiryDate > today)
     # Actually, we also want to show things that have already expired if they still have quantity? 
     # Usually expiry alert is for upcoming. Let's do ExpiryDate <= today + EXPIRY_ALERT_DAYS
-    expiry_threshold = today + timedelta(days=settings.EXPIRY_ALERT_DAYS)
+    expiry_threshold = today + timedelta(days=expiry_alert_days)
     expiring_batches = db.query(models.StockBatch).filter(
         models.StockBatch.Quantity > 0,
         models.StockBatch.ExpiryDate <= expiry_threshold
