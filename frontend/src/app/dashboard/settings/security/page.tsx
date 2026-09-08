@@ -630,7 +630,7 @@ export default function SecurityMaintenancePage() {
           </div>
         </CardHeader>
         <CardContent className="pt-4">
-          <div className="rounded-lg border border-border bg-black/40 dark:bg-black/50 overflow-hidden">
+          <div className="rounded-lg border border-border bg-slate-950 dark:bg-black/50 overflow-hidden">
             {isLoadingLogs ? (
               <div className="flex items-center justify-center py-12 text-slate-400">
                 <Loader2 className="h-6 w-6 animate-spin mr-2" /> Loading logs…

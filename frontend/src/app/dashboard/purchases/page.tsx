@@ -119,7 +119,7 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
   const [supplierId, setSupplierId] = useState<number>(0);
   const [supplierInvNo, setSupplierInvNo] = useState("");
   const [paymentStatus, setPaymentStatus] = useState("Paid");
-  const [paymentMethod, setPaymentMethod] = useState("Bank Transfer");
+  const [paymentMethod, setPaymentMethod] = useState("Cash");
   const [notes, setNotes] = useState("");
   
   // Grid

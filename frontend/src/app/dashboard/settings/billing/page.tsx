@@ -257,22 +257,6 @@ export default function BillingSettingsPage() {
               </Select>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="flex items-center justify-between p-5 bg-slate-50/80 dark:bg-slate-900/40 rounded-xl border border-slate-200/60 dark:border-slate-800">
-                <div>
-                  <Label className="text-base font-semibold">Auto-Print Receipt</Label>
-                  <p className="text-sm text-slate-500 mt-0.5">Instantly print upon save</p>
-                </div>
-                <Switch checked={settings.AutoPrintReceipt} onCheckedChange={(c) => handleSwitchChange("AutoPrintReceipt", c)} />
-              </div>
-              <div className="flex items-center justify-between p-5 bg-slate-50/80 dark:bg-slate-900/40 rounded-xl border border-slate-200/60 dark:border-slate-800">
-                <div>
-                  <Label className="text-base font-semibold">Keyboard Shortcuts</Label>
-                  <p className="text-sm text-slate-500 mt-0.5">Show shortcuts on POS</p>
-                </div>
-                <Switch checked={settings.ShowKeyboardShortcuts} onCheckedChange={(c) => handleSwitchChange("ShowKeyboardShortcuts", c)} />
-              </div>
-            </div>
           </CardContent>
         </Card>
 
