@@ -350,6 +350,8 @@ class PharmacyProfile(Base):
     Website = Column(String(255), nullable=True)
     LogoPath = Column(String(500), nullable=True)
     ReceiptLogoPath = Column(String(500), nullable=True)
+    ReceiptFooter1 = Column(String(255), nullable=True, default="Thank you for your visit!")
+    ReceiptFooter2 = Column(String(255), nullable=True, default="Software provided by Eagle Nest Creations")
     UpdatedAt = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
 class BillingSettings(Base):

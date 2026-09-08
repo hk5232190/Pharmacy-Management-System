@@ -7,10 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { toast } from "sonner";
 import { useProfile } from "@/contexts/ProfileContext";
-import { UploadCloud, Save, RefreshCw, Info, Image as ImageIcon, CheckCircle2, ShieldCheck, MapPin, Building } from "lucide-react";
-import Cropper from "react-easy-crop";
 import { SaveButton } from "@/components/ui/save-button";
-import getCroppedImg from "@/lib/cropImage";
+import { Switch } from "@/components/ui/switch";
+import { RefreshCw, Info, Building, UploadCloud, Image as ImageIcon, Trash2 } from "lucide-react";
 
 interface PharmacyProfile {
   ProfileId?: number;
@@ -30,12 +29,16 @@ interface PharmacyProfile {
   Website: string;
   LogoPath: string | null;
   ReceiptLogoPath: string | null;
+  ReceiptFooter1: string;
+  ReceiptFooter2: string;
 }
 
 const DEFAULT_PROFILE: PharmacyProfile = {
   PharmacyName: "", PharmacySlogan: "", OwnerName: "", RegistrationNumber: "", DrugLicenseNumber: "", NtnStrn: "",
   PhoneNumber: "", EmailAddress: "", Address: "", City: "", State: "",
-  Country: "", PostalCode: "", Website: "", LogoPath: null, ReceiptLogoPath: null
+  Country: "", PostalCode: "", Website: "", LogoPath: null, ReceiptLogoPath: null,
+  ReceiptFooter1: "Thank you for your visit!",
+  ReceiptFooter2: "Software provided by Eagle Nest Creations"
 };
 
 export default function PharmacyProfilePage() {
@@ -43,18 +46,10 @@ export default function PharmacyProfilePage() {
   const [profile, setProfile] = useState<PharmacyProfile>(DEFAULT_PROFILE);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [logoFileToUpload, setLogoFileToUpload] = useState<File | null>(null);
   const [logoPreviewUrl, setLogoPreviewUrl] = useState<string | null>(null);
-
-  // Cropper & Deferred Upload State
-  const [isCropping, setIsCropping] = useState(false);
-  const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
-  const [crop, setCrop] = useState({ x: 0, y: 0 });
-  const [zoom, setZoom] = useState(1);
-  const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
-  
-  const [logoFileToUpload, setLogoFileToUpload] = useState<File | Blob | null>(null);
-  const [shouldRemoveLogo, setShouldRemoveLogo] = useState(false);
+  const [showLogoOnReceipt, setShowLogoOnReceipt] = useState<boolean>(true);
+  const [logoRemoved, setLogoRemoved] = useState<boolean>(false);
 
   useEffect(() => {
     fetchProfile();
@@ -78,8 +73,22 @@ export default function PharmacyProfilePage() {
           ...data
         });
         if (data.ReceiptLogoPath) {
-          setLogoPreviewUrl(`http://127.0.0.1:8000${data.ReceiptLogoPath}?t=${new Date().getTime()}`);
+          const path = data.ReceiptLogoPath.startsWith('/') ? data.ReceiptLogoPath : `/${data.ReceiptLogoPath}`;
+          setLogoPreviewUrl(`http://127.0.0.1:8000${path}`);
+        } else if (data.LogoPath) {
+          const path = data.LogoPath.startsWith('/') ? data.LogoPath : `/${data.LogoPath}`;
+          setLogoPreviewUrl(`http://127.0.0.1:8000${path}`);
+        } else {
+          setLogoPreviewUrl(null);
         }
+      }
+      
+      const printerRes = await fetch("http://127.0.0.1:8000/api/v1/settings/printer", {
+        headers: getAuthHeaders()
+      });
+      if (printerRes.ok) {
+        const printerData = await printerRes.json();
+        setShowLogoOnReceipt(printerData.ShowLogo);
       }
     } catch (error) {
       console.error("Failed to fetch profile", error);
@@ -104,25 +113,41 @@ export default function PharmacyProfilePage() {
       });
       if (!res.ok) throw new Error("Failed to update profile.");
       
-      // 2. Handle Logo operations
-      if (shouldRemoveLogo) {
-        await fetch("http://127.0.0.1:8000/api/v1/settings/profile/receipt-logo", {
-          method: "DELETE",
-          headers: getAuthHeaders()
-        });
-      } else if (logoFileToUpload) {
+      // 2. Upload Logo if exists
+      if (logoFileToUpload) {
         const formData = new FormData();
-        formData.append("file", logoFileToUpload, "receipt_logo.png");
-        await fetch("http://127.0.0.1:8000/api/v1/settings/profile/receipt-logo", {
+        formData.append("file", logoFileToUpload);
+        const uploadRes = await fetch("http://127.0.0.1:8000/api/v1/settings/profile/receipt-logo", {
           method: "POST",
           headers: getAuthHeaders(),
           body: formData
         });
+        if (!uploadRes.ok) throw new Error("Failed to upload logo.");
+        setLogoFileToUpload(null);
+        setLogoRemoved(false);
+      } else if (logoRemoved) {
+        // Delete logo
+        await fetch("http://127.0.0.1:8000/api/v1/settings/profile/receipt-logo", {
+          method: "DELETE",
+          headers: getAuthHeaders()
+        });
+        setLogoRemoved(false);
+      }
+
+      // 3. Save Printer Settings (ShowLogo)
+      const printerRes = await fetch("http://127.0.0.1:8000/api/v1/settings/printer", {
+        headers: getAuthHeaders()
+      });
+      if (printerRes.ok) {
+        const currentPrinterSettings = await printerRes.json();
+        await fetch("http://127.0.0.1:8000/api/v1/settings/printer", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+          body: JSON.stringify({ ...currentPrinterSettings, ShowLogo: showLogoOnReceipt })
+        });
       }
       
       toast.success("Pharmacy Profile updated successfully!");
-      setLogoFileToUpload(null);
-      setShouldRemoveLogo(false);
       
       await refreshProfile();
       await fetchProfile(); // Ensure UI state is strictly in sync
@@ -133,37 +158,7 @@ export default function PharmacyProfilePage() {
     }
   };
 
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || e.target.files.length === 0) return;
-    const file = e.target.files[0];
-    
-    const reader = new FileReader();
-    reader.addEventListener("load", () => {
-      setCropImageSrc(reader.result as string);
-      setIsCropping(true);
-    });
-    reader.readAsDataURL(file);
-    e.target.value = "";
-  };
 
-  const onCropComplete = (croppedArea: any, croppedAreaPixels: any) => {
-    setCroppedAreaPixels(croppedAreaPixels);
-  };
-
-  const showCroppedImage = async () => {
-    try {
-      if (!cropImageSrc || !croppedAreaPixels) return;
-      const croppedImage = await getCroppedImg(cropImageSrc, croppedAreaPixels);
-      if (croppedImage) {
-        setLogoFileToUpload(croppedImage);
-        setLogoPreviewUrl(URL.createObjectURL(croppedImage));
-        setShouldRemoveLogo(false);
-        setIsCropping(false);
-      }
-    } catch (e) {
-      toast.error("Failed to crop image.");
-    }
-  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -186,12 +181,7 @@ export default function PharmacyProfilePage() {
     setProfile({ ...profile, [name]: newValue });
   };
 
-  const handleRemoveLogo = () => {
-    setLogoPreviewUrl(null);
-    setLogoFileToUpload(null);
-    setProfile({ ...profile, ReceiptLogoPath: null });
-    setShouldRemoveLogo(true);
-  };
+
 
   if (isLoading) {
     return <div className="p-8 flex justify-center"><RefreshCw className="h-8 w-8 animate-spin text-slate-400" /></div>;
@@ -212,90 +202,74 @@ export default function PharmacyProfilePage() {
           </CardHeader>
           <CardContent className="p-7 space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Logo Section */}
-              <div className="md:col-span-2 flex flex-col sm:flex-row gap-6 p-6 rounded-2xl border border-slate-200/60 dark:border-slate-800 items-center transition-all group bg-slate-50/30 dark:bg-slate-900/20 hover:bg-slate-50/80 dark:hover:bg-slate-900/40">
-                 <div className="shrink-0 w-24 h-24 rounded-2xl border border-slate-200 dark:border-slate-700 flex items-center justify-center bg-white dark:bg-zinc-900 overflow-hidden shadow-sm relative cursor-pointer group-hover:border-indigo-400 dark:group-hover:border-indigo-500 transition-colors" onClick={() => fileInputRef.current?.click()}>
-                   {logoPreviewUrl ? (
-                     <img src={logoPreviewUrl} alt="Logo" className="w-full h-full object-cover group-hover:opacity-70 transition-opacity" />
-                   ) : (
-                     <ImageIcon className="w-10 h-10 text-slate-300 dark:text-slate-600 group-hover:scale-110 transition-transform" />
-                   )}
-                   <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                      <UploadCloud className="w-7 h-7 text-white" />
-                   </div>
-                 </div>
-                 <div className="space-y-2 w-full text-center sm:text-left">
-                   <h4 className="text-base font-bold text-slate-800 dark:text-slate-200">Pharmacy Logo</h4>
-                   <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">Recommended ratio 1:1 (Square), max 5MB. Displayed on receipts.</p>
-                   <div className="flex gap-3 justify-center sm:justify-start">
-                     <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} className="h-10 px-4 rounded-xl bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 font-semibold shadow-sm transition-all">
-                       <UploadCloud className="w-4 h-4 mr-2" /> {logoPreviewUrl ? 'Change Logo' : 'Upload Logo'}
-                     </Button>
-                     {(logoPreviewUrl || profile.ReceiptLogoPath) && (
-                       <Button variant="outline" size="sm" onClick={handleRemoveLogo} className="h-10 px-4 rounded-xl text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-950/30 border-red-200 dark:border-red-900/30 transition-colors font-semibold shadow-sm">
-                         Remove
-                       </Button>
-                     )}
-                   </div>
-                   <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleLogoUpload} />
-                 </div>
+              
+              <div className="md:col-span-2 flex flex-col space-y-3 p-4 bg-slate-50 dark:bg-secondary/20 rounded-xl border border-slate-100 dark:border-slate-800">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="text-sm font-semibold">Pharmacy Logo</Label>
+                    <p className="text-xs text-slate-500 mt-1">Upload a logo to display on the receipt.</p>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Switch id="show-logo" checked={showLogoOnReceipt} onCheckedChange={setShowLogoOnReceipt} />
+                    <Label htmlFor="show-logo" className="text-xs cursor-pointer">Show on Receipt</Label>
+                  </div>
+                </div>
+                
+                <div className="flex items-center space-x-4 mt-2">
+                  <div className="w-16 h-16 rounded-lg bg-white dark:bg-black border border-slate-200 dark:border-slate-700 flex items-center justify-center overflow-hidden flex-shrink-0 shadow-sm">
+                    {logoPreviewUrl ? (
+                      <img src={logoPreviewUrl} alt="Logo Preview" className="w-full h-full object-contain p-1" />
+                    ) : (
+                      <ImageIcon className="w-6 h-6 text-slate-300" />
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <input 
+                      type="file" 
+                      id="logo-upload" 
+                      accept="image/*" 
+                      className="hidden" 
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          setLogoFileToUpload(file);
+                          setLogoPreviewUrl(URL.createObjectURL(file));
+                          setShowLogoOnReceipt(true);
+                        }
+                      }} 
+                    />
+                    <div className="flex space-x-2">
+                      <Button type="button" variant="outline" size="sm" onClick={() => document.getElementById('logo-upload')?.click()} className="h-8 text-xs bg-white">
+                        <UploadCloud className="w-3.5 h-3.5 mr-1.5" /> Upload Logo
+                      </Button>
+                      {logoPreviewUrl && (
+                        <Button type="button" variant="ghost" size="sm" className="h-8 text-xs text-red-500 hover:text-red-600 hover:bg-red-50" onClick={() => {
+                          setLogoFileToUpload(null);
+                          setLogoPreviewUrl(null);
+                          setShowLogoOnReceipt(false);
+                          setLogoRemoved(true);
+                          setProfile(prev => ({ ...prev, ReceiptLogoPath: null, LogoPath: null }));
+                        }}>
+                          <Trash2 className="w-3.5 h-3.5 mr-1" /> Remove
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
-
-              <div className="space-y-3">
+              <div className="space-y-3 md:col-span-2">
                 <Label htmlFor="PharmacyName" className="text-sm font-semibold">Pharmacy Name <span className="text-red-500">*</span></Label>
                 <Input id="PharmacyName" name="PharmacyName" value={profile.PharmacyName || ""} onChange={handleChange} placeholder="e.g. ABC Pharmacy" className="rounded-xl bg-slate-50/70 dark:bg-secondary/30 border-border focus-visible:ring-indigo-500/30 focus-visible:border-indigo-500 transition-all shadow-sm" />
               </div>
-              <div className="space-y-3">
-                <Label htmlFor="PharmacySlogan" className="text-sm font-semibold">Pharmacy Slogan / Tagline</Label>
-                <Input id="PharmacySlogan" name="PharmacySlogan" value={profile.PharmacySlogan || ""} onChange={handleChange} placeholder="e.g. Your Health, Our Priority" className="rounded-xl bg-slate-50/70 dark:bg-secondary/30 border-border focus-visible:ring-indigo-500/30 focus-visible:border-indigo-500 transition-all shadow-sm" />
-              </div>
 
-              {/* Compliance & Licensing Group */}
-              <div className="md:col-span-2 pt-4">
-                <div className="flex items-center space-x-2 bg-indigo-50/50 dark:bg-indigo-950/20 p-3 rounded-lg border border-indigo-100/50 dark:border-indigo-900/30">
-                  <ShieldCheck className="w-5 h-5 text-indigo-500" />
-                  <h4 className="text-sm font-bold text-indigo-900 dark:text-indigo-300 uppercase tracking-wider">Tax & Licensing Compliance</h4>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <Label htmlFor="OwnerName" className="text-sm font-semibold">Owner Name</Label>
-                <Input id="OwnerName" name="OwnerName" value={profile.OwnerName || ""} onChange={handleChange} placeholder="e.g. Mr. Ahmad Khan" className="rounded-xl bg-slate-50/70 dark:bg-secondary/30 border-border focus-visible:ring-indigo-500/30 focus-visible:border-indigo-500 transition-all shadow-sm" />
-              </div>
-              <div className="space-y-3">
-                <Label htmlFor="NtnStrn" className="text-sm font-semibold">NTN / Tax STRN Number</Label>
-                <Input id="NtnStrn" name="NtnStrn" value={profile.NtnStrn || ""} onChange={handleChange} placeholder="e.g. 1234567-8" className="rounded-xl bg-slate-50/70 dark:bg-secondary/30 border-border focus-visible:ring-indigo-500/30 focus-visible:border-indigo-500 transition-all shadow-sm" />
-              </div>
-              
-              <div className="space-y-3">
-                <Label htmlFor="DrugLicenseNumber" className="text-sm font-semibold">Drug License Number</Label>
-                <Input id="DrugLicenseNumber" name="DrugLicenseNumber" value={profile.DrugLicenseNumber || ""} onChange={handleChange} placeholder="DLD-987654" className="rounded-xl bg-slate-50/70 dark:bg-secondary/30 border-border focus-visible:ring-indigo-500/30 focus-visible:border-indigo-500 transition-all shadow-sm" />
-              </div>
-              <div className="space-y-3">
-                <Label htmlFor="RegistrationNumber" className="text-sm font-semibold">Registration Number</Label>
-                <Input id="RegistrationNumber" name="RegistrationNumber" value={profile.RegistrationNumber || ""} onChange={handleChange} placeholder="REG-2021-5566" className="rounded-xl bg-slate-50/70 dark:bg-secondary/30 border-border focus-visible:ring-indigo-500/30 focus-visible:border-indigo-500 transition-all shadow-sm" />
-              </div>
-
-              {/* Contact Information Group */}
-              <div className="md:col-span-2 pt-4">
-                <div className="flex items-center space-x-2 bg-indigo-50/50 dark:bg-indigo-950/20 p-3 rounded-lg border border-indigo-100/50 dark:border-indigo-900/30">
-                  <MapPin className="w-5 h-5 text-indigo-500" />
-                  <h4 className="text-sm font-bold text-indigo-900 dark:text-indigo-300 uppercase tracking-wider">Contact & Address</h4>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <Label htmlFor="PhoneNumber" className="text-sm font-semibold">Phone Number <span className="text-red-500">*</span></Label>
+              <div className="space-y-3 md:col-span-2">
+                <Label htmlFor="PhoneNumber" className="text-sm font-semibold">Contact / Mobile Number <span className="text-red-500">*</span></Label>
                 <Input id="PhoneNumber" name="PhoneNumber" value={profile.PhoneNumber || ""} onChange={handleChange} placeholder="+92 300 1234567" className="rounded-xl bg-slate-50/70 dark:bg-secondary/30 border-border focus-visible:ring-indigo-500/30 focus-visible:border-indigo-500 transition-all shadow-sm" />
-              </div>
-              <div className="space-y-3">
-                <Label htmlFor="EmailAddress" className="text-sm font-semibold">Email Address <span className="text-red-500">*</span></Label>
-                <Input id="EmailAddress" name="EmailAddress" value={profile.EmailAddress || ""} onChange={handleChange} placeholder="abcpharmacy@gmail.com" className="rounded-xl bg-slate-50/70 dark:bg-secondary/30 border-border focus-visible:ring-indigo-500/30 focus-visible:border-indigo-500 transition-all shadow-sm" />
               </div>
 
               <div className="md:col-span-2 space-y-3">
-                <Label htmlFor="Address" className="text-sm font-semibold">Address <span className="text-red-500">*</span></Label>
-                <Input id="Address" name="Address" value={profile.Address || ""} onChange={handleChange} placeholder="123 Main Street, Near City Hospital, Saddar" className="rounded-xl bg-slate-50/70 dark:bg-secondary/30 border-border focus-visible:ring-indigo-500/30 focus-visible:border-indigo-500 transition-all shadow-sm" />
+                <Label htmlFor="Address" className="text-sm font-semibold">Pharmacy Address <span className="text-red-500">*</span></Label>
+                <Input id="Address" name="Address" value={profile.Address || ""} onChange={handleChange} placeholder="123 Main Street" className="rounded-xl bg-slate-50/70 dark:bg-secondary/30 border-border focus-visible:ring-indigo-500/30 focus-visible:border-indigo-500 transition-all shadow-sm" />
               </div>
 
               <div className="space-y-3">
@@ -311,14 +285,15 @@ export default function PharmacyProfilePage() {
                 <Label htmlFor="Country" className="text-sm font-semibold">Country <span className="text-red-500">*</span></Label>
                 <Input id="Country" name="Country" value={profile.Country || ""} onChange={handleChange} placeholder="Pakistan" className="rounded-xl bg-slate-50/70 dark:bg-secondary/30 border-border focus-visible:ring-indigo-500/30 focus-visible:border-indigo-500 transition-all shadow-sm" />
               </div>
-              <div className="space-y-3">
-                <Label htmlFor="PostalCode" className="text-sm font-semibold">Postal Code</Label>
-                <Input id="PostalCode" name="PostalCode" value={profile.PostalCode || ""} onChange={handleChange} placeholder="54000" className="rounded-xl bg-slate-50/70 dark:bg-secondary/30 border-border focus-visible:ring-indigo-500/30 focus-visible:border-indigo-500 transition-all shadow-sm" />
-              </div>
 
-              <div className="md:col-span-2 space-y-3">
+              <div className="space-y-3">
                 <Label htmlFor="Website" className="text-sm font-semibold">Website (optional)</Label>
                 <Input id="Website" name="Website" value={profile.Website || ""} onChange={handleChange} placeholder="www.abcpharmacy.com" className="rounded-xl bg-slate-50/70 dark:bg-secondary/30 border-border focus-visible:ring-indigo-500/30 focus-visible:border-indigo-500 transition-all shadow-sm" />
+              </div>
+
+              <div className="space-y-3 md:col-span-2">
+                <Label htmlFor="ReceiptFooter1" className="text-sm font-semibold">Receipt Footer Message</Label>
+                <Input id="ReceiptFooter1" name="ReceiptFooter1" value={profile.ReceiptFooter1 || ""} onChange={handleChange} placeholder="e.g. Thank you for your visit!" className="rounded-xl bg-slate-50/70 dark:bg-secondary/30 border-border focus-visible:ring-indigo-500/30 focus-visible:border-indigo-500 transition-all shadow-sm" />
               </div>
             </div>
             
@@ -363,83 +338,88 @@ export default function PharmacyProfilePage() {
               {/* Subtle paper texture/noise background (optional via CSS, simulated here with opacity) */}
               <div className="absolute inset-0 opacity-[0.02] dark:opacity-[0.05] pointer-events-none mix-blend-overlay bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
               
-              <div className="relative z-10 flex flex-col items-center text-center pb-5 border-b border-dashed border-slate-300 dark:border-slate-700/60">
-                {logoPreviewUrl && <img src={logoPreviewUrl} alt="Logo" className="w-14 h-14 mb-3 object-cover rounded-lg filter drop-shadow-sm border border-slate-200/50 dark:border-slate-700/50" />}
-                <h4 className="text-sm font-extrabold uppercase tracking-widest text-slate-900 dark:text-slate-100">
-                  {profile.PharmacyName || "YOUR PHARMACY NAME"}
-                </h4>
-                <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 uppercase font-medium tracking-widest">{profile.PharmacySlogan || "Your Health, Our Priority"}</p>
-                
-                <div className="mt-4 space-y-1 text-slate-600 dark:text-slate-400 font-medium">
-                  <p>{profile.Address || "123 Pharmacy Street"}</p>
-                  {(profile.City || profile.State || profile.PostalCode || profile.Country) && (
-                    <p>{[profile.City, profile.State, profile.PostalCode, profile.Country].filter(Boolean).join(", ")}</p>
+              <div className="relative z-10 flex flex-col text-left font-mono">
+                <div className="text-center mb-2">
+                  {showLogoOnReceipt && logoPreviewUrl && (
+                    <div className="flex justify-center mb-2">
+                      <img src={logoPreviewUrl} alt="Logo" className="w-12 h-12 object-contain grayscale" />
+                    </div>
                   )}
-                  
-                  <div className="pt-2 mt-2 border-t border-dashed border-slate-200 dark:border-slate-700/60 inline-block px-4">
-                    {profile.PhoneNumber && <p>Phone: {profile.PhoneNumber}</p>}
-                    {profile.EmailAddress && <p>Email: {profile.EmailAddress}</p>}
-                    {profile.DrugLicenseNumber && <p>DL No: {profile.DrugLicenseNumber}</p>}
-                    {profile.NtnStrn && <p>NTN/STRN: {profile.NtnStrn}</p>}
-                  </div>
+                  <p className="text-sm font-semibold uppercase text-slate-900 dark:text-slate-100 mb-1">
+                    {profile.PharmacyName || "PHARMACY NAME"}
+                  </p>
+                  <p className="text-slate-700 dark:text-slate-300">
+                    Contact: {profile.PhoneNumber || "mobile number"}
+                  </p>
+                  <p className="text-slate-700 dark:text-slate-300">
+                    Address: {profile.Address || "Pharmacy address"}
+                  </p>
                 </div>
-              </div>
-              
-              <div className="relative z-10 py-5 border-b border-dashed border-slate-300 dark:border-slate-700/60 text-slate-600 dark:text-slate-400">
-                <p className="text-center font-bold text-slate-800 dark:text-slate-200 mb-3 tracking-widest">TAX INVOICE</p>
-                <div className="flex justify-between items-end">
-                  <div className="space-y-1">
-                    <p>Invoice #: <span className="text-slate-900 dark:text-slate-200">INV-2505-0156</span></p>
-                    <p>Customer: <span className="text-slate-900 dark:text-slate-200">Walk-in</span></p>
-                  </div>
-                  <div className="text-right">
-                    <p>Date: {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
-                  </div>
+                
+                <div className="w-full border-t border-dashed border-slate-300 dark:border-slate-600 my-2"></div>
+                
+                <p className="text-slate-700 dark:text-slate-300">Receipt #: INV-000123</p>
+                <p className="text-slate-700 dark:text-slate-300">Date: 07-Sep-2026</p>
+                <p className="text-slate-700 dark:text-slate-300">Time: 01:04 PM</p>
+                
+                <div className="w-full border-t border-dashed border-slate-300 dark:border-slate-600 my-2"></div>
+                
+                <div className="flex text-slate-700 dark:text-slate-300">
+                  <span className="flex-[2]">Item</span>
+                  <span className="flex-1 text-center">Qty</span>
+                  <span className="flex-1 text-right">Price</span>
+                  <span className="flex-1 text-right">Total</span>
                 </div>
-              </div>
-              
-              <div className="relative z-10 py-4 text-slate-700 dark:text-slate-300">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-dashed border-slate-300 dark:border-slate-700/60 text-slate-500">
-                      <th className="text-left font-semibold pb-2">Item</th>
-                      <th className="text-right font-semibold pb-2">Qty</th>
-                      <th className="text-right font-semibold pb-2">Price</th>
-                      <th className="text-right font-semibold pb-2">Total</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td className="py-3 font-medium">Paracetamol 500mg</td>
-                      <td className="text-right py-3">2</td>
-                      <td className="text-right py-3">25.00</td>
-                      <td className="text-right py-3">50.00</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-              
-              <div className="relative z-10 pt-3 border-t border-dashed border-slate-300 dark:border-slate-700/60 space-y-1.5 text-slate-600 dark:text-slate-400">
-                <div className="flex justify-between">
-                  <span>Subtotal</span>
-                  <span>50.00</span>
+                
+                <div className="w-full border-t border-dashed border-slate-300 dark:border-slate-600 my-2"></div>
+                
+                <div className="flex text-slate-700 dark:text-slate-300 my-1">
+                  <span className="flex-[2] truncate pr-1">Panadol</span>
+                  <span className="flex-1 text-center">2</span>
+                  <span className="flex-1 text-right">50.00</span>
+                  <span className="flex-1 text-right">100.00</span>
                 </div>
-                <div className="flex justify-between text-red-500/90 dark:text-red-400">
-                  <span>Discount</span>
-                  <span>- 5.00</span>
+                <div className="flex text-slate-700 dark:text-slate-300 my-1">
+                  <span className="flex-[2] truncate pr-1">Brufen</span>
+                  <span className="flex-1 text-center">1</span>
+                  <span className="flex-1 text-right">120.00</span>
+                  <span className="flex-1 text-right">120.00</span>
                 </div>
-                <div className="flex justify-between">
-                  <span>Tax (12%)</span>
-                  <span>5.40</span>
+                <div className="flex text-slate-700 dark:text-slate-300 my-1">
+                  <span className="flex-[2] truncate pr-1">Syrup</span>
+                  <span className="flex-1 text-center">1</span>
+                  <span className="flex-1 text-right">180.00</span>
+                  <span className="flex-1 text-right">180.00</span>
                 </div>
-                <div className="flex justify-between text-sm font-extrabold text-slate-900 dark:text-white mt-3 pt-3 border-t border-slate-300 dark:border-slate-700/60">
-                  <span>Grand Total</span>
-                  <span className="text-indigo-600 dark:text-indigo-400">Rs. 50.40</span>
+                
+                <div className="w-full border-t border-dashed border-slate-300 dark:border-slate-600 my-2"></div>
+                
+                <div className="flex text-slate-700 dark:text-slate-300 my-1">
+                  <span className="w-24">Subtotal:</span>
+                  <span className="flex-1 text-right">400.00</span>
                 </div>
-              </div>
-              
-              <div className="relative z-10 mt-8 text-center text-[10px] text-slate-500 dark:text-slate-400 font-medium italic">
-                Thank you for choosing us!
+                <div className="flex text-slate-700 dark:text-slate-300 my-1">
+                  <span className="w-24">Discount:</span>
+                  <span className="flex-1 text-right">0.00</span>
+                </div>
+                <div className="flex text-slate-700 dark:text-slate-300 my-1">
+                  <span className="w-24">Tax:</span>
+                  <span className="flex-1 text-right">0.00</span>
+                </div>
+                
+                <div className="w-full border-t border-dashed border-slate-300 dark:border-slate-600 my-2"></div>
+                
+                <div className="flex text-slate-700 dark:text-slate-300 font-bold my-1">
+                  <span className="w-24">TOTAL:</span>
+                  <span className="flex-1 text-right">400.00</span>
+                </div>
+                
+                <div className="w-full border-t border-dashed border-slate-300 dark:border-slate-600 my-2"></div>
+                
+                <div className="text-center text-[10px] text-gray-500 mt-6 pt-4 border-t border-dashed border-slate-300 dark:border-slate-600">
+                  <p className="mb-1">{profile.ReceiptFooter1 || "Thank you for your visit!"}</p>
+                  <p>{profile.ReceiptFooter2 || "Software provided by Eagle Nest Creations"}</p>
+                </div>
               </div>
             </CardContent>
             
@@ -453,36 +433,7 @@ export default function PharmacyProfilePage() {
         </div>
       </div>
 
-      {/* Crop Modal for Logo */}
-      {isCropping && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 transition-all">
-          <div className="bg-card rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden border border-border animate-in fade-in zoom-in-95 duration-200">
-            <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
-              <h3 className="font-semibold text-slate-800 dark:text-slate-200">Crop Logo</h3>
-              <Button variant="ghost" size="sm" onClick={() => setIsCropping(false)} className="h-8">Cancel</Button>
-            </div>
-            <div className="relative h-64 sm:h-80 w-full bg-slate-100 dark:bg-secondary/20">
-              {cropImageSrc && (
-                  <Cropper
-                  image={cropImageSrc}
-                  crop={crop}
-                  zoom={zoom}
-                  aspect={1}
-                  onCropChange={setCrop}
-                  onCropComplete={onCropComplete}
-                  onZoomChange={setZoom}
-                />
-              )}
-            </div>
-            <div className="p-4 border-t border-slate-100 dark:border-slate-800 flex justify-end space-x-2 bg-slate-50/50 dark:bg-secondary/20">
-              <Button variant="outline" onClick={() => setIsCropping(false)}>Cancel</Button>
-              <Button onClick={showCroppedImage} className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm">
-                Apply Crop
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+
 
     </div>
   );

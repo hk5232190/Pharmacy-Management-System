@@ -19,6 +19,8 @@ class PharmacyProfileBase(BaseModel):
     Website: Optional[str] = None
     LogoPath: Optional[str] = None
     ReceiptLogoPath: Optional[str] = None
+    ReceiptFooter1: Optional[str] = None
+    ReceiptFooter2: Optional[str] = None
 
 class PharmacyProfileCreate(PharmacyProfileBase):
     pass

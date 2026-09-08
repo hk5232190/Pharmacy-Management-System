@@ -17,13 +17,18 @@ export interface PharmacyProfile {
   PostalCode: string;
   Website: string;
   LogoPath: string | null;
+  ReceiptLogoPath: string | null;
+  ReceiptFooter1: string;
+  ReceiptFooter2: string;
 }
 
 const DEFAULT_PROFILE: PharmacyProfile = {
   PharmacyName: "Pharmacy",
   OwnerName: "", RegistrationNumber: "", DrugLicenseNumber: "",
   PhoneNumber: "", EmailAddress: "", Address: "", City: "", State: "",
-  Country: "", PostalCode: "", Website: "", LogoPath: null
+  Country: "", PostalCode: "", Website: "", LogoPath: null, ReceiptLogoPath: null,
+  ReceiptFooter1: "Thank you for your visit!",
+  ReceiptFooter2: "Software provided by Eagle Nest Creations"
 };
 
 interface ProfileContextType {

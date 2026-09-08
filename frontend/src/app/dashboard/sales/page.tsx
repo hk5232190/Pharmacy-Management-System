@@ -30,6 +30,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useSystemPreferences } from "@/contexts/SystemPreferencesContext";
 import { useInventorySettings } from "@/contexts/InventorySettingsContext";
+import { useProfile } from "@/contexts/ProfileContext";
 import { useSearchParams } from "next/navigation";
 
 // --- Interfaces ---
@@ -113,6 +114,8 @@ function POSBillingPageContent() {
 function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { onRefresh: () => void, refreshState: "idle" | "loading" | "done", activeTab: "pos" | "history" | "return", onTabChange: (tab: "pos" | "history" | "return") => void }) {
   const { formatNumber, formatCurrency, currencySymbol } = useSystemPreferences();
   const { inventorySettings } = useInventorySettings();
+  const { profile } = useProfile();
+  const [showLogoOnReceipt, setShowLogoOnReceipt] = useState(false);
   // (activeTab is now managed by the wrapper so it survives a refresh reset)
   const [loadingInit, setLoadingInit] = useState(true);
   const [invoiceNo, setInvoiceNo] = useState("");
@@ -257,6 +260,11 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
         autoPrintRef.current = initRes.data.AutoPrintReceipt ?? false;
         showShortcutsRef.current = initRes.data.ShowKeyboardShortcuts ?? true;
         setShowKeyboardShortcuts(initRes.data.ShowKeyboardShortcuts ?? true);
+      }
+      
+      const printerRes = await apiClient.get('/settings/printer');
+      if (printerRes.success && printerRes.data) {
+        setShowLogoOnReceipt(printerRes.data.ShowLogo);
       }
 
       const userStr = localStorage.getItem('user');
@@ -1710,9 +1718,14 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
                 )}
 
                 <div className="text-center mb-4 relative z-10">
-                  <h2 className="font-bold text-base mb-1">PHARMACY MANAGEMENT SYSTEM</h2>
-                  <p>123 Health Ave, Medical City</p>
-                  <p>Tel: +1 234 567 8900</p>
+                  {showLogoOnReceipt && (profile.ReceiptLogoPath || profile.LogoPath) && (
+                    <div className="flex justify-center mb-2">
+                      <img src={`http://127.0.0.1:8000${(profile.ReceiptLogoPath || profile.LogoPath)?.startsWith('/') ? (profile.ReceiptLogoPath || profile.LogoPath) : '/' + (profile.ReceiptLogoPath || profile.LogoPath)}`} alt="Logo" className="w-12 h-12 object-contain grayscale" />
+                    </div>
+                  )}
+                  <h2 className="font-bold text-base mb-1 uppercase">{profile.PharmacyName || "PHARMACY NAME"}</h2>
+                  <p>Contact: {profile.PhoneNumber || "mobile number"}</p>
+                  <p>Address: {profile.Address || "Pharmacy address"}</p>
                 </div>
 
                 {isReprintMode && (
@@ -1721,26 +1734,26 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
                   </div>
                 )}
 
-                <div className="mb-4 pb-2 border-b border-dashed border-gray-400 relative z-10">
-                  <div className="flex justify-between"><span>Invoice:</span> <span>{completedReceipt.InvoiceNumber}</span></div>
-                  <div className="flex justify-between"><span>Date:</span> <span>{completedReceipt.Date}</span></div>
-                  <div className="flex justify-between"><span>Cashier:</span> <span>{completedReceipt.Cashier}</span></div>
+                <div className="mb-4 pb-2 border-b border-dashed border-gray-400 relative z-10 text-left">
+                  <p>Invoice: {completedReceipt.InvoiceNumber}</p>
+                  <p>Date: {completedReceipt.Date}</p>
+                  <p>Cashier: {completedReceipt.Cashier}</p>
                 </div>
 
                 <div className="mb-4">
                   <div className="flex justify-between font-bold border-b border-dashed border-gray-400 pb-1 mb-2">
-                    <span>Item</span>
-                    <span>Total</span>
+                    <span className="flex-[2]">Item</span>
+                    <span className="flex-1 text-center">Qty</span>
+                    <span className="flex-1 text-right">Price</span>
+                    <span className="flex-1 text-right">Total</span>
                   </div>
                   {completedReceipt.Items.map((item: CartItem) => (
                     <div key={item.id} className="mb-2">
-                      <div className="font-bold">{item.MedicineName}</div>
-                      <div className="flex justify-between text-[10px] text-gray-600">
-                        <span>Batch: {item.BatchCode} | Exp: {item.ExpiryDate}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>{item.Quantity} x {formatCurrency(item.UnitPrice)}</span>
-                        <span>{formatCurrency(item.LineTotal)}</span>
+                      <div className="flex text-slate-900 dark:text-slate-100 items-start">
+                        <span className="flex-[2] pr-1 font-semibold break-words leading-tight">{item.MedicineName}</span>
+                        <span className="flex-1 text-center">{item.Quantity}</span>
+                        <span className="flex-1 text-right">{item.UnitPrice.toFixed(2)}</span>
+                        <span className="flex-1 text-right">{item.LineTotal.toFixed(2)}</span>
                       </div>
                     </div>
                   ))}
@@ -1773,8 +1786,8 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
                 </div>
 
                 <div className="text-center text-[10px] text-gray-500">
-                  <p className="mb-1">Thank you for your visit!</p>
-                  <p>Software License ID: LIC-9942-AX3</p>
+                  <p className="mb-1">{profile.ReceiptFooter1 || "Thank you for your visit!"}</p>
+                  <p>{profile.ReceiptFooter2 || "Software provided by Eagle Nest Creations"}</p>
                 </div>
               </div>
 

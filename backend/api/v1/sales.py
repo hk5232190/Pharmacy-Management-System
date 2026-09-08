@@ -9,7 +9,7 @@ def utc_to_local_str(dt_obj):
         return ""
     return dt_obj.replace(tzinfo=timezone.utc).astimezone().strftime('%d/%m/%Y, %I:%M %p')
 
-from models import Sale, Medicine, StockBatch, Customer, StockAdjustment, SaleReturn, BillingSettings, InventorySettings
+from models import Sale, Medicine, StockBatch, Customer, StockAdjustment, SaleReturn, BillingSettings, InventorySettings, PharmacyProfile
 from schemas.base import BaseResponse
 from schemas.sales import SaleInitResponse, ProductSearchResponse, ProductSearchBatch, SaleReturnHistoryItem, SaleReturnHistoryPagedResponse
 from api.deps import get_current_user, get_db
@@ -317,6 +317,10 @@ def print_thermal_receipt(
         sale = db.query(Sale).filter(Sale.SalesId == sales_id).first()
         if not sale:
             raise HTTPException(status_code=404, detail="Sale not found")
+        profile = db.query(PharmacyProfile).first()
+        pharmacy_name = profile.PharmacyName if profile and profile.PharmacyName else "PHARMACY NAME"
+        pharmacy_contact = profile.PhoneNumber if profile and profile.PhoneNumber else "mobile number"
+        pharmacy_address = profile.Address if profile and profile.Address else "Pharmacy address"
         
         # Build ESC/POS bytes
         ESC = b'\x1b'
@@ -334,36 +338,52 @@ def print_thermal_receipt(
         bytes_data += INIT
         
         # Header
-        bytes_data += ALIGN_CENTER + BOLD_ON + b"PHARMACY MANAGEMENT SYSTEM\n" + BOLD_OFF
-        bytes_data += b"123 Health Ave, Medical City\n"
-        bytes_data += b"Tel: +1 234 567 8900\n\n"
+        bytes_data += ALIGN_CENTER
+        bytes_data += BOLD_ON + f"{pharmacy_name}\n".encode() + BOLD_OFF
+        bytes_data += f"Contact: {pharmacy_contact}\n".encode()
+        bytes_data += f"Address: {pharmacy_address}\n".encode()
+        bytes_data += b"------------------------------------------\n"
         
         if is_reprint:
-            bytes_data += BOLD_ON + b"*** DUPLICATE / REPRINT ***\n\n" + BOLD_OFF
+            bytes_data += BOLD_ON + b"*** DUPLICATE / REPRINT ***\n" + BOLD_OFF
         
         # Details
         bytes_data += ALIGN_LEFT
-        bytes_data += f"Invoice : {sale.InvoiceNumber}\n".encode()
-        bytes_data += f"Date    : {utc_to_local_str(sale.TransactionDate)}\n".encode()
-        bytes_data += f"Cashier : {sale.user.Username if sale.user else 'Admin'}\n".encode()
+        bytes_data += f"Receipt #: {sale.InvoiceNumber}\n".encode()
+        
+        # Parse date and time separately
+        tx_date = sale.TransactionDate.replace(tzinfo=timezone.utc).astimezone() if sale.TransactionDate else datetime.now()
+        date_str = tx_date.strftime('%d-%b-%Y')
+        time_str = tx_date.strftime('%I:%M %p')
+        
+        bytes_data += f"Date: {date_str}\n".encode()
+        bytes_data += f"Time: {time_str}\n".encode()
+        bytes_data += b"------------------------------------------\n"
+        
+        # Table Header
+        bytes_data += b"Item       Qty Price Total\n"
         bytes_data += b"------------------------------------------\n"
         
         # Items
         for item in sale.items:
             med_name = item.batch.medicine.BrandName if item.batch and item.batch.medicine else "Unknown"
-            batch_code = item.batch.BatchCode if item.batch else "N/A"
-            expiry = item.batch.ExpiryDate.strftime('%y-%m') if item.batch and item.batch.ExpiryDate else "N/A"
+            med_name = (med_name[:10] + '..') if len(med_name) > 12 else med_name.ljust(12)
             
-            bytes_data += f"{med_name}\n".encode()
-            bytes_data += f"  Batch: {batch_code} | Exp: {expiry}\n".encode()
+            qty_str = str(item.Quantity).rjust(3)
+            price_str = f"{item.UnitPrice:.2f}".rjust(6)
+            total_str = f"{item.TotalPrice:.2f}".rjust(7)
             
-            # Right align total
-            qty_price = f"  {item.Quantity} x {item.UnitPrice:.2f}"
-            total_str = f"{item.TotalPrice:.2f}"
-            spaces = 42 - len(qty_price) - len(total_str)
-            if spaces < 1: spaces = 1
+            # med_name(12) + " " + qty(3) + " " + price(6) + " " + total(7) => ~31 chars, fits easily in 42
+            # Let's align properly.
+            # Template:
+            # Panadol      2  50.00  100.00
+            # 123456789012345678901234567890123456789012
+            # Item       Qty Price Total
+            # Panadol      2  50.00  100.00
             
-            bytes_data += f"{qty_price}{' ' * spaces}{total_str}\n".encode()
+            line = f"{med_name.ljust(11)} {qty_str.rjust(3)} {price_str.rjust(6)} {total_str.rjust(7)}"
+            
+            bytes_data += f"{line}\n".encode()
             
         bytes_data += b"------------------------------------------\n"
         
@@ -376,17 +396,19 @@ def print_thermal_receipt(
             
         bytes_data += add_total_line("Subtotal:", sale.SubTotal)
         bytes_data += add_total_line("Discount:", sale.DiscountAmount)
-        bytes_data += BOLD_ON + add_total_line("GRAND TOTAL:", sale.GrandTotal) + BOLD_OFF
-        bytes_data += b"\n"
-        bytes_data += add_total_line("Paid:", sale.PaidAmount)
-        change = max(0, float(sale.PaidAmount) - float(sale.GrandTotal))
-        bytes_data += add_total_line("Change:", change)
+        bytes_data += add_total_line("Tax:", sale.TaxAmount)
+        bytes_data += b"------------------------------------------\n"
+        bytes_data += BOLD_ON + add_total_line("TOTAL:", sale.GrandTotal) + BOLD_OFF
+        bytes_data += b"------------------------------------------\n"
+        
+        footer_line1 = profile.ReceiptFooter1 if profile and profile.ReceiptFooter1 else "Thank you for your visit!"
+        footer_line2 = profile.ReceiptFooter2 if profile and profile.ReceiptFooter2 else "Software provided by Eagle Nest Creations"
         
         # Footer
         bytes_data += b"\n"
         bytes_data += ALIGN_CENTER
-        bytes_data += b"Thank you for your visit!\n"
-        bytes_data += b"Software License ID: LIC-9942-AX3\n"
+        bytes_data += f"{footer_line1}\n\n".encode()
+        bytes_data += f"{footer_line2}\n".encode()
         bytes_data += LF * 4 + CUT
         
         # Save to spooler
