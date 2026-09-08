@@ -175,9 +175,7 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
   const showShortcutsRef = useRef(true);
   const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(true);
 
-  // --- Modals ---
   const [completedReceipt, setCompletedReceipt] = useState<any>(null);
-  const [isPrintingThermal, setIsPrintingThermal] = useState(false);
 
   // --- Return States ---
   const [returnInvoiceNo, setReturnInvoiceNo] = useState("");
@@ -563,31 +561,174 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
     }
   };
 
-  const handleThermalPrint = async () => {
-    if (!completedReceipt) return;
-    setIsPrintingThermal(true);
+  const handleThermalPrint = async (): Promise<boolean> => {
+    if (!completedReceipt) return false;
     try {
-      const url = completedReceipt.type === 'return' 
-        ? `/sales/return/${completedReceipt.ReturnId}/print-thermal`
-        : `/sales/${completedReceipt.SalesId}/print-thermal?is_reprint=${isReprintMode}`;
-        
-      const res = await apiClient.post(url, {});
-      if (res.success) {
-        toast.success("Sent to ESC/POS thermal printer spooler successfully!");
+      let endpoint: string;
+      if (completedReceipt.type === 'return' && completedReceipt.ReturnId) {
+        endpoint = `/sales/return/${completedReceipt.ReturnId}/print-thermal`;
+      } else if (completedReceipt.SalesId && completedReceipt.SalesId > 0) {
+        endpoint = `/sales/${completedReceipt.SalesId}/print-thermal`;
       } else {
-        toast.error("Failed to print thermal receipt");
+        toast.error("No printer job available for this receipt");
+        return false;
       }
-    } catch (err) {
-      toast.error("Error communicating with print spooler");
-    } finally {
-      setIsPrintingThermal(false);
+
+      const res = await apiClient.post(endpoint, {}, {
+        params: completedReceipt.type === 'return' ? {} : { is_reprint: String(isReprintMode || autoPrintRef.current) }
+      });
+
+      if (res.success) {
+        toast.success("Receipt sent to thermal printer");
+        return true;
+      } else {
+        toast.error(res.error || "Thermal print failed");
+        return false;
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Thermal print failed");
+      return false;
+    }
+  };
+
+  const handlePrintReceipt = () => {
+    const printContent = document.getElementById("print-area");
+    if (!printContent) return;
+
+    const iframe = document.createElement("iframe");
+    iframe.style.position = "absolute";
+    iframe.style.left = "-9999px";
+    iframe.style.top = "0";
+    iframe.style.width = "80mm";
+    iframe.style.height = "100vh";
+    iframe.style.border = "0";
+    document.body.appendChild(iframe);
+
+    const doc = iframe.contentWindow?.document;
+    if (doc) {
+      doc.open();
+      doc.write(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>Receipt</title>
+            <style>
+              @page { 
+                margin: 0; 
+              }
+              html, body { 
+                margin: 0 !important; 
+                padding: 0 !important;
+                width: 80mm;
+                height: auto !important;
+                background: white;
+                color: black;
+                font-family: monospace;
+                font-size: 12px;
+              }
+              
+              /* Tailwind Utility Classes */
+              * { box-sizing: border-box; }
+              .p-6 { padding: 10px; } /* Reduced padding for thermal */
+              .w-full { width: 100%; }
+              .max-w-\\[80mm\\] { max-width: 80mm; }
+              .text-black { color: #000; }
+              .font-mono { font-family: monospace; }
+              .text-xs { font-size: 12px; line-height: 1.2; }
+              .text-sm { font-size: 14px; line-height: 1.2; }
+              .text-base { font-size: 16px; line-height: 1.2; }
+              .text-4xl { font-size: 24px; line-height: 1.2; }
+              .text-\\[10px\\] { font-size: 10px; line-height: 1.2; }
+              .text-gray-500 { color: #6b7280; }
+              .text-slate-900, .dark\\:text-slate-100 { color: #000; }
+              
+              .relative { position: relative; }
+              .absolute { position: absolute; }
+              .inset-0 { top: 0; right: 0; bottom: 0; left: 0; }
+              .z-10 { z-index: 10; }
+              
+              .pointer-events-none { pointer-events: none; }
+              .overflow-hidden { overflow: hidden; }
+              .opacity-10 { opacity: 0.1; }
+              
+              .flex { display: flex; }
+              .items-center { align-items: center; }
+              .items-start { align-items: flex-start; }
+              .justify-center { justify-content: center; }
+              .justify-between { justify-content: space-between; }
+              .flex-1 { flex: 1 1 0%; }
+              .flex-\\[2\\] { flex: 2 2 0%; }
+              
+              .text-center { text-align: center; }
+              .text-right { text-align: right; }
+              .text-left { text-align: left; }
+              .font-bold { font-weight: 700; }
+              .font-semibold { font-weight: 600; }
+              .uppercase { text-transform: uppercase; }
+              .whitespace-nowrap { white-space: nowrap; }
+              .break-words { word-break: break-word; }
+              .leading-tight { line-height: 1.25; }
+              
+              .transform { transform: translate(0); }
+              .-rotate-45 { transform: rotate(-45deg); }
+              
+              .mb-1 { margin-bottom: 0.25rem; }
+              .mb-2 { margin-bottom: 0.5rem; }
+              .mb-4 { margin-bottom: 1rem; }
+              .mb-6 { margin-bottom: 1.5rem; }
+              .pb-1 { padding-bottom: 0.25rem; }
+              .pb-2 { padding-bottom: 0.5rem; }
+              .pt-2 { padding-top: 0.5rem; }
+              .py-1 { padding-top: 0.25rem; padding-bottom: 0.25rem; }
+              .pr-1 { padding-right: 0.25rem; }
+              
+              .space-y-1 > :not([hidden]) ~ :not([hidden]) {
+                margin-top: 0.25rem;
+                margin-bottom: 0;
+              }
+              
+              .border-b { border-bottom-width: 1px; border-bottom-style: solid; }
+              .border-t { border-top-width: 1px; border-top-style: solid; }
+              .border-y { border-top-width: 1px; border-bottom-width: 1px; border-top-style: solid; border-bottom-style: solid; }
+              .border-dashed { border-style: dashed; }
+              .border-gray-400 { border-color: #9ca3af; }
+              .border-black { border-color: #000; }
+              
+              .w-12 { width: 3rem; }
+              .h-12 { height: 3rem; }
+              .object-contain { object-fit: contain; }
+              .grayscale { filter: grayscale(100%); }
+            </style>
+          </head>
+          <body>
+            ${printContent.outerHTML}
+          </body>
+        </html>
+      `);
+      doc.close();
+
+      // Wait for fonts and images to load
+      setTimeout(() => {
+        if (doc.body) {
+          iframe.style.height = doc.body.scrollHeight + 'px';
+        }
+        iframe.contentWindow?.focus();
+        iframe.contentWindow?.print();
+        
+        // Cleanup after printing
+        setTimeout(() => {
+          document.body.removeChild(iframe);
+        }, 1000);
+      }, 500);
     }
   };
 
   useEffect(() => {
     if (completedReceipt && autoPrintRef.current) {
       autoPrintRef.current = false;
-      handleThermalPrint();
+      setTimeout(() => {
+        handleThermalPrint();
+      }, 500);
     }
   }, [completedReceipt]);
 
@@ -1795,11 +1936,11 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
 
             {/* Print Buttons Footer */}
             <div className="p-4 border-t border-border bg-slate-50 flex flex-col gap-3">
-              <Button onClick={() => window.print()} className="w-full bg-slate-800 hover:bg-slate-900 text-white shadow">
-                <Printer className="mr-2 w-4 h-4" /> Print Standard / Save PDF
+              <Button onClick={() => { autoPrintRef.current = false; handleThermalPrint(); }} className="w-full bg-slate-800 hover:bg-slate-900 text-white shadow">
+                <Printer className="mr-2 w-4 h-4" /> Print Receipt (Thermal)
               </Button>
-              <Button onClick={handleThermalPrint} disabled={isPrintingThermal} variant="outline" className="w-full border-blue-200 text-blue-700 hover:bg-blue-50">
-                <Printer className="mr-2 w-4 h-4" /> {isPrintingThermal ? "Spooling..." : "Print to Thermal (ESC/POS)"}
+              <Button variant="outline" onClick={handlePrintReceipt} className="w-full">
+                <Printer className="mr-2 w-4 h-4" /> Print via Browser (Fallback)
               </Button>
             </div>
           </div>

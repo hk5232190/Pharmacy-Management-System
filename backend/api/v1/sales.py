@@ -3,17 +3,42 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func, or_
 from typing import List, Optional
 from datetime import datetime, timezone
+import os
+import sys
+import logging
+
+logger = logging.getLogger(__name__)
 
 def utc_to_local_str(dt_obj):
     if not dt_obj:
         return ""
     return dt_obj.replace(tzinfo=timezone.utc).astimezone().strftime('%d/%m/%Y, %I:%M %p')
 
-from models import Sale, Medicine, StockBatch, Customer, StockAdjustment, SaleReturn, BillingSettings, InventorySettings, PharmacyProfile
+from models import Sale, Medicine, StockBatch, Customer, StockAdjustment, SaleReturn, BillingSettings, InventorySettings, PharmacyProfile, PrinterSettings
 from schemas.base import BaseResponse
 from schemas.sales import SaleInitResponse, ProductSearchResponse, ProductSearchBatch, SaleReturnHistoryItem, SaleReturnHistoryPagedResponse
 from api.deps import get_current_user, get_db
 from core.config import settings
+
+def send_to_printer(printer_settings, raw_bytes: bytes):
+    """Send raw ESC/POS bytes to the configured thermal printer."""
+    if not printer_settings:
+        return
+    port = printer_settings.ConnectionPort or "USB"
+    if port.startswith("COM") or port.startswith("LPT"):
+        with open(port, "wb") as f:
+            f.write(raw_bytes)
+    elif sys.platform == 'win32' and printer_settings.SelectedPrinterName:
+        import win32print
+        hprinter = win32print.OpenPrinter(printer_settings.SelectedPrinterName)
+        try:
+            win32print.StartDocPrinter(hprinter, 1, ("Receipt", None, "RAW"))
+            win32print.StartPagePrinter(hprinter)
+            win32print.WritePrinter(hprinter, raw_bytes)
+            win32print.EndPagePrinter(hprinter)
+            win32print.EndDocPrinter(hprinter)
+        finally:
+            win32print.ClosePrinter(hprinter)
 
 router = APIRouter()
 
@@ -411,7 +436,14 @@ def print_thermal_receipt(
         bytes_data += f"{footer_line2}\n".encode()
         bytes_data += LF * 4 + CUT
         
-        # Save to spooler
+        # Send to physical printer
+        printer_settings = db.query(PrinterSettings).first()
+        try:
+            send_to_printer(printer_settings, bytes(bytes_data))
+        except Exception as e:
+            logger.error(f"Physical print failed for {sale.InvoiceNumber}: {e}")
+
+        # Save to spooler as backup
         spooler_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "spooler")
         os.makedirs(spooler_dir, exist_ok=True)
         
@@ -836,6 +868,13 @@ def process_sales_return(
             bytes_data += f"Mode: {return_data.RefundMode}\n".encode()
             bytes_data += LF * 4 + CUT
             
+            # Send to physical printer
+            printer_settings = db.query(PrinterSettings).first()
+            try:
+                send_to_printer(printer_settings, bytes(bytes_data))
+            except Exception as print_e:
+                logger.error(f"Physical print failed for return {ret_invoice_no}: {print_e}")
+
             spooler_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "spooler")
             os.makedirs(spooler_dir, exist_ok=True)
             with open(os.path.join(spooler_dir, f"{ret_invoice_no}.bin"), 'wb') as f:
@@ -970,6 +1009,13 @@ def print_return_thermal(return_id: int, db: Session = Depends(get_db)):
         bytes_data += BOLD_ON + f"REFUND TOTAL:{' ' * max(1, 42 - 13 - len(refund_str))}{refund_str}\n".encode() + BOLD_OFF
         bytes_data += f"Mode: {ret.RefundMode}\n".encode()
         bytes_data += LF * 4 + CUT
+        
+        # Send to physical printer
+        printer_settings = db.query(PrinterSettings).first()
+        try:
+            send_to_printer(printer_settings, bytes(bytes_data))
+        except Exception as e:
+            logger.error(f"Physical print failed for return {ret.ReturnInvoiceNumber}: {e}")
         
         spooler_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "spooler")
         os.makedirs(spooler_dir, exist_ok=True)
