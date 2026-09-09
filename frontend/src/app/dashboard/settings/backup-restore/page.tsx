@@ -392,7 +392,11 @@ function BackupRestorePageInner({
 
   const handleBrowseFolder = async () => {
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/v1/backup/browse-folder");
+      const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
+      const res = await fetch("http://127.0.0.1:8000/api/v1/backup/browse-folder", {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error("Request failed");
       const data = await res.json();
       if (data.path) {
         setBackupLocation(data.path);
@@ -404,7 +408,11 @@ function BackupRestorePageInner({
 
   const handleBrowseSettingsFolder = async () => {
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/v1/backup/browse-folder");
+      const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
+      const res = await fetch("http://127.0.0.1:8000/api/v1/backup/browse-folder", {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error("Request failed");
       const data = await res.json();
       if (data.path) {
         setSettings({ ...settings, BackupLocation: data.path });
@@ -416,7 +424,11 @@ function BackupRestorePageInner({
 
   const handleBrowseFile = async () => {
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/v1/backup/browse-file");
+      const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
+      const res = await fetch("http://127.0.0.1:8000/api/v1/backup/browse-file", {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error("Request failed");
       const data = await res.json();
       if (data.path) {
         setRestoreFilePath(data.path);
