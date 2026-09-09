@@ -2,24 +2,23 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Card } from "@/components/ui/card";
-import { User, Lock, Eye, EyeOff, Key, Shield, Zap, CheckCircle2, Info, Plus } from "lucide-react";
-import Image from "next/image";
+import {
+  User, Lock, Eye, EyeOff, Key, Shield, Plus,
+  Receipt, Package, WifiOff, AlertTriangle
+} from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [isCapsLockOn, setIsCapsLockOn] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [branding, setBranding] = useState({
     LoginBrandingName: "PMS Software",
-    LoginSubheading: "Sign in to continue.",
+    LoginSubheading: "Pharmacy Management System",
     LoginBackgroundPath: null as string | null
   });
 
@@ -30,7 +29,7 @@ export default function LoginPage() {
         if (data && !data.detail) {
           setBranding({
             LoginBrandingName: data.LoginBrandingName || "PMS Software",
-            LoginSubheading: data.LoginSubheading || "Sign in to continue.",
+            LoginSubheading: data.LoginSubheading || "Pharmacy Management System",
             LoginBackgroundPath: data.LoginBackgroundPath || null
           });
         }
@@ -49,13 +48,14 @@ export default function LoginPage() {
       formData.append("password", password);
       // OAuth2PasswordRequestForm expects form data
 
-      const response = await fetch("http://127.0.0.1:8000/api/v1/auth/login" + (rememberMe ? "?remember_me=true" : ""), {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: formData,
-      });
+      const response = await fetch(
+        "http://127.0.0.1:8000/api/v1/auth/login",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: formData,
+        }
+      );
 
       const data = await response.json();
 
@@ -63,16 +63,12 @@ export default function LoginPage() {
         throw new Error(data.error || "Authentication failed");
       }
 
-      // Store token
-      if (rememberMe) {
-        localStorage.setItem("access_token", data.access_token);
-      } else {
-        sessionStorage.setItem("access_token", data.access_token);
-      }
+      // Store token in session (cleared on browser close)
+      sessionStorage.setItem("access_token", data.access_token);
 
       // Redirect to dashboard
       router.push("/dashboard");
-      
+
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -81,139 +77,528 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex h-screen w-full font-sans bg-slate-50 overflow-hidden">
-      
-      {/* Left Column - Hero Banner */}
-      <div className="hidden lg:flex w-1/2 flex-col justify-between relative bg-white overflow-hidden border-r border-slate-100">
-        
-        {/* Dedicated Left Side Image (Contains Logo, Heading, and Badges baked in) */}
-        <div className="relative w-full flex-grow bg-white">
-          <img 
-            src={branding.LoginBackgroundPath ? `http://127.0.0.1:8000${branding.LoginBackgroundPath}` : "/images/login page left side.png"}
-            alt={branding.LoginBrandingName}
-            className="absolute inset-0 w-full h-full object-cover"
-          />
-        </div>
+    <div
+      className="flex h-screen w-full overflow-hidden"
+      style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif" }}
+    >
 
-        {/* Absolute Bottom Footer Bar */}
-        <div className="relative z-10 w-full bg-[#0f172a] py-5 px-12 xl:px-16 flex justify-between items-center text-[13px] text-slate-300 font-medium shrink-0">
-          <p>© {new Date().getFullYear()} {branding.LoginBrandingName}. All rights reserved.</p>
-          <p>Version 1.0.0</p>
+      {/* ════════════════════════════════════════
+          LEFT PANEL — Vibrant Blue Hero
+      ════════════════════════════════════════ */}
+      <div
+        className="hidden lg:flex lg:w-[48%] flex-col"
+        style={{ position: "relative", overflow: "hidden", backgroundColor: "#1352a8" }}
+      >
+
+        {/* Clean pharmacy background — no baked text */}
+        <img
+          src={
+            branding.LoginBackgroundPath
+              ? `http://127.0.0.1:8000${branding.LoginBackgroundPath}`
+              : "/images/pharmacy_bg.jpg"
+          }
+          alt=""
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            inset: 0,
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            objectPosition: "right center",
+            zIndex: 0,
+          }}
+        />
+
+        {/* Subtle blue tint overlay — left side darker for text legibility */}
+        <div
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            inset: 0,
+            background:
+              "linear-gradient(to right, rgba(15,52,140,0.82) 0%, rgba(15,52,140,0.72) 40%, rgba(15,52,140,0.45) 70%, rgba(15,52,140,0.20) 100%)",
+            zIndex: 1,
+          }}
+        />
+
+        {/* ── Foreground content ── */}
+        <div
+          style={{
+            position: "relative",
+            zIndex: 2,
+            display: "flex",
+            flexDirection: "column",
+            height: "100%",
+          }}
+        >
+
+          <div style={{ padding: "32px 40px 0" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              {/* Standalone white cross — no box */}
+              <Plus size={38} color="#ffffff" strokeWidth={3} style={{ flexShrink: 0 }} />
+              {/* Wordmark */}
+              <div>
+                <div
+                  style={{
+                    color: "#ffffff",
+                    fontWeight: 800,
+                    fontSize: 20,
+                    letterSpacing: "0.09em",
+                    lineHeight: 1,
+                  }}
+                >
+                  PHARMACY
+                </div>
+                <div
+                  style={{
+                    color: "rgba(255,255,255,0.80)",
+                    fontWeight: 500,
+                    fontSize: 10,
+                    letterSpacing: "0.20em",
+                    marginTop: 3,
+                  }}
+                >
+                  MANAGEMENT SYSTEM
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ── MIDDLE: Headline + Subtext ── */}
+          <div style={{ flex: 1, display: "flex", alignItems: "center", padding: "0 40px 76px 40px" }}>
+            <div style={{ maxWidth: 340 }}>
+              <h1
+                style={{
+                  color: "#ffffff",
+                  fontWeight: 900,
+                  fontSize: 42,
+                  lineHeight: 1.10,
+                  letterSpacing: "-0.5px",
+                  marginBottom: 18,
+                  textShadow: "0 2px 12px rgba(0,0,0,0.25)",
+                }}
+              >
+                Pharmacy<br />Management,<br />Simplified.
+              </h1>
+              <p
+                style={{
+                  color: "rgba(255,255,255,0.88)",
+                  fontSize: 15,
+                  lineHeight: 1.65,
+                  fontWeight: 400,
+                  textShadow: "0 1px 6px rgba(0,0,0,0.2)",
+                }}
+              >
+                Manage billing, inventory and purchases<br />
+                from one simple desktop application.
+              </p>
+            </div>
+          </div>
+
+          {/* ── BOTTOM: Feature badges + footer ── */}
+          <div>
+            {/* Feature badges row */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                padding: "0 40px 24px",
+                gap: 0,
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 8, paddingRight: 18, color: "rgba(255,255,255,0.92)", fontSize: 13, fontWeight: 600 }}>
+                <Receipt size={18} strokeWidth={1.7} />
+                Fast Billing
+              </div>
+              <div style={{ width: 1, height: 18, backgroundColor: "rgba(255,255,255,0.35)", marginRight: 18 }} />
+              <div style={{ display: "flex", alignItems: "center", gap: 8, paddingRight: 18, color: "rgba(255,255,255,0.92)", fontSize: 13, fontWeight: 600 }}>
+                <Package size={18} strokeWidth={1.7} />
+                Smart Inventory
+              </div>
+              <div style={{ width: 1, height: 18, backgroundColor: "rgba(255,255,255,0.35)", marginRight: 18 }} />
+              <div style={{ display: "flex", alignItems: "center", gap: 8, color: "rgba(255,255,255,0.92)", fontSize: 13, fontWeight: 600 }}>
+                <WifiOff size={18} strokeWidth={1.7} />
+                Works Offline
+              </div>
+            </div>
+
+            {/* Footer bar */}
+            <div
+              style={{
+                backgroundColor: "rgba(5,18,55,0.85)",
+                padding: "12px 40px",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <p style={{ color: "rgba(255,255,255,0.65)", fontSize: 12.5, fontWeight: 500 }}>
+                © {new Date().getFullYear()} {branding.LoginBrandingName}
+              </p>
+              <p style={{ color: "rgba(255,255,255,0.55)", fontSize: 12.5, fontWeight: 500 }}>
+                Version 1.0.0
+              </p>
+            </div>
+          </div>
+
         </div>
       </div>
 
-      {/* Right Column - Auth & License Container */}
-      <div className="w-full lg:w-1/2 flex flex-col items-center justify-center p-8 lg:p-12 xl:p-24 relative bg-slate-50/50">
-        
-        <div className="w-full max-w-[440px] space-y-6">
-          
-          {/* Main Auth Card */}
-          <Card className="p-10 sm:p-12 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border-0 rounded-[20px] bg-white">
-            <div className="text-center mb-10">
-              <h3 className="text-[28px] font-bold text-slate-900 mb-2">Welcome Back</h3>
-              <p className="text-slate-500 font-medium">{branding.LoginSubheading}</p>
+      {/* ════════════════════════════════════════
+          RIGHT PANEL — Auth Card
+      ════════════════════════════════════════ */}
+      <div
+        className="w-full lg:w-[52%] flex flex-col items-center justify-center relative"
+        style={{ backgroundColor: "#ffffff" }}
+      >
+
+        {/* Auth Card */}
+        <div style={{ width: "100%", maxWidth: 440, padding: "0 28px" }}>
+          <div
+            style={{
+              backgroundColor: "#ffffff",
+              borderRadius: 18,
+              padding: "44px 40px 40px",
+              boxShadow:
+                "0 2px 8px rgba(15,23,42,0.06), 0 8px 32px rgba(15,23,42,0.10)",
+              border: "1px solid #e2e8f0",
+            }}
+          >
+
+            {/* ── Card Header ── */}
+            <div style={{ textAlign: "center", marginBottom: 30 }}>
+              <h2
+                style={{
+                  fontSize: 28,
+                  fontWeight: 800,
+                  color: "#0f172a",
+                  letterSpacing: "-0.3px",
+                  marginBottom: 6,
+                }}
+              >
+                Welcome Back
+              </h2>
+              <p
+                style={{
+                  fontSize: 14.5,
+                  color: "#2563eb",
+                  fontWeight: 500,
+                }}
+              >
+                {branding.LoginSubheading}
+              </p>
             </div>
 
-            <form className="space-y-6" onSubmit={handleLogin}>
+            {/* ── Login Form ── */}
+            <form
+              onSubmit={handleLogin}
+              style={{ display: "flex", flexDirection: "column", gap: 20 }}
+            >
+
+              {/* Error banner */}
               {error && (
-                <div className="bg-red-50 text-red-600 text-[13px] font-medium p-3 rounded-lg border border-red-100 flex items-center">
+                <div
+                  style={{
+                    backgroundColor: "#fef2f2",
+                    border: "1px solid #fecaca",
+                    borderRadius: 10,
+                    padding: "10px 14px",
+                    fontSize: 13,
+                    color: "#dc2626",
+                    fontWeight: 500,
+                  }}
+                >
                   {error}
                 </div>
               )}
-              
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-slate-700">Username</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                    <User className="h-5 w-5 text-slate-400" strokeWidth={2} />
-                  </div>
-                  <Input 
-                    type="text" 
-                    placeholder="Enter your username" 
+
+              {/* ── Username ── */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+                <label
+                  htmlFor="username"
+                  style={{ fontSize: 13.5, fontWeight: 600, color: "#334155" }}
+                >
+                  Username
+                </label>
+                <div style={{ position: "relative" }}>
+                  <span
+                    style={{
+                      position: "absolute",
+                      left: 14,
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                      pointerEvents: "none",
+                      display: "flex",
+                      alignItems: "center",
+                    }}
+                  >
+                    <User size={17} color="#9ca3af" strokeWidth={2} />
+                  </span>
+                  <Input
+                    id="username"
+                    type="text"
+                    placeholder="Enter your username"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     required
                     disabled={isLoading}
-                    className="pl-11 h-12 bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus-visible:ring-primary/20 rounded-lg shadow-sm" 
+                    className="focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-[#2563eb] placeholder:text-[#b0bac9]"
+                    style={{
+                      height: 48,
+                      paddingLeft: 42,
+                      paddingRight: 14,
+                      fontSize: 14,
+                      color: "#111827",
+                      backgroundColor: "#ffffff",
+                      border: "1.5px solid #d1d5db",
+                      borderRadius: 10,
+                      boxShadow: "none",
+                    }}
                   />
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-slate-700">Password</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                    <Lock className="h-5 w-5 text-slate-400" strokeWidth={2} />
-                  </div>
-                  <Input 
-                    type={showPassword ? "text" : "password"} 
-                    placeholder="Enter your password" 
+              {/* ── Password ── */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+                <label
+                  htmlFor="password"
+                  style={{ fontSize: 13.5, fontWeight: 600, color: "#334155" }}
+                >
+                  Password
+                </label>
+                <div style={{ position: "relative" }}>
+                  <span
+                    style={{
+                      position: "absolute",
+                      left: 14,
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                      pointerEvents: "none",
+                      display: "flex",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Lock size={17} color="#9ca3af" strokeWidth={2} />
+                  </span>
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Enter your password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    onKeyDown={(e) => setIsCapsLockOn(e.getModifierState("CapsLock"))}
+                    onKeyUp={(e) => setIsCapsLockOn(e.getModifierState("CapsLock"))}
+                    onFocus={(e) => {
+                      // Detect Caps Lock state on field focus
+                      const ev = e.nativeEvent as unknown as KeyboardEvent;
+                      if (typeof ev.getModifierState === "function") {
+                        setIsCapsLockOn(ev.getModifierState("CapsLock"));
+                      }
+                    }}
                     required
                     disabled={isLoading}
-                    className="pl-11 pr-11 h-12 bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus-visible:ring-primary/20 rounded-lg shadow-sm" 
+                    className="focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-[#2563eb] placeholder:text-[#b0bac9]"
+                    style={{
+                      height: 48,
+                      paddingLeft: 42,
+                      paddingRight: 46,
+                      fontSize: 14,
+                      color: "#111827",
+                      backgroundColor: "#ffffff",
+                      border: isCapsLockOn ? "1.5px solid #f59e0b" : "1.5px solid #d1d5db",
+                      borderRadius: 10,
+                      boxShadow: "none",
+                      transition: "border-color 0.15s",
+                    }}
                   />
-                  <div 
-                    className="absolute inset-y-0 right-0 pr-3.5 flex items-center cursor-pointer text-slate-400 hover:text-slate-600"
+                  <button
+                    type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? <EyeOff className="h-5 w-5" strokeWidth={2} /> : <Eye className="h-5 w-5" strokeWidth={2} />}
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between pt-1">
-                <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    id="remember" 
-                    checked={rememberMe}
-                    onCheckedChange={(checked) => setRememberMe(checked as boolean)}
                     disabled={isLoading}
-                    className="border-slate-300 rounded-[4px] data-[state=checked]:bg-primary data-[state=checked]:border-primary" 
-                  />
-                  <label htmlFor="remember" className="text-sm font-medium leading-none cursor-pointer text-slate-700">
-                    Remember Me
-                  </label>
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    style={{
+                      position: "absolute",
+                      right: 14,
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                      padding: 2,
+                      display: "flex",
+                      alignItems: "center",
+                      color: "#9ca3af",
+                      transition: "color 0.15s",
+                    }}
+                    className="hover:text-slate-600"
+                  >
+                    {showPassword
+                      ? <EyeOff size={18} strokeWidth={2} />
+                      : <Eye size={18} strokeWidth={2} />
+                    }
+                  </button>
                 </div>
               </div>
 
-              <Button 
-                type="submit" 
+              {/* ── Caps Lock Warning ── */}
+              {isCapsLockOn && (
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    backgroundColor: "#fffbeb",
+                    border: "1px solid #fcd34d",
+                    borderRadius: 8,
+                    padding: "9px 13px",
+                    fontSize: 13,
+                    color: "#92400e",
+                    fontWeight: 500,
+                    marginTop: -6,
+                  }}
+                >
+                  <AlertTriangle size={15} color="#d97706" strokeWidth={2.5} style={{ flexShrink: 0 }} />
+                  Caps Lock is ON — your password may be entered incorrectly.
+                </div>
+              )}
+
+              {/* ── Login Button ── */}
+              <button
+                type="submit"
                 disabled={isLoading}
-                className="w-full h-[52px] text-[15px] font-semibold mt-2 shadow-md shadow-primary/20 hover:shadow-primary/30 transition-all rounded-lg bg-primary hover:bg-primary/90 text-white"
+                style={{
+                  width: "100%",
+                  height: 50,
+                  backgroundColor: isLoading ? "#3b82f6" : "#2563eb",
+                  color: "#ffffff",
+                  fontSize: 15.5,
+                  fontWeight: 700,
+                  borderRadius: 10,
+                  border: "none",
+                  cursor: isLoading ? "not-allowed" : "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  boxShadow: "0 4px 16px rgba(37,99,235,0.32)",
+                  transition: "background-color 0.15s, box-shadow 0.15s, transform 0.1s",
+                  marginTop: 4,
+                  letterSpacing: "0.01em",
+                }}
+                onMouseEnter={e => {
+                  if (!isLoading) {
+                    (e.currentTarget as HTMLButtonElement).style.backgroundColor = "#1d4ed8";
+                    (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 6px 20px rgba(37,99,235,0.42)";
+                  }
+                }}
+                onMouseLeave={e => {
+                  if (!isLoading) {
+                    (e.currentTarget as HTMLButtonElement).style.backgroundColor = "#2563eb";
+                    (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 4px 16px rgba(37,99,235,0.32)";
+                  }
+                }}
+                onMouseDown={e => {
+                  (e.currentTarget as HTMLButtonElement).style.transform = "scale(0.99)";
+                }}
+                onMouseUp={e => {
+                  (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)";
+                }}
               >
                 {isLoading ? "Authenticating..." : "Login"}
-              </Button>
+              </button>
 
-              <div className="relative my-7">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-slate-100"></div>
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="bg-white px-4 text-slate-400 font-medium text-[13px]">or</span>
-                </div>
+              {/* ── Or Divider ── */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 0,
+                  margin: "2px 0",
+                }}
+              >
+                <div style={{ flex: 1, height: 1, backgroundColor: "#e5e7eb" }} />
+                <span
+                  style={{
+                    padding: "0 16px",
+                    fontSize: 13,
+                    color: "#9ca3af",
+                    fontWeight: 500,
+                    backgroundColor: "#ffffff",
+                  }}
+                >
+                  or
+                </span>
+                <div style={{ flex: 1, height: 1, backgroundColor: "#e5e7eb" }} />
               </div>
 
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => window.location.href = '/activate'}
-                className="w-full h-[52px] text-[15px] text-primary border-primary/20 hover:bg-primary/5 font-semibold flex items-center gap-2 rounded-lg bg-white shadow-sm transition-all"
+              {/* ── Activate License Button ── */}
+              <button
+                type="button"
+                onClick={() => window.location.href = "/activate"}
+                style={{
+                  width: "100%",
+                  height: 50,
+                  backgroundColor: "#ffffff",
+                  color: "#2563eb",
+                  fontSize: 15,
+                  fontWeight: 600,
+                  borderRadius: 10,
+                  border: "1.5px solid #bfdbfe",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                  transition: "background-color 0.15s, border-color 0.15s",
+                  letterSpacing: "0.01em",
+                }}
+                onMouseEnter={e => {
+                  (e.currentTarget as HTMLButtonElement).style.backgroundColor = "#eff6ff";
+                  (e.currentTarget as HTMLButtonElement).style.borderColor = "#93c5fd";
+                }}
+                onMouseLeave={e => {
+                  (e.currentTarget as HTMLButtonElement).style.backgroundColor = "#ffffff";
+                  (e.currentTarget as HTMLButtonElement).style.borderColor = "#bfdbfe";
+                }}
               >
-                <Key size={18} strokeWidth={2.5} /> Activate License
-              </Button>
+                <Key size={17} strokeWidth={2.5} />
+                Activate License
+              </button>
+
             </form>
-          </Card>
+          </div>
+        </div>
 
+        {/* ── System Secure Badge ── */}
+        <div
+          style={{
+            position: "absolute",
+            bottom: 20,
+            right: 20,
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            backgroundColor: "rgba(255,255,255,0.90)",
+            backdropFilter: "blur(8px)",
+            border: "1px solid #bbf7d0",
+            borderRadius: 999,
+            padding: "6px 14px 6px 10px",
+            boxShadow: "0 1px 6px rgba(0,0,0,0.06)",
+          }}
+        >
+          <Shield size={15} color="#16a34a" strokeWidth={2.5} />
+          <span
+            style={{
+              fontSize: 13,
+              fontWeight: 700,
+              color: "#16a34a",
+            }}
+          >
+            System Secure
+          </span>
         </div>
-        
-        {/* Bottom Right System Status */}
-        <div className="absolute bottom-8 right-10 flex items-center gap-2 text-sm text-green-600 font-bold bg-white/50 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-sm">
-          <Shield size={18} strokeWidth={2.5} /> System Secure
-        </div>
+
       </div>
-
     </div>
   );
 }
