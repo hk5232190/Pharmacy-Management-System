@@ -6,6 +6,7 @@ import { SessionTimeoutWrapper } from "@/components/layout/session-timeout-wrapp
 import { LicenseExpiryBar } from "@/components/layout/license-expiry-bar";
 import { ExitBackupMounter } from "@/components/layout/exit-backup-mounter";
 import { AccessGuard } from "@/components/layout/access-guard";
+import { AuthGate } from "@/components/layout/auth-gate";
 
 export default function DashboardLayout({
   children,
@@ -15,25 +16,27 @@ export default function DashboardLayout({
   return (
     <SessionTimeoutWrapper>
       <AutoLockWrapper>
-        <ExitBackupMounter />
-        <div className="flex h-screen w-full bg-background overflow-hidden print:h-auto print:overflow-visible print:bg-white">
-          <div className="print:hidden shrink-0">
-            <Sidebar />
-          </div>
-          <div className="flex flex-col flex-1 min-w-0 print:block">
-            <div className="print:hidden">
-              <Header />
+        <AuthGate>
+          <ExitBackupMounter />
+          <div className="flex h-screen w-full bg-background overflow-hidden print:h-auto print:overflow-visible print:bg-white">
+            <div className="print:hidden shrink-0">
+              <Sidebar />
             </div>
-            <LicenseExpiryBar />
-            <main className="flex-1 overflow-y-auto print:overflow-visible">
-              <InventorySettingsProvider>
-                <AccessGuard>
-                  {children}
-                </AccessGuard>
-              </InventorySettingsProvider>
-            </main>
+            <div className="flex flex-col flex-1 min-w-0 print:block">
+              <div className="print:hidden">
+                <Header />
+              </div>
+              <LicenseExpiryBar />
+              <main className="flex-1 overflow-y-auto print:overflow-visible">
+                <InventorySettingsProvider>
+                  <AccessGuard>
+                    {children}
+                  </AccessGuard>
+                </InventorySettingsProvider>
+              </main>
+            </div>
           </div>
-        </div>
+        </AuthGate>
       </AutoLockWrapper>
     </SessionTimeoutWrapper>
   );

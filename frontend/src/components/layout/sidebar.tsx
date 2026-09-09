@@ -101,7 +101,7 @@ export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { profile, isLoading } = useProfile();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
 
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
@@ -124,8 +124,7 @@ export function Sidebar() {
       }
     }
 
-    localStorage.removeItem("access_token");
-    sessionStorage.removeItem("access_token");
+    logout();
     router.push("/");
   };
 

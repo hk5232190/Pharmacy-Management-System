@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Loader2 } from "lucide-react";
+import { resetAuthState } from "@/lib/auth-session";
 
 export function StartupProvider({ children }: { children: React.ReactNode }) {
   const [isReady, setIsReady] = useState(false);
@@ -75,9 +76,8 @@ export function StartupProvider({ children }: { children: React.ReactNode }) {
             }
           }
         } else {
-          // Invalid token, remove it
-          localStorage.removeItem("access_token");
-          sessionStorage.removeItem("access_token");
+          // Invalid token, clear stored session and reset any stale auth state
+          resetAuthState();
           if (pathname !== "/") {
             router.push("/");
           }

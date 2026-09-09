@@ -1,6 +1,8 @@
 // A centralized API client that automatically handles attaching the JWT token
 // to all requests. This ensures authentication is never missing.
 
+import { resetAuthState } from "@/lib/auth-session";
+
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://127.0.0.1:8000/api/v1";
 
@@ -71,11 +73,10 @@ async function fetchAPI<T>(endpoint: string, options: FetchOptions = {}): Promis
   });
 
   // Handle global 401 Unauthorized securely before attempting to parse JSON
-  if (response.status === 401) {
+if (response.status === 401) {
     if (typeof window !== 'undefined') {
-      localStorage.removeItem("access_token");
-      sessionStorage.removeItem("access_token");
-      window.location.href = '/login?reason=session_expired';
+      resetAuthState();
+      window.location.href = '/';
     }
     return { success: false, error: "Session expired" } as T;
   }

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
 import { Input } from "@/components/ui/input";
 import {
   User, Lock, Eye, EyeOff, Key, Shield, Plus,
@@ -10,6 +11,7 @@ import {
 
 export default function LoginPage() {
   const router = useRouter();
+  const { login } = useAuth();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -63,25 +65,12 @@ export default function LoginPage() {
         throw new Error(data.error || "Authentication failed");
       }
 
-      // Store token in session (cleared on browser close)
-      sessionStorage.setItem("access_token", data.access_token);
-
-      try {
-        // Route depending on role: cashiers land directly on the POS terminal
-        const meRes = await fetch("http://127.0.0.1:8000/api/v1/auth/me", {
-          headers: { "Authorization": `Bearer ${data.access_token}` }
-        });
-        if (meRes.ok) {
-          const me = await meRes.json();
-          if (me.role === "cashier") {
-            router.push("/dashboard/sales");
-          } else {
-            router.push("/dashboard");
-          }
-        } else {
-          router.push("/dashboard");
-        }
-      } catch {
+      // Hydrate the authenticated profile before navigating so the app shell
+      // renders the correct role from the very first frame (no admin flash).
+      const profile = await login(data.access_token);
+      if (profile && profile.role === "cashier") {
+        router.push("/dashboard/sales");
+      } else {
         router.push("/dashboard");
       }
 

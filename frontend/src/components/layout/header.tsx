@@ -53,7 +53,7 @@ function getInitials(name: string): string {
 export function Header() {
   const router = useRouter();
   const { profile } = useProfile();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { formatDate } = useSystemPreferences();
   const [currentDate, setCurrentDate] = useState("");
   const [currentDayName, setCurrentDayName] = useState("");
@@ -134,8 +134,7 @@ export function Header() {
       }
     }
 
-    localStorage.removeItem("access_token");
-    sessionStorage.removeItem("access_token");
+    logout();
     router.push("/");
   };
 

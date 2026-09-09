@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, useCallback } from "react";
 import { fireExitBackupBeacon } from "@/lib/exit-backup";
+import { resetAuthState } from "@/lib/auth-session";
 
 function parseJwt(token: string) {
   try {
@@ -89,20 +90,18 @@ export function SessionTimeoutWrapper({ children }: { children: React.ReactNode 
     // Fire-and-forget: session expired silently — user may not be at keyboard.
     // keepalive fetch survives the redirect; backend records success/failure in BackupHistory.
     if (token) fireExitBackupBeacon(token);
-    localStorage.removeItem("access_token");
-    sessionStorage.removeItem("access_token");
+    resetAuthState();
     // Broadcast cross-tab logout
     localStorage.setItem("session_timeout_trigger", Date.now().toString());
-    window.location.href = '/login?reason=session_expired';
+    window.location.href = '/';
   }, []);
 
   // Listen for cross-tab logout trigger
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === "session_timeout_trigger") {
-        localStorage.removeItem("access_token");
-        sessionStorage.removeItem("access_token");
-        window.location.href = '/login?reason=session_expired';
+        resetAuthState();
+        window.location.href = '/';
       }
     };
     window.addEventListener("storage", handleStorageChange);
