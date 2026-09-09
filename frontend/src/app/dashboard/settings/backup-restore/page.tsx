@@ -163,7 +163,7 @@ function BackupRestorePageInner({
 
   const generateBackupName = () => {
     const now = new Date();
-    setBackupName(`Backup_${format(now, "yyyy_MM_dd_HHmmss")}`);
+    setBackupName(`Backup_${format(now, "dd_MM_yyyy_HHmmss")}`);
   };
 
   const fetchHistory = async () => {

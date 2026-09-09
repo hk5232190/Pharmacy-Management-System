@@ -429,7 +429,7 @@ def backup_on_exit(
         return {"skipped": True, "reason": "duplicate", "last_backup": recent.BackupName}
 
     # 3. Execute backup — raises on failure (recorded in history by execute_backup)
-    backup_name = f"ExitBackup_{datetime.now().strftime('%Y_%m_%d_%H%M%S')}"
+    backup_name = f"ExitBackup_{datetime.now().strftime('%d_%m_%Y_%H%M%S')}"
     try:
         record = execute_backup(
             db=db,

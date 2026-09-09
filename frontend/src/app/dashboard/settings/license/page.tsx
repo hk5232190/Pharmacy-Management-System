@@ -406,10 +406,19 @@ export default function LicensePage() {
               label="Client / Licensee"
               value={info?.pharmacy_name ?? info?.client_name ?? "—"}
             />
-            <InfoRow label="Activation Date" value={info?.activation_date ?? "—"} />
+            <InfoRow 
+              label="Activation Date" 
+              value={info?.activation_date && info.activation_date !== "N/A"
+                ? new Date(info.activation_date.replace(' ', 'T')).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) 
+                : "—"} 
+            />
             <InfoRow
               label="Expiry Date"
-              value={info?.expiry_date ?? "—"}
+              value={info?.expiry_date && info.expiry_date !== "N/A"
+                ? (info.expiry_date.includes("Never") || info.expiry_date.includes("Lifetime")
+                    ? info.expiry_date
+                    : new Date(info.expiry_date.replace(' ', 'T')).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }))
+                : "—"}
             />
             <InfoRow label="Remaining Days">
               {info?.is_lifetime ? (
@@ -481,7 +490,12 @@ export default function LicensePage() {
               ? formatBytes(info.license_file_info.size_bytes)
               : "—"}
           />
-          <InfoRow label="Last Modified" value={info?.license_file_info?.last_modified ?? "—"} />
+          <InfoRow 
+            label="Last Modified" 
+            value={info?.license_file_info?.last_modified 
+              ? new Date(info.license_file_info.last_modified.replace(' ', 'T')).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) 
+              : "—"} 
+          />
         </CardContent>
       </Card>
 
