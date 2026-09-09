@@ -21,7 +21,6 @@ import {
   CalendarClock,
   Truck,
   Activity,
-  ArrowUpRight,
   RefreshCcw,
   Check
 } from "lucide-react";
@@ -130,11 +129,7 @@ function DashKPICard({
         >
           <span className={a.icon}>{icon}</span>
         </div>
-        {onClick && (
-          <span className="text-muted-foreground/30 group-hover:text-muted-foreground/80 transition-colors p-1 rounded-md">
-            <ArrowUpRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-          </span>
-        )}
+
       </div>
       <div className="mt-4 space-y-1">
         <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground/85 truncate" title={title}>

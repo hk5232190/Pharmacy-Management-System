@@ -15,6 +15,73 @@ import {
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { useSystemPreferences } from "@/contexts/SystemPreferencesContext";
+import { useProfile } from "@/contexts/ProfileContext";
+
+const PrintLayout = ({
+  profile,
+  title,
+  periodStr,
+  summaryData,
+  children
+}: {
+  profile: any;
+  title: string;
+  periodStr: string;
+  summaryData: { label: string; value: string | React.ReactNode; isNet?: boolean; isLoss?: boolean }[];
+  children: React.ReactNode;
+}) => (
+  <div className="hidden print:block w-full bg-white text-black font-sans">
+    <style type="text/css" media="print">
+      {`
+      @page { size: A4; margin: 14mm 12mm 20mm 12mm; }
+      @media print {
+        body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        thead { display: table-header-group; }
+        tr { page-break-inside: avoid; }
+        tfoot { display: table-footer-group; }
+      }
+    `}
+    </style>
+    {/* Header */}
+    <div className="flex justify-between items-start pb-4 border-b border-gray-200 mb-6">
+      <div className="flex flex-col">
+        <h1 className="text-2xl font-bold text-gray-900">{profile.PharmacyName || "Pharmacy"}</h1>
+        {profile.Address && <p className="text-sm text-gray-500 mt-1">{profile.Address}{profile.City ? `, ${profile.City}` : ''}</p>}
+        {profile.PhoneNumber && <p className="text-sm text-gray-500">Contact: {profile.PhoneNumber}</p>}
+      </div>
+      <div className="text-right">
+        <h2 className="text-xl font-bold text-slate-800 uppercase tracking-wide">{title}</h2>
+        <p className="text-sm text-gray-600 mt-1">Period: {periodStr}</p>
+        <p className="text-xs text-gray-400 mt-0.5">Generated: {new Date().toLocaleDateString('en-GB').replaceAll('/', '-')} {new Date().toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit', hour12: true})}</p>
+      </div>
+    </div>
+    
+    {/* REPORT SUMMARY */}
+    <div className="mb-8">
+      <h3 className="text-sm font-bold uppercase tracking-widest text-gray-800 mb-3 pb-1 border-b border-gray-200">Report Summary</h3>
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-y-3 gap-x-8 text-sm">
+        {summaryData.map((item, idx) => (
+          <div key={idx} className="flex justify-between items-center border-b border-gray-100 pb-1">
+            <span className="text-gray-600 font-medium">{item.label}</span>
+            <span className={cn("font-bold text-gray-900", item.isNet ? "text-emerald-700 text-base" : "", item.isLoss ? "text-rose-600" : "")}>{item.value}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    {/* Detail Table */}
+    <div className="mb-12">
+      {children}
+    </div>
+
+    {/* Footer */}
+    <div className="fixed bottom-0 left-0 w-full flex justify-between items-center text-[10px] text-gray-400 pt-3 border-t border-gray-200 mt-8 bg-white">
+      <span>{profile.PharmacyName || "Pharmacy"}</span>
+      <span>CarePlus Pharmacy System</span>
+      <span>Software provided by EagleNest Creations</span>
+    </div>
+  </div>
+);
 
 import {
   ShoppingCart, RefreshCw, Printer, Download, Calendar,
@@ -88,6 +155,7 @@ function ReportsPageInner({
   onMedicineTabChange: (tab: string) => void
 }) {
   const { formatCurrency, currencySymbol } = useSystemPreferences();
+  const { profile } = useProfile();
   const [loading, setLoading] = useState(true);
   // Per-tab data cache: avoid blanking screen on tab switch
   const [dataCache, setDataCache] = useState<Record<string, any>>({});
@@ -874,52 +942,20 @@ function ReportsPageInner({
             </div>
 
             {/* -------------------- PRINT TEMPLATE -------------------- */}
-            <div className="hidden print:block w-full bg-white text-black font-sans">
-              <style type="text/css" media="print">
-                {`
-                @page { size: A4; margin: 12mm; }
-                @media print {
-                  body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-                }
-              `}
-              </style>
-
-              {/* Header */}
-              <div className="flex justify-between items-start pb-4 border-b border-gray-200 mb-6">
-                <div>
-                  <h1 className="text-2xl font-bold text-gray-900">CarePlus Pharmacy</h1>
-                  <p className="text-sm text-gray-500 mt-1">Main Branch | Contact: 0300-XXXXXXX</p>
-                </div>
-                <div className="text-right">
-                  <h2 className="text-xl font-bold text-slate-800 uppercase tracking-wide">Sales Performance Report</h2>
-                  <p className="text-sm text-gray-600 mt-1">
-                    Period: {timeframe === 'custom' && dateRange ? `${new Date(dateRange.start).toLocaleDateString('en-GB').replaceAll('/', '-')} - ${new Date(dateRange.end).toLocaleDateString('en-GB').replaceAll('/', '-')}` : timeframe.replace(/_/g, ' ').toUpperCase()}
-                  </p>
-                  <p className="text-xs text-gray-400 mt-0.5">Generated: {new Date().toLocaleDateString('en-GB').replaceAll('/', '-')} {new Date().toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit', hour12: true})}</p>
-                </div>
-              </div>
-
-              {/* KPIs */}
-              <div className="grid grid-cols-4 gap-4 mb-8">
-                <div className="p-4 border border-gray-200 rounded-lg bg-gray-50/50">
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Gross Sales</p>
-                  <p className="text-lg font-bold text-gray-900 mt-1 tabular-nums">Rs. {data?.summary?.TotalGrossSales || '0.00'}</p>
-                </div>
-                <div className="p-4 border border-gray-200 rounded-lg bg-gray-50/50">
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Returns</p>
-                  <p className="text-lg font-bold text-rose-600 mt-1 tabular-nums">Rs. {data?.summary?.TotalReturns || '0.00'}</p>
-                </div>
-                <div className="p-4 border border-gray-200 rounded-lg bg-emerald-50">
-                  <p className="text-xs font-semibold text-emerald-700 uppercase tracking-wider">Net Sales</p>
-                  <p className="text-xl font-extrabold text-emerald-700 mt-1 tabular-nums">Rs. {data?.summary?.NetSales || '0.00'}</p>
-                </div>
-                <div className="p-4 border border-gray-200 rounded-lg bg-gray-50/50">
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Total Invoices</p>
-                  <p className="text-lg font-bold text-gray-900 mt-1 tabular-nums">{data?.summary?.TotalInvoices || '0'}</p>
-                </div>
-              </div>
-
-              {/* Table */}
+            <PrintLayout
+              profile={profile}
+              title="Sales Performance Report"
+              periodStr={timeframe === 'custom' && dateRange ? `${new Date(dateRange.start).toLocaleDateString('en-GB').replaceAll('/', '-')} - ${new Date(dateRange.end).toLocaleDateString('en-GB').replaceAll('/', '-')}` : timeframe.replace(/_/g, ' ').toUpperCase()}
+              summaryData={[
+                { label: "Gross Sales", value: `Rs. ${data?.summary?.TotalGrossSales || '0.00'}` },
+                { label: "Sales Returns", value: `Rs. ${data?.summary?.TotalReturns || '0.00'}`, isLoss: true },
+                { label: "Net Sales", value: `Rs. ${data?.summary?.NetSales || '0.00'}`, isNet: true },
+                { label: "Net Profit", value: `Rs. ${data?.summary?.NetProfit || '0.00'}` },
+                { label: "Profit Margin", value: `${data?.summary?.ProfitMargin || '0'}%` },
+                { label: "Total Invoices", value: `${data?.summary?.TotalInvoices || '0'}` },
+                { label: "Average Sale", value: `Rs. ${data?.summary?.AverageSaleValue || '0.00'}` }
+              ]}
+            >
               <table className="w-full text-sm text-left border-collapse">
                 <thead className="bg-slate-800 text-white">
                   <tr>
@@ -961,12 +997,7 @@ function ReportsPageInner({
                   })()}
                 </tbody>
               </table>
-
-              {/* Footer */}
-              <div className="fixed bottom-0 left-0 w-full text-center text-xs text-gray-400 py-4 border-t border-gray-200 mt-8">
-                CarePlus Pharmacy System • Page 1 of 1
-              </div>
-            </div>
+            </PrintLayout>
           </>
         );
       })()}
@@ -1370,6 +1401,78 @@ function ReportsPageInner({
               )}
 
             </div>
+
+            {/* -------------------- PRINT TEMPLATE -------------------- */}
+            <PrintLayout
+              profile={profile}
+              title="Inventory Status Report"
+              periodStr="Current Snapshot"
+              summaryData={[
+                { label: "Total Items in Stock", value: `${data?.summary?.TotalItemsInStock || '0'}` },
+                { label: "Total Cost Value", value: `Rs. ${data?.summary?.TotalCostValue || '0.00'}` },
+                { label: "Potential Retail Value", value: `Rs. ${data?.summary?.TotalRetailValue || '0.00'}` },
+                { label: "Low Stock Items", value: `${data?.summary?.LowStockCount || '0'}`, isLoss: true },
+                { label: "Out of Stock", value: `${data?.summary?.OutOfStockCount || '0'}`, isLoss: true }
+              ]}
+            >
+              <table className="w-full text-sm text-left border-collapse">
+                <thead className="bg-slate-800 text-white">
+                  <tr>
+                    <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800">Medicine</th>
+                    <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800">Batch</th>
+                    <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800">Category</th>
+                    <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-right">Qty</th>
+                    <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-right">Cost Price</th>
+                    <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-right">Retail Price</th>
+                    <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-right">Total Cost</th>
+                    <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-right">Total Retail</th>
+                    <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-left">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(() => {
+                    const printData = data?.stock_items || [];
+                    let sumQty = 0;
+                    let sumCost = 0;
+                    let sumRetail = 0;
+
+                    const rows = printData.map((t: any, idx: number) => {
+                      sumQty += t.Quantity || 0;
+                      sumCost += t.TotalCostValue || 0;
+                      sumRetail += t.TotalRetailValue || 0;
+                      
+                      return (
+                        <tr key={idx} className="border-b border-gray-200 even:bg-gray-50">
+                          <td className="px-3 py-2 font-semibold text-gray-900">{t.MedicineName}</td>
+                          <td className="px-3 py-2 text-gray-600">{t.BatchCode}</td>
+                          <td className="px-3 py-2 text-gray-600">{t.Category}</td>
+                          <td className="px-3 py-2 text-right tabular-nums text-gray-900">{t.Quantity}</td>
+                          <td className="px-3 py-2 text-right tabular-nums text-gray-600">{t.CostPrice}</td>
+                          <td className="px-3 py-2 text-right tabular-nums text-gray-600">{t.SellingPrice}</td>
+                          <td className="px-3 py-2 text-right tabular-nums text-gray-900 font-semibold">{t.TotalCostValue}</td>
+                          <td className="px-3 py-2 text-right tabular-nums text-emerald-700 font-semibold">{t.TotalRetailValue}</td>
+                          <td className="px-3 py-2 text-left text-gray-600">{t.Status}</td>
+                        </tr>
+                      );
+                    });
+
+                    return (
+                      <>
+                        {rows}
+                        <tr className="border-t-2 border-gray-800 bg-gray-100">
+                          <td colSpan={3} className="px-3 py-3 text-right font-bold text-gray-900 uppercase text-xs">Total Valuation:</td>
+                          <td className="px-3 py-3 text-right font-bold text-gray-900 tabular-nums">{sumQty}</td>
+                          <td colSpan={2}></td>
+                          <td className="px-3 py-3 text-right font-bold text-gray-900 tabular-nums text-base">Rs. {sumCost}</td>
+                          <td className="px-3 py-3 text-right font-bold text-emerald-700 tabular-nums text-base">Rs. {sumRetail}</td>
+                          <td></td>
+                        </tr>
+                      </>
+                    );
+                  })()}
+                </tbody>
+              </table>
+            </PrintLayout>
           </div>
         );
       })()}
@@ -1771,6 +1874,65 @@ function ReportsPageInner({
               </Dialog>
             </div>
 
+            {/* -------------------- PRINT TEMPLATE -------------------- */}
+            <PrintLayout
+              profile={profile}
+              title="Purchases Report"
+              periodStr={timeframe === 'custom' && dateRange ? `${new Date(dateRange.start).toLocaleDateString('en-GB').replaceAll('/', '-')} - ${new Date(dateRange.end).toLocaleDateString('en-GB').replaceAll('/', '-')}` : timeframe.replace(/_/g, ' ').toUpperCase()}
+              summaryData={[
+                { label: "Gross Purchases", value: `Rs. ${data?.summary?.TotalGrossPurchases || '0.00'}` },
+                { label: "Purchase Returns", value: `Rs. ${data?.summary?.TotalReturns || '0.00'}`, isLoss: true },
+                { label: "Net Purchases", value: `Rs. ${data?.summary?.NetPurchases || '0.00'}`, isNet: true },
+                { label: "Total Invoices", value: `${data?.summary?.TotalInvoices || '0'}` },
+                { label: "Avg Purchase", value: `Rs. ${data?.summary?.AveragePurchase || '0.00'}` },
+                { label: "Supplier Due", value: `Rs. ${totalSupplierDue}` }
+              ]}
+            >
+              <table className="w-full text-sm text-left border-collapse">
+                <thead className="bg-slate-800 text-white">
+                  <tr>
+                    <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800">Invoice No</th>
+                    <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800">Date</th>
+                    <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800">Supplier</th>
+                    <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-right">Items</th>
+                    <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-right">Qty</th>
+                    <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-right">Grand Total</th>
+                    <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-right">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(() => {
+                    const printData = data?.transactions || [];
+                    const totalQty = printData.reduce((acc: number, t: any) => acc + (t.TotalQty || 0), 0);
+                    const totalItems = printData.reduce((acc: number, t: any) => acc + (t.MedicinesPurchased || 0), 0);
+                    const totalGrand = printData.reduce((acc: number, t: any) => acc + (t.GrandTotal || 0), 0);
+
+                    return (
+                      <>
+                        {printData.map((t: any, idx: number) => (
+                          <tr key={idx} className="border-b border-gray-200 even:bg-gray-50">
+                            <td className="px-3 py-2 font-mono font-bold text-gray-800">{t.InvoiceNo}</td>
+                            <td className="px-3 py-2 text-gray-600">{new Date(t.PurchaseDate).toLocaleDateString('en-GB')}</td>
+                            <td className="px-3 py-2 text-gray-800">{t.SupplierName || '-'}</td>
+                            <td className="px-3 py-2 text-right tabular-nums text-gray-600">{t.MedicinesPurchased}</td>
+                            <td className="px-3 py-2 text-right tabular-nums text-gray-600">{t.TotalQty}</td>
+                            <td className="px-3 py-2 text-right tabular-nums font-semibold text-gray-900">{t.GrandTotal}</td>
+                            <td className="px-3 py-2 text-right text-gray-600">{t.Status}</td>
+                          </tr>
+                        ))}
+                        <tr className="border-t-2 border-gray-800 bg-gray-100">
+                          <td colSpan={3} className="px-3 py-3 text-right font-bold text-gray-900 uppercase text-xs">Total for Period:</td>
+                          <td className="px-3 py-3 text-right font-bold text-gray-900 tabular-nums">{totalItems}</td>
+                          <td className="px-3 py-3 text-right font-bold text-gray-900 tabular-nums">{totalQty}</td>
+                          <td className="px-3 py-3 text-right font-bold text-gray-900 tabular-nums text-base">Rs. {totalGrand}</td>
+                          <td></td>
+                        </tr>
+                      </>
+                    );
+                  })()}
+                </tbody>
+              </table>
+            </PrintLayout>
           </div>
         );
       })()}
@@ -2007,6 +2169,92 @@ function ReportsPageInner({
                 )}
               </Card>
             </div>
+
+            {/* -------------------- PRINT TEMPLATE -------------------- */}
+            <PrintLayout
+              profile={profile}
+              title={`Medicine Report: ${activeMedicineTab === 'expiry' ? 'Expiry Alerts' : activeMedicineTab === 'low_stock' ? 'Low Stock' : 'Performance (Moving)'}`}
+              periodStr={timeframe === 'custom' && dateRange ? `${new Date(dateRange.start).toLocaleDateString('en-GB').replaceAll('/', '-')} - ${new Date(dateRange.end).toLocaleDateString('en-GB').replaceAll('/', '-')}` : timeframe.replace(/_/g, ' ').toUpperCase()}
+              summaryData={
+                activeMedicineTab === 'expiry' ? [
+                  { label: "Total Expired Batches", value: `${data?.summary?.TotalExpiredBatches || 0}`, isLoss: true },
+                  { label: "Expiring Soon (90d)", value: `${data?.summary?.ExpiringSoonBatches || 0}` }
+                ] : activeMedicineTab === 'low_stock' ? [
+                  { label: "Low Stock Medicines", value: `${data?.summary?.LowStockMedicines || 0}`, isLoss: true }
+                ] : [
+                  { label: "Fast Moving", value: `${data?.summary?.FastMovingCount || 0}`, isNet: true },
+                  { label: "Slow Moving", value: `${data?.summary?.SlowMovingCount || 0}` },
+                  { label: "Dead Stock", value: `${data?.summary?.DeadStockCount || 0}`, isLoss: true }
+                ]
+              }
+            >
+              <table className="w-full text-sm text-left border-collapse">
+                <thead className="bg-slate-800 text-white">
+                  {activeMedicineTab === 'expiry' && (
+                    <tr>
+                      <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800">Medicine</th>
+                      <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800">Batch Code</th>
+                      <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800">Supplier</th>
+                      <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-right">Qty</th>
+                      <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800">Expiry Date</th>
+                      <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800">Status</th>
+                    </tr>
+                  )}
+                  {activeMedicineTab === 'low_stock' && (
+                    <tr>
+                      <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800">Medicine</th>
+                      <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800">Category</th>
+                      <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-right">Current Stock</th>
+                      <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-right">Min Stock</th>
+                      <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-right">Deficit</th>
+                      <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800">Status</th>
+                    </tr>
+                  )}
+                  {activeMedicineTab === 'moving' && (
+                    <tr>
+                      <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800">Medicine</th>
+                      <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800">Category</th>
+                      <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-right">Sold Qty</th>
+                      <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-right">Velocity</th>
+                      <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-right">Revenue</th>
+                      <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800">Classification</th>
+                    </tr>
+                  )}
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {activeMedicineTab === 'expiry' && data.expiry_items?.map((t: any, idx: number) => (
+                    <tr key={idx} className="even:bg-gray-50 border-b border-gray-200">
+                      <td className="px-3 py-2 text-gray-900 font-semibold">{t.MedicineName}</td>
+                      <td className="px-3 py-2 text-gray-600">{t.BatchCode}</td>
+                      <td className="px-3 py-2 text-gray-600">{t.SupplierName || '-'}</td>
+                      <td className="px-3 py-2 text-right tabular-nums text-gray-900">{t.Quantity}</td>
+                      <td className="px-3 py-2 text-gray-600">{new Date(t.ExpiryDate).toLocaleDateString('en-GB')}</td>
+                      <td className="px-3 py-2 text-gray-900">{t.Status}</td>
+                    </tr>
+                  ))}
+                  {activeMedicineTab === 'low_stock' && data.low_stock_items?.map((t: any, idx: number) => (
+                    <tr key={idx} className="even:bg-gray-50 border-b border-gray-200">
+                      <td className="px-3 py-2 text-gray-900 font-semibold">{t.MedicineName}</td>
+                      <td className="px-3 py-2 text-gray-600">{t.Category}</td>
+                      <td className="px-3 py-2 text-right tabular-nums text-rose-600 font-medium">{t.CurrentStock}</td>
+                      <td className="px-3 py-2 text-right tabular-nums text-gray-600">{t.MinStockLevel}</td>
+                      <td className="px-3 py-2 text-right tabular-nums text-rose-600 font-bold">{t.Deficit}</td>
+                      <td className="px-3 py-2 text-gray-900">{t.Status}</td>
+                    </tr>
+                  ))}
+                  {activeMedicineTab === 'moving' && data.movement_items?.map((t: any, idx: number) => (
+                    <tr key={idx} className="even:bg-gray-50 border-b border-gray-200">
+                      <td className="px-3 py-2 text-gray-900 font-semibold">{t.MedicineName}</td>
+                      <td className="px-3 py-2 text-gray-600">{t.Category}</td>
+                      <td className="px-3 py-2 text-right tabular-nums text-gray-900">{t.SoldQuantity}</td>
+                      <td className="px-3 py-2 text-right tabular-nums text-gray-600">{t.SalesVelocity}</td>
+                      <td className="px-3 py-2 text-right tabular-nums text-gray-900 font-semibold">Rs. {t.Revenue}</td>
+                      <td className="px-3 py-2 text-gray-900">{t.Classification}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </PrintLayout>
           </div>
         );
       })()}
@@ -2142,21 +2390,14 @@ function ReportsPageInner({
             {/* Row 3: Data Tables */}
             <div className="space-y-6">
 
-              <Card className="border border-border shadow-sm rounded-xl overflow-hidden print:border-none print:shadow-none print:m-0 print:p-0">
-                {/* Print Header */}
-                <div className="hidden print:block text-center mb-6 border-b-2 border-slate-800 pb-4">
-                  <h1 className="text-3xl font-black text-slate-900 uppercase tracking-widest">CarePlus Pharmacy</h1>
-                  <h2 className="text-xl font-bold text-slate-800 mt-2">Profit & Loss Statement</h2>
-                  <p className="text-sm text-slate-600 mt-1">Reporting Period: {timeframe === 'custom' && dateRange ? `${new Date(dateRange.start).toLocaleDateString('en-GB').replaceAll('/', '-')} to ${new Date(dateRange.end).toLocaleDateString('en-GB').replaceAll('/', '-')}` : timeframe.replace('_', ' ').toUpperCase()}</p>
-                </div>
-
-                <div className="p-4 border-b border-border bg-slate-50/50 dark:bg-secondary/20 flex justify-between items-center print:hidden">
+              <Card className="border border-border shadow-sm rounded-xl overflow-hidden print:hidden">
+                <div className="p-4 border-b border-border bg-slate-50/50 dark:bg-secondary/20 flex justify-between items-center">
                   <h3 className="font-semibold text-lg flex items-center">
                     <FileSpreadsheet className="w-5 h-5 mr-2 text-primary" />
                     Profit & Loss Statement
                   </h3>
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={() => window.print()} className="print:hidden h-9">
+                    <Button variant="outline" size="sm" onClick={() => window.print()} className="h-9">
                       <Printer className="w-4 h-4 mr-2" />
                       Print P&L Statement
                     </Button>
@@ -2225,6 +2466,73 @@ function ReportsPageInner({
                 </div>
               </Card>
 
+              {/* -------------------- PRINT TEMPLATE -------------------- */}
+              <PrintLayout
+                profile={profile}
+                title="Profit & Loss Statement"
+                periodStr={timeframe === 'custom' && dateRange ? `${new Date(dateRange.start).toLocaleDateString('en-GB').replaceAll('/', '-')} - ${new Date(dateRange.end).toLocaleDateString('en-GB').replaceAll('/', '-')}` : timeframe.replace(/_/g, ' ').toUpperCase()}
+                summaryData={[
+                  { label: "Total Net Revenue", value: `Rs. ${data?.summary?.TotalRevenue || '0.00'}` },
+                  { label: "Cost of Goods Sold", value: `Rs. ${data?.summary?.TotalCOGS || '0.00'}`, isLoss: true },
+                  { label: "Net Profit", value: `Rs. ${data?.summary?.NetProfit || '0.00'}`, isNet: true },
+                  { label: "Profit Margin", value: `${data?.summary?.ProfitMargin || '0'}%`, isNet: true }
+                ]}
+              >
+                <table className="w-full text-sm text-left border-collapse border border-gray-300">
+                  <tbody className="divide-y divide-gray-200">
+                    <tr className="bg-gray-100">
+                      <td colSpan={2} className="px-6 py-2 font-bold text-gray-900 border-b border-gray-300">1. Revenue (Income)</td>
+                    </tr>
+                    <tr>
+                      <td className="px-6 py-2 text-gray-700 pl-10 border-r border-gray-300">Gross Sales Revenue</td>
+                      <td className="px-6 py-2 text-right font-medium text-gray-900">+ {formatCurrency(data?.summary?.GrossSales || '0.00')}</td>
+                    </tr>
+                    <tr>
+                      <td className="px-6 py-2 text-gray-700 pl-10 border-r border-gray-300">Less: Sales Returns & Refunds</td>
+                      <td className="px-6 py-2 text-right font-medium text-rose-700">- {formatCurrency(data?.summary?.SalesReturns || '0.00')}</td>
+                    </tr>
+                    <tr>
+                      <td className="px-6 py-2 text-gray-700 pl-10 border-r border-gray-300">Less: Discounts Given</td>
+                      <td className="px-6 py-2 text-right font-medium text-rose-700">- {formatCurrency(data?.summary?.DiscountsApplied || '0.00')}</td>
+                    </tr>
+                    <tr className="border-t-2 border-gray-400 bg-gray-50">
+                      <td className="px-6 py-3 font-bold text-right text-gray-900 border-r border-gray-300">Subtotal: Net Revenue</td>
+                      <td className="px-6 py-3 text-right font-bold text-gray-900">{formatCurrency(data?.summary?.TotalRevenue || '0.00')}</td>
+                    </tr>
+
+                    <tr className="bg-gray-100">
+                      <td colSpan={2} className="px-6 py-2 font-bold text-gray-900 border-b border-gray-300">2. Cost of Goods Sold (COGS)</td>
+                    </tr>
+                    <tr>
+                      <td className="px-6 py-2 text-gray-700 pl-10 border-r border-gray-300">Direct Cost of Sold Medicines</td>
+                      <td className="px-6 py-2 text-right font-medium text-rose-700">- {formatCurrency(data?.summary?.TotalCOGS || '0.00')}</td>
+                    </tr>
+                    <tr className="border-t-2 border-gray-400 bg-gray-50">
+                      <td className="px-6 py-3 font-bold text-right text-gray-900 border-r border-gray-300">Subtotal: Gross Profit</td>
+                      <td className="px-6 py-3 text-right font-bold text-gray-900">{formatCurrency(data?.summary?.GrossProfit || '0.00')}</td>
+                    </tr>
+
+                    <tr className="bg-gray-100">
+                      <td colSpan={2} className="px-6 py-2 font-bold text-gray-900 border-b border-gray-300">3. Expenses & Operational Losses</td>
+                    </tr>
+                    <tr>
+                      <td className="px-6 py-2 text-gray-700 pl-10 border-r border-gray-300">Inventory Expiry & Write-Offs</td>
+                      <td className="px-6 py-2 text-right font-medium text-rose-700">- {formatCurrency(data?.summary?.InventoryLoss || '0.00')}</td>
+                    </tr>
+                    <tr>
+                      <td className="px-6 py-2 text-gray-700 pl-10 border-r border-gray-300">Operating Expenses (Rent, Utilities, etc.)</td>
+                      <td className="px-6 py-2 text-right font-medium text-rose-700">- {formatCurrency(data?.summary?.TotalExpenses || '0.00')}</td>
+                    </tr>
+
+                    <tr className="border-t-4 border-double border-gray-800 bg-gray-200">
+                      <td className="px-6 py-4 font-black text-lg text-right text-gray-900 border-r border-gray-400">NET PROFIT / LOSS</td>
+                      <td className={`px-6 py-4 text-right font-black text-xl ${data?.summary?.NetProfit >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
+                        {data?.summary?.NetProfit >= 0 ? '+ ' : '- '}{formatCurrency(Math.abs(data?.summary?.NetProfit || 0))}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </PrintLayout>
             </div>
           </div>
         );
