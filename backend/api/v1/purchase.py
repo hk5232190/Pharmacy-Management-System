@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import desc, func
 from typing import List
 from datetime import datetime, date
@@ -23,6 +23,18 @@ def create_purchase(
         raise HTTPException(status_code=404, detail="Supplier not found")
         
     try:
+        medicine_ids = {item.MedicineId for item in purchase_in.items}
+        existing_medicine_ids = {
+            medicine_id
+            for (medicine_id,) in db.query(Medicine.MedicineId)
+            .filter(Medicine.MedicineId.in_(medicine_ids))
+            .all()
+        }
+        missing_medicine_ids = medicine_ids - existing_medicine_ids
+        if missing_medicine_ids:
+            missing_id = min(missing_medicine_ids)
+            raise HTTPException(status_code=404, detail=f"Medicine ID {missing_id} not found")
+
         # 2. Create Purchase record
         new_purchase = Purchase(
             SupplierId=purchase_in.SupplierId,
@@ -45,12 +57,6 @@ def create_purchase(
         
         # 3. Process Items and update Inventory (StockBatches)
         for item in purchase_in.items:
-            # Verify medicine exists
-            medicine = db.query(Medicine).filter(Medicine.MedicineId == item.MedicineId).first()
-            if not medicine:
-                db.rollback()
-                raise HTTPException(status_code=404, detail=f"Medicine ID {item.MedicineId} not found")
-                
             # Create PurchaseItem
             new_item = PurchaseItem(
                 PurchaseId=new_purchase.PurchaseId,
@@ -158,7 +164,16 @@ def get_purchases(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
-    purchases = db.query(Purchase).order_by(desc(Purchase.PurchaseDate)).limit(limit).all()
+    purchases = (
+        db.query(Purchase)
+        .options(
+            joinedload(Purchase.supplier),
+            joinedload(Purchase.items).joinedload(PurchaseItem.medicine),
+        )
+        .order_by(desc(Purchase.PurchaseDate))
+        .limit(limit)
+        .all()
+    )
     
     # We must format the response to include SupplierName and items
     result = []

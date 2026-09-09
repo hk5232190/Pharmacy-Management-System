@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import desc
 from typing import List
 from decimal import Decimal
@@ -123,27 +123,28 @@ def get_purchase_returns(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
-    returns = db.query(PurchaseReturn).order_by(desc(PurchaseReturn.ReturnDate)).limit(limit).all()
+    returns = (
+        db.query(PurchaseReturn)
+        .options(
+            joinedload(PurchaseReturn.supplier),
+            joinedload(PurchaseReturn.purchase),
+            joinedload(PurchaseReturn.items).joinedload(PurchaseReturnItem.medicine),
+        )
+        .order_by(desc(PurchaseReturn.ReturnDate))
+        .limit(limit)
+        .all()
+    )
     
     result = []
     for r in returns:
         r_dict = {c.name: getattr(r, c.name) for c in r.__table__.columns}
-        # In SQLAlchemy we need to get related objects for the UI
-        # Wait, PurchaseReturn doesn't have a relationship named `supplier` yet!
-        # Let's fix that or fetch it differently.
-        # Actually I didn't add the supplier relationship in models.py for PurchaseReturn!
-        # I'll query it manually.
-        supplier = db.query(Supplier).filter(Supplier.SupplierId == r.SupplierId).first()
-        r_dict["SupplierName"] = supplier.Name if supplier else None
-        
-        purchase = db.query(Purchase).filter(Purchase.PurchaseId == r.PurchaseId).first()
-        r_dict["OriginalInvoiceNumber"] = purchase.InvoiceNumber if purchase else None
+        r_dict["SupplierName"] = r.supplier.Name if r.supplier else None
+        r_dict["OriginalInvoiceNumber"] = r.purchase.InvoiceNumber if r.purchase else None
         
         items_list = []
         for i in r.items:
             i_dict = {c.name: getattr(i, c.name) for c in i.__table__.columns}
-            medicine = db.query(Medicine).filter(Medicine.MedicineId == i.MedicineId).first()
-            i_dict["MedicineName"] = medicine.BrandName if medicine else None
+            i_dict["MedicineName"] = i.medicine.BrandName if i.medicine else None
             items_list.append(i_dict)
             
         r_dict["items"] = items_list

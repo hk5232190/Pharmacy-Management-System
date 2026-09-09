@@ -128,6 +128,7 @@ class Purchase(Base):
 
     supplier = relationship("Supplier", back_populates="purchases")
     items = relationship("PurchaseItem", back_populates="purchase")
+    returns = relationship("PurchaseReturn", back_populates="purchase")
 
 class PurchaseItem(Base):
     __tablename__ = "purchase_items"
@@ -233,6 +234,8 @@ class PurchaseReturn(Base):
     Reason = Column(Text, nullable=True)
     SettlementType = Column(String(50), nullable=True, default="Adjust in Supplier Balance")
 
+    purchase = relationship("Purchase", back_populates="returns")
+    supplier = relationship("Supplier")
     items = relationship("PurchaseReturnItem", back_populates="purchase_return")
 
 class PurchaseReturnItem(Base):
@@ -247,6 +250,7 @@ class PurchaseReturnItem(Base):
     ReturnReason = Column(String(100), nullable=True)
 
     purchase_return = relationship("PurchaseReturn", back_populates="items")
+    medicine = relationship("Medicine")
 
 class StockAdjustment(Base):
     __tablename__ = "stock_adjustments"
