@@ -66,8 +66,24 @@ export default function LoginPage() {
       // Store token in session (cleared on browser close)
       sessionStorage.setItem("access_token", data.access_token);
 
-      // Redirect to dashboard
-      router.push("/dashboard");
+      try {
+        // Route depending on role: cashiers land directly on the POS terminal
+        const meRes = await fetch("http://127.0.0.1:8000/api/v1/auth/me", {
+          headers: { "Authorization": `Bearer ${data.access_token}` }
+        });
+        if (meRes.ok) {
+          const me = await meRes.json();
+          if (me.role === "cashier") {
+            router.push("/dashboard/sales");
+          } else {
+            router.push("/dashboard");
+          }
+        } else {
+          router.push("/dashboard");
+        }
+      } catch {
+        router.push("/dashboard");
+      }
 
     } catch (err: any) {
       setError(err.message);

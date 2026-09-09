@@ -51,6 +51,11 @@ export function StartupProvider({ children }: { children: React.ReactNode }) {
           // Valid token! Go to dashboard if we are on login screen
           if (pathname === "/" || pathname === "/activate") {
             try {
+              const authData = await authRes.json();
+              if (authData.role === "cashier") {
+                router.push("/dashboard/sales");
+                return;
+              }
               // Fetch SystemPreferences for StartupModule redirection
               const prefRes = await fetch("http://127.0.0.1:8000/api/v1/settings/appearance");
               if (prefRes.ok) {

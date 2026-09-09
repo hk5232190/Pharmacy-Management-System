@@ -19,18 +19,18 @@ import { toast } from "sonner";
 import { triggerExitBackup } from "@/lib/exit-backup";
 
 const SEARCH_ITEMS = [
-  { title: "Dashboard", desc: "Overview & analytics", icon: LayoutDashboard, href: "/dashboard", category: "Modules" },
-  { title: "Sales & POS Billing", desc: "Point of sale & billing", icon: TrendingUp, href: "/dashboard/sales", category: "Modules" },
-  { title: "Purchases", desc: "Purchase orders & invoices", icon: ShoppingCart, href: "/dashboard/purchases", category: "Modules" },
-  { title: "Inventory", desc: "Stock & inventory tracking", icon: Package, href: "/dashboard/inventory", category: "Modules" },
-  { title: "Medicines", desc: "Manage medicine catalog", icon: Pill, href: "/dashboard/masters/medicines", category: "Medicines" },
-  { title: "Categories", desc: "Medicine categories", icon: Grid2X2, href: "/dashboard/masters/categories", category: "Medicines" },
-  { title: "Companies", desc: "Pharmaceutical companies", icon: Building2, href: "/dashboard/masters/companies", category: "Medicines" },
-  { title: "Suppliers", desc: "Manage suppliers", icon: Truck, href: "/dashboard/masters/suppliers", category: "Modules" },
-  { title: "Customers", desc: "Customer records", icon: Users, href: "/dashboard/masters/customers", category: "Modules" },
-  { title: "Reports", desc: "Analytics & export reports", icon: BarChart3, href: "/dashboard/reports", category: "Modules" },
-  { title: "Backup & Restore", desc: "Database backup", icon: Database, href: "/dashboard/settings/backup-restore", category: "Modules" },
-  { title: "Settings", desc: "System preferences", icon: Settings, href: "/dashboard/settings", category: "Modules" },
+  { title: "Dashboard", desc: "Overview & analytics", icon: LayoutDashboard, href: "/dashboard", category: "Modules", roles: ["admin"] },
+  { title: "Sales & POS Billing", desc: "Point of sale & billing", icon: TrendingUp, href: "/dashboard/sales", category: "Modules", roles: ["admin", "cashier"] },
+  { title: "Purchases", desc: "Purchase orders & invoices", icon: ShoppingCart, href: "/dashboard/purchases", category: "Modules", roles: ["admin"] },
+  { title: "Inventory", desc: "Stock & inventory tracking", icon: Package, href: "/dashboard/inventory", category: "Modules", roles: ["admin"] },
+  { title: "Medicines", desc: "Manage medicine catalog", icon: Pill, href: "/dashboard/masters/medicines", category: "Medicines", roles: ["admin"] },
+  { title: "Categories", desc: "Medicine categories", icon: Grid2X2, href: "/dashboard/masters/categories", category: "Medicines", roles: ["admin"] },
+  { title: "Companies", desc: "Pharmaceutical companies", icon: Building2, href: "/dashboard/masters/companies", category: "Medicines", roles: ["admin"] },
+  { title: "Suppliers", desc: "Manage suppliers", icon: Truck, href: "/dashboard/masters/suppliers", category: "Modules", roles: ["admin"] },
+  { title: "Customers", desc: "Customer records", icon: Users, href: "/dashboard/masters/customers", category: "Modules", roles: ["admin"] },
+  { title: "Reports", desc: "Analytics & export reports", icon: BarChart3, href: "/dashboard/reports", category: "Modules", roles: ["admin"] },
+  { title: "Backup & Restore", desc: "Database backup", icon: Database, href: "/dashboard/settings/backup-restore", category: "Modules", roles: ["admin"] },
+  { title: "Settings", desc: "System preferences", icon: Settings, href: "/dashboard/settings", category: "Modules", roles: ["admin"] },
 ];
 
 function getGreeting(): string {
@@ -77,13 +77,15 @@ export function Header() {
     return () => clearInterval(timer);
   }, [formatDate]);
 
+  const searchItems = SEARCH_ITEMS.filter(item => !item.roles || item.roles.includes(user.role));
+
   const filtered = query.trim().length > 0
-    ? SEARCH_ITEMS.filter(item =>
+    ? searchItems.filter(item =>
         item.title.toLowerCase().includes(query.toLowerCase()) ||
         item.desc.toLowerCase().includes(query.toLowerCase()) ||
         item.category.toLowerCase().includes(query.toLowerCase())
       )
-    : SEARCH_ITEMS;
+    : searchItems;
 
   const navigate = useCallback((href: string) => {
     router.push(href);
@@ -118,14 +120,18 @@ export function Header() {
     const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
     setIsLoggingOut(true);
 
-    const result = await triggerExitBackup(token ?? "");
+    // Cashiers log out immediately; admins get the safety backup first
+    if (user.role !== "cashier") {
+      const result = await triggerExitBackup(token ?? "");
 
-    if (!result.success && result.error) {
-      toast.error(`Backup failed before logout: ${result.error}`, {
-        duration: 5000,
-        description: "Your session will close, but the last backup may be incomplete. Check Backup History.",
-      });
-      await new Promise((r) => setTimeout(r, 2000));
+      if (!result.success && result.error) {
+        toast.error(`Backup failed before logout: ${result.error}`, {
+          duration: 5000,
+          description: "Your session will close, but the last backup may be incomplete. Check Backup History.",
+        });
+        // Give user 2 s to read the toast before navigating away
+        await new Promise((r) => setTimeout(r, 2000));
+      }
     }
 
     localStorage.removeItem("access_token");
@@ -244,16 +250,20 @@ export function Header() {
             </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56 mt-2">
-            <DropdownMenuItem onClick={() => router.push("/dashboard/settings/my-profile")} className="text-sm cursor-pointer py-2">
-              <User className="mr-2 w-4 h-4 text-slate-500" /> My Profile
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => router.push("/dashboard/settings/security")} className="text-sm cursor-pointer py-2">
-              <LockIcon className="mr-2 w-4 h-4 text-slate-500" /> Change Password
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => router.push("/dashboard/settings/about")} className="text-sm cursor-pointer py-2">
-              <InfoIcon className="mr-2 w-4 h-4 text-slate-500" /> About Software
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
+            {user.role !== "cashier" && (
+              <>
+                <DropdownMenuItem onClick={() => router.push("/dashboard/settings/my-profile")} className="text-sm cursor-pointer py-2">
+                  <User className="mr-2 w-4 h-4 text-slate-500" /> My Profile
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => router.push("/dashboard/settings/security")} className="text-sm cursor-pointer py-2">
+                  <LockIcon className="mr-2 w-4 h-4 text-slate-500" /> Change Password
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => router.push("/dashboard/settings/about")} className="text-sm cursor-pointer py-2">
+                  <InfoIcon className="mr-2 w-4 h-4 text-slate-500" /> About Software
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+              </>
+            )}
             <DropdownMenuItem
               onClick={handleLogout}
               disabled={isLoggingOut}

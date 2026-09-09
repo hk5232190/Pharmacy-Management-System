@@ -19,7 +19,7 @@ from openpyxl.styles import Font, PatternFill
 from openpyxl.utils import get_column_letter
 import io
 
-from api.deps import get_db
+from api.deps import get_db, get_current_admin_user
 import models
 from schemas.reports import (
     FinancialBreakdownItem, FinancialReportSummary, FinancialTrendPoint, FinancialReportResponse,
@@ -43,7 +43,7 @@ class PDFExportRequest(BaseModel):
     supplier_id: Optional[str] = None
     report_type: Optional[str] = 'expiry'
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_current_admin_user)])
 
 def get_reports_date_range(timeframe: str, start_date: str = None, end_date: str = None):
     today = date.today()

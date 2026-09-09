@@ -2,12 +2,12 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import func, or_
 from datetime import date, timedelta
-from api.deps import get_db
+from api.deps import get_db, get_current_admin_user
 import models
 from schemas.dashboard import DashboardSummaryResponse, DashboardChartsResponse, DashboardWidgetsResponse
 from core.config import settings
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_current_admin_user)])
 
 @router.get("/summary", response_model=DashboardSummaryResponse)
 def get_dashboard_summary(

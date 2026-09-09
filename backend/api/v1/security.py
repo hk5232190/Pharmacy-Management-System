@@ -12,7 +12,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 
-from api.deps import get_db, get_current_user
+from api.deps import get_db, get_current_user, get_current_admin_user
 from models import User, SecuritySettings
 from core.security import verify_password, get_password_hash_and_salt
 from core.logger import logger
@@ -106,7 +106,7 @@ def get_security_settings(
 def update_security_settings(
     update: SecuritySettingsUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_admin_user)
 ):
     s = get_or_create_security_settings(db)
     s.AutoLockEnabled = update.AutoLockEnabled
@@ -123,7 +123,7 @@ def update_security_settings(
 @router.post("/db-optimize")
 def optimize_database(
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_admin_user)
 ):
     """Run VACUUM (reclaim space) and ANALYZE (rebuild query stats) on the live SQLite database."""
     db_path = get_db_path()
@@ -152,7 +152,7 @@ def optimize_database(
 @router.get("/db-integrity")
 def check_integrity(
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_admin_user)
 ):
     """Full SQLite PRAGMA integrity_check with table count and schema version."""
     db_path = get_db_path()
@@ -223,7 +223,7 @@ def get_application_logs(
     search: str = "",
     page: int = 1,
     page_size: int = 100,
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_admin_user)
 ):
     """Read the app_audit.log file, newest entries first, paginated with filters."""
     log_file = Path("app_audit.log")
@@ -289,7 +289,7 @@ def get_application_logs(
     return {"lines": page_lines, "total": total, "page": page, "page_size": page_size}
 
 @router.get("/logs/export")
-def export_application_logs(current_user: User = Depends(get_current_user)):
+def export_application_logs(current_user: User = Depends(get_current_admin_user)):
     """Export the raw log file."""
     log_file = Path("app_audit.log")
     if not log_file.exists():
@@ -305,7 +305,7 @@ def export_application_logs(current_user: User = Depends(get_current_user)):
 @router.post("/clear-temp")
 def clear_temp_data(
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_admin_user)
 ):
     """Delete files in the spooler directory, temp directories, and *.tmp/*.pdf in backend root."""
     deleted_files_count = 0
@@ -374,7 +374,7 @@ RESET_TABLE_ORDER = [
 def safe_data_reset(
     req: SafeResetRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_admin_user)
 ):
     """
     Admin-only: Wipe all transactional and master data.

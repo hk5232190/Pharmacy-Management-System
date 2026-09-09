@@ -1,12 +1,13 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 import platform
 import psutil
 import os
 import sys
 import datetime
 from .about import _STARTUP_TIME
+from api.deps import get_current_admin_user
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_current_admin_user)])
 
 @router.get("/diagnostics", summary="Get live backend system diagnostics")
 def get_diagnostics():

@@ -1,5 +1,5 @@
 from typing import Generator
-from fastapi import Depends
+from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 import jwt
@@ -39,6 +39,7 @@ def get_current_user(
     return user
 
 def get_current_admin_user(current_user: User = Depends(get_current_user)) -> User:
-    # Future-proof: Ensure this user has admin rights. 
-    # Currently, any active user acts as an admin.
+    # Ensure this user has admin rights.
+    if getattr(current_user, "Role", "admin") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
     return current_user

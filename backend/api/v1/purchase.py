@@ -7,9 +7,9 @@ from datetime import datetime, date
 from models import Purchase, PurchaseItem, StockBatch, Supplier, Medicine, PurchaseReturn
 from schemas.purchase import PurchaseCreate, PurchaseResponse, PurchaseSummaryResponse
 from schemas.base import BaseResponse
-from api.deps import get_current_user, get_db
+from api.deps import get_current_admin_user, get_current_user, get_db
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_current_admin_user)])
 
 @router.post("", response_model=BaseResponse[PurchaseResponse], summary="Create a new purchase invoice")
 def create_purchase(

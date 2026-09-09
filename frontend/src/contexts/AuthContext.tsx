@@ -10,6 +10,7 @@ export interface UserProfile {
   phone_number: string | null;
   profile_photo_path: string | null;
   is_active: boolean;
+  role: string;
 }
 
 const DEFAULT_USER: UserProfile = {
@@ -19,7 +20,8 @@ const DEFAULT_USER: UserProfile = {
   is_active: true,
   full_name: "Admin",
   phone_number: "",
-  profile_photo_path: null
+  profile_photo_path: null,
+  role: "admin"
 };
 
 interface AuthContextType {

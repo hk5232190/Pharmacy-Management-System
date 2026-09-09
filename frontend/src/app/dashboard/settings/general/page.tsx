@@ -82,7 +82,7 @@ export default function GeneralSettingsPage() {
         
         // Auto-upload logo if selected
         if (logoFile) {
-          await uploadFile('logo');
+          await uploadFile();
         }
       } else {
         toast.error("Failed to update pharmacy name.");

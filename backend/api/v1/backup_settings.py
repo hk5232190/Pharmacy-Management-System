@@ -1,12 +1,12 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from api.deps import get_db, get_current_user
+from api.deps import get_db, get_current_admin_user, get_current_user
 from models import BackupSettings, User
 from schemas.backup_settings import BackupSettingsResponse, BackupSettingsUpdate
 
 from core.logger import logger
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_current_admin_user)])
 
 def get_or_create_settings(db: Session) -> BackupSettings:
     settings = db.query(BackupSettings).first()

@@ -9,10 +9,10 @@ import io
 from models import Category, Medicine
 from schemas.category import CategoryCreate, CategoryUpdate, CategoryResponse
 from schemas.base import BaseResponse
-from api.deps import get_current_user, get_db
+from api.deps import get_current_admin_user, get_current_user, get_db
 from core.logger import logger
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_current_admin_user)])
 
 @router.get("", summary="Get all categories")
 def get_categories(

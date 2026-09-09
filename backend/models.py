@@ -15,6 +15,7 @@ class User(Base):
     PhoneNumber = Column(String(20), nullable=True)
     ProfilePhotoPath = Column(String(255), nullable=True)
     IsActive = Column(Boolean, default=True)
+    Role = Column(String(20), nullable=False, default="admin")
     CreatedAt = Column(DateTime, server_default=func.now())
 
     sales = relationship("Sale", back_populates="user")

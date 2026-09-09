@@ -9,10 +9,10 @@ import io
 from models import Supplier, Purchase
 from schemas.supplier import SupplierCreate, SupplierUpdate, SupplierResponse
 from schemas.base import BaseResponse
-from api.deps import get_current_user, get_db
+from api.deps import get_current_admin_user, get_current_user, get_db
 from core.logger import logger
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_current_admin_user)])
 
 @router.get("", summary="Get all suppliers")
 def get_suppliers(

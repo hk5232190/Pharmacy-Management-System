@@ -5,6 +5,7 @@ import { AutoLockWrapper } from "@/components/layout/auto-lock-wrapper";
 import { SessionTimeoutWrapper } from "@/components/layout/session-timeout-wrapper";
 import { LicenseExpiryBar } from "@/components/layout/license-expiry-bar";
 import { ExitBackupMounter } from "@/components/layout/exit-backup-mounter";
+import { AccessGuard } from "@/components/layout/access-guard";
 
 export default function DashboardLayout({
   children,
@@ -26,7 +27,9 @@ export default function DashboardLayout({
             <LicenseExpiryBar />
             <main className="flex-1 overflow-y-auto print:overflow-visible">
               <InventorySettingsProvider>
-                {children}
+                <AccessGuard>
+                  {children}
+                </AccessGuard>
               </InventorySettingsProvider>
             </main>
           </div>

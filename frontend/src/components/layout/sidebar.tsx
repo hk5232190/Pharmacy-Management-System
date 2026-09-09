@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useProfile } from "@/contexts/ProfileContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
@@ -31,6 +32,7 @@ interface NavItem {
   href: string;
   activePrefixes?: string[];
   subItems?: { title: string; icon: any; href: string }[];
+  roles?: string[];
 }
 
 const NAV_ITEMS: NavItem[] = [
@@ -38,21 +40,25 @@ const NAV_ITEMS: NavItem[] = [
     title: "Dashboard",
     icon: LayoutDashboard,
     href: "/dashboard",
+    roles: ["admin"],
   },
   {
     title: "Sales & POS Billing",
     icon: TrendingUp,
     href: "/dashboard/sales",
+    roles: ["admin", "cashier"],
   },
   {
     title: "Purchases",
     icon: ShoppingCart,
     href: "/dashboard/purchases",
+    roles: ["admin"],
   },
   {
     title: "Inventory",
     icon: Package,
     href: "/dashboard/inventory",
+    roles: ["admin"],
   },
   {
     title: "Medicines",
@@ -63,26 +69,31 @@ const NAV_ITEMS: NavItem[] = [
       "/dashboard/masters/categories",
       "/dashboard/masters/companies",
     ],
+    roles: ["admin"],
   },
   {
     title: "Suppliers",
     icon: Truck,
     href: "/dashboard/masters/suppliers",
+    roles: ["admin"],
   },
   {
     title: "Customers",
     icon: Users,
     href: "/dashboard/masters/customers",
+    roles: ["admin"],
   },
   {
     title: "Reports",
     icon: BarChart3,
     href: "/dashboard/reports",
+    roles: ["admin"],
   },
   {
     title: "Settings",
     icon: Settings,
     href: "/dashboard/settings",
+    roles: ["admin"],
   },
 ];
 
@@ -90,7 +101,8 @@ export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { profile, isLoading } = useProfile();
-  
+  const { user } = useAuth();
+
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const handleLogout = async () => {
@@ -98,15 +110,18 @@ export function Sidebar() {
     const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
     setIsLoggingOut(true);
 
-    const result = await triggerExitBackup(token ?? "");
+    // Cashiers log out immediately; admins get the safety backup first
+    if (user.role !== "cashier") {
+      const result = await triggerExitBackup(token ?? "");
 
-    if (!result.success && result.error) {
-      toast.error(`Backup failed before logout: ${result.error}`, {
-        duration: 5000,
-        description: "Your session will close, but the last backup may be incomplete. Check Backup History.",
-      });
-      // Give user 2 s to read the toast before navigating away
-      await new Promise((r) => setTimeout(r, 2000));
+      if (!result.success && result.error) {
+        toast.error(`Backup failed before logout: ${result.error}`, {
+          duration: 5000,
+          description: "Your session will close, but the last backup may be incomplete. Check Backup History.",
+        });
+        // Give user 2 s to read the toast before navigating away
+        await new Promise((r) => setTimeout(r, 2000));
+      }
     }
 
     localStorage.removeItem("access_token");
@@ -115,9 +130,10 @@ export function Sidebar() {
   };
 
   // Manage open states for items with sub-menus. By default, open if the current path matches.
+  const visibleNavItems = NAV_ITEMS.filter(item => !item.roles || item.roles.includes(user.role));
   const [openStates, setOpenStates] = useState<Record<string, boolean>>(() => {
     const initialState: Record<string, boolean> = {};
-    NAV_ITEMS.forEach(item => {
+    visibleNavItems.forEach(item => {
       if (item.subItems) {
         initialState[item.title] = pathname.startsWith(item.href);
       }
@@ -167,7 +183,7 @@ export function Sidebar() {
       {/* Navigation */}
       <div className="flex-1 overflow-y-auto py-4 custom-scrollbar">
         <nav className="space-y-1 px-3">
-          {NAV_ITEMS.map((item) => {
+          {visibleNavItems.map((item) => {
             const isExact = pathname === item.href;
             const isPrefixMatch = item.activePrefixes
               ? item.activePrefixes.some((p) => pathname.startsWith(p))

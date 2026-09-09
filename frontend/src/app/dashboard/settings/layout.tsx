@@ -3,7 +3,7 @@
 import { ReactNode, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Building2, ReceiptText, Package, Settings as SettingsIcon, ShieldCheck, Info, Shield, RefreshCcw, Check, Database, User as UserIcon } from "lucide-react";
+import { Building2, ReceiptText, Package, Settings as SettingsIcon, ShieldCheck, Info, Shield, RefreshCcw, Check, Database, User as UserIcon, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -30,6 +30,7 @@ export default function SettingsLayout({ children }: { children: ReactNode }) {
     { name: "Inventory & Medicine Settings", href: "/dashboard/settings/inventory", icon: Package },
     { name: "Security & Maintenance", href: "/dashboard/settings/security", icon: Shield },
     { name: "Backup & Restore", href: "/dashboard/settings/backup-restore", icon: Database },
+    { name: "Users", href: "/dashboard/settings/users", icon: Users },
     { name: "License Information", href: "/dashboard/settings/license", icon: ShieldCheck },
     { name: "About Software", href: "/dashboard/settings/about", icon: Info },
   ];

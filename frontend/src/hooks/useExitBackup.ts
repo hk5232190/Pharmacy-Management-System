@@ -11,8 +11,9 @@ import { fireExitBackupBeacon } from '@/lib/exit-backup';
  * The backend duplicate-guard (60 s window) prevents double-backups if the user
  * also clicks the logout button before closing the window.
  */
-export function useExitBackup() {
+export function useExitBackup(enabled = true) {
   useEffect(() => {
+    if (!enabled) return;
     const handleBeforeUnload = () => {
       const token =
         localStorage.getItem('access_token') ||
@@ -25,5 +26,5 @@ export function useExitBackup() {
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
-  }, []);
+  }, [enabled]);
 }

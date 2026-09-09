@@ -16,7 +16,8 @@ def create_admin_user(username, password):
             Username=username,
             PasswordHash=hash_str,
             Salt=salt_str,
-            IsActive=True
+            IsActive=True,
+            Role="admin"
         )
         db.add(new_user)
         db.commit()

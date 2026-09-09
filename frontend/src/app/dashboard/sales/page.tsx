@@ -1684,8 +1684,6 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
                     onKeyDown={e => { if (e.key === 'Enter') { setHistoryPage(1); fetchHistory(); } }}
                   />
                 </div>
-                <Button onClick={exportPDF} variant="outline" size="sm" className="h-9"><FileText className="w-4 h-4 mr-2 text-rose-500" /> Export PDF</Button>
-                <Button onClick={exportCSV} variant="outline" size="sm" className="h-9"><FileText className="w-4 h-4 mr-2 text-emerald-500" /> Export CSV</Button>
               </div>
             </div>
 

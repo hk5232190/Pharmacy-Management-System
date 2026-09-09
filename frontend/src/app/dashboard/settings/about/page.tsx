@@ -238,12 +238,11 @@ export default function AboutPage() {
   const fetchAbout = async () => {
     setLoading(true);
     try {
+      const headers = { Authorization: `Bearer ${localStorage.getItem("access_token") || sessionStorage.getItem("access_token") || ""}` };
       const [resAbout, resDiag, resLic] = await Promise.all([
-        fetch("http://127.0.0.1:8000/api/v1/about/info"),
-        fetch("http://127.0.0.1:8000/api/v1/system/diagnostics").catch(() => null),
-        fetch("http://127.0.0.1:8000/api/v1/license/info", {
-          headers: { Authorization: `Bearer ${localStorage.getItem("access_token") || sessionStorage.getItem("access_token") || ""}` }
-        }).catch(() => null)
+        fetch("http://127.0.0.1:8000/api/v1/about/info", { headers }),
+        fetch("http://127.0.0.1:8000/api/v1/system/diagnostics", { headers }).catch(() => null),
+        fetch("http://127.0.0.1:8000/api/v1/license/info", { headers }).catch(() => null)
       ]);
       
       if (!resAbout.ok) throw new Error("Failed");
@@ -399,83 +398,7 @@ export default function AboutPage() {
         </SectionCard>
       </div>
 
-      {/* ── System Information ── */}
-      {diagnostics ? (
-        <SectionCard 
-          icon={Monitor} 
-          title="System Information"
-          action={
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                const text = `OS: ${diagnostics.os_name} | Arch: ${diagnostics.architecture} | RAM: ${diagnostics.total_ram_gb}GB | Uptime: ${diagnostics.server_uptime}`;
-                navigator.clipboard.writeText(text);
-                toast.success("Diagnostics copied to clipboard");
-              }}
-              className="h-8 gap-1.5 text-indigo-600 border-indigo-200 hover:bg-indigo-50"
-            >
-              <Copy size={14} /> Copy System Info
-            </Button>
-          }
-        >
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
-            <StatPill
-              icon={Monitor}
-              label="Operating System"
-              value={diagnostics.os_name}
-              color="bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-400"
-            />
-            <StatPill
-              icon={Cpu}
-              label="Architecture"
-              value={diagnostics.architecture}
-              color="bg-violet-50 dark:bg-violet-950/20 border-violet-200 dark:border-violet-800 text-violet-700 dark:text-violet-400"
-            />
-            <StatPill
-              icon={MemoryStick}
-              label="Total RAM"
-              value={`${diagnostics.total_ram_gb} GB`}
-              color="bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400"
-            />
-            <StatPill
-              icon={Clock}
-              label="Server Uptime"
-              value={diagnostics.server_uptime}
-              color="bg-orange-50 dark:bg-orange-950/20 border-orange-200 dark:border-orange-800 text-orange-700 dark:text-orange-400"
-            />
-          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8">
-            <div>
-              <InfoRow label="CPU" value={diagnostics.cpu_model} />
-              <InfoRow label="Python Version" value={diagnostics.python_version} mono />
-              <InfoRow label="Backend Port" value={`:${diagnostics.backend_port}`} mono />
-              <InfoRow label="Frontend Port" value={`:${diagnostics.frontend_port}`} mono />
-            </div>
-            <div>
-              <InfoRow label="OS Version" value={diagnostics.os_version} mono />
-              <InfoRow label="Database File" value={diagnostics.db_file} mono />
-              <InfoRow label="Database Size" value={diagnostics.db_size_human} />
-              <div className="py-2.5 border-b border-border/60 last:border-0">
-                <p className="text-xs text-muted-foreground font-medium mb-2">Disk Usage</p>
-                <DiskBar
-                  used={`${diagnostics.disk_used_gb} GB`}
-                  total={`${diagnostics.disk_total_gb} GB`}
-                  percent={diagnostics.disk_used_percent}
-                />
-              </div>
-            </div>
-          </div>
-        </SectionCard>
-      ) : (
-        <SectionCard icon={Monitor} title="System Information">
-          <div className="p-4 flex flex-col items-center justify-center text-muted-foreground">
-            <Loader2 size={24} className="animate-spin mb-2" />
-            <p className="text-sm">Loading Live Diagnostics...</p>
-          </div>
-        </SectionCard>
-      )}
 
       {/* ── License Info (Display Only) ── */}
       <SectionCard icon={Shield} title="License Information (Display Only)">
@@ -500,7 +423,7 @@ export default function AboutPage() {
         <div className="flex items-center justify-center gap-2 mt-2">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
           <span className="text-xs text-muted-foreground font-medium">
-            PMS V {app.version} · Build {app.build_number} · Running on port {diagnostics ? diagnostics.backend_port : system.backend_port}
+            PMS V {app.version} · Build {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}
           </span>
         </div>
       </div>

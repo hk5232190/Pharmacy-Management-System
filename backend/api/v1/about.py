@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 import platform
 import sys
 import os
@@ -6,7 +6,9 @@ import shutil
 import subprocess
 import datetime
 
-router = APIRouter()
+from api.deps import get_current_admin_user
+
+router = APIRouter(dependencies=[Depends(get_current_admin_user)])
 
 # App is started at import time – track startup
 _STARTUP_TIME = datetime.datetime.now()

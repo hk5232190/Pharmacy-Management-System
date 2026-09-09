@@ -12,7 +12,7 @@ import plyer
 from database import SQLALCHEMY_DATABASE_URL, engine
 from models import BackupHistory, User, BackupSettings
 from schemas.backup import BackupRequest, BackupResponse, RestoreRequest, RestoreResponse, DatabaseInfoResponse, DatabaseHealthResponse
-from api.deps import get_db, get_current_user
+from api.deps import get_db, get_current_user, get_current_admin_user
 from core.logger import logger
 from core.security import verify_password
 from utils.hwid import generate_hwid
@@ -25,7 +25,11 @@ import tempfile
 import subprocess
 import sys
 
-router = APIRouter(tags=["backup"])
+router = APIRouter(tags=["backup"], dependencies=[Depends(get_current_admin_user)])
+
+# Separate router for the logout/exit auto-backup - reachable by ANY authenticated user
+# (including cashiers), since it fires automatically on their logout/beforeunload.
+exit_backup_router = APIRouter(tags=["backup"])
 
 def get_db_path():
     # SQLALCHEMY_DATABASE_URL is like "sqlite:///./pharma_db.sqlite"
@@ -393,7 +397,7 @@ import time
 import anyio
 from datetime import timedelta
 
-@router.post("/backup-on-exit")
+@exit_backup_router.post("/backup-on-exit")
 def backup_on_exit(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)

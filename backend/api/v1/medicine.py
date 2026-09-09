@@ -12,10 +12,10 @@ from decimal import Decimal, ROUND_HALF_UP
 from models import Medicine, Category, Company, StockBatch, SaleItem, PurchaseItem, InventorySettings
 from schemas.medicine import MedicineCreate, MedicineUpdate, MedicineResponse
 from schemas.base import BaseResponse
-from api.deps import get_current_user, get_db
+from api.deps import get_current_admin_user, get_current_user, get_db
 from core.logger import logger
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_current_admin_user)])
 
 @router.get("", summary="Get all medicines")
 def get_medicines(

@@ -9,7 +9,7 @@ import io
 from models import Customer, Sale
 from schemas.customer import CustomerCreate, CustomerUpdate, CustomerResponse
 from schemas.base import BaseResponse
-from api.deps import get_current_user, get_db
+from api.deps import get_current_user, get_current_admin_user, get_db
 from core.logger import logger
 
 router = APIRouter()
@@ -73,7 +73,7 @@ def update_customer(
     customer_id: int,
     customer_in: CustomerUpdate,
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
+    current_user = Depends(get_current_admin_user)
 ):
     if customer_id == 0:
         raise HTTPException(status_code=403, detail="Cannot edit the default Walk-in Customer")
@@ -103,7 +103,7 @@ def update_customer(
 def toggle_customer_status(
     customer_id: int,
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
+    current_user = Depends(get_current_admin_user)
 ):
     if customer_id == 0:
         raise HTTPException(status_code=403, detail="Cannot toggle status of the default Walk-in Customer")
@@ -119,7 +119,7 @@ def toggle_customer_status(
 
 
 @router.get("/export", summary="Export all customers to CSV")
-def export_customers(db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+def export_customers(db: Session = Depends(get_db), current_user = Depends(get_current_admin_user)):
     try:
         customers = db.query(Customer).all()
         
@@ -148,7 +148,7 @@ def export_customers(db: Session = Depends(get_db), current_user = Depends(get_c
 def import_customers(
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
+    current_user = Depends(get_current_admin_user)
 ):
     if not file.filename.endswith('.csv'):
         raise HTTPException(status_code=400, detail="Only CSV files are allowed")
@@ -223,7 +223,7 @@ def import_customers(
 def delete_customer(
     customer_id: int,
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
+    current_user = Depends(get_current_admin_user)
 ):
     customer = db.query(Customer).filter(Customer.CustomerId == customer_id).first()
     if not customer:

@@ -7,9 +7,9 @@ from decimal import Decimal
 from models import PurchaseReturn, PurchaseReturnItem, StockBatch, Supplier, Medicine, Purchase, PurchaseItem, InventorySettings
 from schemas.purchase_return import PurchaseReturnCreate, PurchaseReturnResponse
 from schemas.base import BaseResponse
-from api.deps import get_current_user, get_db
+from api.deps import get_current_admin_user, get_current_user, get_db
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_current_admin_user)])
 
 @router.post("", response_model=BaseResponse[PurchaseReturnResponse], summary="Create a new purchase return")
 def create_purchase_return(

@@ -31,6 +31,7 @@ class UserProfile(BaseModel):
     full_name: Optional[str] = None
     phone_number: Optional[str] = None
     profile_photo_path: Optional[str] = None
+    role: str = "admin"
 
 class UserProfileUpdate(BaseModel):
     FullName: Optional[str] = None
@@ -102,7 +103,8 @@ def read_users_me(current_user: User = Depends(get_current_user)):
         is_active=current_user.IsActive,
         full_name=current_user.FullName,
         phone_number=current_user.PhoneNumber,
-        profile_photo_path=current_user.ProfilePhotoPath
+        profile_photo_path=current_user.ProfilePhotoPath,
+        role=getattr(current_user, "Role", "admin") or "admin"
     )
 
 @router.put("/me", summary="Update Current User Profile")

@@ -13,9 +13,9 @@ from schemas.inventory import (
     AuditLogResponse,
     StockBatchUpdate
 )
-from api.deps import get_current_user, get_db
+from api.deps import get_current_admin_user, get_current_user, get_db
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_current_admin_user)])
 
 @router.get("/kpi", summary="Get inventory summary KPIs (alias)")
 @router.get("/summary", summary="Get inventory summary KPIs")

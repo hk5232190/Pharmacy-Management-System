@@ -463,64 +463,6 @@ export default function LicensePage() {
               </Button>
             </CardContent>
           </Card>
-
-          <Card className="border-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none overflow-hidden ring-1 ring-slate-200/60 dark:ring-slate-800 transition-all duration-500 hover:shadow-[0_8px_30px_rgb(168,85,247,0.08)] rounded-2xl">
-            <CardHeader className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-r from-purple-50/80 to-transparent dark:from-transparent dark:to-transparent flex flex-row items-center justify-between space-y-0">
-              <div className="flex items-center gap-2">
-                <HardDrive size={18} className="text-purple-600 dark:text-purple-400 drop-shadow-sm" />
-                <CardTitle className="font-bold text-base text-purple-700 dark:text-purple-400">Key Reference</CardTitle>
-              </div>
-              {/* Show / Hide toggle — calls authenticated endpoint on first reveal */}
-              <button
-                id="toggle-key-visibility-btn"
-                onClick={handleToggleKey}
-                disabled={
-                  revealLoading ||
-                  !info?.key_reference ||
-                  info.key_reference === "N/A" ||
-                  info.key_reference === "No license file"
-                }
-                className={cn(
-                  "rounded-lg p-1.5 transition-colors text-muted-foreground hover:text-foreground hover:bg-secondary disabled:opacity-40 disabled:cursor-not-allowed",
-                  showKey && "text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/20",
-                )}
-                title={showKey ? "Hide key" : "Reveal key"}
-              >
-                {revealLoading
-                  ? <Loader2 size={16} className="animate-spin" />
-                  : showKey
-                  ? <EyeOff size={16} />
-                  : <Eye size={16} />}
-              </button>
-            </CardHeader>
-            <CardContent className="p-5 space-y-3">
-              <div className={cn(
-                "bg-secondary/50 border border-border rounded-xl p-3 font-mono text-xs text-foreground break-all transition-all duration-200 min-h-[48px] flex items-center",
-                !showKey && "tracking-widest text-muted-foreground select-none",
-              )}>
-                {showKey && revealedKey !== null
-                  ? revealedKey
-                  : (info?.key_reference && info.key_reference !== "N/A" && info.key_reference !== "No license file"
-                    ? "•".repeat(32)
-                    : "No license file")}
-              </div>
-              <Button
-                id="copy-key-reference-btn"
-                onClick={() => copyToClipboard(
-                  revealedKey ?? info?.key_reference ?? "",
-                  "key",
-                )}
-                variant="outline"
-                className={cn(
-                  "w-full gap-2 h-10 transition-all duration-200",
-                  copiedKey && "border-emerald-400 text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/20",
-                )}
-                disabled={!info?.key_reference || info.key_reference === "N/A" || info.key_reference === "No license file"}
-              >
-                {copiedKey ? <><Check size={15} className="text-emerald-500" /> Copied!</> : <><Copy size={15} /> Copy Key Reference</>}
-              </Button>
-            </CardContent>
-          </Card>
         </div>
       </div>
 
