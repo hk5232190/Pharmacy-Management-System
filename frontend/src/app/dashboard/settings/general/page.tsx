@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Save, RefreshCw, Image as ImageIcon, ImageOff, Upload, Building2, MonitorSmartphone, Eye } from "lucide-react";
+import { Save, RefreshCw, Image as ImageIcon, ImageOff, Upload, Building2 } from "lucide-react";
 import { useProfile } from "@/contexts/ProfileContext";
 import { SaveButton } from "@/components/ui/save-button";
 import Cropper from "react-easy-crop";
@@ -17,34 +17,21 @@ interface PharmacyProfile {
   LogoPath?: string | null;
 }
 
-interface GeneralSettings {
-  LoginBrandingName: string;
-  LoginSubheading: string;
-  LoginBackgroundPath?: string | null;
-}
-
 const DEFAULT_PROFILE = { PharmacyName: "My Pharmacy", LogoPath: null };
-const DEFAULT_GENERAL = { LoginBrandingName: "PMS Software", LoginSubheading: "Pharmacy Management System", LoginBackgroundPath: null };
 
 export default function GeneralSettingsPage() {
   const { refreshProfile } = useProfile();
   const [profile, setProfile] = useState<PharmacyProfile>(DEFAULT_PROFILE);
-  const [general, setGeneral] = useState<GeneralSettings>(DEFAULT_GENERAL);
   
   const [isLoading, setIsLoading] = useState(false);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
-  const [isSavingGeneral, setIsSavingGeneral] = useState(false);
-  const [showLoginPreview, setShowLoginPreview] = useState(false);
 
-  // File Inputs
+  // File input ref
   const logoInputRef = useRef<HTMLInputElement>(null);
-  const bgInputRef = useRef<HTMLInputElement>(null);
-  
+
   // Local object URLs for preview before upload, if user selects a new file
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
-  const [bgPreview, setBgPreview] = useState<string | null>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
-  const [bgFile, setBgFile] = useState<File | null>(null);
 
   // Cropper State
   const [isCropping, setIsCropping] = useState(false);
@@ -69,18 +56,10 @@ export default function GeneralSettingsPage() {
 
   const fetchSettings = async () => {
     try {
-      const [profileRes, generalRes] = await Promise.all([
-        fetch("http://127.0.0.1:8000/api/v1/settings/profile", { headers: getAuthHeaders() }),
-        fetch("http://127.0.0.1:8000/api/v1/settings/general") // Public endpoint
-      ]);
-
+      const profileRes = await fetch("http://127.0.0.1:8000/api/v1/settings/profile", { headers: getAuthHeaders() });
       if (profileRes.ok) {
         const pData = await profileRes.json();
         setProfile({ PharmacyName: pData.PharmacyName, LogoPath: pData.LogoPath });
-      }
-      if (generalRes.ok) {
-        const gData = await generalRes.json();
-        setGeneral({ LoginBrandingName: gData.LoginBrandingName, LoginSubheading: gData.LoginSubheading, LoginBackgroundPath: gData.LoginBackgroundPath });
       }
     } catch (error) {
       toast.error("Failed to load settings from server.");
@@ -115,44 +94,14 @@ export default function GeneralSettingsPage() {
     }
   };
 
-  const handleSaveGeneralText = async () => {
-    setIsSavingGeneral(true);
-    try {
-      const res = await fetch("http://127.0.0.1:8000/api/v1/settings/general", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-        body: JSON.stringify({ LoginBrandingName: general.LoginBrandingName, LoginSubheading: general.LoginSubheading })
-      });
-      if (res.ok) {
-        toast.success("Login page branding updated successfully.");
-        
-        // Auto-upload bg if selected
-        if (bgFile) {
-          await uploadFile('bg');
-        }
-      } else {
-        toast.error("Failed to update login branding.");
-      }
-    } catch (error) {
-      toast.error("Network error.");
-    } finally {
-      setIsSavingGeneral(false);
-    }
-  };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'bg') => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    
     const previewUrl = URL.createObjectURL(file);
-    if (type === 'logo') {
-      setCropImageSrc(previewUrl);
-      setIsCropping(true);
-      setZoom(1);
-    } else {
-      setBgFile(file);
-      setBgPreview(previewUrl);
-    }
+    setCropImageSrc(previewUrl);
+    setIsCropping(true);
+    setZoom(1);
   };
 
   const onCropComplete = (croppedArea: any, croppedAreaPixels: any) => {
@@ -173,17 +122,14 @@ export default function GeneralSettingsPage() {
     }
   };
 
-  const uploadFile = async (type: 'logo' | 'bg') => {
-    const file = type === 'logo' ? logoFile : bgFile;
-    if (!file) return;
+  const uploadFile = async () => {
+    if (!logoFile) return;
 
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append("file", logoFile);
 
-    const endpoint = type === 'logo' ? "/api/v1/settings/profile/logo" : "/api/v1/settings/general/background";
-    
     try {
-      const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      const res = await fetch(`http://127.0.0.1:8000/api/v1/settings/profile/logo`, {
         method: "POST",
         headers: getAuthHeaders(),
         body: formData,
@@ -194,16 +140,10 @@ export default function GeneralSettingsPage() {
       if (res.ok) {
         toast.success(data.message || "Upload successful!");
         setTimestamp(Date.now());
-        if (type === 'logo') {
-          setProfile(prev => ({ ...prev, LogoPath: data.logo_path }));
-          setLogoFile(null);
-          setLogoPreview(null);
-          await refreshProfile();
-        } else {
-          setGeneral(prev => ({ ...prev, LoginBackgroundPath: data.background_path }));
-          setBgFile(null);
-          setBgPreview(null);
-        }
+        setProfile(prev => ({ ...prev, LogoPath: data.logo_path }));
+        setLogoFile(null);
+        setLogoPreview(null);
+        await refreshProfile();
       } else {
         toast.error(data.detail || "Upload failed.");
       }
@@ -212,11 +152,9 @@ export default function GeneralSettingsPage() {
     }
   };
 
-  const removeFile = async (type: 'logo' | 'bg') => {
-    const endpoint = type === 'logo' ? "/api/v1/settings/profile/logo" : "/api/v1/settings/general/background";
-    
+  const removeFile = async () => {
     try {
-      const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      const res = await fetch(`http://127.0.0.1:8000/api/v1/settings/profile/logo`, {
         method: "DELETE",
         headers: getAuthHeaders(),
       });
@@ -224,18 +162,11 @@ export default function GeneralSettingsPage() {
       if (res.ok) {
         toast.success("Image removed successfully.");
         setTimestamp(Date.now());
-        if (type === 'logo') {
-          setProfile(prev => ({ ...prev, LogoPath: null }));
-          setLogoFile(null);
-          setLogoPreview(null);
-          if (logoInputRef.current) logoInputRef.current.value = "";
-          await refreshProfile();
-        } else {
-          setGeneral(prev => ({ ...prev, LoginBackgroundPath: null }));
-          setBgFile(null);
-          setBgPreview(null);
-          if (bgInputRef.current) bgInputRef.current.value = "";
-        }
+        setProfile(prev => ({ ...prev, LogoPath: null }));
+        setLogoFile(null);
+        setLogoPreview(null);
+        if (logoInputRef.current) logoInputRef.current.value = "";
+        await refreshProfile();
       } else {
         const data = await res.json();
         toast.error(data.detail || "Failed to remove image.");
@@ -251,7 +182,7 @@ export default function GeneralSettingsPage() {
 
   return (
     <>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-20 pr-2 lg:pr-4">
+      <div className="max-w-2xl pb-20 pr-2 lg:pr-4">
         
         {/* Left Column: Pharmacy Branding */}
       <div className="space-y-6">
@@ -299,7 +230,7 @@ export default function GeneralSettingsPage() {
                     accept="image/png, image/jpeg, image/webp"
                     className="hidden" 
                     ref={logoInputRef}
-                    onChange={(e) => handleFileChange(e, 'logo')}
+                    onChange={(e) => handleFileChange(e)}
                   />
                   
                   <div className="flex flex-wrap gap-2.5">
@@ -308,13 +239,13 @@ export default function GeneralSettingsPage() {
                     </Button>
                     
                     {logoFile && (
-                      <Button variant="default" onClick={() => uploadFile('logo')} className="text-sm rounded-xl bg-indigo-600 hover:bg-indigo-700 shadow-md shadow-indigo-600/20 transition-all">
+                      <Button variant="default" onClick={() => uploadFile()} className="text-sm rounded-xl bg-indigo-600 hover:bg-indigo-700 shadow-md shadow-indigo-600/20 transition-all">
                         <Save className="w-4 h-4 mr-2" /> Upload
                       </Button>
                     )}
 
                     {(profile.LogoPath || logoFile) && (
-                      <Button variant="destructive" onClick={() => logoFile ? (setLogoFile(null), setLogoPreview(null)) : removeFile('logo')} className="text-sm rounded-xl shadow-sm transition-all hover:shadow-red-500/20">
+                      <Button variant="destructive" onClick={() => logoFile ? (setLogoFile(null), setLogoPreview(null)) : removeFile()} className="text-sm rounded-xl shadow-sm transition-all hover:shadow-red-500/20">
                         <ImageOff className="w-4 h-4 mr-2" /> Remove
                       </Button>
                     )}
@@ -334,105 +265,7 @@ export default function GeneralSettingsPage() {
         </Card>
       </div>
 
-      {/* Right Column: Login Page Content */}
-      <div className="space-y-6">
-        <Card className="border-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none overflow-hidden ring-1 ring-slate-200/60 dark:ring-slate-800 h-full transition-all duration-500 hover:shadow-[0_8px_30px_rgb(16,185,129,0.08)] rounded-2xl">
-          <CardHeader className="pb-5 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-r from-emerald-50/80 to-transparent dark:from-transparent dark:to-transparent flex flex-row items-center justify-between">
-            <div>
-              <CardTitle className="text-xl font-bold flex items-center gap-2.5 text-emerald-700 dark:text-emerald-400">
-                <MonitorSmartphone className="w-5 h-5 drop-shadow-sm" /> Login Page Branding
-              </CardTitle>
-              <CardDescription className="text-slate-500 mt-1">Custom texts and backgrounds for the login portal.</CardDescription>
-            </div>
-            <Button variant="outline" size="sm" onClick={() => setShowLoginPreview(true)} className="text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 rounded-full shadow-sm transition-all hover:shadow-emerald-500/10">
-              <Eye className="w-4 h-4 mr-2" /> Preview Login Screen
-            </Button>
-          </CardHeader>
-          <CardContent className="p-7 space-y-8">
-            
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label className="text-sm font-semibold">Login Branding Name</Label>
-                <Input 
-                  value={general.LoginBrandingName}
-                  onChange={e => setGeneral({...general, LoginBrandingName: e.target.value})}
-                  placeholder="e.g. PMS Software"
-                  className="rounded-xl bg-slate-50/70 dark:bg-secondary/30 border-border focus-visible:ring-emerald-500/30 focus-visible:border-emerald-500 transition-all shadow-sm"
-                />
-              </div>
-              <div className="space-y-3">
-                <Label className="text-sm font-semibold">Login Subheading</Label>
-                <Input 
-                  value={general.LoginSubheading}
-                  onChange={e => setGeneral({...general, LoginSubheading: e.target.value})}
-                  placeholder="e.g. Pharmacy Management System"
-                  className="rounded-xl bg-slate-50/70 dark:bg-secondary/30 border-border focus-visible:ring-emerald-500/30 focus-visible:border-emerald-500 transition-all shadow-sm"
-                />
-              </div>
-            </div>
-
-            <div className="border-t border-slate-100 dark:border-slate-800 pt-6 space-y-4">
-              <Label className="text-sm font-semibold block">Login Background Image</Label>
-              <div className="flex flex-col gap-4">
-                
-                {/* Background Preview */}
-                <div className="w-full h-56 shrink-0 border-2 border-dashed border-emerald-200 dark:border-slate-700 rounded-3xl flex items-center justify-center bg-gradient-to-br from-emerald-50/50 to-slate-50 dark:from-transparent dark:to-transparent overflow-hidden relative group transition-colors hover:border-emerald-400 dark:hover:border-slate-500 shadow-inner">
-                  {(bgPreview || general.LoginBackgroundPath) ? (
-                    <img 
-                      src={bgPreview || `http://127.0.0.1:8000${general.LoginBackgroundPath}?t=${timestamp}`} 
-                      alt="Background Preview" 
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
-                    />
-                  ) : (
-                    <ImageIcon className="w-12 h-12 text-emerald-300 dark:text-emerald-700/50 group-hover:scale-110 transition-transform duration-500" />
-                  )}
-                </div>
-
-                <div className="space-y-3 w-full">
-                  <input 
-                    type="file" 
-                    accept="image/png, image/jpeg, image/webp"
-                    className="hidden" 
-                    ref={bgInputRef}
-                    onChange={(e) => handleFileChange(e, 'bg')}
-                  />
-                  
-                  <div className="flex flex-wrap gap-2.5">
-                    <Button variant="outline" onClick={() => bgInputRef.current?.click()} className="text-sm flex-1 rounded-xl border-border hover:bg-secondary transition-all">
-                      <Upload className="w-4 h-4 mr-2 text-emerald-500" /> {general.LoginBackgroundPath ? 'Replace Banner' : 'Select Banner'}
-                    </Button>
-                    
-                    {bgFile && (
-                      <Button variant="default" onClick={() => uploadFile('bg')} className="text-sm flex-1 rounded-xl bg-emerald-600 hover:bg-emerald-700 shadow-md shadow-emerald-600/20 transition-all">
-                        <Save className="w-4 h-4 mr-2" /> Upload
-                      </Button>
-                    )}
-
-                    {(general.LoginBackgroundPath || bgFile) && (
-                      <Button variant="destructive" onClick={() => bgFile ? (setBgFile(null), setBgPreview(null)) : removeFile('bg')} className="text-sm flex-1 rounded-xl shadow-sm transition-all hover:shadow-red-500/20">
-                        <ImageOff className="w-4 h-4 mr-2" /> Remove
-                      </Button>
-                    )}
-                  </div>
-                  <p className="text-[13px] text-slate-500 font-medium bg-slate-50/50 dark:bg-secondary/20 p-3 rounded-xl border border-border mt-2 block text-center">
-                    Recommended size: 1080x1080 or larger. Max size: 5MB.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="border-t border-slate-100 dark:border-slate-800/80 pt-6 flex justify-between items-center gap-3 mt-4">
-              <Button variant="link" size="sm" onClick={() => setGeneral(DEFAULT_GENERAL)} className="text-[13px] text-slate-500 hover:text-emerald-600 dark:hover:text-emerald-400 h-auto p-0 font-medium transition-colors">
-                Reset texts to default
-              </Button>
-              <SaveButton isSaving={isSavingGeneral} onClick={handleSaveGeneralText} />
-            </div>
-
-          </CardContent>
-        </Card>
       </div>
-
-    </div>
 
     {/* Crop Modal for Logo */}
     {isCropping && (
@@ -459,14 +292,14 @@ export default function GeneralSettingsPage() {
           <div className="p-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-secondary/20">
             <div className="flex items-center gap-4 w-1/2">
                <Label className="text-xs text-slate-500 font-semibold uppercase">Zoom</Label>
-               <input 
-                 type="range" 
-                 min={1} 
-                 max={3} 
-                 step={0.1} 
-                 value={zoom} 
-                 onChange={(e) => setZoom(Number(e.target.value))} 
-                 className="w-full accent-indigo-600" 
+               <input
+                 type="range"
+                 min={1}
+                 max={3}
+                 step={0.1}
+                 value={zoom}
+                 onChange={(e) => setZoom(Number(e.target.value))}
+                 className="w-full accent-indigo-600"
                />
             </div>
             <Button onClick={showCroppedImage} className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm">
@@ -476,81 +309,6 @@ export default function GeneralSettingsPage() {
         </div>
       </div>
     )}
-    {/* Login Screen Preview Modal */}
-    {showLoginPreview && (
-      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 xl:p-12">
-        <div className="bg-card w-full max-w-5xl h-[80vh] rounded-xl shadow-2xl overflow-hidden flex flex-col border border-border relative">
-          
-          <div className="absolute top-4 right-4 z-10">
-            <Button variant="outline" onClick={() => setShowLoginPreview(false)} className="bg-white/80 hover:bg-white text-slate-800 border-0 shadow-sm backdrop-blur-md">Close Preview</Button>
-          </div>
-
-          <div className="flex-1 flex w-full h-full">
-            {/* Left side: Background & Branding */}
-            <div className="hidden lg:flex w-1/2 relative flex-col justify-center p-12 overflow-hidden bg-slate-900">
-              {/* Background Image */}
-              <img
-                src={bgPreview || (general.LoginBackgroundPath ? `http://127.0.0.1:8000${general.LoginBackgroundPath}?t=${timestamp}` : "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&q=80")}
-                alt="Login Background"
-                className="absolute inset-0 w-full h-full object-cover"
-              />
-              {/* Gradient Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/50 to-slate-900/20" />
-              
-              {/* Content */}
-              <div className="relative z-10 space-y-6 max-w-md">
-                {(logoPreview || profile.LogoPath) && (
-                  <div className="w-20 h-20 bg-white/10 backdrop-blur-md rounded-2xl p-3 border border-white/20 shadow-xl">
-                    <img 
-                      src={logoPreview || `http://127.0.0.1:8000${profile.LogoPath}?t=${timestamp}`} 
-                      alt="Logo" 
-                      className="w-full h-full object-contain"
-                    />
-                  </div>
-                )}
-                <div>
-                  <h1 className="text-4xl font-bold text-white mb-2 leading-tight">
-                    {general.LoginBrandingName || profile.PharmacyName || "Pharmacy System"}
-                  </h1>
-                  <p className="text-lg text-slate-300 font-medium leading-relaxed">
-                    {general.LoginSubheading || "Manage your pharmacy operations efficiently."}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Right side: Login Form Mock */}
-            <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-slate-50 dark:bg-slate-950">
-              <div className="w-full max-w-sm space-y-8">
-                <div className="text-center">
-                  <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Welcome back</h2>
-                  <p className="text-sm text-slate-500 mt-2">Please sign in to your account</p>
-                </div>
-                
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>Email Address</Label>
-                    <Input placeholder="admin@pharmacy.com" disabled />
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <Label>Password</Label>
-                      <span className="text-xs text-indigo-600">Forgot password?</span>
-                    </div>
-                    <Input type="password" placeholder="••••••••" disabled />
-                  </div>
-                  <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white" disabled>
-                    Sign In
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-        </div>
-      </div>
-    )}
-  </>
+    </>
   );
 }
-

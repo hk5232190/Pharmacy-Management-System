@@ -78,16 +78,29 @@ export default function LoginPage() {
 
   return (
     <div
-      className="flex h-screen w-full overflow-hidden"
-      style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif" }}
+      style={{
+        display: "flex",
+        minHeight: "100vh",
+        width: "100%",
+        overflow: "auto",
+        fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+      }}
     >
 
       {/* ════════════════════════════════════════
           LEFT PANEL — Vibrant Blue Hero
       ════════════════════════════════════════ */}
       <div
-        className="hidden lg:flex lg:w-[48%] flex-col"
-        style={{ position: "relative", overflow: "hidden", backgroundColor: "#1352a8" }}
+        className="login-left-panel"
+        style={{
+          display: "none",
+          position: "relative",
+          overflow: "hidden",
+          backgroundColor: "#1352a8",
+          flex: "1 1 48%",
+          minWidth: 340,
+          minHeight: "100vh",
+        }}
       >
 
         {/* Clean pharmacy background — no baked text */}
@@ -130,20 +143,21 @@ export default function LoginPage() {
             display: "flex",
             flexDirection: "column",
             height: "100%",
+            minHeight: "100vh",
           }}
         >
 
-          <div style={{ padding: "32px 40px 0" }}>
+          <div style={{ padding: "clamp(20px, 3vh, 36px) clamp(24px, 4vw, 48px) 0" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               {/* Standalone white cross — no box */}
-              <Plus size={38} color="#ffffff" strokeWidth={3} style={{ flexShrink: 0 }} />
+              <Plus size={34} color="#ffffff" strokeWidth={3} style={{ flexShrink: 0 }} />
               {/* Wordmark */}
               <div>
                 <div
                   style={{
                     color: "#ffffff",
                     fontWeight: 800,
-                    fontSize: 20,
+                    fontSize: "clamp(15px, 1.55vw, 22px)",
                     letterSpacing: "0.09em",
                     lineHeight: 1,
                   }}
@@ -154,7 +168,7 @@ export default function LoginPage() {
                   style={{
                     color: "rgba(255,255,255,0.80)",
                     fontWeight: 500,
-                    fontSize: 10,
+                    fontSize: "clamp(9px, 0.72vw, 11px)",
                     letterSpacing: "0.20em",
                     marginTop: 3,
                   }}
@@ -166,28 +180,28 @@ export default function LoginPage() {
           </div>
 
           {/* ── MIDDLE: Headline + Subtext ── */}
-          <div style={{ flex: 1, display: "flex", alignItems: "center", padding: "0 40px 76px 40px" }}>
-            <div style={{ maxWidth: 340 }}>
+          <div style={{ flex: 1, display: "flex", alignItems: "center", padding: "0 clamp(24px, 4vw, 48px) clamp(48px, 7vh, 80px)" }}>
+            <div style={{ maxWidth: 400 }}>
               <h1
                 style={{
                   color: "#ffffff",
                   fontWeight: 900,
-                  fontSize: 42,
-                  lineHeight: 1.10,
-                  letterSpacing: "-0.5px",
-                  marginBottom: 18,
-                  textShadow: "0 2px 12px rgba(0,0,0,0.25)",
+                  fontSize: "clamp(30px, 3.4vw, 48px)",
+                  lineHeight: 1.08,
+                  letterSpacing: "-0.6px",
+                  marginBottom: "clamp(14px, 1.8vh, 22px)",
+                  textShadow: "0 2px 16px rgba(0,0,0,0.30)",
                 }}
               >
                 Pharmacy<br />Management,<br />Simplified.
               </h1>
               <p
                 style={{
-                  color: "rgba(255,255,255,0.88)",
-                  fontSize: 15,
-                  lineHeight: 1.65,
+                  color: "rgba(255,255,255,0.90)",
+                  fontSize: "clamp(13px, 1.1vw, 16px)",
+                  lineHeight: 1.68,
                   fontWeight: 400,
-                  textShadow: "0 1px 6px rgba(0,0,0,0.2)",
+                  textShadow: "0 1px 8px rgba(0,0,0,0.22)",
                 }}
               >
                 Manage billing, inventory and purchases<br />
@@ -203,22 +217,23 @@ export default function LoginPage() {
               style={{
                 display: "flex",
                 alignItems: "center",
-                padding: "0 40px 24px",
-                gap: 0,
+                flexWrap: "wrap",
+                gap: "6px 0",
+                padding: "0 clamp(24px, 4vw, 48px) clamp(14px, 2.5vh, 26px)",
               }}
             >
-              <div style={{ display: "flex", alignItems: "center", gap: 8, paddingRight: 18, color: "rgba(255,255,255,0.92)", fontSize: 13, fontWeight: 600 }}>
-                <Receipt size={18} strokeWidth={1.7} />
+              <div style={{ display: "flex", alignItems: "center", gap: 7, paddingRight: 18, color: "rgba(255,255,255,0.95)", fontSize: "clamp(12px, 0.95vw, 14px)", fontWeight: 600 }}>
+                <Receipt size={16} strokeWidth={1.7} />
                 Fast Billing
               </div>
-              <div style={{ width: 1, height: 18, backgroundColor: "rgba(255,255,255,0.35)", marginRight: 18 }} />
-              <div style={{ display: "flex", alignItems: "center", gap: 8, paddingRight: 18, color: "rgba(255,255,255,0.92)", fontSize: 13, fontWeight: 600 }}>
-                <Package size={18} strokeWidth={1.7} />
+              <div style={{ width: 1, height: 18, backgroundColor: "rgba(255,255,255,0.40)", marginRight: 18 }} />
+              <div style={{ display: "flex", alignItems: "center", gap: 7, paddingRight: 18, color: "rgba(255,255,255,0.95)", fontSize: "clamp(12px, 0.95vw, 14px)", fontWeight: 600 }}>
+                <Package size={16} strokeWidth={1.7} />
                 Smart Inventory
               </div>
-              <div style={{ width: 1, height: 18, backgroundColor: "rgba(255,255,255,0.35)", marginRight: 18 }} />
-              <div style={{ display: "flex", alignItems: "center", gap: 8, color: "rgba(255,255,255,0.92)", fontSize: 13, fontWeight: 600 }}>
-                <WifiOff size={18} strokeWidth={1.7} />
+              <div style={{ width: 1, height: 18, backgroundColor: "rgba(255,255,255,0.40)", marginRight: 18 }} />
+              <div style={{ display: "flex", alignItems: "center", gap: 7, color: "rgba(255,255,255,0.95)", fontSize: "clamp(12px, 0.95vw, 14px)", fontWeight: 600 }}>
+                <WifiOff size={16} strokeWidth={1.7} />
                 Works Offline
               </div>
             </div>
@@ -227,16 +242,16 @@ export default function LoginPage() {
             <div
               style={{
                 backgroundColor: "rgba(5,18,55,0.85)",
-                padding: "12px 40px",
+                padding: "clamp(10px, 1.5vh, 14px) clamp(24px, 4vw, 48px)",
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
               }}
             >
-              <p style={{ color: "rgba(255,255,255,0.65)", fontSize: 12.5, fontWeight: 500 }}>
+              <p style={{ color: "rgba(255,255,255,0.70)", fontSize: "clamp(12px, 0.88vw, 13px)", fontWeight: 500 }}>
                 © {new Date().getFullYear()} {branding.LoginBrandingName}
               </p>
-              <p style={{ color: "rgba(255,255,255,0.55)", fontSize: 12.5, fontWeight: 500 }}>
+              <p style={{ color: "rgba(255,255,255,0.60)", fontSize: "clamp(12px, 0.88vw, 13px)", fontWeight: 500 }}>
                 Version 1.0.0
               </p>
             </div>
@@ -249,39 +264,49 @@ export default function LoginPage() {
           RIGHT PANEL — Auth Card
       ════════════════════════════════════════ */}
       <div
-        className="w-full lg:w-[52%] flex flex-col items-center justify-center relative"
-        style={{ backgroundColor: "#ffffff" }}
+        style={{
+          flex: "1 1 52%",
+          minWidth: 320,
+          minHeight: "100vh",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          position: "relative",
+          backgroundColor: "#ffffff",
+          padding: "clamp(24px, 4vh, 48px) clamp(16px, 3vw, 40px)",
+        }}
       >
 
         {/* Auth Card */}
-        <div style={{ width: "100%", maxWidth: 440, padding: "0 28px" }}>
+        <div style={{ width: "100%", maxWidth: 420, minWidth: 300 }}>
           <div
             style={{
               backgroundColor: "#ffffff",
-              borderRadius: 18,
-              padding: "44px 40px 40px",
+              borderRadius: 20,
+              padding: "clamp(36px, 5.5vh, 62px) clamp(28px, 3.5vw, 40px) clamp(36px, 5vh, 56px)",
               boxShadow:
-                "0 2px 8px rgba(15,23,42,0.06), 0 8px 32px rgba(15,23,42,0.10)",
-              border: "1px solid #e2e8f0",
+                "0 1px 3px rgba(15,23,42,0.04), 0 4px 16px rgba(15,23,42,0.08), 0 16px 48px rgba(15,23,42,0.12)",
+              border: "1px solid #dde3ed",
             }}
           >
 
             {/* ── Card Header ── */}
-            <div style={{ textAlign: "center", marginBottom: 30 }}>
+            <div style={{ textAlign: "center", marginBottom: "clamp(18px, 3vh, 32px)" }}>
               <h2
                 style={{
-                  fontSize: 28,
+                  fontSize: "clamp(22px, 2.4vw, 32px)",
                   fontWeight: 800,
                   color: "#0f172a",
-                  letterSpacing: "-0.3px",
-                  marginBottom: 6,
+                  letterSpacing: "-0.4px",
+                  marginBottom: 7,
                 }}
               >
                 Welcome Back
               </h2>
               <p
                 style={{
-                  fontSize: 14.5,
+                  fontSize: "clamp(13px, 1.05vw, 15.5px)",
                   color: "#2563eb",
                   fontWeight: 500,
                 }}
@@ -293,7 +318,7 @@ export default function LoginPage() {
             {/* ── Login Form ── */}
             <form
               onSubmit={handleLogin}
-              style={{ display: "flex", flexDirection: "column", gap: 20 }}
+              style={{ display: "flex", flexDirection: "column", gap: "clamp(14px, 2vh, 22px)" }}
             >
 
               {/* Error banner */}
@@ -304,7 +329,7 @@ export default function LoginPage() {
                     border: "1px solid #fecaca",
                     borderRadius: 10,
                     padding: "10px 14px",
-                    fontSize: 13,
+                    fontSize: "clamp(11px, 0.85vw, 13px)",
                     color: "#dc2626",
                     fontWeight: 500,
                   }}
@@ -317,7 +342,7 @@ export default function LoginPage() {
               <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
                 <label
                   htmlFor="username"
-                  style={{ fontSize: 13.5, fontWeight: 600, color: "#334155" }}
+                  style={{ fontSize: "clamp(13px, 0.95vw, 14px)", fontWeight: 600, color: "#334155" }}
                 >
                   Username
                 </label>
@@ -345,15 +370,15 @@ export default function LoginPage() {
                     disabled={isLoading}
                     className="focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-[#2563eb] placeholder:text-[#b0bac9]"
                     style={{
-                      height: 48,
+                      height: "clamp(42px, 5.2vh, 52px)",
                       paddingLeft: 42,
                       paddingRight: 14,
-                      fontSize: 14,
+                      fontSize: "clamp(13px, 0.95vw, 14.5px)",
                       color: "#111827",
-                      backgroundColor: "#ffffff",
+                      backgroundColor: "#f8fafc",
                       border: "1.5px solid #d1d5db",
                       borderRadius: 10,
-                      boxShadow: "none",
+                      boxShadow: "inset 0 1px 2px rgba(15,23,42,0.04)",
                     }}
                   />
                 </div>
@@ -363,7 +388,7 @@ export default function LoginPage() {
               <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
                 <label
                   htmlFor="password"
-                  style={{ fontSize: 13.5, fontWeight: 600, color: "#334155" }}
+                  style={{ fontSize: "clamp(13px, 0.95vw, 14px)", fontWeight: 600, color: "#334155" }}
                 >
                   Password
                 </label>
@@ -400,15 +425,15 @@ export default function LoginPage() {
                     disabled={isLoading}
                     className="focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-[#2563eb] placeholder:text-[#b0bac9]"
                     style={{
-                      height: 48,
+                      height: "clamp(42px, 5.2vh, 52px)",
                       paddingLeft: 42,
                       paddingRight: 46,
-                      fontSize: 14,
+                      fontSize: "clamp(13px, 0.95vw, 14.5px)",
                       color: "#111827",
-                      backgroundColor: "#ffffff",
+                      backgroundColor: "#f8fafc",
                       border: isCapsLockOn ? "1.5px solid #f59e0b" : "1.5px solid #d1d5db",
                       borderRadius: 10,
-                      boxShadow: "none",
+                      boxShadow: "inset 0 1px 2px rgba(15,23,42,0.04)",
                       transition: "border-color 0.15s",
                     }}
                   />
@@ -452,7 +477,7 @@ export default function LoginPage() {
                     border: "1px solid #fcd34d",
                     borderRadius: 8,
                     padding: "9px 13px",
-                    fontSize: 13,
+                    fontSize: "clamp(11px, 0.85vw, 13px)",
                     color: "#92400e",
                     fontWeight: 500,
                     marginTop: -6,
@@ -469,10 +494,10 @@ export default function LoginPage() {
                 disabled={isLoading}
                 style={{
                   width: "100%",
-                  height: 50,
+                  height: "clamp(42px, 5.5vh, 52px)",
                   backgroundColor: isLoading ? "#3b82f6" : "#2563eb",
                   color: "#ffffff",
-                  fontSize: 15.5,
+                  fontSize: "clamp(13px, 1vw, 16px)",
                   fontWeight: 700,
                   borderRadius: 10,
                   border: "none",
@@ -520,7 +545,7 @@ export default function LoginPage() {
                 <span
                   style={{
                     padding: "0 16px",
-                    fontSize: 13,
+                    fontSize: "clamp(11px, 0.85vw, 13px)",
                     color: "#9ca3af",
                     fontWeight: 500,
                     backgroundColor: "#ffffff",
@@ -537,10 +562,10 @@ export default function LoginPage() {
                 onClick={() => window.location.href = "/activate"}
                 style={{
                   width: "100%",
-                  height: 50,
+                  height: "clamp(42px, 5.5vh, 52px)",
                   backgroundColor: "#ffffff",
                   color: "#2563eb",
-                  fontSize: 15,
+                  fontSize: "clamp(13px, 1vw, 16px)",
                   fontWeight: 600,
                   borderRadius: 10,
                   border: "1.5px solid #bfdbfe",
@@ -589,7 +614,7 @@ export default function LoginPage() {
           <Shield size={15} color="#16a34a" strokeWidth={2.5} />
           <span
             style={{
-              fontSize: 13,
+              fontSize: "clamp(11px, 0.85vw, 13px)",
               fontWeight: 700,
               color: "#16a34a",
             }}
@@ -599,6 +624,23 @@ export default function LoginPage() {
         </div>
 
       </div>
+
+      {/* ════════════════════════════════════════
+          Responsive CSS — left panel visibility
+      ════════════════════════════════════════ */}
+      <style>{`
+        @media (min-width: 1024px) {
+          .login-left-panel {
+            display: flex !important;
+            flex-direction: column;
+          }
+        }
+        @media (max-width: 1023px) {
+          .login-left-panel {
+            display: none !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }
