@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { apiClient } from "@/lib/api-client";
+import { apiClient, API_BASE_URL } from "@/lib/api-client";
 import { useInventorySettings } from "@/contexts/InventorySettingsContext";
 
 interface Medicine {
@@ -219,7 +219,7 @@ export default function MedicinesPage() {
     
     try {
       const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
-      const res = await fetch("http://127.0.0.1:8000/api/v1/medicines/export", {
+      const res = await fetch(`${API_BASE_URL}/medicines/export`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -261,7 +261,7 @@ export default function MedicinesPage() {
       formData.append("file", file);
       
       const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
-      const res = await fetch("http://127.0.0.1:8000/api/v1/medicines/import", {
+      const res = await fetch(`${API_BASE_URL}/medicines/import`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
         body: formData,

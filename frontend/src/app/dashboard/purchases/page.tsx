@@ -16,7 +16,10 @@ import { cn } from "@/lib/utils";
 import { apiClient } from "@/lib/api-client";
 import { useSystemPreferences } from "@/contexts/SystemPreferencesContext";
 import { useInventorySettings } from "@/contexts/InventorySettingsContext";
+import { useProfile } from "@/contexts/ProfileContext";
 import { format } from "date-fns";
+import ChallanPrint from "@/components/ChallanPrint";
+import type { ChallanData } from "@/components/ChallanTemplate";
 
 // --- Types ---
 interface Supplier {
@@ -628,6 +631,58 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
     (historyCurrentPage - 1) * historyPageSize,
     historyCurrentPage * historyPageSize
   );
+
+  // --- Challan State & Handler ---
+  const { profile } = useProfile();
+  const [challanDataMap, setChallanDataMap] = useState<Record<string, ChallanData | null>>({});
+
+  const buildPurchaseChallanData = async (purchaseId: number): Promise<ChallanData | null> => {
+    try {
+      const res = await apiClient.get(`/purchases/${purchaseId}`);
+      if (!res.success || !res.data) return null;
+
+      const d = res.data;
+      return {
+        type: "purchase",
+        ChallanNumber: d.InvoiceNumber,
+        Date: d.PurchaseDate ? new Date(d.PurchaseDate).toLocaleDateString() : new Date().toLocaleDateString(),
+        FromName: d.SupplierName || "Unknown Supplier",
+        FromAddress: "",
+        FromPhone: "",
+        ToName: profile.PharmacyName || "Pharmacy",
+        ToAddress: [profile.Address, profile.City].filter(Boolean).join(", "),
+        ToPhone: profile.PhoneNumber || "",
+        Items: (d.items || []).map((i: any) => ({
+          MedicineName: i.MedicineName || `Medicine #${i.MedicineId}`,
+          BatchCode: i.BatchCode,
+          ExpiryDate: i.ExpiryDate || undefined,
+          Quantity: i.Quantity,
+          UnitPrice: i.CostPrice,
+          Discount: i.Discount || 0,
+          Tax: i.TaxPercentage || 0,
+          LineTotal: i.LineTotal,
+        })),
+        SubTotal: d.SubTotal || 0,
+        DiscountAmount: d.TotalDiscount || 0,
+        TaxAmount: d.TotalTax || 0,
+        GrandTotal: d.GrandTotal || 0,
+        PaidAmount: d.PaidAmount ?? 0,
+        PaymentMethod: d.PaymentMethod || undefined,
+        Notes: d.Notes || undefined,
+      };
+    } catch {
+      toast.error("Failed to load challan data");
+      return null;
+    }
+  };
+
+  const handleChallanClick = async (purchaseId: number) => {
+    const key = String(purchaseId);
+    if (!challanDataMap[key]) {
+      const data = await buildPurchaseChallanData(purchaseId);
+      if (data) setChallanDataMap(prev => ({ ...prev, [key]: data }));
+    }
+  };
 
   // --- Render ---
   return (
@@ -1262,6 +1317,24 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
                             >
                               <Printer className="h-4 w-4" />
                             </Button>
+                            {challanDataMap[String(inv.PurchaseId)] ? (
+                              <ChallanPrint
+                                data={challanDataMap[String(inv.PurchaseId)]!}
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-900/20"
+                              />
+                            ) : (
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="h-8 w-8 p-0 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-900/20"
+                                onClick={() => handleChallanClick(inv.PurchaseId)}
+                                title="Print Challan"
+                              >
+                                <FileText className="h-4 w-4" />
+                              </Button>
+                            )}
                             <Button 
                               variant="ghost" 
                               size="sm" 
@@ -1830,6 +1903,35 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
           
         </div>
       )}
+    </div>
+
+    {/* Hidden Challan Print Area - used by ChallanPrint component */}
+    <div id="challan-print-area" className="hidden print:block bg-white text-black w-full">
+      <style dangerouslySetInnerHTML={{__html: `
+        @media print {
+          body * {
+            visibility: hidden;
+          }
+          #challan-print-area, #challan-print-area * {
+            visibility: visible;
+          }
+          #challan-print-area {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 80mm;
+            margin: 0;
+            padding: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 11px;
+            line-height: 1.35;
+          }
+          @page {
+            size: 80mm auto;
+            margin: 2mm;
+          }
+        }
+      `}} />
     </div>
     </>
   );

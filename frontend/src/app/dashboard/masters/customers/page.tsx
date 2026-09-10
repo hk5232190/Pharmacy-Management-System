@@ -1,11 +1,9 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
 import { Search, Plus, Download, Upload, RefreshCcw, Eye, Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -13,9 +11,8 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { apiClient } from "@/lib/api-client";
+import { useMasterCRUD } from "@/hooks/useMasterCRUD";
 
 interface Customer {
   CustomerId: number;
@@ -26,241 +23,53 @@ interface Customer {
   IsActive: boolean;
 }
 
+const DEFAULT_CUSTOMER: Partial<Customer> = { Name: "", Phone: "", Address: "", LoyaltyPoints: 0, IsActive: true };
+
 export default function CustomersPage() {
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
-  const [filterStatus, setFilterStatus] = useState("all");
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(25);
-  const [totalRecords, setTotalRecords] = useState(0);
-  
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [isImporting, setIsImporting] = useState(false);
-  const [isExporting, setIsExporting] = useState(false);
-  
-  // Dialog State
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
-  const [currentCustomer, setCurrentCustomer] = useState<Partial<Customer>>({ Name: "", Phone: "", Address: "", LoyaltyPoints: 0, IsActive: true });
-  const [isSaving, setIsSaving] = useState(false);
-
-  // Delete State
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
-
-  // ── Selection state ──────────────────────────────────────────────────────
-  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
-  const allSelected = customers.length > 0 && selectedIds.size === customers.length;
-  const someSelected = selectedIds.size > 0 && selectedIds.size < customers.length;
-  const toggleSelectAll = () => {
-    if (allSelected) { setSelectedIds(new Set()); }
-    else { setSelectedIds(new Set(customers.map(c => c.CustomerId))); }
-  };
-  const toggleSelect = (id: number) => setSelectedIds(prev => {
-    const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next;
+  const {
+    items: customers,
+    loading,
+    search,
+    setSearch,
+    filterStatus,
+    setFilterStatus,
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
+    totalRecords,
+    isDialogOpen,
+    setIsDialogOpen,
+    isViewDialogOpen,
+    setIsViewDialogOpen,
+    currentItem,
+    setCurrentItem,
+    isSaving,
+    isDeleteDialogOpen,
+    setIsDeleteDialogOpen,
+    itemToDelete,
+    isDeleting,
+    isImporting,
+    isExporting,
+    fileInputRef,
+    fetchItems,
+    handleSave,
+    handleDelete,
+    handleToggleStatus,
+    handleExport,
+    handleImportClick,
+    handleFileChange,
+    openNewDialog,
+    openEditDialog,
+    openViewDialog,
+    openDeleteDialog,
+  } = useMasterCRUD<Customer>({
+    endpoint: "customers",
+    entityName: "Customer",
+    idField: "CustomerId",
+    defaultItem: DEFAULT_CUSTOMER,
+    exportFilename: "customers_export.csv",
   });
-
-  const fetchCustomers = async () => {
-    setLoading(true);
-    try {
-      const params: any = { page, page_size: pageSize };
-      if (search) params.search = search;
-      if (filterStatus !== "all") params.status = filterStatus;
-
-      const data = await apiClient.get("/customers", { params });
-      if (data.success) {
-        setCustomers(data.data);
-        setTotalRecords(data.total || 0);
-        setSelectedIds(new Set());
-      } else {
-        toast.error("Failed to load customers");
-      }
-    } catch (error) {
-      toast.error("Network error while loading customers");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    setPage(1);
-  }, [search, filterStatus]);
-
-  useEffect(() => {
-    // Debounce search
-    const timer = setTimeout(() => {
-      fetchCustomers();
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [search, filterStatus, page, pageSize]);
-
-  useEffect(() => {
-    const handleMastersRefresh = () => fetchCustomers();
-    window.addEventListener("refresh-masters-tab", handleMastersRefresh);
-    return () => window.removeEventListener("refresh-masters-tab", handleMastersRefresh);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, filterStatus, page, pageSize]);
-
-  const handleToggleStatus = async (id: number) => {
-    try {
-      const res = await fetch(`http://127.0.0.1:8000/api/v1/customers/${id}/status`, { method: "PUT" });
-      const data = await res.json();
-      if (data.success) {
-        toast.success(data.message);
-        setCustomers(customers.map(c => c.CustomerId === id ? { ...c, IsActive: !c.IsActive } : c));
-      } else {
-        toast.error(data.error);
-      }
-    } catch (error) {
-      toast.error("Failed to toggle status");
-    }
-  };
-
-  const handleSave = async () => {
-    if (!currentCustomer.Name?.trim()) {
-      toast.error("Customer name is required");
-      return;
-    }
-    
-    setIsSaving(true);
-    try {
-      const isEditing = !!currentCustomer.CustomerId;
-      const url = isEditing 
-        ? `/customers/${currentCustomer.CustomerId}`
-        : `/customers`;
-      
-      const data = isEditing 
-        ? await apiClient.put(url, currentCustomer)
-        : await apiClient.post(url, currentCustomer);
-      
-      if (data.success) {
-        toast.success(data.message);
-        setIsDialogOpen(false);
-        fetchCustomers(); // Reload list
-      } else {
-        toast.error(data.error || "Failed to save customer");
-      }
-    } catch (error) {
-      toast.error("Network error while saving");
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const openNewDialog = () => {
-    setCurrentCustomer({ Name: "", Phone: "", Address: "", LoyaltyPoints: 0, IsActive: true });
-    setIsDialogOpen(true);
-  };
-
-  const openEditDialog = (customer: Customer) => {
-    setCurrentCustomer(customer);
-    setIsDialogOpen(true);
-  };
-
-  const openViewDialog = (customer: Customer) => {
-    setCurrentCustomer(customer);
-    setIsViewDialogOpen(true);
-  };
-
-  const openDeleteDialog = (customer: Customer) => {
-    setCustomerToDelete(customer);
-    setIsDeleteDialogOpen(true);
-  };
-
-  const handleDelete = async () => {
-    if (!customerToDelete) return;
-    setIsDeleting(true);
-    try {
-      const data = await apiClient.delete(`/customers/${customerToDelete.CustomerId}`);
-      if (data.success) {
-        toast.success(data.message || "Customer deleted successfully");
-        setIsDeleteDialogOpen(false);
-        fetchCustomers(); // Reload list
-      } else {
-        toast.error(data.error || "Failed to delete customer");
-      }
-    } catch (error) {
-      toast.error("Network error while deleting");
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-
-  const handleExport = async () => {
-    setIsExporting(true);
-    const toastId = toast.loading("Generating CSV from server...");
-    
-    try {
-      const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
-      const res = await fetch("http://127.0.0.1:8000/api/v1/customers/export", {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      if (!res.ok) throw new Error("Export failed");
-      
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "customers_export.csv";
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-      
-      toast.dismiss(toastId);
-      setTimeout(() => {
-        toast.success("Customers exported successfully!");
-      }, 1000);
-    } catch (err) {
-      toast.dismiss(toastId);
-      toast.error("Failed to export customers");
-    } finally {
-      setIsExporting(false);
-    }
-  };
-
-  const handleImportClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    
-    setIsImporting(true);
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      
-      const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
-      const res = await fetch("http://127.0.0.1:8000/api/v1/customers/import", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
-      });
-      
-      const data = await res.json();
-      if (res.ok && data.data) {
-        toast.success(`Imported: ${data.data.imported_count}, Skipped: ${data.data.skipped_count}`);
-        if (data.data.errors?.length > 0) {
-          console.warn("Import errors:", data.data.errors);
-          toast.error(`There were ${data.data.errors.length} errors. Check console.`);
-        }
-        fetchCustomers(); // Reload
-      } else {
-        toast.error(data.detail || data.message || "Failed to import");
-      }
-    } catch (err) {
-      toast.error("Network error during import");
-    } finally {
-      setIsImporting(false);
-      // Reset input
-      if (fileInputRef.current) fileInputRef.current.value = '';
-    }
-  };
 
   return (
     <div className="flex flex-col h-full bg-card">
@@ -269,14 +78,14 @@ export default function CustomersPage() {
         <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto flex-1">
           <div className="relative w-full sm:w-[400px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input 
-              placeholder="Search customers by name or phone..." 
+            <Input
+              placeholder="Search customers by name or phone..."
               className="pl-9 h-10 w-full bg-background border-border"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <select 
+          <select
             className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
@@ -290,16 +99,16 @@ export default function CustomersPage() {
           <Button onClick={openNewDialog} className="h-10 bg-primary text-primary-foreground hover:bg-primary/90 px-4 font-semibold">
             <Plus className="mr-2 h-4 w-4" /> Add New
           </Button>
-          
+
           <input type="file" accept=".csv" className="hidden" ref={fileInputRef} onChange={handleFileChange} />
-          
+
           <Button variant="outline" className="h-10 bg-background text-foreground hidden sm:flex" onClick={handleImportClick} disabled={isImporting}>
             <Download className="mr-2 h-4 w-4" /> {isImporting ? "Importing..." : "Import"}
           </Button>
           <Button variant="outline" className="h-10 bg-background text-foreground hidden sm:flex" onClick={handleExport} disabled={isExporting}>
             <Upload className="mr-2 h-4 w-4" /> {isExporting ? "Exporting..." : "Export"}
           </Button>
-          <Button variant="outline" size="icon" className="h-10 w-10 bg-background text-foreground" onClick={fetchCustomers} disabled={loading}>
+          <Button variant="outline" size="icon" className="h-10 w-10 bg-background text-foreground" onClick={fetchItems} disabled={loading}>
             <RefreshCcw className={cn("h-4 w-4", loading && "animate-spin")} />
           </Button>
         </div>
@@ -311,7 +120,6 @@ export default function CustomersPage() {
           <Table>
             <TableHeader className="bg-secondary/50">
               <TableRow className="hover:bg-transparent">
-
                 <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-10 text-center">#</TableHead>
                 <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-28">Code</TableHead>
                 <TableHead className="font-semibold text-slate-700 dark:text-slate-300">Customer Name</TableHead>
@@ -333,7 +141,6 @@ export default function CustomersPage() {
               ) : (
                 customers.map((customer, idx) => (
                   <TableRow key={customer.CustomerId} className="hover:bg-secondary/50 transition-colors h-14">
-
                     <TableCell className="text-center py-3 text-[#111827] dark:text-gray-200 font-medium text-[14px]">{(page - 1) * pageSize + idx + 1}</TableCell>
                     <TableCell className="py-3 font-mono text-[14px] font-semibold text-[#111827] dark:text-gray-200">
                       CUST-{customer.CustomerId.toString().padStart(5, '0')}
@@ -351,13 +158,13 @@ export default function CustomersPage() {
                       </span>
                     </TableCell>
                     <TableCell className="text-center py-3">
-                      <button 
+                      <button
                         onClick={() => handleToggleStatus(customer.CustomerId)}
                         disabled={customer.CustomerId === 0}
                         className={cn(
                           "px-3 py-1 text-[11px] font-bold rounded-full transition-colors",
-                          customer.IsActive 
-                            ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-900/50" 
+                          customer.IsActive
+                            ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-900/50"
                             : "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 hover:bg-rose-200 dark:hover:bg-rose-900/50",
                           customer.CustomerId === 0 && "opacity-50 cursor-not-allowed"
                         )}
@@ -397,25 +204,25 @@ export default function CustomersPage() {
                 <option value={100}>100</option>
               </select>
             </div>
-            
+
             <div className="flex items-center gap-4">
               <span>
                 Showing {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, totalRecords)} of {totalRecords}
               </span>
               <div className="flex items-center gap-1">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="h-8 px-2" 
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 px-2"
                   disabled={page === 1}
                   onClick={() => setPage(p => Math.max(1, p - 1))}
                 >
                   Prev
                 </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="h-8 px-2" 
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 px-2"
                   disabled={page * pageSize >= totalRecords}
                   onClick={() => setPage(p => p + 1)}
                 >
@@ -431,83 +238,81 @@ export default function CustomersPage() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>{currentCustomer.CustomerId ? "Edit Customer" : "Add New Customer"}</DialogTitle>
+            <DialogTitle>{(currentItem as Customer).CustomerId ? "Edit Customer" : "Add New Customer"}</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
               <label className="text-sm font-semibold text-foreground">Customer Name</label>
-              <Input 
-                value={currentCustomer.Name || ""}
-                onChange={e => setCurrentCustomer({...currentCustomer, Name: e.target.value})}
+              <Input
+                value={(currentItem as Customer).Name || ""}
+                onChange={e => setCurrentItem(prev => ({...prev, Name: e.target.value}))}
                 placeholder="e.g. John Doe"
                 className="h-11"
               />
             </div>
             <div className="space-y-2">
               <label className="text-sm font-semibold text-foreground">Mobile / Phone <span className="text-muted-foreground font-normal">(Required for credit customers)</span></label>
-              <Input 
-                value={currentCustomer.Phone || ""}
-                onChange={e => setCurrentCustomer({...currentCustomer, Phone: e.target.value})}
+              <Input
+                value={(currentItem as Customer).Phone || ""}
+                onChange={e => setCurrentItem(prev => ({...prev, Phone: e.target.value}))}
                 placeholder="e.g. 0300-1234567"
                 className="h-11"
               />
             </div>
-            
+
             <div className="space-y-2">
               <label className="text-sm font-semibold text-foreground">Address / Area <span className="text-muted-foreground font-normal">(Optional)</span></label>
-              <Input 
-                value={currentCustomer.Address || ""}
-                onChange={e => setCurrentCustomer({...currentCustomer, Address: e.target.value})}
+              <Input
+                value={(currentItem as Customer).Address || ""}
+                onChange={e => setCurrentItem(prev => ({...prev, Address: e.target.value}))}
                 placeholder="e.g. DHA Phase 5, Street 12"
                 className="h-11"
               />
             </div>
-            
-            {/* Loyalty points can usually be viewed/edited by admin */}
-            {currentCustomer.CustomerId !== undefined && (
+
+            {(currentItem as Customer).CustomerId !== undefined && (
                <div className="space-y-2">
                  <label className="text-sm font-semibold text-foreground">Loyalty Points</label>
-                 <Input 
+                 <Input
                    type="number"
-                   value={currentCustomer.LoyaltyPoints}
-                   onChange={e => setCurrentCustomer({...currentCustomer, LoyaltyPoints: parseInt(e.target.value) || 0})}
+                   value={(currentItem as Customer).LoyaltyPoints}
+                   onChange={e => setCurrentItem(prev => ({...prev, LoyaltyPoints: parseInt(e.target.value) || 0}))}
                    className="h-11"
                  />
                </div>
             )}
 
-            {/* Status Toggle — shown for both Add and Edit */}
             <div className="space-y-2">
               <label className="text-sm font-semibold text-foreground">Status</label>
               <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-secondary/30">
                 <div className="flex items-center gap-3">
                   <span className={cn(
                     "w-2.5 h-2.5 rounded-full",
-                    currentCustomer.IsActive ? "bg-emerald-500" : "bg-rose-500"
+                    (currentItem as Customer).IsActive ? "bg-emerald-500" : "bg-rose-500"
                   )} />
                   <span className={cn(
                     "text-sm font-semibold",
-                    currentCustomer.IsActive ? "text-emerald-700 dark:text-emerald-400" : "text-rose-700 dark:text-rose-400"
+                    (currentItem as Customer).IsActive ? "text-emerald-700 dark:text-emerald-400" : "text-rose-700 dark:text-rose-400"
                   )}>
-                    {currentCustomer.IsActive ? "Active" : "Inactive"}
+                    {(currentItem as Customer).IsActive ? "Active" : "Inactive"}
                   </span>
                   <span className="text-xs text-muted-foreground">
-                    {currentCustomer.IsActive ? "Customer is visible and usable" : "Customer is hidden from use"}
+                    {(currentItem as Customer).IsActive ? "Customer is visible and usable" : "Customer is hidden from use"}
                   </span>
                 </div>
                 <button
                   type="button"
                   role="switch"
-                  aria-checked={currentCustomer.IsActive}
-                  onClick={() => setCurrentCustomer({...currentCustomer, IsActive: !currentCustomer.IsActive})}
+                  aria-checked={(currentItem as Customer).IsActive}
+                  onClick={() => setCurrentItem(prev => ({...prev, IsActive: !(prev as Customer).IsActive}))}
                   className={cn(
                     "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary/30",
-                    currentCustomer.IsActive ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"
+                    (currentItem as Customer).IsActive ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"
                   )}
                 >
                   <span className={cn(
                     "pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-lg ring-0 transition-transform duration-200 ease-in-out",
-                    currentCustomer.IsActive ? "translate-x-5" : "translate-x-0"
+                    (currentItem as Customer).IsActive ? "translate-x-5" : "translate-x-0"
                   )} />
                 </button>
               </div>
@@ -522,7 +327,6 @@ export default function CustomersPage() {
         </DialogContent>
       </Dialog>
 
-
       {/* View Dialog */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
@@ -534,7 +338,7 @@ export default function CustomersPage() {
               <div className="space-y-1">
                 <p className="text-sm font-medium text-muted-foreground">Customer Code</p>
                 <p className="font-mono text-sm font-semibold">
-                  CUST-{currentCustomer.CustomerId?.toString().padStart(5, '0')}
+                  CUST-{(currentItem as Customer).CustomerId?.toString().padStart(5, '0')}
                 </p>
               </div>
               <div className="space-y-1">
@@ -542,36 +346,36 @@ export default function CustomersPage() {
                 <div className="flex items-center">
                   <span className={cn(
                     "px-3 py-1 text-[13px] font-bold rounded-full",
-                    currentCustomer.IsActive 
-                      ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" 
+                    (currentItem as Customer).IsActive
+                      ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
                       : "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400"
                   )}>
-                    {currentCustomer.IsActive ? "Active" : "Inactive"}
+                    {(currentItem as Customer).IsActive ? "Active" : "Inactive"}
                   </span>
                 </div>
               </div>
             </div>
-            
+
             <div className="space-y-1 pt-2 border-t border-border">
               <p className="text-sm font-medium text-muted-foreground">Customer Name</p>
-              <p className="text-base font-medium">{currentCustomer.Name}</p>
+              <p className="text-base font-medium">{(currentItem as Customer).Name}</p>
             </div>
-            
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
                 <p className="text-sm font-medium text-muted-foreground">Mobile / Phone</p>
-                <p className="text-sm">{currentCustomer.Phone || "N/A"}</p>
+                <p className="text-sm">{(currentItem as Customer).Phone || "N/A"}</p>
               </div>
               <div className="space-y-1">
                 <p className="text-sm font-medium text-muted-foreground">Address / Area</p>
-                <p className="text-sm">{currentCustomer.Address || "N/A"}</p>
+                <p className="text-sm">{(currentItem as Customer).Address || "N/A"}</p>
               </div>
             </div>
-            
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
                 <p className="text-sm font-medium text-muted-foreground">Loyalty Points</p>
-                <p className="text-sm font-semibold text-primary">{currentCustomer.LoyaltyPoints}</p>
+                <p className="text-sm font-semibold text-primary">{(currentItem as Customer).LoyaltyPoints}</p>
               </div>
             </div>
           </div>
@@ -591,7 +395,7 @@ export default function CustomersPage() {
             </DialogTitle>
           </DialogHeader>
           <div className="py-4 text-foreground/80">
-            <p>Are you absolutely sure you want to delete the customer <strong>{customerToDelete?.Name}</strong>?</p>
+            <p>Are you absolutely sure you want to delete the customer <strong>{(itemToDelete as Customer)?.Name}</strong>?</p>
             <p className="text-sm text-muted-foreground mt-2">This action is irreversible. It will be permanently removed from the database.</p>
           </div>
           <DialogFooter className="gap-2 sm:gap-0">
