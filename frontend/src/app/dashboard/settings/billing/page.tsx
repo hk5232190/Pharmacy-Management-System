@@ -284,7 +284,7 @@ export default function BillingSettingsPage() {
             <div className="space-y-1">
               <p className="text-slate-500 font-medium">Sample Price Display:</p>
               <p className="text-xl font-bold">
-                {settings.CurrencySymbol} 1,250.00 <span className="text-sm font-normal text-slate-400 ml-1">({settings.Currency})</span>
+                {settings.CurrencySymbol} 1,250 <span className="text-sm font-normal text-slate-400 ml-1">({settings.Currency})</span>
               </p>
             </div>
             

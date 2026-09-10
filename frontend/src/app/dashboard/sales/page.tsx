@@ -32,6 +32,8 @@ import { useSystemPreferences } from "@/contexts/SystemPreferencesContext";
 import { useInventorySettings } from "@/contexts/InventorySettingsContext";
 import { useProfile } from "@/contexts/ProfileContext";
 import { useSearchParams } from "next/navigation";
+import ChallanPrint from "@/components/ChallanPrint";
+import type { ChallanData } from "@/components/ChallanTemplate";
 
 // --- Interfaces ---
 interface SaleInit {
@@ -456,17 +458,29 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
     }
   }, [grandTotal]);
 
-  // Quick payment preset amounts (exact + slightly lower rounded values)
+  // Note-based Quick Payment Presets
+  // Pakistani currency notes: 10, 20, 50, 100, 500, 1000, 5000
   const paymentPresets = useCallback(() => {
     if (grandTotal <= 0) return [];
-    const presets: number[] = [grandTotal];
-    
-    // Add slightly lower amounts for quick selection
-    if (grandTotal >= 10) presets.push(grandTotal - 10);
-    if (grandTotal >= 20) presets.push(grandTotal - 20);
-    if (grandTotal >= 30) presets.push(grandTotal - 30);
-    
-    return presets.sort((a, b) => b - a).slice(0, 4);
+
+    const notes = [10, 20, 50, 100, 500, 1000, 5000];
+    const result = new Set<number>();
+
+    // 1. Always include exact bill
+    result.add(grandTotal);
+
+    // 2. Nearest rounded-up amounts (practical change-giving)
+    const roundTo50  = Math.ceil(grandTotal / 50)  * 50;
+    const roundTo100 = Math.ceil(grandTotal / 100) * 100;
+    if (roundTo50  > grandTotal) result.add(roundTo50);
+    if (roundTo100 > grandTotal) result.add(roundTo100);
+
+    // 3. Note denominations strictly above the bill
+    for (const note of notes) {
+      if (note > grandTotal) result.add(note);
+    }
+
+    return Array.from(result).sort((a, b) => a - b).slice(0, 5);
   }, [grandTotal]);
 
   const verifyAdminPin = async (e: React.FormEvent) => {
@@ -1085,6 +1099,55 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
     }
   };
 
+  const buildSaleChallanData = async (invoiceNo: string): Promise<ChallanData | null> => {
+    try {
+      const res = await apiClient.get(`/sales/invoice/${invoiceNo}`);
+      if (!res.success || !res.data) return null;
+
+      const d = res.data;
+      return {
+        type: "sale",
+        ChallanNumber: d.InvoiceNumber,
+        Date: d.TransactionDate || new Date().toLocaleDateString(),
+        FromName: profile.PharmacyName || "Pharmacy",
+        FromAddress: [profile.Address, profile.City].filter(Boolean).join(", "),
+        FromPhone: profile.PhoneNumber || "",
+        FromLicense: profile.DrugLicenseNumber || undefined,
+        ToName: d.CustomerName || "Walk-in Customer",
+        ToAddress: undefined,
+        ToPhone: undefined,
+        Items: (d.Items || []).map((i: any) => ({
+          MedicineName: i.MedicineName,
+          BatchCode: i.BatchCode,
+          ExpiryDate: i.ExpiryDate || undefined,
+          Quantity: i.Quantity,
+          UnitPrice: i.UnitPrice,
+          Discount: i.Discount || 0,
+          Tax: i.Tax || 0,
+          LineTotal: i.TotalPrice,
+        })),
+        SubTotal: d.SubTotal || 0,
+        DiscountAmount: d.DiscountAmount || 0,
+        TaxAmount: d.TaxAmount || 0,
+        GrandTotal: d.GrandTotal || 0,
+        PaidAmount: d.PaidAmount ?? d.GrandTotal,
+        PaymentMethod: d.PaymentMethod || undefined,
+      };
+    } catch {
+      toast.error("Failed to load challan data");
+      return null;
+    }
+  };
+
+  const [challanDataMap, setChallanDataMap] = useState<Record<string, ChallanData | null>>({});
+
+  const handleChallanClick = async (invoiceNo: string) => {
+    if (!challanDataMap[invoiceNo]) {
+      const data = await buildSaleChallanData(invoiceNo);
+      if (data) setChallanDataMap(prev => ({ ...prev, [invoiceNo]: data }));
+    }
+  };
+
   return (
     <div className="flex flex-col min-h-full bg-slate-50/50 dark:bg-background relative">
       <div className="flex-1 p-4 lg:p-6 pb-6">
@@ -1149,11 +1212,6 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
               <div className="bg-white dark:bg-card rounded-xl border border-border shadow-sm p-4 relative z-20">
                 <h3 className="font-semibold text-foreground mb-3 flex justify-between items-center">
                   2. Search Medicine
-                  <div className="text-xs font-normal text-muted-foreground flex items-center gap-1">
-                    <span className="bg-secondary px-1.5 py-0.5 rounded">F2</span> Focus &nbsp;·&nbsp;
-                    <span className="bg-secondary px-1.5 py-0.5 rounded">↑↓</span> Navigate &nbsp;·&nbsp;
-                    <span className="bg-secondary px-1.5 py-0.5 rounded">↵</span> Select
-                  </div>
                 </h3>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -1393,7 +1451,7 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
                                   : "bg-white dark:bg-secondary text-foreground border-border hover:bg-secondary/50"
                             )}
                           >
-                            {formatCurrency(preset)}
+                            {currencySymbol} {Number.isInteger(preset) ? preset.toLocaleString() : preset.toFixed(2)}
                           </button>
                         ))}
                       </div>
@@ -1412,10 +1470,7 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
 
                 <div className="mt-6 space-y-3">
                   <Button id="complete-sale-btn" onClick={handleCompleteSale} className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white text-base font-bold shadow-lg shadow-blue-500/20" disabled={cart.length === 0}>
-                    Complete Sale <span className="ml-2 text-[10px] bg-blue-500 px-1 rounded border border-blue-400">F10</span> <ArrowRight className="ml-2 w-5 h-5" />
-                  </Button>
-                  <Button onClick={() => { autoPrintRef.current = true; handleCompleteSale(); }} className="w-full h-11 bg-emerald-600 hover:bg-emerald-700 text-white font-medium shadow-md" disabled={cart.length === 0}>
-                    <Printer className="mr-2 w-4 h-4" /> Save & Print
+                    Complete Sale <ArrowRight className="ml-2 w-5 h-5" />
                   </Button>
                   <Button variant="outline" onClick={() => { toast("Sale held temporarily. Cart preserved."); }} className="w-full h-11 border-blue-200 text-blue-600 hover:bg-blue-50 dark:border-blue-900/50 dark:text-blue-400 font-medium">
                     <Pause className="mr-2 w-4 h-4" /> Hold Sale
@@ -1751,6 +1806,24 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
                               <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-500 hover:bg-slate-100" onClick={() => handleReprint(item.InvoiceNumber, item.CashierName || "", item.PaymentMethod)} title="Reprint">
                                 <Printer className="w-4 h-4" />
                               </Button>
+                              {challanDataMap[item.InvoiceNumber] ? (
+                                <ChallanPrint
+                                  data={challanDataMap[item.InvoiceNumber]!}
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7 text-emerald-500 hover:bg-emerald-50"
+                                />
+                              ) : (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7 text-emerald-500 hover:bg-emerald-50"
+                                  onClick={() => handleChallanClick(item.InvoiceNumber)}
+                                  title="Print Challan"
+                                >
+                                  <FileText className="w-4 h-4" />
+                                </Button>
+                              )}
                               <Button 
                                 variant="ghost" 
                                 size="icon" 
@@ -2007,6 +2080,35 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
           </div>
         </div>
       )}
+
+      {/* Hidden Challan Print Area - used by ChallanPrint component */}
+      <div id="challan-print-area" className="hidden print:block bg-white text-black w-full">
+        <style dangerouslySetInnerHTML={{__html: `
+          @media print {
+            body * {
+              visibility: hidden;
+            }
+            #challan-print-area, #challan-print-area * {
+              visibility: visible;
+            }
+            #challan-print-area {
+              position: absolute;
+              left: 0;
+              top: 0;
+              width: 80mm;
+              margin: 0;
+              padding: 0;
+              font-family: 'Courier New', Courier, monospace;
+              font-size: 11px;
+              line-height: 1.35;
+            }
+            @page {
+              size: 80mm auto;
+              margin: 2mm;
+            }
+          }
+        `}} />
+      </div>
     </div>
   );
 }

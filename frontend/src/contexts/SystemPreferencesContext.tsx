@@ -130,17 +130,17 @@ export function SystemPreferencesProvider({ children }: { children: ReactNode })
   };
 
   const formatNumber = (value: number | null | undefined) => {
-    if (value === null || value === undefined || isNaN(value)) return "0.00";
+    if (value === null || value === undefined || isNaN(value)) return "0";
 
     if (preferences.NumberFormat === "1.234,56") {
       // European format
-      return new Intl.NumberFormat('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value);
+      return new Intl.NumberFormat('de-DE', { minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(value);
     } else if (preferences.NumberFormat === "1 234.56") {
       // Space separated
-      return new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value).replace(/,/g, '.');
+      return new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(value).replace(/,/g, '.');
     }
     // Default US/UK 1,234.56
-    return new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value);
+    return new Intl.NumberFormat('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(value);
   };
 
   const formatCurrency = (value: number | null | undefined) => {
