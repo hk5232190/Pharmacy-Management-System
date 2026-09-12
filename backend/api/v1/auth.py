@@ -53,12 +53,15 @@ def login_for_access_token(
 ):
     user = db.query(User).filter(User.Username == form_data.username).first()
     if not user:
+        logger.warning("PRODUCTION_TRACE auth rejected username=%s reason=user-not-found", form_data.username)
         raise AuthenticationError("Incorrect username or password")
     
     if not verify_password(form_data.password, user.PasswordHash, user.Salt):
+        logger.warning("PRODUCTION_TRACE auth rejected username=%s reason=password-mismatch", form_data.username)
         raise AuthenticationError("Incorrect username or password")
         
     if not user.IsActive:
+        logger.warning("PRODUCTION_TRACE auth rejected username=%s reason=inactive", form_data.username)
         raise AuthenticationError("Inactive user")
 
     # Set expiry duration based on remember me and security settings
@@ -75,6 +78,7 @@ def login_for_access_token(
     access_token = create_access_token(
         data={"sub": str(user.UserId)}, expires_delta=access_token_expires
     )
+    logger.info("PRODUCTION_TRACE auth accepted username=%s user_id=%s", user.Username, user.UserId)
     return {"access_token": access_token, "token_type": "bearer"}
 
 @router.post("/refresh", response_model=Token, summary="Refresh Access Token")

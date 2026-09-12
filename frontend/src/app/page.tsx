@@ -1,5 +1,5 @@
 "use client";
-import { getApiBaseUrl } from "@/lib/api-client";
+import { getApiBaseUrl, resolveApiBaseUrl } from "@/lib/api-client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -26,7 +26,7 @@ export default function LoginPage() {
   });
 
   useEffect(() => {
-    fetch(`${getApiBaseUrl()}/settings/general`)
+    resolveApiBaseUrl().then((baseUrl) => fetch(`${baseUrl}/settings/general`))
       .then(res => res.json())
       .then(data => {
         if (data && !data.detail) {
@@ -46,13 +46,15 @@ export default function LoginPage() {
     setError("");
 
     try {
+      const baseUrl = await resolveApiBaseUrl();
+      console.info("[PMS production trace] login request", { apiBaseUrl: baseUrl, username });
       const formData = new URLSearchParams();
       formData.append("username", username);
       formData.append("password", password);
       // OAuth2PasswordRequestForm expects form data
 
       const response = await fetch(
-        `${getApiBaseUrl()}/auth/login`,
+        `${baseUrl}/auth/login`,
         {
           method: "POST",
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -63,8 +65,11 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (!response.ok) {
+        console.warn("[PMS production trace] login rejected", { apiBaseUrl: baseUrl, status: response.status });
         throw new Error(data.error || "Authentication failed");
       }
+
+      console.info("[PMS production trace] login accepted", { apiBaseUrl: baseUrl });
 
       // Hydrate the authenticated profile before navigating so the app shell
       // renders the correct role from the very first frame (no admin flash).
@@ -565,7 +570,7 @@ export default function LoginPage() {
               {/* ── Activate License Button ── */}
               <button
                 type="button"
-                onClick={() => window.location.href = "/activate"}
+                onClick={() => router.push("/activate")}
                 style={{
                   width: "100%",
                   height: "clamp(42px, 5.5vh, 52px)",

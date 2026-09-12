@@ -9,11 +9,14 @@ from core.exceptions import PMSException
 from api.deps import get_current_user, get_current_admin_user, get_db
 from sqlalchemy.orm import Session
 import models
+from core.config import DATA_DIR, IS_FROZEN
+from core.logger import logger
 
 router = APIRouter()
 
-LICENSE_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "licenses")
+LICENSE_DIR = str(DATA_DIR / "licenses") if IS_FROZEN else os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "licenses")
 ACTIVE_LICENSE_PATH = os.path.join(LICENSE_DIR, "active.lic")
+logger.info("PRODUCTION_TRACE license storage path=%s exists=%s", ACTIVE_LICENSE_PATH, os.path.exists(ACTIVE_LICENSE_PATH))
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -141,11 +144,13 @@ async def activate_license(file: UploadFile = File(...)):
 def get_license_status():
     """Quick check: returns status (Active/Missing/Invalid/Expired) and payload."""
     if not os.path.exists(ACTIVE_LICENSE_PATH):
+        logger.info("PRODUCTION_TRACE license status=Missing path=%s", ACTIVE_LICENSE_PATH)
         return {"status": "Missing", "message": "No active license found"}
     try:
         with open(ACTIVE_LICENSE_PATH, "rb") as f:
             content = f.read()
         license_data = validate_license(content)
+        logger.info("PRODUCTION_TRACE license status=Active path=%s", ACTIVE_LICENSE_PATH)
         return {"status": "Active", "data": license_data}
     except PMSException as e:
         return {"status": "Invalid", "message": str(e)}

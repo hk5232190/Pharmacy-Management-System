@@ -12,7 +12,8 @@ let _resolvedPort: number | null = null;
 /**
  * Resolve the backend API base URL.
  * - In Tauri (production): polls the Rust `get_api_port` command until the
- *   Python sidecar has started and announced its port. Retries for up to 15s.
+ *   Python sidecar has started and announced its port. Retries for up to 60s
+ *   to cover first-run antivirus scanning of the packaged Python executable.
  * - In browser/dev mode: falls back to the static NEXT_PUBLIC_API_BASE_URL.
  */
 export async function resolveApiBaseUrl(): Promise<string> {
@@ -26,7 +27,7 @@ export async function resolveApiBaseUrl(): Promise<string> {
     try {
       const { invoke } = await import('@tauri-apps/api/core');
       // Poll until the backend has started (port becomes non-zero)
-      for (let i = 0; i < 30; i++) {
+      for (let i = 0; i < 120; i++) {
         const port: number = await invoke('get_api_port');
         if (port && port > 0) {
           _resolvedPort = port;

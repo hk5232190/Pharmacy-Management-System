@@ -92,6 +92,18 @@ fn kill_backend(app: &AppHandle) {
         if let Ok(mut guard) = state.0.lock() {
             if let Some(child) = guard.take() {
                 log::info!("Killing backend sidecar process...");
+                // PyInstaller one-file executables use a parent bootstrap and
+                // a child worker. Killing only the bootstrap can orphan the
+                // worker, leaving pms-backend.exe locked during an update.
+                #[cfg(target_os = "windows")]
+                {
+                    use std::os::windows::process::CommandExt;
+                    let pid = child.pid().to_string();
+                    let _ = std::process::Command::new("taskkill")
+                        .args(["/F", "/T", "/PID", &pid])
+                        .creation_flags(0x08000000)
+                        .status();
+                }
                 let _ = child.kill();
             }
         }

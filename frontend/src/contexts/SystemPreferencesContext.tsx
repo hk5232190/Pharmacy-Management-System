@@ -1,5 +1,5 @@
 "use client";
-import { getApiBaseUrl } from "@/lib/api-client";
+import { resolveApiBaseUrl } from "@/lib/api-client";
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 
@@ -64,15 +64,14 @@ import { useAudio } from "@/hooks/use-audio";
 export function SystemPreferencesProvider({ children }: { children: ReactNode }) {
   const [preferences, setPreferences] = useState<SystemPreferences>(DEFAULT_SETTINGS);
   const [currencySymbol, setCurrencySymbol] = useState<string>("Rs");
-  const [isLoaded, setIsLoaded] = useState(false);
-  
   const { playTone } = useAudio();
 
   const fetchPreferences = async () => {
     try {
+      const baseUrl = await resolveApiBaseUrl();
       const [appRes, billRes] = await Promise.all([
-        fetch(`${getApiBaseUrl()}/settings/appearance`),
-        fetch(`${getApiBaseUrl()}/settings/billing`)
+        fetch(`${baseUrl}/settings/appearance`),
+        fetch(`${baseUrl}/settings/billing`)
       ]);
 
       if (appRes.ok) {
@@ -88,13 +87,12 @@ export function SystemPreferencesProvider({ children }: { children: ReactNode })
       }
     } catch (e) {
       console.error("Failed to load system preferences", e);
-    } finally {
-      setIsLoaded(true);
     }
   };
 
   useEffect(() => {
-    fetchPreferences();
+    const timer = window.setTimeout(() => void fetchPreferences(), 0);
+    return () => window.clearTimeout(timer);
   }, []);
 
   const formatDate = (date: Date | string) => {

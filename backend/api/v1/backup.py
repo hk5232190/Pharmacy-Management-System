@@ -6,7 +6,6 @@ from datetime import datetime
 from pathlib import Path
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from tkinter import Tk, filedialog
 import plyer
 
 from database import SQLALCHEMY_DATABASE_URL, engine

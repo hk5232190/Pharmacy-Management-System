@@ -16,6 +16,7 @@ export function StartupProvider({ children }: { children: React.ReactNode }) {
       try {
         // Step 1: Wait for backend to fully start and resolve its port
         const baseUrl = await resolveApiBaseUrl();
+        console.info("[PMS production trace] startup API resolved", { baseUrl, pathname });
         
         // Step 2: Check License
         // VERY IMPORTANT: Prevent WebView2 from caching this GET request across restarts.
@@ -23,10 +24,12 @@ export function StartupProvider({ children }: { children: React.ReactNode }) {
         if (!licenseRes.ok) throw new Error("License server error");
         
         const licenseData = await licenseRes.json();
+        console.info("[PMS production trace] license status", { status: licenseData.status, pathname });
         
         if (licenseData.status !== "Active") {
           // If not active, enforce activation unless they are on the login page or activation page
           if (pathname !== "/activate" && pathname !== "/") {
+            console.info("[PMS production trace] redirect", { from: pathname, to: "/activate", reason: "license-not-active" });
             router.push("/activate");
           }
           setIsReady(true);
@@ -40,6 +43,7 @@ export function StartupProvider({ children }: { children: React.ReactNode }) {
         if (!token) {
           // No session found, send to login
           if (pathname !== "/" && pathname !== "/activate") {
+            console.info("[PMS production trace] redirect", { from: pathname, to: "/", reason: "missing-session" });
             router.push("/");
           }
           setIsReady(true);
@@ -89,18 +93,23 @@ export function StartupProvider({ children }: { children: React.ReactNode }) {
         }
       } catch (err) {
         console.error("Startup checks failed:", err);
-        // Fallback to login if backend isn't ready
-        if (pathname !== "/") {
+        // Never eject the user from activation because of a transient sidecar
+        // readiness error; the activation screen displays its own retryable error.
+        if (pathname !== "/" && pathname !== "/activate") {
+          console.info("[PMS production trace] redirect", { from: pathname, to: "/", reason: "startup-check-failed" });
           router.push("/");
         }
       } finally {
-        // Add a tiny delay to ensure smooth transition without flickering
-        setTimeout(() => setIsReady(true), 300);
+        setIsReady(true);
       }
     };
 
     initializeApp();
-  }, [pathname, router]);
+    // Startup verification belongs to the process boot path. Re-running the
+    // license and session requests on every client-side route made navigation
+    // wait on unrelated security/file-system work.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (!isReady) {
     return (

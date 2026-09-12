@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload, selectinload
 from sqlalchemy import func, or_
 from typing import List, Optional
 from datetime import datetime, timezone
@@ -560,7 +560,11 @@ def get_sales_history(
     current_user = Depends(get_current_user)
 ):
     try:
-        query = db.query(Sale)
+        query = db.query(Sale).options(
+            joinedload(Sale.customer),
+            joinedload(Sale.user),
+            selectinload(Sale.items),
+        )
         
         if start_date:
             try:
@@ -583,8 +587,6 @@ def get_sales_history(
         if user_id:
             query = query.filter(Sale.UserId == user_id)
             
-        print(f"DEBUG: Query count before q filter: {query.count()}")
-            
         if q:
             search_term = f"%{q}%"
             query = query.outerjoin(Customer).filter(
@@ -602,12 +604,20 @@ def get_sales_history(
         else:
             sales = query.all()
         
+        sale_ids = [sale.SalesId for sale in sales]
+        returns_by_sale = {sale_id: [] for sale_id in sale_ids}
+        if sale_ids:
+            returns = db.query(SaleReturn).options(selectinload(SaleReturn.items)).filter(
+                SaleReturn.SalesId.in_(sale_ids)
+            ).all()
+            for sale_return in returns:
+                returns_by_sale[sale_return.SalesId].append(sale_return)
+
         results = []
         for sale in sales:
             total_items = sum(i.Quantity for i in sale.items)
             returned_items = 0
-            returns = db.query(SaleReturn).filter(SaleReturn.SalesId == sale.SalesId).all()
-            for r in returns:
+            for r in returns_by_sale[sale.SalesId]:
                 returned_items += sum(ri.ReturnQuantity for ri in r.items)
                 
             status = sale.Status

@@ -43,6 +43,7 @@
     "windows": {
       "nsis": {
         "installMode": "both",
+        "installerHooks": "windows/installer-hooks.nsh",
         "displayLanguageSelector": false,
         "installerIcon": "icons/icon.ico",
         "headerImage": null,

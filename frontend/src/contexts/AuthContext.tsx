@@ -1,5 +1,5 @@
 "use client";
-import { getAccessToken, getApiBaseUrl } from "@/lib/api-client";
+import { getAccessToken, resolveApiBaseUrl } from "@/lib/api-client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { clearStoredTokens } from "@/lib/auth-session";
@@ -46,7 +46,8 @@ export const useAuth = () => useContext(AuthContext);
 
 async function fetchProfileByToken(token: string): Promise<UserProfile | null> {
   try {
-    const res = await fetch(`${getApiBaseUrl()}/auth/me`, {
+    const baseUrl = await resolveApiBaseUrl();
+    const res = await fetch(`${baseUrl}/auth/me`, {
       headers: { "Authorization": `Bearer ${token}` }
     });
     if (res.ok) {

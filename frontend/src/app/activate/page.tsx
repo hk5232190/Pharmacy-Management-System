@@ -1,5 +1,5 @@
 "use client";
-import { getApiBaseUrl } from "@/lib/api-client";
+import { resolveApiBaseUrl } from "@/lib/api-client";
 
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
@@ -27,7 +27,11 @@ export default function ActivatePage() {
 
   useEffect(() => {
     // Fetch MAC Address on mount
-    fetch(`${getApiBaseUrl()}/license/mac`)
+    resolveApiBaseUrl()
+      .then((baseUrl) => {
+        console.info("[PMS production trace] activation page API", { apiBaseUrl: baseUrl });
+        return fetch(`${baseUrl}/license/mac`);
+      })
       .then((res) => res.json())
       .then((data) => setMac(data.mac))
       .catch(() => setError("Failed to fetch MAC Address from backend. Is the server running?"));
@@ -48,10 +52,11 @@ export default function ActivatePage() {
     setError("");
 
     try {
+      const baseUrl = await resolveApiBaseUrl();
       const formData = new FormData();
       formData.append("file", selectedFile);
 
-      const response = await fetch(`${getApiBaseUrl()}/license/activate`, {
+      const response = await fetch(`${baseUrl}/license/activate`, {
         method: "POST",
         body: formData,
       });

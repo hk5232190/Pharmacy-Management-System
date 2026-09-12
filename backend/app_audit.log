@@ -2719,3 +2719,91 @@ NoneType: None
 2026-09-09 16:52:36,398 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_09_09_2026_165236.zip | Size: 13009 bytes | Status: Success
 2026-09-09 16:52:36,414 - pms - INFO - Exit backup verification: Passed
 2026-09-09 16:52:57,655 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_09_09_2026_165236.zip)
+2026-09-12 21:57:18,943 - pms - INFO - PRODUCTION_TRACE license storage path=E:\Projects\PMS-Software\backend\licenses\active.lic exists=True
+2026-09-12 21:57:20,562 - httpx - INFO - HTTP Request: OPTIONS http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-09-12 21:57:20,566 - httpx - INFO - HTTP Request: OPTIONS http://testserver/api/v1/auth/login "HTTP/1.1 400 Bad Request"
+2026-09-12 21:57:20,569 - httpx - INFO - HTTP Request: OPTIONS http://testserver/api/v1/auth/login "HTTP/1.1 400 Bad Request"
+2026-09-12 21:57:20,572 - httpx - INFO - HTTP Request: OPTIONS http://testserver/api/v1/auth/login "HTTP/1.1 400 Bad Request"
+2026-09-12 21:57:45,287 - pms - INFO - PRODUCTION_TRACE license storage path=E:\Projects\PMS-Software\backend\licenses\active.lic exists=True
+2026-09-12 21:57:45,304 - pms - INFO - PRODUCTION_TRACE license storage path=E:\Projects\PMS-Software\backend\licenses\active.lic exists=True
+2026-09-12 21:57:48,679 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-12 21:57:48,768 - pms - INFO - Verified notifications table in database.
+2026-09-12 21:57:49,061 - httpx - INFO - HTTP Request: OPTIONS http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-09-12 21:57:49,201 - pms - ERROR - Error checking backups in notification sync: 'BackupHistory' object has no attribute 'FileName'
+2026-09-12 21:57:49,209 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-12 21:57:49,672 - pms - INFO - PRODUCTION_TRACE auth accepted username=admin user_id=1
+2026-09-12 21:57:49,686 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-09-12 21:57:49,807 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/license/mac "HTTP/1.1 200 OK"
+2026-09-12 21:57:49,813 - httpx - INFO - HTTP Request: OPTIONS http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-09-12 21:57:50,107 - pms - INFO - PRODUCTION_TRACE auth accepted username=admin user_id=1
+2026-09-12 21:57:50,110 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-09-12 21:57:50,117 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/license/mac "HTTP/1.1 200 OK"
+2026-09-12 21:57:50,121 - httpx - INFO - HTTP Request: OPTIONS http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-09-12 21:57:50,310 - pms - INFO - PRODUCTION_TRACE auth accepted username=admin user_id=1
+2026-09-12 21:57:50,316 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-09-12 21:57:50,322 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/license/mac "HTTP/1.1 200 OK"
+2026-09-12 21:57:50,326 - httpx - INFO - HTTP Request: OPTIONS http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-09-12 21:57:50,552 - pms - INFO - PRODUCTION_TRACE auth accepted username=admin user_id=1
+2026-09-12 21:57:50,556 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-09-12 21:57:50,564 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/license/mac "HTTP/1.1 200 OK"
+2026-09-12 21:57:56,443 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-12 21:58:02,001 - pms - WARNING - PRODUCTION_TRACE auth rejected username=admin reason=password-mismatch
+2026-09-12 21:58:02,003 - pms - ERROR - PMSException caught: Incorrect username or password (status: 401) | Path: /api/v1/auth/login
+2026-09-12 21:58:08,610 - pms - INFO - PRODUCTION_TRACE auth accepted username=admin user_id=1
+2026-09-12 21:58:34,812 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_12_09_2026_215834.zip | Size: 13008 bytes | Status: Success
+2026-09-12 21:58:35,317 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-12 21:58:35,646 - pms - INFO - Exit backup verification: Passed
+2026-09-12 21:58:52,985 - pms - INFO - PRODUCTION_TRACE license storage path=E:\Projects\PMS-Software\backend\licenses\active.lic exists=True
+2026-09-12 21:58:55,944 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-12 21:58:55,983 - pms - INFO - Verified notifications table in database.
+2026-09-12 21:58:56,371 - pms - ERROR - Error checking backups in notification sync: 'BackupHistory' object has no attribute 'FileName'
+2026-09-12 21:58:56,447 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-12 21:59:00,423 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-12 22:00:46,938 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_12_09_2026_220046.zip | Size: 13014 bytes | Status: Success
+2026-09-12 22:00:47,611 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-12 22:00:48,225 - pms - INFO - Exit backup verification: Passed
+2026-09-12 22:00:49,729 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_12_09_2026_220046.zip)
+2026-09-12 22:00:56,171 - pms - WARNING - PRODUCTION_TRACE auth rejected username=admin reason=password-mismatch
+2026-09-12 22:00:56,173 - pms - ERROR - PMSException caught: Incorrect username or password (status: 401) | Path: /api/v1/auth/login
+2026-09-12 22:01:01,277 - pms - INFO - PRODUCTION_TRACE auth accepted username=admin user_id=1
+2026-09-12 22:01:24,090 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_12_09_2026_220046.zip)
+2026-09-12 22:01:24,456 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-12 22:11:09,610 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_12_09_2026_221109.zip | Size: 13026 bytes | Status: Success
+2026-09-12 22:11:09,692 - pms - INFO - Exit backup verification: Passed
+2026-09-12 22:11:10,959 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-12 22:11:22,091 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_12_09_2026_221109.zip)
+2026-09-12 22:11:22,453 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-12 22:11:53,778 - pms - WARNING - Safe Data Reset | Auth Failed | User: admin
+2026-09-12 22:12:02,546 - pms - INFO - Safe Data Reset | SUCCESS | User: admin | Snapshot: pre_reset_snapshot_20260912_221202.sqlite
+2026-09-12 22:12:11,928 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_12_09_2026_221211.zip | Size: 8924 bytes | Status: Success
+2026-09-12 22:12:11,941 - pms - INFO - Exit backup verification: Passed
+2026-09-12 22:12:12,212 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-12 22:12:21,092 - pms - INFO - AUDIT: User admin removed their Profile Photo.
+2026-09-12 22:12:23,769 - pms - INFO - AUDIT: User admin updated their profile information.
+2026-09-12 22:12:43,517 - pms - INFO - AUDIT: User admin updated their profile information.
+2026-09-12 22:13:02,895 - pms - INFO - AUDIT: User admin updated Pharmacy Branding (Name/Profile).
+2026-09-12 22:13:11,955 - pms - INFO - AUDIT: User admin updated Pharmacy Branding (Name/Profile).
+2026-09-12 22:13:12,011 - pms - INFO - AUDIT: User admin uploaded a new Pharmacy Logo.
+2026-09-12 22:13:12,015 - pms - ERROR - Unhandled Exception caught: Response content shorter than Content-Length | Path: /uploads/logo/logo_1.jpg
+NoneType: None
+2026-09-12 22:13:16,218 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_12_09_2026_221316.zip | Size: 9038 bytes | Status: Success
+2026-09-12 22:13:16,234 - pms - INFO - Exit backup verification: Passed
+2026-09-12 22:13:16,517 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-12 22:14:05,366 - pms - INFO - AUDIT: User admin updated Pharmacy Branding (Name/Profile).
+2026-09-12 22:14:23,822 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_12_09_2026_221423.zip | Size: 9119 bytes | Status: Success
+2026-09-12 22:14:23,838 - pms - INFO - Exit backup verification: Passed
+2026-09-12 22:14:24,206 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-12 22:15:31,083 - pms - INFO - PRODUCTION_TRACE license storage path=E:\Projects\PMS-Software\backend\licenses\active.lic exists=True
+2026-09-12 22:15:32,607 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-12 22:15:32,616 - pms - INFO - Verified notifications table in database.
+2026-09-12 22:15:32,744 - pms - ERROR - Error checking backups in notification sync: 'BackupHistory' object has no attribute 'FileName'
+2026-09-12 22:15:32,755 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-12 22:15:58,783 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_12_09_2026_221558.zip | Size: 9172 bytes | Status: Success
+2026-09-12 22:16:00,516 - pms - INFO - Exit backup verification: Passed
+2026-09-12 22:16:03,071 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-12 22:19:42,488 - pms - INFO - Safe Data Reset | SUCCESS | User: admin | Snapshot: pre_reset_snapshot_20260912_221942.sqlite
+2026-09-12 22:19:46,877 - pms - INFO - Clear Temp Data | User: admin | Deleted 0 files | Reclaimed: 0.00 KB
+2026-09-12 22:19:47,744 - pms - INFO - Clear Temp Data | User: admin | Deleted 0 files | Reclaimed: 0.00 KB
+2026-09-12 22:19:55,891 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_12_09_2026_221955.zip | Size: 8315 bytes | Status: Success
+2026-09-12 22:19:55,904 - pms - INFO - Exit backup verification: Passed
+2026-09-12 22:19:56,256 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic

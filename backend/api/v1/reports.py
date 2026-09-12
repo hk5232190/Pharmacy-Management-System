@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Query, Response, Body
 from fastapi.responses import StreamingResponse
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload, selectinload
 from sqlalchemy import func
 from datetime import date, timedelta, datetime
 import csv
@@ -110,7 +110,10 @@ def fetch_sales_report_data(
     if payment_method and payment_method != "all":
         base_query = base_query.filter(models.Sale.PaymentMethod == payment_method)
 
-    completed_sales = base_query.filter(models.Sale.Status == 'Completed').all()
+    completed_sales = base_query.options(
+        joinedload(models.Sale.customer),
+        selectinload(models.Sale.items),
+    ).filter(models.Sale.Status == 'Completed').all()
     # Returns from SaleReturn model
     returns_query = db.query(models.SaleReturn).filter(
         func.date(models.SaleReturn.ReturnDate, 'localtime') >= start_date,
@@ -127,7 +130,12 @@ def fetch_sales_report_data(
 
     # Calculate COGS dynamically — pre-fetch all relevant batches to avoid N+1 queries
     all_batch_ids = list({item.BatchId for sale in completed_sales for item in sale.items})
-    batch_map = {b.BatchId: b for b in db.query(models.StockBatch).filter(models.StockBatch.BatchId.in_(all_batch_ids)).all()} if all_batch_ids else {}
+    batch_map = {
+        b.BatchId: b
+        for b in db.query(models.StockBatch)
+        .options(joinedload(models.StockBatch.medicine))
+        .filter(models.StockBatch.BatchId.in_(all_batch_ids)).all()
+    } if all_batch_ids else {}
     total_cogs = 0
     for sale in completed_sales:
         for item in sale.items:
@@ -295,7 +303,10 @@ def fetch_purchase_report_data(
     if supplier_id and supplier_id != "all":
         base_query = base_query.filter(models.Purchase.SupplierId == supplier_id)
 
-    completed_purchases = base_query.all()
+    completed_purchases = base_query.options(
+        joinedload(models.Purchase.supplier),
+        selectinload(models.Purchase.items),
+    ).all()
     # Calculate Purchase Returns correctly using the PurchaseReturn model
     returns_query = db.query(models.PurchaseReturn).filter(
         func.date(models.PurchaseReturn.ReturnDate, 'localtime') >= start_date,
@@ -554,12 +565,12 @@ def fetch_inventory_report_data(
             func.date(models.Purchase.PurchaseDate, 'localtime') <= end_date
         ).all()
         
-        sales = db.query(models.SaleItem).join(models.Sale).filter(
+        sales = db.query(models.SaleItem).options(joinedload(models.SaleItem.batch)).join(models.Sale).filter(
             func.date(models.Sale.TransactionDate, 'localtime') >= start_date,
             func.date(models.Sale.TransactionDate, 'localtime') <= end_date
         ).all()
         
-        adjustments = db.query(models.StockAdjustment).filter(
+        adjustments = db.query(models.StockAdjustment).options(joinedload(models.StockAdjustment.batch)).filter(
             func.date(models.StockAdjustment.AdjustmentDate, 'localtime') >= start_date,
             func.date(models.StockAdjustment.AdjustmentDate, 'localtime') <= end_date
         ).all()
@@ -582,12 +593,12 @@ def fetch_inventory_report_data(
         for s in sales:
             tot_sold += s.Quantity
             # s.BatchId -> get medicine
-            b = db.query(models.StockBatch).filter(models.StockBatch.BatchId == s.BatchId).first()
+            b = s.batch
             if b:
                 med_move_map[b.MedicineId]["s"] += s.Quantity
                 
         for a in adjustments:
-            b = db.query(models.StockBatch).filter(models.StockBatch.BatchId == a.BatchId).first()
+            b = a.batch
             if not b:
                 continue
                 
@@ -972,7 +983,7 @@ def fetch_financial_report_data(
     end_date: date
 ):
     # 1. Sales Data (Revenue & Discounts & Returns & COGS)
-    completed_sales = db.query(models.Sale).filter(
+    completed_sales = db.query(models.Sale).options(selectinload(models.Sale.items)).filter(
         func.date(models.Sale.TransactionDate, 'localtime') >= start_date,
         func.date(models.Sale.TransactionDate, 'localtime') <= end_date,
         models.Sale.Status == 'Completed'
@@ -989,12 +1000,17 @@ def fetch_financial_report_data(
     
     total_revenue = gross_sales - discounts_applied - sales_returns
     
+    all_batch_ids = {item.BatchId for sale in completed_sales for item in sale.items}
+    batch_costs = {
+        batch_id: float(cost or 0.0)
+        for batch_id, cost in db.query(models.StockBatch.BatchId, models.StockBatch.CostPrice)
+        .filter(models.StockBatch.BatchId.in_(all_batch_ids)).all()
+    } if all_batch_ids else {}
+
     total_cogs = 0.0
     for sale in completed_sales:
         for item in sale.items:
-            batch = db.query(models.StockBatch).filter(models.StockBatch.BatchId == item.BatchId).first()
-            if batch:
-                total_cogs += ((item.Quantity - item.ReturnedQuantity) * float(batch.CostPrice or 0.0))
+            total_cogs += ((item.Quantity - item.ReturnedQuantity) * batch_costs.get(item.BatchId, 0.0))
                 
     # 2. Inventory Loss / Expiry Write-Off
     today = date.today()
@@ -1060,7 +1076,7 @@ def fetch_financial_report_data(
             trend_dict[period]["revenue"] += (float(s.SubTotal or 0.0) - float(s.DiscountAmount or 0.0))
             
             # Add COGS to expenses for the sale
-            sale_cogs = sum((i.Quantity * float(db.query(models.StockBatch).filter(models.StockBatch.BatchId == i.BatchId).first().CostPrice if db.query(models.StockBatch).filter(models.StockBatch.BatchId == i.BatchId).first() else 0.0)) for i in s.items)
+            sale_cogs = sum(i.Quantity * batch_costs.get(i.BatchId, 0.0) for i in s.items)
             trend_dict[period]["expenses"] += sale_cogs
             
     # Add daily returns to expenses (as a reduction of revenue)
