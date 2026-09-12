@@ -5,18 +5,12 @@ from core.exceptions import LicenseExpiredError, HardwareMismatchError, Tampered
 from utils.hwid import get_primary_mac
 from core.logger import logger
 
-from core.config import DATA_DIR, IS_FROZEN
-
-if IS_FROZEN:
-    KEYS_DIR = os.path.join(DATA_DIR, "utils", "keys")
-else:
-    KEYS_DIR = os.path.join(os.path.dirname(__file__), "keys")
-
+KEYS_DIR = os.path.join(os.path.dirname(__file__), "keys")
 PUBLIC_KEY_PATH = os.path.join(KEYS_DIR, "public.pem")
 
 def get_public_key():
     if not os.path.exists(PUBLIC_KEY_PATH):
-        raise FileNotFoundError(f"Public key not found at {PUBLIC_KEY_PATH}. Please ensure the app is correctly built.")
+        raise FileNotFoundError("Public key not found. Please ensure the app is correctly built.")
     with open(PUBLIC_KEY_PATH, "rb") as f:
         return serialization.load_pem_public_key(f.read())
 

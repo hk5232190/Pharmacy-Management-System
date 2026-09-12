@@ -129,6 +129,15 @@
   }
 }
 
+/* 
+ * Hide native Edge/WebView2 password reveal eye icon and clear cross
+ * to prevent duplicate icons when using our custom Lucide React icons. 
+ */
+input::-ms-reveal,
+input::-ms-clear {
+  display: none !important;
+}
+
 @page {
   size: A4 portrait;
   margin: 15mm 12mm;

@@ -1,0 +1,5 @@
+2026-09-12 08:18:28,069 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-12 08:18:28,070 - pms - INFO - AUTH-DEBUG: DB URL=sqlite:///PMS-Data\pharma_db.sqlite DATA_DIR=PMS-Data
+2026-09-12 08:18:28,220 - pms - INFO - Verified notifications table in database.
+2026-09-12 08:18:28,254 - pms - ERROR - Error checking backups in notification sync: 'BackupHistory' object has no attribute 'FileName'
+2026-09-12 08:18:28,275 - pms - INFO - Completed startup system notifications synchronization.

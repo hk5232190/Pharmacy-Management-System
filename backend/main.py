@@ -1,14 +1,12 @@
-from fastapi import FastAPI, APIRouter
-from fastapi.exceptions import RequestValidationError
-from core.config import settings, DATA_DIR, IS_FROZEN, BUNDLE_DIR
+from fastapi import FastAPI
+from api.router import create_api_router
+from core.config import settings
 from core.logger import logger
 from core.exceptions import (
     PMSException, 
     pms_exception_handler, 
     general_exception_handler
 )
-
-from api.v1 import license, auth, category, company, supplier, customer, medicine, purchase, purchase_return, inventory, sales, dashboard, reports, backup, backup_settings, settings as pms_settings, security, about, system, notification, users
 
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -21,53 +19,24 @@ app = FastAPI(
 )
 
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
 import os
 
-# ── Uploads directory (persistent in DATA_DIR) ────────────────────────────
-_uploads_dir = os.path.join(DATA_DIR, 'uploads')
-os.makedirs(os.path.join(_uploads_dir, 'logo'), exist_ok=True)
-os.makedirs(os.path.join(_uploads_dir, 'background'), exist_ok=True)
-os.makedirs(os.path.join(_uploads_dir, 'profile'), exist_ok=True)
-app.mount("/uploads", StaticFiles(directory=_uploads_dir), name="uploads")
+# Create uploads dir if not exists
+os.makedirs("uploads/logo", exist_ok=True)
+os.makedirs("uploads/background", exist_ok=True)
+os.makedirs("uploads/profile", exist_ok=True)
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
-# Add CORS middleware — allow all localhost origins for dynamic port allocation
+# Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=False,
+    allow_origins=["http://localhost:3000"], # Frontend URL
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Define API Router
-api_router = APIRouter(prefix=settings.API_V1_STR)
-
-# Register Routers
-api_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])
-api_router.include_router(license.router, prefix="/license", tags=["License"])
-api_router.include_router(category.router, prefix="/categories", tags=["Categories"])
-api_router.include_router(company.router, prefix="/companies", tags=["Companies"])
-api_router.include_router(supplier.router, prefix="/suppliers", tags=["Suppliers"])
-api_router.include_router(customer.router, prefix="/customers", tags=["Customers"])
-api_router.include_router(medicine.router, prefix="/medicines", tags=["Medicines"])
-api_router.include_router(purchase.router, prefix="/purchases", tags=["Purchases"])
-api_router.include_router(purchase_return.router, prefix="/purchase-returns", tags=["Purchase Returns"])
-api_router.include_router(inventory.router, prefix="/inventory", tags=["Inventory"])
-api_router.include_router(sales.router, prefix="/sales", tags=["Sales"])
-api_router.include_router(dashboard.router, prefix="/dashboard", tags=["Dashboard"])
-api_router.include_router(reports.router, prefix="/reports", tags=["Reports"])
-api_router.include_router(backup.router, prefix="/backup", tags=["Backup & Restore"])
-api_router.include_router(backup.exit_backup_router, prefix="/backup", tags=["Backup & Restore"])
-api_router.include_router(backup_settings.router, prefix="/backup-settings", tags=["Backup Settings"])
-api_router.include_router(pms_settings.router, prefix="/settings", tags=["Settings"])
-api_router.include_router(security.router)
-api_router.include_router(about.router, prefix="/about", tags=["About"])
-api_router.include_router(system.router, prefix="/system", tags=["System Diagnostics"])
-api_router.include_router(notification.router, prefix="/notifications", tags=["Notifications"])
-api_router.include_router(users.router, prefix="/users", tags=["Users"])
-
-app.include_router(api_router)
+app.include_router(create_api_router(settings.API_V1_STR))
 
 # Register Custom Exception Handlers
 app.add_exception_handler(PMSException, pms_exception_handler)
@@ -102,7 +71,6 @@ def run_startup_backup_job():
 @app.on_event("startup")
 async def startup_event():
     logger.info(f"Starting {settings.PROJECT_NAME} backend...")
-    logger.info(f"AUTH-DEBUG: DB URL={settings.DATABASE_URL} DATA_DIR={DATA_DIR}")
 
     from database import SessionLocal, engine
     from models import BackupSettings, BackupHistory
@@ -110,25 +78,6 @@ async def startup_event():
 
     db = SessionLocal()
     try:
-        # ── Ensure all tables exist ──────────────────────────────────────────
-        from models import Base, User
-        Base.metadata.create_all(bind=engine)
-
-        # ── Seed Default Admin User ──────────────────────────────────────────
-        if db.query(User).count() == 0:
-            logger.info("No users found. Seeding default 'admin' user.")
-            from core.security import get_password_hash_and_salt
-            hash_str, salt_str = get_password_hash_and_salt("admin")
-            default_admin = User(
-                Username="admin",
-                PasswordHash=hash_str,
-                Salt=salt_str,
-                IsActive=True,
-                Role="admin"
-            )
-            db.add(default_admin)
-            db.commit()
-
         # ── Inline migrations ────────────────────────────────────────────────
         try:
             result = db.execute(text("PRAGMA table_info(billing_settings)")).fetchall()
@@ -179,40 +128,7 @@ async def startup_event():
     finally:
         db.close()
 
-# ── Static frontend serving (production only) ─────────────────────────────
-if IS_FROZEN:
-    _frontend_dir = os.path.join(BUNDLE_DIR, 'frontend')
-    if os.path.isdir(_frontend_dir):
-        # Serve Next.js static export — mount _next assets first
-        _next_dir = os.path.join(_frontend_dir, '_next')
-        if os.path.isdir(_next_dir):
-            app.mount("/_next", StaticFiles(directory=_next_dir), name="next_assets")
-
-        @app.get("/")
-        def serve_index():
-            return FileResponse(os.path.join(_frontend_dir, 'index.html'))
-
-        @app.get("/{full_path:path}")
-        def serve_frontend(full_path: str):
-            """Serve static frontend files, falling back to the page's HTML."""
-            file_path = os.path.join(_frontend_dir, full_path)
-            if os.path.isfile(file_path):
-                return FileResponse(file_path)
-            # Try as HTML page (Next.js static export convention)
-            html_path = os.path.join(_frontend_dir, full_path + '.html')
-            if os.path.isfile(html_path):
-                return FileResponse(html_path)
-            html_path = os.path.join(_frontend_dir, full_path, 'index.html')
-            if os.path.isfile(html_path):
-                return FileResponse(html_path)
-            # Fallback to main index
-            return FileResponse(os.path.join(_frontend_dir, 'index.html'))
-    else:
-        @app.get("/")
-        def read_root():
-            return {"status": "ok", "message": f"{settings.PROJECT_NAME} Backend is running"}
-else:
-    @app.get("/")
-    def read_root():
-        logger.info("Root endpoint accessed")
-        return {"status": "ok", "message": f"{settings.PROJECT_NAME} Backend is running"}
+@app.get("/")
+def read_root():
+    logger.info("Root endpoint accessed")
+    return {"status": "ok", "message": f"{settings.PROJECT_NAME} Backend is running"}

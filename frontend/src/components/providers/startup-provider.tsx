@@ -1,5 +1,5 @@
 "use client";
-import { resolveApiBaseUrl } from "@/lib/api-client";
+import { getAccessToken, resolveApiBaseUrl } from "@/lib/api-client";
 
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
@@ -35,7 +35,7 @@ export function StartupProvider({ children }: { children: React.ReactNode }) {
 
         // License is active. 
         // Step 2: Check Session
-        const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
+        const token = getAccessToken();
         
         if (!token) {
           // No session found, send to login

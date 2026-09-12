@@ -4813,34 +4813,6 @@
    'C:\\Users\\Muhammad '
    'Saqib\\AppData\\Local\\Programs\\Python\\Python314\\Lib\\timeit.py',
    'PYMODULE'),
-  ('tkinter',
-   'C:\\Users\\Muhammad '
-   'Saqib\\AppData\\Local\\Programs\\Python\\Python314\\Lib\\tkinter\\__init__.py',
-   'PYMODULE'),
-  ('tkinter.commondialog',
-   'C:\\Users\\Muhammad '
-   'Saqib\\AppData\\Local\\Programs\\Python\\Python314\\Lib\\tkinter\\commondialog.py',
-   'PYMODULE'),
-  ('tkinter.constants',
-   'C:\\Users\\Muhammad '
-   'Saqib\\AppData\\Local\\Programs\\Python\\Python314\\Lib\\tkinter\\constants.py',
-   'PYMODULE'),
-  ('tkinter.dialog',
-   'C:\\Users\\Muhammad '
-   'Saqib\\AppData\\Local\\Programs\\Python\\Python314\\Lib\\tkinter\\dialog.py',
-   'PYMODULE'),
-  ('tkinter.filedialog',
-   'C:\\Users\\Muhammad '
-   'Saqib\\AppData\\Local\\Programs\\Python\\Python314\\Lib\\tkinter\\filedialog.py',
-   'PYMODULE'),
-  ('tkinter.messagebox',
-   'C:\\Users\\Muhammad '
-   'Saqib\\AppData\\Local\\Programs\\Python\\Python314\\Lib\\tkinter\\messagebox.py',
-   'PYMODULE'),
-  ('tkinter.simpledialog',
-   'C:\\Users\\Muhammad '
-   'Saqib\\AppData\\Local\\Programs\\Python\\Python314\\Lib\\tkinter\\simpledialog.py',
-   'PYMODULE'),
   ('token',
    'C:\\Users\\Muhammad '
    'Saqib\\AppData\\Local\\Programs\\Python\\Python314\\Lib\\token.py',

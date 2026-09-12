@@ -1,5 +1,5 @@
 "use client";
-import { getApiBaseUrl } from "@/lib/api-client";
+import { getAccessToken, getApiBaseUrl } from "@/lib/api-client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { clearStoredTokens } from "@/lib/auth-session";
@@ -72,7 +72,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const refreshUser = useCallback(async () => {
-    const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
+    const token = getAccessToken();
     if (!token) return;
     const profile = await fetchProfileByToken(token);
     if (profile) setUser(profile);
@@ -95,7 +95,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
+      const token = getAccessToken();
       if (!token) {
         if (!cancelled) setLoading(false);
         return;
