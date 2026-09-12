@@ -18,7 +18,8 @@ export function StartupProvider({ children }: { children: React.ReactNode }) {
         const baseUrl = await resolveApiBaseUrl();
         
         // Step 2: Check License
-        const licenseRes = await fetch(`${baseUrl}/license/status`);
+        // VERY IMPORTANT: Prevent WebView2 from caching this GET request across restarts.
+        const licenseRes = await fetch(`${baseUrl}/license/status`, { cache: "no-store" });
         if (!licenseRes.ok) throw new Error("License server error");
         
         const licenseData = await licenseRes.json();
