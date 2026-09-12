@@ -135,28 +135,7 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
   const [grandTotal, setGrandTotal] = useState(0);
   const [paidAmount, setPaidAmount] = useState(0);
 
-  // Quick payment preset amounts
-  const paymentPresets = React.useCallback(() => {
-    if (grandTotal <= 0) return [];
-    const presets: number[] = [grandTotal];
-    
-    const milestones = [50, 100, 200, 500, 1000, 2000, 5000, 10000];
-    for (const m of milestones) {
-      const rounded = Math.ceil(grandTotal / m) * m;
-      if (rounded > grandTotal && !presets.includes(rounded)) {
-        presets.push(rounded);
-        if (presets.length >= 4) break;
-      }
-    }
-    
-    // Add slightly lower amounts for quick selection
-    if (grandTotal >= 10 && !presets.includes(grandTotal - 10)) presets.push(grandTotal - 10);
-    if (grandTotal >= 20 && !presets.includes(grandTotal - 20)) presets.push(grandTotal - 20);
-    if (grandTotal >= 30 && !presets.includes(grandTotal - 30)) presets.push(grandTotal - 30);
-    
-    return presets.sort((a, b) => b - a).slice(0, 4);
-  }, [grandTotal]);
-  
+
   // --- States for History Tab ---
   const [purchaseHistory, setPurchaseHistory] = useState<PurchaseHistory[]>([]);
   const [viewingInvoice, setViewingInvoice] = useState<PurchaseHistory | null>(null);
@@ -913,27 +892,7 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
                         />
                     </div>
                   </div>
-                  {/* Quick Payment Presets */}
-                  {items.length > 0 && paymentPresets().length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 justify-end mt-1">
-                      {paymentPresets().map((preset) => (
-                        <button
-                          key={preset}
-                          onClick={() => setPaidAmount(preset)}
-                          className={cn(
-                            "min-w-[50px] text-[11px] font-bold py-1 px-2 rounded border transition-all duration-150",
-                            paidAmount === preset
-                              ? "bg-emerald-600 text-white border-emerald-600"
-                              : preset === grandTotal
-                                ? "bg-emerald-900/40 text-emerald-400 border-emerald-700/50 hover:bg-emerald-800/60"
-                                : "bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700"
-                          )}
-                        >
-                          {formatCurrency(preset)}
-                        </button>
-                      ))}
-                    </div>
-                  )}
+
                   <div className="flex justify-between items-center text-sm text-rose-400 mt-2">
                     <span>Balance Due</span>
                     <span className="font-medium">Rs. {formatNumber(Number(Math.max(0, grandTotal - paidAmount) || 0))}</span>

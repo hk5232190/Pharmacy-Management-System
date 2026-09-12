@@ -18,7 +18,7 @@ APP_INFO = {
     "software_name":   "Pharmacy Management System",
     "software_short":  "PMS",
     "version":         "1.0.0",
-    "build_number":    "2026.08.001",
+    "build_number":    "01/08/2026",
     "release_date":    "2026-08-01",
     "edition":         "Professional",
     "framework":       "FastAPI + Next.js 16",
@@ -38,8 +38,8 @@ DEVELOPER_INFO = {
 
 SUPPORT_INFO = {
     "support_email":   "msaqib1656@gmail.com",
-    "phone":           "+92 300 1234567",
-    "whatsapp":        "+92 300 1234567",
+    "phone":           "+92 330 5525748",
+    "whatsapp":        "+92 330 5525748",
 }
 
 

@@ -2807,3 +2807,62 @@ NoneType: None
 2026-09-12 22:19:55,891 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_12_09_2026_221955.zip | Size: 8315 bytes | Status: Success
 2026-09-12 22:19:55,904 - pms - INFO - Exit backup verification: Passed
 2026-09-12 22:19:56,256 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-12 22:20:18,814 - pms - INFO - PRODUCTION_TRACE license storage path=E:\Projects\PMS-Software\backend\licenses\active.lic exists=True
+2026-09-12 22:20:21,247 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-12 22:20:21,260 - pms - INFO - Verified notifications table in database.
+2026-09-12 22:20:21,544 - pms - ERROR - Error checking backups in notification sync: 'BackupHistory' object has no attribute 'FileName'
+2026-09-12 22:20:21,556 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-12 22:20:22,492 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_12_09_2026_221955.zip)
+2026-09-12 22:20:26,538 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-12 22:23:46,695 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_12_09_2026_222346.zip | Size: 8441 bytes | Status: Success
+2026-09-12 22:23:47,179 - pms - INFO - Exit backup verification: Passed
+2026-09-12 22:23:54,611 - pms - INFO - PRODUCTION_TRACE auth accepted username=admin user_id=1
+2026-09-12 22:24:05,313 - pms - INFO - Backup Settings Updated | User: admin | AutoBackup: False | BackupOnExit: True
+2026-09-12 22:24:05,776 - pms - INFO - Backup Settings Updated | User: admin | AutoBackup: False | BackupOnExit: True
+2026-09-12 22:24:22,486 - pms - WARNING - PRODUCTION_TRACE auth rejected username=admin reason=password-mismatch
+2026-09-12 22:24:22,491 - pms - ERROR - PMSException caught: Incorrect username or password (status: 401) | Path: /api/v1/auth/login
+2026-09-12 22:24:28,938 - pms - INFO - PRODUCTION_TRACE auth accepted username=admin user_id=1
+2026-09-12 22:32:09,491 - pms - INFO - Database Optimization | User: admin | Reclaimed: 0 bytes
+2026-09-12 22:56:22,501 - pms - INFO - AUDIT: User admin imported 5 categories. Skipped: 0. Errors: 0
+2026-09-12 22:56:31,081 - pms - INFO - AUDIT: User admin successfully deleted medicine 2 (Amoxil 500mg).
+2026-09-12 22:56:33,037 - pms - INFO - AUDIT: User admin successfully deleted medicine 5 (Calpol).
+2026-09-12 22:56:35,248 - pms - INFO - AUDIT: User admin successfully deleted medicine 4 (Betnovate).
+2026-09-12 22:56:37,329 - pms - INFO - AUDIT: User admin successfully deleted medicine 3 (Gaviscon).
+2026-09-12 22:56:39,336 - pms - INFO - AUDIT: User admin successfully deleted medicine 1 (Panadol).
+2026-09-12 22:57:08,768 - pms - INFO - AUDIT: User admin imported 5 companies. Skipped: 0. Errors: 0
+2026-09-12 22:57:17,553 - pms - INFO - AUDIT: User admin imported 5 suppliers. Skipped: 0. Errors: 0
+2026-09-13 00:05:10,124 - pms - INFO - AUDIT: [SCREEN_LOCKED] Screen automatically locked due to inactivity (User: admin)
+2026-09-13 00:40:16,933 - pms - WARNING - PRODUCTION_TRACE auth rejected username=admin reason=password-mismatch
+2026-09-13 00:40:16,944 - pms - ERROR - PMSException caught: Incorrect username or password (status: 401) | Path: /api/v1/auth/login
+2026-09-13 00:40:23,994 - pms - INFO - PRODUCTION_TRACE auth accepted username=admin user_id=1
+2026-09-13 00:40:24,024 - pms - INFO - AUDIT: [SCREEN_UNLOCKED] Screen unlocked successfully by user (User: admin)
+2026-09-13 00:40:38,140 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-13 00:41:21,547 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-13 00:42:20,239 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-13 00:42:41,972 - pms - INFO - AUDIT: User admin updated user 'cashier 1' (role=cashier, active=True).
+2026-09-13 00:48:19,634 - pms - INFO - PRODUCTION_TRACE license storage path=E:\Projects\PMS-Software\backend\licenses\active.lic exists=True
+2026-09-13 00:48:22,167 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-13 00:48:22,201 - pms - INFO - Verified notifications table in database.
+2026-09-13 00:48:22,425 - pms - ERROR - Error checking backups in notification sync: 'BackupHistory' object has no attribute 'FileName'
+2026-09-13 00:48:22,452 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-13 00:48:36,455 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-13 00:48:58,923 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-13 00:49:02,386 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-13 00:56:26,144 - pms - INFO - PRODUCTION_TRACE license storage path=E:\Projects\PMS-Software\backend\licenses\active.lic exists=True
+2026-09-13 00:56:30,294 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-13 00:56:30,318 - pms - INFO - Verified notifications table in database.
+2026-09-13 00:56:30,802 - pms - ERROR - Error checking backups in notification sync: 'BackupHistory' object has no attribute 'FileName'
+2026-09-13 00:56:30,819 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-13 00:56:35,518 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-13 00:57:30,408 - pms - INFO - PRODUCTION_TRACE license storage path=E:\Projects\PMS-Software\backend\licenses\active.lic exists=True
+2026-09-13 00:57:34,466 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-13 00:57:34,480 - pms - INFO - Verified notifications table in database.
+2026-09-13 00:57:35,207 - pms - ERROR - Error checking backups in notification sync: 'BackupHistory' object has no attribute 'FileName'
+2026-09-13 00:57:35,230 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-13 00:57:39,508 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-13 00:58:28,432 - pms - INFO - PRODUCTION_TRACE license storage path=E:\Projects\PMS-Software\backend\licenses\active.lic exists=True
+2026-09-13 00:58:32,084 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-13 00:58:32,098 - pms - INFO - Verified notifications table in database.
+2026-09-13 00:58:32,369 - pms - ERROR - Error checking backups in notification sync: 'BackupHistory' object has no attribute 'FileName'
+2026-09-13 00:58:32,376 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-13 00:58:42,825 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic

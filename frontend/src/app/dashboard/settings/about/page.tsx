@@ -99,8 +99,22 @@ function InfoRow({ label, value, mono = false, href }: {
     <div className="flex items-start justify-between py-3.5 border-b border-slate-100 dark:border-slate-800/60 last:border-0 gap-4">
       <span className="text-sm text-slate-500 dark:text-slate-400 font-medium shrink-0">{label}</span>
       {href ? (
-        <a href={href} target="_blank" rel="noopener noreferrer"
-          className="text-sm font-semibold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1.5 text-right">
+        <a href={href} 
+          onClick={async (e) => {
+            e.preventDefault();
+            if (typeof window !== 'undefined' && (window as any).__TAURI_INTERNALS__) {
+              try {
+                const { open } = await import('@tauri-apps/plugin-shell');
+                await open(href);
+              } catch (err) {
+                console.error("Failed to open link", err);
+                window.open(href, '_blank', 'noopener,noreferrer');
+              }
+            } else {
+              window.open(href, '_blank', 'noopener,noreferrer');
+            }
+          }}
+          className="text-sm font-semibold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1.5 text-right cursor-pointer">
           {value} <ExternalLink size={14} />
         </a>
       ) : (
@@ -202,7 +216,7 @@ function LicenseStatusBadge({ status, type, expiryDate, remainingDays, isLifetim
         </div>
         {status === "Active" && (
           <p className="text-xs text-muted-foreground mt-0.5">
-            {isLifetime ? "Lifetime License – Never Expires" : `Expires: ${expiryDate} (${remainingDays} days remaining)`}
+            {isLifetime ? "Lifetime License – Never Expires" : `Expires: ${new Date(expiryDate as string).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })} (${remainingDays} days remaining)`}
           </p>
         )}
       </div>
@@ -217,24 +231,8 @@ export default function AboutPage() {
   const [data, setData] = useState<AboutData | null>(null);
   const [diagnostics, setDiagnostics] = useState<any>(null);
   const [loading, setLoading] = useState(false);
-  const [checkingUpdates, setCheckingUpdates] = useState(false);
-  const [updateStatus, setUpdateStatus] = useState<string | null>(null);
 
   useEffect(() => { fetchAbout(); }, []);
-
-  const handleCheckUpdates = async () => {
-    setCheckingUpdates(true);
-    try {
-      const res = await fetch(`${getApiBaseUrl()}/about/check-updates`);
-      if (!res.ok) throw new Error("Failed");
-      const data = await res.json();
-      setUpdateStatus(data.message || (data.status === "up_to_date" ? "You are up to date" : "Update Available"));
-    } catch {
-      toast.error("Failed to check for updates.");
-    } finally {
-      setCheckingUpdates(false);
-    }
-  };
 
   const fetchAbout = async () => {
     setLoading(true);
@@ -333,38 +331,18 @@ export default function AboutPage() {
               </div>
               <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
                 <Calendar size={15} />
-                <span>Released {app.release_date}</span>
+                <span>Released {new Date(app.release_date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}</span>
               </div>
               <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
                 <Database size={15} />
                 <span>{app.database_engine}</span>
               </div>
-              <button
-                onClick={() => {
-                  const specs = `${app.software_short} Pro v${app.version} | Build ${app.build_number} | ${app.database_engine}`;
-                  navigator.clipboard.writeText(specs);
-                  toast.success("System specs copied to clipboard");
-                }}
-                className="ml-2 flex items-center gap-1 text-xs font-semibold text-primary bg-primary/10 hover:bg-primary/20 px-2.5 py-1 rounded-md transition-colors"
-                title="Copy Specs"
-              >
-                <Copy size={12} /> Copy Specs
-              </button>
+
             </div>
           </div>
         </div>
         
-        <div className="relative shrink-0 text-right flex flex-col items-end gap-2">
-          <Button onClick={handleCheckUpdates} disabled={checkingUpdates} variant="outline" className="gap-2 bg-background/50 backdrop-blur-sm border-primary/20 hover:bg-primary/5">
-            {checkingUpdates ? <Loader2 size={16} className="animate-spin text-primary" /> : <RefreshCw size={16} className="text-primary" />}
-            Check for Updates
-          </Button>
-          {updateStatus && (
-            <div className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/30 px-3 py-1 rounded-full border border-emerald-200 dark:border-emerald-800 animate-in fade-in zoom-in duration-300">
-              {updateStatus}
-            </div>
-          )}
-        </div>
+
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -375,7 +353,7 @@ export default function AboutPage() {
           <InfoRow label="Short Name"      value={app.software_short} />
           <InfoRow label="Version"         value={`V ${app.version}`} />
           <InfoRow label="Build Number"    value={app.build_number} mono />
-          <InfoRow label="Release Date"    value={app.release_date} />
+          <InfoRow label="Release Date"    value={new Date(app.release_date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })} />
           <InfoRow label="Edition"         value={app.edition} />
           <InfoRow label="Framework"       value={app.framework} />
           <InfoRow label="Database Engine" value={app.database_engine} />
@@ -424,7 +402,7 @@ export default function AboutPage() {
         <div className="flex items-center justify-center gap-2 mt-2">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
           <span className="text-xs text-muted-foreground font-medium">
-            PMS V {app.version} · Build {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+            PMS V {app.version} · Build {app.build_number}
           </span>
         </div>
       </div>
