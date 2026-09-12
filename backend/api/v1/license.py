@@ -6,6 +6,7 @@ import datetime
 from utils.hwid import get_primary_mac
 from utils.license_engine import validate_license
 from core.exceptions import PMSException
+from core.config import DATA_DIR
 from api.deps import get_current_user, get_current_admin_user
 from database import SessionLocal
 from sqlalchemy.orm import Session
@@ -13,8 +14,13 @@ import models
 
 router = APIRouter()
 
-LICENSE_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "licenses")
+# ── Persistent license storage — always in %LOCALAPPDATA%\PMS-Data\licenses ──
+# NEVER use os.path.dirname(__file__) here: in a PyInstaller onefile build,
+# __file__ resolves to a temp _MEIPASS directory that changes on every launch,
+# making any file written in one session invisible to the next.
+LICENSE_DIR = os.path.join(DATA_DIR, "licenses")
 ACTIVE_LICENSE_PATH = os.path.join(LICENSE_DIR, "active.lic")
+
 
 
 def get_db():
