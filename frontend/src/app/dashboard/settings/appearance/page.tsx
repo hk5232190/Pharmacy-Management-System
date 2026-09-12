@@ -1,4 +1,5 @@
 "use client";
+import { getApiBaseUrl } from "@/lib/api-client";
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -60,7 +61,7 @@ export default function AppearanceSettingsPage() {
 
   const fetchSettings = async () => {
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/v1/settings/appearance");
+      const res = await fetch(`${getApiBaseUrl()}/settings/appearance`);
       if (res.ok) {
         const data = await res.json();
         setSettings({ ...DEFAULT_SETTINGS, ...data });
@@ -78,7 +79,7 @@ export default function AppearanceSettingsPage() {
     setIsSaving(true);
     try {
       const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token") || "";
-      const res = await fetch("http://127.0.0.1:8000/api/v1/settings/appearance", {
+      const res = await fetch(`${getApiBaseUrl()}/settings/appearance`, {
         method: "PUT",
         headers: { 
           "Content-Type": "application/json",

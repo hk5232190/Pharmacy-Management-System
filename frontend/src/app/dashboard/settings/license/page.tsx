@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { apiClient } from "@/lib/api-client";
+import { apiClient, getApiBaseUrl } from "@/lib/api-client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -265,7 +265,7 @@ export default function LicensePage() {
     const formData = new FormData();
     formData.append("file", file);
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/v1/license/import", {
+      const res = await fetch(`${getApiBaseUrl()}/license/import`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("access_token") || sessionStorage.getItem("access_token") || ""}`,

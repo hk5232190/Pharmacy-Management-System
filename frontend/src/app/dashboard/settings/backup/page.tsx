@@ -1,4 +1,5 @@
 "use client";
+import { getApiBaseUrl } from "@/lib/api-client";
 
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
@@ -80,8 +81,8 @@ export default function BackupDataManagementSettingsPage() {
     try {
       const headers = getAuthHeaders();
       const [settingsRes, dbInfoRes] = await Promise.all([
-        fetch("http://127.0.0.1:8000/api/v1/backup-settings", { headers }),
-        fetch("http://127.0.0.1:8000/api/v1/backup/db-info", { headers }),
+        fetch(`${getApiBaseUrl()}/backup-settings`, { headers }),
+        fetch(`${getApiBaseUrl()}/backup/db-info`, { headers }),
       ]);
       if (settingsRes.ok) setSettings(await settingsRes.json());
       if (dbInfoRes.ok) setDbInfo(await dbInfoRes.json());
@@ -99,7 +100,7 @@ export default function BackupDataManagementSettingsPage() {
     setIsSaving(true);
     try {
       const { SettingsId, ...payload } = settings;
-      const res = await fetch("http://127.0.0.1:8000/api/v1/backup-settings", {
+      const res = await fetch(`${getApiBaseUrl()}/backup-settings`, {
         method: "PUT",
         headers: getAuthHeaders(),
         body: JSON.stringify(payload),
@@ -120,7 +121,7 @@ export default function BackupDataManagementSettingsPage() {
   const handleCheckHealth = async () => {
     setIsCheckingHealth(true);
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/v1/backup/db-health", {
+      const res = await fetch(`${getApiBaseUrl()}/backup/db-health`, {
         headers: getAuthHeaders(),
       });
       if (res.ok) {

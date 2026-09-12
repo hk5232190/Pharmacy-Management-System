@@ -1,4 +1,5 @@
 "use client";
+import { getApiBaseUrl } from "@/lib/api-client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 
@@ -51,7 +52,7 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
 
   const fetchProfile = async () => {
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/v1/settings/profile");
+      const res = await fetch(`${getApiBaseUrl()}/settings/profile`);
       if (res.ok) {
         const data = await res.json();
         if (data.LogoPath) {

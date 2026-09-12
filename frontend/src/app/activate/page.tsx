@@ -1,4 +1,5 @@
 "use client";
+import { getApiBaseUrl } from "@/lib/api-client";
 
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
@@ -26,7 +27,7 @@ export default function ActivatePage() {
 
   useEffect(() => {
     // Fetch MAC Address on mount
-    fetch("http://127.0.0.1:8000/api/v1/license/mac")
+    fetch(`${getApiBaseUrl()}/license/mac`)
       .then((res) => res.json())
       .then((data) => setMac(data.mac))
       .catch(() => setError("Failed to fetch MAC Address from backend. Is the server running?"));
@@ -50,7 +51,7 @@ export default function ActivatePage() {
       const formData = new FormData();
       formData.append("file", selectedFile);
 
-      const response = await fetch("http://127.0.0.1:8000/api/v1/license/activate", {
+      const response = await fetch(`${getApiBaseUrl()}/license/activate`, {
         method: "POST",
         body: formData,
       });
@@ -220,6 +221,15 @@ export default function ActivatePage() {
             >
               {isLoading ? "Verifying..." : "Activate Software"} <Key className="ml-2" size={18} />
             </Button>
+            
+            <div className="text-center mt-4">
+              <button 
+                onClick={() => router.push("/")}
+                className="text-sm font-medium text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+              >
+                Back to Login
+              </button>
+            </div>
           </div>
         ) : (
           <div className="space-y-6 animate-in zoom-in-95 duration-500">

@@ -1,4 +1,5 @@
 "use client";
+import { getApiBaseUrl } from "@/lib/api-client";
 
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
@@ -63,7 +64,7 @@ export default function PharmacyProfilePage() {
   const fetchProfile = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/v1/settings/profile", {
+      const res = await fetch(`${getApiBaseUrl()}/settings/profile`, {
         headers: getAuthHeaders()
       });
       if (res.ok) {
@@ -74,16 +75,16 @@ export default function PharmacyProfilePage() {
         });
         if (data.ReceiptLogoPath) {
           const path = data.ReceiptLogoPath.startsWith('/') ? data.ReceiptLogoPath : `/${data.ReceiptLogoPath}`;
-          setLogoPreviewUrl(`http://127.0.0.1:8000${path}`);
+          setLogoPreviewUrl(`${getApiBaseUrl().replace("/api/v1","")}${path}`);
         } else if (data.LogoPath) {
           const path = data.LogoPath.startsWith('/') ? data.LogoPath : `/${data.LogoPath}`;
-          setLogoPreviewUrl(`http://127.0.0.1:8000${path}`);
+          setLogoPreviewUrl(`${getApiBaseUrl().replace("/api/v1","")}${path}`);
         } else {
           setLogoPreviewUrl(null);
         }
       }
       
-      const printerRes = await fetch("http://127.0.0.1:8000/api/v1/settings/printer", {
+      const printerRes = await fetch(`${getApiBaseUrl()}/settings/printer`, {
         headers: getAuthHeaders()
       });
       if (printerRes.ok) {
@@ -106,7 +107,7 @@ export default function PharmacyProfilePage() {
     setIsSaving(true);
     try {
       // 1. Save text profile
-      const res = await fetch("http://127.0.0.1:8000/api/v1/settings/profile", {
+      const res = await fetch(`${getApiBaseUrl()}/settings/profile`, {
         method: "PUT",
         headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify(profile)
@@ -117,7 +118,7 @@ export default function PharmacyProfilePage() {
       if (logoFileToUpload) {
         const formData = new FormData();
         formData.append("file", logoFileToUpload);
-        const uploadRes = await fetch("http://127.0.0.1:8000/api/v1/settings/profile/receipt-logo", {
+        const uploadRes = await fetch(`${getApiBaseUrl()}/settings/profile/receipt-logo`, {
           method: "POST",
           headers: getAuthHeaders(),
           body: formData
@@ -127,7 +128,7 @@ export default function PharmacyProfilePage() {
         setLogoRemoved(false);
       } else if (logoRemoved) {
         // Delete logo
-        await fetch("http://127.0.0.1:8000/api/v1/settings/profile/receipt-logo", {
+        await fetch(`${getApiBaseUrl()}/settings/profile/receipt-logo`, {
           method: "DELETE",
           headers: getAuthHeaders()
         });
@@ -135,12 +136,12 @@ export default function PharmacyProfilePage() {
       }
 
       // 3. Save Printer Settings (ShowLogo)
-      const printerRes = await fetch("http://127.0.0.1:8000/api/v1/settings/printer", {
+      const printerRes = await fetch(`${getApiBaseUrl()}/settings/printer`, {
         headers: getAuthHeaders()
       });
       if (printerRes.ok) {
         const currentPrinterSettings = await printerRes.json();
-        await fetch("http://127.0.0.1:8000/api/v1/settings/printer", {
+        await fetch(`${getApiBaseUrl()}/settings/printer`, {
           method: "PUT",
           headers: { "Content-Type": "application/json", ...getAuthHeaders() },
           body: JSON.stringify({ ...currentPrinterSettings, ShowLogo: showLogoOnReceipt })

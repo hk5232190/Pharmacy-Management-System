@@ -6,6 +6,56 @@ import { resetAuthState } from "@/lib/auth-session";
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://127.0.0.1:8000/api/v1";
 
+// Cache the resolved port so we only call Tauri once
+let _resolvedPort: number | null = null;
+
+/**
+ * Resolve the backend API base URL.
+ * - In Tauri (production): polls the Rust `get_api_port` command until the
+ *   Python sidecar has started and announced its port. Retries for up to 15s.
+ * - In browser/dev mode: falls back to the static NEXT_PUBLIC_API_BASE_URL.
+ */
+export async function resolveApiBaseUrl(): Promise<string> {
+  // If already resolved, return cached value immediately
+  if (_resolvedPort !== null) {
+    return `http://127.0.0.1:${_resolvedPort}/api/v1`;
+  }
+
+  // Check if we are inside Tauri
+  if (typeof window !== 'undefined' && (window as any).__TAURI_INTERNALS__) {
+    try {
+      const { invoke } = await import('@tauri-apps/api/core');
+      // Poll until the backend has started (port becomes non-zero)
+      for (let i = 0; i < 30; i++) {
+        const port: number = await invoke('get_api_port');
+        if (port && port > 0) {
+          _resolvedPort = port;
+          // Also set the global for any legacy callers
+          (window as any).__PMS_API_PORT__ = port;
+          return `http://127.0.0.1:${port}/api/v1`;
+        }
+        // Backend not ready yet – wait 500ms and retry
+        await new Promise(r => setTimeout(r, 500));
+      }
+    } catch (e) {
+      console.warn('Tauri invoke failed, falling back to default port:', e);
+    }
+  }
+
+  return API_BASE_URL;
+}
+
+/** Synchronous fallback for contexts that can't be async (rare). */
+export function getApiBaseUrl(): string {
+  if (_resolvedPort !== null) {
+    return `http://127.0.0.1:${_resolvedPort}/api/v1`;
+  }
+  if (typeof window !== 'undefined' && (window as any).__PMS_API_PORT__) {
+    return `http://127.0.0.1:${(window as any).__PMS_API_PORT__}/api/v1`;
+  }
+  return API_BASE_URL;
+}
+
 interface FetchOptions extends RequestInit {
   params?: Record<string, string | number | boolean | null | undefined>;
 }
@@ -60,7 +110,8 @@ async function fetchAPI<T>(endpoint: string, options: FetchOptions = {}): Promis
     headers.set("Authorization", `Bearer ${token}`);
   }
 
-  const url = new URL(`${API_BASE_URL}${endpoint}`);
+  const baseUrl = await resolveApiBaseUrl();
+  const url = new URL(`${baseUrl}${endpoint}`);
   if (options.params) {
     Object.entries(options.params).forEach(([key, value]) => {
       if (value != null) url.searchParams.append(key, String(value));

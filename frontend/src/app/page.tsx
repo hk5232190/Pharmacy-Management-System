@@ -1,4 +1,5 @@
 "use client";
+import { getApiBaseUrl } from "@/lib/api-client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -25,7 +26,7 @@ export default function LoginPage() {
   });
 
   useEffect(() => {
-    fetch("http://127.0.0.1:8000/api/v1/settings/general")
+    fetch(`${getApiBaseUrl()}/settings/general`)
       .then(res => res.json())
       .then(data => {
         if (data && !data.detail) {
@@ -51,7 +52,7 @@ export default function LoginPage() {
       // OAuth2PasswordRequestForm expects form data
 
       const response = await fetch(
-        "http://127.0.0.1:8000/api/v1/auth/login",
+        `${getApiBaseUrl()}/auth/login`,
         {
           method: "POST",
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -112,7 +113,7 @@ export default function LoginPage() {
         <img
           src={
             branding.LoginBackgroundPath
-              ? `http://127.0.0.1:8000${branding.LoginBackgroundPath}`
+              ? `${getApiBaseUrl().replace("/api/v1","")}${branding.LoginBackgroundPath}`
               : "/images/pharmacy_bg.jpg"
           }
           alt=""

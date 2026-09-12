@@ -1,4 +1,5 @@
 "use client";
+import { getApiBaseUrl } from "@/lib/api-client";
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -57,7 +58,7 @@ export default function BillingSettingsPage() {
 
   const fetchSettings = async () => {
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/v1/settings/billing");
+      const res = await fetch(`${getApiBaseUrl()}/settings/billing`);
       if (res.ok) {
         const data = await res.json();
         setSettings({ ...DEFAULT_SETTINGS, ...data });
@@ -74,7 +75,7 @@ export default function BillingSettingsPage() {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/v1/settings/billing", {
+      const res = await fetch(`${getApiBaseUrl()}/settings/billing`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(settings)

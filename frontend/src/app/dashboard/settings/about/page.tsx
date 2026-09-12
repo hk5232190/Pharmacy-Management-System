@@ -1,4 +1,5 @@
 "use client";
+import { getApiBaseUrl } from "@/lib/api-client";
 
 import { useState, useEffect } from "react";
 import {
@@ -224,7 +225,7 @@ export default function AboutPage() {
   const handleCheckUpdates = async () => {
     setCheckingUpdates(true);
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/v1/about/check-updates");
+      const res = await fetch(`${getApiBaseUrl()}/about/check-updates`);
       if (!res.ok) throw new Error("Failed");
       const data = await res.json();
       setUpdateStatus(data.message || (data.status === "up_to_date" ? "You are up to date" : "Update Available"));
@@ -240,9 +241,9 @@ export default function AboutPage() {
     try {
       const headers = { Authorization: `Bearer ${localStorage.getItem("access_token") || sessionStorage.getItem("access_token") || ""}` };
       const [resAbout, resDiag, resLic] = await Promise.all([
-        fetch("http://127.0.0.1:8000/api/v1/about/info", { headers }),
-        fetch("http://127.0.0.1:8000/api/v1/system/diagnostics", { headers }).catch(() => null),
-        fetch("http://127.0.0.1:8000/api/v1/license/info", { headers }).catch(() => null)
+        fetch(`${getApiBaseUrl()}/about/info`, { headers }),
+        fetch(`${getApiBaseUrl()}/system/diagnostics`, { headers }).catch(() => null),
+        fetch(`${getApiBaseUrl()}/license/info`, { headers }).catch(() => null)
       ]);
       
       if (!resAbout.ok) throw new Error("Failed");

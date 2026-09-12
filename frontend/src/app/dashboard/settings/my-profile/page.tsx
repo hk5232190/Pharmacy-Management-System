@@ -1,4 +1,5 @@
 "use client";
+import { getApiBaseUrl } from "@/lib/api-client";
 
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
@@ -115,7 +116,7 @@ export default function MyProfileSettingsPage() {
     
     setIsSavingProfile(true);
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/v1/auth/me", {
+      const res = await fetch(`${getApiBaseUrl()}/auth/me`, {
         method: "PUT",
         headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify({ FullName: fullName, Email: email || null, PhoneNumber: phoneNumber || null })
@@ -173,7 +174,7 @@ export default function MyProfileSettingsPage() {
     formData.append("file", photoFile);
 
     try {
-      const res = await fetch(`http://127.0.0.1:8000/api/v1/auth/me/photo`, {
+      const res = await fetch(`${getApiBaseUrl()}/auth/me/photo`, {
         method: "POST",
         headers: getAuthHeaders(),
         body: formData,
@@ -197,7 +198,7 @@ export default function MyProfileSettingsPage() {
 
   const removePhoto = async () => {
     try {
-      const res = await fetch(`http://127.0.0.1:8000/api/v1/auth/me/photo`, {
+      const res = await fetch(`${getApiBaseUrl()}/auth/me/photo`, {
         method: "DELETE",
         headers: getAuthHeaders(),
       });
@@ -296,7 +297,7 @@ export default function MyProfileSettingsPage() {
                 <div className="w-36 h-36 shrink-0 border-2 border-dashed border-indigo-200 dark:border-slate-700 rounded-full flex items-center justify-center bg-gradient-to-br from-indigo-50/50 to-white dark:from-transparent dark:to-transparent overflow-hidden relative group transition-colors hover:border-indigo-400 dark:hover:border-slate-500 shadow-sm">
                   {(photoPreview || user.profile_photo_path) ? (
                     <img 
-                      src={photoPreview || `http://127.0.0.1:8000${user.profile_photo_path}?t=${timestamp}`} 
+                      src={photoPreview || `${getApiBaseUrl().replace("/api/v1","")}${user.profile_photo_path}?t=${timestamp}`} 
                       alt="Profile Preview" 
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />

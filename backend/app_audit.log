@@ -2313,3 +2313,574 @@ NoneType: None
 2026-09-08 20:26:43,160 - pms - INFO - Completed startup system notifications synchronization.
 2026-09-08 20:27:19,691 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_2026_09_08_202719.zip | Size: 12511 bytes | Status: Success
 2026-09-08 20:27:20,957 - pms - INFO - Exit backup verification: Passed
+2026-09-08 20:27:44,221 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-08 20:27:44,310 - pms - INFO - Verified notifications table in database.
+2026-09-08 20:27:44,670 - pms - ERROR - Error checking backups in notification sync: 'BackupHistory' object has no attribute 'FileName'
+2026-09-08 20:27:44,677 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-08 22:29:58,664 - pms - INFO - AUDIT: [SCREEN_LOCKED] Screen automatically locked due to inactivity (User: admin)
+2026-09-08 22:30:47,134 - pms - ERROR - PMSException caught: Incorrect username or password (status: 401) | Path: /api/v1/auth/login
+2026-09-08 22:31:12,185 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_2026_09_08_223112.zip | Size: 12516 bytes | Status: Success
+2026-09-08 22:31:12,900 - pms - INFO - Exit backup verification: Passed
+2026-09-08 22:32:00,595 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_2026_09_08_223112.zip)
+2026-09-08 22:32:05,841 - pms - INFO - AUDIT: [SCREEN_UNLOCKED] Screen unlocked successfully by user (User: admin)
+2026-09-08 22:32:09,425 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_2026_09_08_223112.zip)
+2026-09-08 22:42:44,810 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_2026_09_08_224244.zip | Size: 12519 bytes | Status: Success
+2026-09-08 22:42:44,831 - pms - INFO - Exit backup verification: Passed
+2026-09-08 22:43:17,671 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_2026_09_08_224244.zip)
+2026-09-08 22:43:20,341 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_2026_09_08_224244.zip)
+2026-09-08 23:03:24,617 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-08 23:03:24,624 - pms - INFO - Verified notifications table in database.
+2026-09-08 23:03:24,759 - pms - ERROR - Error checking backups in notification sync: 'BackupHistory' object has no attribute 'FileName'
+2026-09-08 23:03:24,763 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-08 23:04:01,373 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_2026_09_08_230401.zip | Size: 12518 bytes | Status: Success
+2026-09-08 23:04:01,857 - pms - INFO - Exit backup verification: Passed
+2026-09-08 23:05:12,356 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_2026_09_08_230512.zip | Size: 12529 bytes | Status: Success
+2026-09-08 23:05:12,373 - pms - INFO - Exit backup verification: Passed
+2026-09-08 23:05:25,623 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_2026_09_08_230512.zip)
+2026-09-08 23:05:28,775 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_2026_09_08_230512.zip)
+2026-09-08 23:05:45,565 - pms - ERROR - Error checking backups in notification sync: 'BackupHistory' object has no attribute 'FileName'
+2026-09-08 23:06:04,755 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_2026_09_08_230512.zip)
+2026-09-08 23:42:22,036 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-08 23:42:22,050 - pms - INFO - Verified notifications table in database.
+2026-09-08 23:42:22,433 - pms - ERROR - Error checking backups in notification sync: 'BackupHistory' object has no attribute 'FileName'
+2026-09-08 23:42:22,446 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-08 23:47:31,535 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-08 23:47:31,545 - pms - INFO - Verified notifications table in database.
+2026-09-08 23:47:31,781 - pms - ERROR - Error checking backups in notification sync: 'BackupHistory' object has no attribute 'FileName'
+2026-09-08 23:47:31,810 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-08 23:48:28,869 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-08 23:48:28,884 - pms - INFO - Verified notifications table in database.
+2026-09-08 23:48:29,036 - pms - ERROR - Error checking backups in notification sync: 'BackupHistory' object has no attribute 'FileName'
+2026-09-08 23:48:29,045 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-08 23:56:25,963 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_2026_09_08_235625.zip | Size: 12527 bytes | Status: Success
+2026-09-08 23:56:26,615 - pms - INFO - Exit backup verification: Passed
+2026-09-09 07:11:56,228 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_2026_09_09_071156.zip | Size: 12523 bytes | Status: Success
+2026-09-09 07:11:56,263 - pms - INFO - Exit backup verification: Passed
+2026-09-09 07:12:18,934 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_2026_09_09_071156.zip)
+2026-09-09 07:12:20,956 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_2026_09_09_071156.zip)
+2026-09-09 09:11:34,957 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-09 09:11:34,983 - pms - INFO - Verified notifications table in database.
+2026-09-09 09:11:35,149 - pms - ERROR - Error checking backups in notification sync: 'BackupHistory' object has no attribute 'FileName'
+2026-09-09 09:11:35,154 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-09 09:30:36,897 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_2026_09_09_093036.zip | Size: 12525 bytes | Status: Success
+2026-09-09 09:30:37,431 - pms - INFO - Exit backup verification: Passed
+2026-09-09 09:31:14,305 - pms - INFO - AUDIT: User admin updated Pharmacy Branding (Name/Profile).
+2026-09-09 09:31:14,382 - pms - INFO - AUDIT: User admin uploaded a new Pharmacy Logo.
+2026-09-09 09:31:19,664 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_2026_09_09_093036.zip)
+2026-09-09 09:34:06,328 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_2026_09_09_093406.zip | Size: 12529 bytes | Status: Success
+2026-09-09 09:34:06,345 - pms - INFO - Exit backup verification: Passed
+2026-09-09 09:34:28,925 - pms - INFO - AUDIT: User admin updated General Settings (Login Page Branding).
+2026-09-09 09:34:31,225 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_2026_09_09_093406.zip)
+2026-09-09 09:35:27,551 - pms - INFO - AUDIT: User admin updated General Settings (Login Page Branding).
+2026-09-09 09:35:35,840 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_2026_09_09_093535.zip | Size: 12543 bytes | Status: Success
+2026-09-09 09:35:35,857 - pms - INFO - Exit backup verification: Passed
+2026-09-09 09:37:24,412 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_2026_09_09_093724.zip | Size: 12539 bytes | Status: Success
+2026-09-09 09:37:24,426 - pms - INFO - Exit backup verification: Passed
+2026-09-09 09:45:03,249 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_2026_09_09_094503.zip | Size: 12538 bytes | Status: Success
+2026-09-09 09:45:03,265 - pms - INFO - Exit backup verification: Passed
+2026-09-09 09:52:45,496 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_2026_09_09_095245.zip | Size: 12539 bytes | Status: Success
+2026-09-09 09:52:45,514 - pms - INFO - Exit backup verification: Passed
+2026-09-09 09:56:24,916 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_2026_09_09_095624.zip | Size: 12529 bytes | Status: Success
+2026-09-09 09:56:24,934 - pms - INFO - Exit backup verification: Passed
+2026-09-09 09:56:26,527 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_2026_09_09_095624.zip)
+2026-09-09 10:26:12,477 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-09 10:26:12,488 - pms - INFO - Verified notifications table in database.
+2026-09-09 10:26:12,650 - pms - ERROR - Error checking backups in notification sync: 'BackupHistory' object has no attribute 'FileName'
+2026-09-09 10:26:12,657 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-09 10:26:52,912 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_2026_09_09_102652.zip | Size: 12517 bytes | Status: Success
+2026-09-09 10:26:53,354 - pms - INFO - Exit backup verification: Passed
+2026-09-09 10:57:18,119 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_2026_09_09_105717.zip | Size: 12530 bytes | Status: Success
+2026-09-09 10:57:18,226 - pms - INFO - Exit backup verification: Passed
+2026-09-09 11:03:48,665 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_2026_09_09_110348.zip | Size: 12536 bytes | Status: Success
+2026-09-09 11:03:48,689 - pms - INFO - Exit backup verification: Passed
+2026-09-09 11:04:40,892 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_2026_09_09_110348.zip)
+2026-09-09 11:18:20,226 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-09 11:18:20,285 - pms - INFO - Verified notifications table in database.
+2026-09-09 11:18:20,977 - pms - ERROR - Error checking backups in notification sync: 'BackupHistory' object has no attribute 'FileName'
+2026-09-09 11:18:20,993 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-09 11:18:45,470 - pms - ERROR - Unhandled Exception caught: 'SalesReportSummary' object has no attribute 'ProfitMargin' | Path: /api/v1/reports/sales/export/pdf
+NoneType: None
+2026-09-09 11:18:52,410 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_2026_09_09_111852.zip | Size: 12537 bytes | Status: Success
+2026-09-09 11:18:52,987 - pms - INFO - Exit backup verification: Passed
+2026-09-09 11:18:57,967 - pms - ERROR - Unhandled Exception caught: 'SalesReportSummary' object has no attribute 'ProfitMargin' | Path: /api/v1/reports/sales/export/pdf
+NoneType: None
+2026-09-09 11:19:20,311 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-09 11:19:20,322 - pms - INFO - Verified notifications table in database.
+2026-09-09 11:19:20,500 - pms - ERROR - Error checking backups in notification sync: 'BackupHistory' object has no attribute 'FileName'
+2026-09-09 11:19:20,508 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-09 11:19:24,814 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_2026_09_09_111852.zip)
+2026-09-09 11:19:30,992 - pms - ERROR - Unhandled Exception caught: 'SalesReportSummary' object has no attribute 'ProfitMargin' | Path: /api/v1/reports/sales/export/pdf
+NoneType: None
+2026-09-09 11:19:57,972 - pms - ERROR - Unhandled Exception caught: name 'build_premium_header' is not defined | Path: /api/v1/reports/inventory/export/pdf
+NoneType: None
+2026-09-09 11:20:02,972 - pms - ERROR - Unhandled Exception caught: name 'build_premium_header' is not defined | Path: /api/v1/reports/medicine/export/pdf
+NoneType: None
+2026-09-09 11:20:06,527 - pms - ERROR - Unhandled Exception caught: name 'build_premium_header' is not defined | Path: /api/v1/reports/financial/export/pdf
+NoneType: None
+2026-09-09 11:20:27,332 - pms - ERROR - Unhandled Exception caught: name 'build_premium_header' is not defined | Path: /api/v1/reports/financial/export/pdf
+NoneType: None
+2026-09-09 11:21:38,543 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_2026_09_09_112138.zip | Size: 12545 bytes | Status: Success
+2026-09-09 11:21:39,200 - pms - INFO - Exit backup verification: Passed
+2026-09-09 11:22:45,937 - pms - ERROR - Unhandled Exception caught: 'SalesReportSummary' object has no attribute 'ProfitMargin' | Path: /api/v1/reports/sales/export/pdf
+NoneType: None
+2026-09-09 11:23:15,295 - pms - ERROR - Unhandled Exception caught: 'SalesReportSummary' object has no attribute 'ProfitMargin' | Path: /api/v1/reports/sales/export/pdf
+NoneType: None
+2026-09-09 11:23:28,099 - pms - ERROR - Unhandled Exception caught: name 'build_premium_header' is not defined | Path: /api/v1/reports/inventory/export/pdf
+NoneType: None
+2026-09-09 11:32:09,461 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-09 11:32:09,469 - pms - INFO - Verified notifications table in database.
+2026-09-09 11:32:09,663 - pms - ERROR - Error checking backups in notification sync: 'BackupHistory' object has no attribute 'FileName'
+2026-09-09 11:32:09,681 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-09 11:49:04,856 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-09 11:49:04,872 - pms - INFO - Verified notifications table in database.
+2026-09-09 11:49:05,118 - pms - ERROR - Error checking backups in notification sync: 'BackupHistory' object has no attribute 'FileName'
+2026-09-09 11:49:05,156 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-09 11:49:18,563 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_2026_09_09_114918.zip | Size: 12541 bytes | Status: Success
+2026-09-09 11:49:19,164 - pms - INFO - Exit backup verification: Passed
+2026-09-09 12:08:16,441 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_2026_09_09_120816.zip | Size: 12712 bytes | Status: Success
+2026-09-09 12:08:16,491 - pms - INFO - Exit backup verification: Passed
+2026-09-09 13:39:37,556 - pms - INFO - AUDIT: [SCREEN_LOCKED] Screen automatically locked due to inactivity (User: admin)
+2026-09-09 13:59:09,218 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-09-09 13:59:09,390 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-09-09 13:59:09,714 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/sales/init "HTTP/1.1 200 OK"
+2026-09-09 13:59:09,736 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/customers "HTTP/1.1 422 Unprocessable Entity"
+2026-09-09 13:59:09,767 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/customers "HTTP/1.1 200 OK"
+2026-09-09 13:59:09,948 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/settings/printer "HTTP/1.1 200 OK"
+2026-09-09 13:59:09,998 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/security/settings "HTTP/1.1 200 OK"
+2026-09-09 13:59:10,197 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_2026_09_09_135910.zip | Size: 12936 bytes | Status: Success
+2026-09-09 13:59:11,172 - pms - INFO - Exit backup verification: Passed
+2026-09-09 13:59:11,176 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/backup/backup-on-exit "HTTP/1.1 200 OK"
+2026-09-09 13:59:11,195 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/security/change-password "HTTP/1.1 422 Unprocessable Entity"
+2026-09-09 13:59:11,212 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/medicines "HTTP/1.1 403 Forbidden"
+2026-09-09 13:59:11,232 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/medicines "HTTP/1.1 403 Forbidden"
+2026-09-09 13:59:11,247 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/inventory/kpi "HTTP/1.1 403 Forbidden"
+2026-09-09 13:59:11,263 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/purchases "HTTP/1.1 403 Forbidden"
+2026-09-09 13:59:11,283 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/dashboard/summary "HTTP/1.1 403 Forbidden"
+2026-09-09 13:59:11,297 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/reports/sales "HTTP/1.1 403 Forbidden"
+2026-09-09 13:59:11,310 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/customers/export "HTTP/1.1 403 Forbidden"
+2026-09-09 13:59:11,321 - httpx - INFO - HTTP Request: PUT http://testserver/api/v1/customers/1 "HTTP/1.1 403 Forbidden"
+2026-09-09 13:59:11,332 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/backup/history "HTTP/1.1 403 Forbidden"
+2026-09-09 13:59:11,346 - httpx - INFO - HTTP Request: PUT http://testserver/api/v1/security/settings "HTTP/1.1 403 Forbidden"
+2026-09-09 13:59:11,364 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/settings/profile "HTTP/1.1 200 OK"
+2026-09-09 13:59:11,379 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/about/info "HTTP/1.1 403 Forbidden"
+2026-09-09 13:59:11,394 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/system/diagnostics "HTTP/1.1 403 Forbidden"
+2026-09-09 13:59:11,409 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/settings/general "HTTP/1.1 200 OK"
+2026-09-09 13:59:11,444 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/medicines "HTTP/1.1 200 OK"
+2026-09-09 13:59:11,541 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/dashboard/summary "HTTP/1.1 200 OK"
+2026-09-09 13:59:11,555 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/backup/history "HTTP/1.1 200 OK"
+2026-09-09 14:00:11,802 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-09-09 14:00:12,025 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/customers "HTTP/1.1 200 OK"
+2026-09-09 14:00:12,052 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/customers "HTTP/1.1 200 OK"
+2026-09-09 14:08:50,557 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-09-09 14:08:50,824 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-09-09 14:08:50,851 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/auth/me "HTTP/1.1 200 OK"
+2026-09-09 14:08:50,862 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/auth/me "HTTP/1.1 200 OK"
+2026-09-09 14:08:51,511 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/users "HTTP/1.1 403 Forbidden"
+2026-09-09 14:08:51,588 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/users "HTTP/1.1 200 OK"
+2026-09-09 14:08:51,915 - pms - INFO - AUDIT: User tfadmin created user 'cashier2' with role 'cashier'.
+2026-09-09 14:08:51,919 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/users "HTTP/1.1 200 OK"
+2026-09-09 14:08:51,955 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/users "HTTP/1.1 400 Bad Request"
+2026-09-09 14:08:51,975 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/users "HTTP/1.1 400 Bad Request"
+2026-09-09 14:08:52,001 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/users "HTTP/1.1 422 Unprocessable Entity"
+2026-09-09 14:08:52,032 - pms - INFO - AUDIT: User tfadmin updated user 'cashier2' (role=admin, active=True).
+2026-09-09 14:08:52,036 - httpx - INFO - HTTP Request: PUT http://testserver/api/v1/users/4 "HTTP/1.1 200 OK"
+2026-09-09 14:08:52,216 - pms - INFO - AUDIT: User tfadmin updated user 'cashier2' (role=admin, active=True).
+2026-09-09 14:08:52,220 - httpx - INFO - HTTP Request: PUT http://testserver/api/v1/users/4 "HTTP/1.1 200 OK"
+2026-09-09 14:08:52,238 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/users "HTTP/1.1 200 OK"
+2026-09-09 14:08:52,256 - httpx - INFO - HTTP Request: PUT http://testserver/api/v1/users/2 "HTTP/1.1 400 Bad Request"
+2026-09-09 14:08:52,274 - httpx - INFO - HTTP Request: PUT http://testserver/api/v1/users/2 "HTTP/1.1 400 Bad Request"
+2026-09-09 14:08:52,298 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/users "HTTP/1.1 200 OK"
+2026-09-09 14:08:52,330 - pms - INFO - AUDIT: User tfadmin updated user 'admin' (role=cashier, active=True).
+2026-09-09 14:08:52,333 - httpx - INFO - HTTP Request: PUT http://testserver/api/v1/users/1 "HTTP/1.1 200 OK"
+2026-09-09 14:08:52,353 - httpx - INFO - HTTP Request: PUT http://testserver/api/v1/users/2 "HTTP/1.1 400 Bad Request"
+2026-09-09 14:08:52,369 - httpx - INFO - HTTP Request: PUT http://testserver/api/v1/users/2 "HTTP/1.1 400 Bad Request"
+2026-09-09 14:08:52,385 - httpx - INFO - HTTP Request: PUT http://testserver/api/v1/users/99999 "HTTP/1.1 404 Not Found"
+2026-09-09 14:24:22,538 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-09 14:24:22,564 - pms - INFO - Verified notifications table in database.
+2026-09-09 14:24:23,031 - pms - ERROR - Error checking backups in notification sync: 'BackupHistory' object has no attribute 'FileName'
+2026-09-09 14:24:23,060 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-09 14:25:18,576 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_2026_09_09_142518.zip | Size: 12628 bytes | Status: Success
+2026-09-09 14:25:19,505 - pms - INFO - Exit backup verification: Passed
+2026-09-09 14:25:24,123 - pms - INFO - AUDIT: [SCREEN_UNLOCKED] Screen unlocked successfully by user (User: admin)
+2026-09-09 14:25:27,442 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_2026_09_09_142518.zip)
+2026-09-09 14:25:29,711 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_2026_09_09_142518.zip)
+2026-09-09 14:25:46,902 - pms - ERROR - Error checking backups in notification sync: 'BackupHistory' object has no attribute 'FileName'
+2026-09-09 14:27:36,688 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_2026_09_09_142736.zip | Size: 12634 bytes | Status: Success
+2026-09-09 14:27:36,799 - pms - INFO - Exit backup verification: Passed
+2026-09-09 14:30:27,119 - pms - INFO - AUDIT: User admin updated user 'admin' (role=admin, active=True).
+2026-09-09 14:30:48,120 - pms - INFO - AUDIT: User admin created user 'cashier 1' with role 'cashier'.
+2026-09-09 14:31:09,889 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_2026_09_09_143109.zip | Size: 12763 bytes | Status: Success
+2026-09-09 14:31:09,914 - pms - INFO - Exit backup verification: Passed
+2026-09-09 14:31:12,781 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_2026_09_09_143109.zip)
+2026-09-09 14:31:56,374 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_2026_09_09_143109.zip)
+2026-09-09 14:32:06,141 - pms - ERROR - Error checking backups in notification sync: 'BackupHistory' object has no attribute 'FileName'
+2026-09-09 14:32:26,072 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-09-09 14:32:26,193 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-09-09 14:32:26,211 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/auth/me "HTTP/1.1 200 OK"
+2026-09-09 14:32:26,221 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/auth/me "HTTP/1.1 200 OK"
+2026-09-09 14:32:41,536 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_2026_09_09_143241.zip | Size: 12761 bytes | Status: Success
+2026-09-09 14:32:41,558 - pms - INFO - Exit backup verification: Passed
+2026-09-09 14:32:43,696 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-09-09 14:32:43,801 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-09-09 14:32:43,815 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/auth/me "HTTP/1.1 200 OK"
+2026-09-09 14:32:43,821 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/auth/me "HTTP/1.1 200 OK"
+2026-09-09 14:32:51,972 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_2026_09_09_143241.zip)
+2026-09-09 14:33:07,358 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_2026_09_09_143241.zip)
+2026-09-09 14:33:24,876 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-09-09 14:33:25,004 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-09-09 14:33:25,022 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/auth/me "HTTP/1.1 200 OK"
+2026-09-09 14:33:25,030 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/auth/me "HTTP/1.1 200 OK"
+2026-09-09 14:33:25,314 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/users "HTTP/1.1 200 OK"
+2026-09-09 14:33:25,449 - pms - INFO - AUDIT: User tfadmin created user 'final_cashier' with role 'cashier'.
+2026-09-09 14:33:25,452 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/users "HTTP/1.1 200 OK"
+2026-09-09 14:33:25,466 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/users "HTTP/1.1 400 Bad Request"
+2026-09-09 14:33:25,478 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/users "HTTP/1.1 400 Bad Request"
+2026-09-09 14:33:25,496 - pms - INFO - AUDIT: User tfadmin updated user 'final_cashier' (role=admin, active=True).
+2026-09-09 14:33:25,499 - httpx - INFO - HTTP Request: PUT http://testserver/api/v1/users/5 "HTTP/1.1 200 OK"
+2026-09-09 14:33:25,526 - pms - INFO - AUDIT: User tfadmin updated user 'final_cashier' (role=admin, active=False).
+2026-09-09 14:33:25,529 - httpx - INFO - HTTP Request: PUT http://testserver/api/v1/users/5 "HTTP/1.1 200 OK"
+2026-09-09 14:33:25,544 - httpx - INFO - HTTP Request: PUT http://testserver/api/v1/users/99999 "HTTP/1.1 404 Not Found"
+2026-09-09 14:33:25,557 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/users "HTTP/1.1 200 OK"
+2026-09-09 14:33:25,569 - httpx - INFO - HTTP Request: PUT http://testserver/api/v1/users/3 "HTTP/1.1 400 Bad Request"
+2026-09-09 14:33:25,582 - httpx - INFO - HTTP Request: PUT http://testserver/api/v1/users/3 "HTTP/1.1 400 Bad Request"
+2026-09-09 14:33:25,647 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/sales/history "HTTP/1.1 200 OK"
+2026-09-09 14:33:25,666 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/customers "HTTP/1.1 200 OK"
+2026-09-09 14:33:25,693 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/customers "HTTP/1.1 200 OK"
+2026-09-09 14:33:25,708 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/settings/printer "HTTP/1.1 200 OK"
+2026-09-09 14:33:25,724 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/security/settings "HTTP/1.1 200 OK"
+2026-09-09 14:33:25,757 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/notifications/unread-count "HTTP/1.1 200 OK"
+2026-09-09 14:33:25,775 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/medicines "HTTP/1.1 403 Forbidden"
+2026-09-09 14:33:25,788 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/categories "HTTP/1.1 403 Forbidden"
+2026-09-09 14:33:25,801 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/companies "HTTP/1.1 403 Forbidden"
+2026-09-09 14:33:25,816 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/suppliers "HTTP/1.1 403 Forbidden"
+2026-09-09 14:33:25,831 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/purchases "HTTP/1.1 403 Forbidden"
+2026-09-09 14:33:25,845 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/purchase-returns "HTTP/1.1 403 Forbidden"
+2026-09-09 14:33:25,860 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/inventory/summary "HTTP/1.1 403 Forbidden"
+2026-09-09 14:33:25,868 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/dashboard "HTTP/1.1 404 Not Found"
+2026-09-09 14:33:25,884 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/reports/sales "HTTP/1.1 403 Forbidden"
+2026-09-09 14:33:25,900 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/backup-settings "HTTP/1.1 403 Forbidden"
+2026-09-09 14:33:25,910 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/backup "HTTP/1.1 404 Not Found"
+2026-09-09 14:33:25,924 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/about/info "HTTP/1.1 403 Forbidden"
+2026-09-09 14:33:25,939 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/users "HTTP/1.1 403 Forbidden"
+2026-09-09 14:33:25,950 - httpx - INFO - HTTP Request: PUT http://testserver/api/v1/customers/1 "HTTP/1.1 403 Forbidden"
+2026-09-09 14:33:25,965 - httpx - INFO - HTTP Request: DELETE http://testserver/api/v1/customers/1 "HTTP/1.1 403 Forbidden"
+2026-09-09 14:33:25,982 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/settings/profile "HTTP/1.1 200 OK"
+2026-09-09 14:33:26,012 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/license/status "HTTP/1.1 200 OK"
+2026-09-09 14:35:36,630 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-09-09 14:35:36,848 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-09-09 14:35:36,888 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/auth/me "HTTP/1.1 200 OK"
+2026-09-09 14:35:36,897 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/auth/me "HTTP/1.1 200 OK"
+2026-09-09 14:35:37,170 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/users "HTTP/1.1 200 OK"
+2026-09-09 14:35:37,298 - pms - INFO - AUDIT: User tfadmin created user 'final_cashier' with role 'cashier'.
+2026-09-09 14:35:37,301 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/users "HTTP/1.1 200 OK"
+2026-09-09 14:35:37,315 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/users "HTTP/1.1 400 Bad Request"
+2026-09-09 14:35:37,329 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/users "HTTP/1.1 400 Bad Request"
+2026-09-09 14:35:37,350 - pms - INFO - AUDIT: User tfadmin updated user 'final_cashier' (role=admin, active=True).
+2026-09-09 14:35:37,352 - httpx - INFO - HTTP Request: PUT http://testserver/api/v1/users/5 "HTTP/1.1 200 OK"
+2026-09-09 14:35:37,383 - pms - INFO - AUDIT: User tfadmin updated user 'final_cashier' (role=admin, active=False).
+2026-09-09 14:35:37,385 - httpx - INFO - HTTP Request: PUT http://testserver/api/v1/users/5 "HTTP/1.1 200 OK"
+2026-09-09 14:35:37,398 - httpx - INFO - HTTP Request: PUT http://testserver/api/v1/users/99999 "HTTP/1.1 404 Not Found"
+2026-09-09 14:35:37,416 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/users "HTTP/1.1 200 OK"
+2026-09-09 14:35:37,435 - httpx - INFO - HTTP Request: PUT http://testserver/api/v1/users/3 "HTTP/1.1 400 Bad Request"
+2026-09-09 14:35:37,453 - httpx - INFO - HTTP Request: PUT http://testserver/api/v1/users/3 "HTTP/1.1 400 Bad Request"
+2026-09-09 14:35:37,529 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/sales/history "HTTP/1.1 200 OK"
+2026-09-09 14:35:37,550 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/customers "HTTP/1.1 200 OK"
+2026-09-09 14:35:37,573 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/customers "HTTP/1.1 200 OK"
+2026-09-09 14:35:37,589 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/settings/printer "HTTP/1.1 200 OK"
+2026-09-09 14:35:37,604 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/security/settings "HTTP/1.1 200 OK"
+2026-09-09 14:35:37,629 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/notifications/unread-count "HTTP/1.1 200 OK"
+2026-09-09 14:35:37,641 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/medicines "HTTP/1.1 403 Forbidden"
+2026-09-09 14:35:37,656 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/categories "HTTP/1.1 403 Forbidden"
+2026-09-09 14:35:37,671 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/companies "HTTP/1.1 403 Forbidden"
+2026-09-09 14:35:37,681 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/suppliers "HTTP/1.1 403 Forbidden"
+2026-09-09 14:35:37,691 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/purchases "HTTP/1.1 403 Forbidden"
+2026-09-09 14:35:37,704 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/purchase-returns "HTTP/1.1 403 Forbidden"
+2026-09-09 14:35:37,716 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/inventory/summary "HTTP/1.1 403 Forbidden"
+2026-09-09 14:35:37,733 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/dashboard/summary "HTTP/1.1 403 Forbidden"
+2026-09-09 14:35:37,746 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/reports/sales "HTTP/1.1 403 Forbidden"
+2026-09-09 14:35:37,756 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/backup-settings "HTTP/1.1 403 Forbidden"
+2026-09-09 14:35:37,770 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/backup/history "HTTP/1.1 403 Forbidden"
+2026-09-09 14:35:37,784 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/about/info "HTTP/1.1 403 Forbidden"
+2026-09-09 14:35:37,796 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/users "HTTP/1.1 403 Forbidden"
+2026-09-09 14:35:37,806 - httpx - INFO - HTTP Request: PUT http://testserver/api/v1/customers/1 "HTTP/1.1 403 Forbidden"
+2026-09-09 14:35:37,817 - httpx - INFO - HTTP Request: DELETE http://testserver/api/v1/customers/1 "HTTP/1.1 403 Forbidden"
+2026-09-09 14:35:37,835 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/settings/profile "HTTP/1.1 200 OK"
+2026-09-09 14:35:37,860 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/license/status "HTTP/1.1 200 OK"
+2026-09-09 14:35:51,516 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-09-09 14:35:51,729 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/medicines "HTTP/1.1 200 OK"
+2026-09-09 14:35:51,761 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/categories "HTTP/1.1 200 OK"
+2026-09-09 14:35:51,781 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/companies "HTTP/1.1 200 OK"
+2026-09-09 14:35:51,801 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/suppliers "HTTP/1.1 200 OK"
+2026-09-09 14:35:51,846 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/purchases "HTTP/1.1 200 OK"
+2026-09-09 14:35:51,900 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/inventory/summary "HTTP/1.1 200 OK"
+2026-09-09 14:35:51,999 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/dashboard/summary "HTTP/1.1 200 OK"
+2026-09-09 14:35:52,072 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/reports/sales "HTTP/1.1 200 OK"
+2026-09-09 14:35:52,104 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/backup-settings "HTTP/1.1 200 OK"
+2026-09-09 14:35:52,118 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/backup/history "HTTP/1.1 200 OK"
+2026-09-09 14:35:52,381 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/about/info "HTTP/1.1 200 OK"
+2026-09-09 14:35:52,409 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/users "HTTP/1.1 200 OK"
+2026-09-09 14:35:52,459 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/sales/history "HTTP/1.1 200 OK"
+2026-09-09 14:35:52,475 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/customers "HTTP/1.1 200 OK"
+2026-09-09 14:37:55,125 - pms - ERROR - Error checking backups in notification sync: 'BackupHistory' object has no attribute 'FileName'
+2026-09-09 14:42:28,004 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_2026_09_09_144227.zip | Size: 12756 bytes | Status: Success
+2026-09-09 14:42:28,079 - pms - INFO - Exit backup verification: Passed
+2026-09-09 14:42:29,651 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_2026_09_09_144227.zip)
+2026-09-09 14:42:45,214 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_2026_09_09_144227.zip)
+2026-09-09 14:43:18,705 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_2026_09_09_144227.zip)
+2026-09-09 14:44:45,923 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_2026_09_09_144445.zip | Size: 12750 bytes | Status: Success
+2026-09-09 14:44:45,949 - pms - INFO - Exit backup verification: Passed
+2026-09-09 14:46:41,519 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-09 14:46:41,541 - pms - INFO - Verified notifications table in database.
+2026-09-09 14:46:41,944 - pms - ERROR - Error checking backups in notification sync: 'BackupHistory' object has no attribute 'FileName'
+2026-09-09 14:46:41,952 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-09 14:48:12,695 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_2026_09_09_144812.zip | Size: 12748 bytes | Status: Success
+2026-09-09 14:48:13,722 - pms - INFO - Exit backup verification: Passed
+2026-09-09 14:48:22,300 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_2026_09_09_144812.zip)
+2026-09-09 14:50:14,544 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_2026_09_09_145014.zip | Size: 12739 bytes | Status: Success
+2026-09-09 14:50:14,566 - pms - INFO - Exit backup verification: Passed
+2026-09-09 14:50:23,823 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_2026_09_09_145014.zip)
+2026-09-09 14:50:52,992 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_2026_09_09_145014.zip)
+2026-09-09 14:52:06,080 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_2026_09_09_145206.zip | Size: 12746 bytes | Status: Success
+2026-09-09 14:52:06,096 - pms - INFO - Exit backup verification: Passed
+2026-09-09 14:54:38,350 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_2026_09_09_145438.zip | Size: 12745 bytes | Status: Success
+2026-09-09 14:54:38,366 - pms - INFO - Exit backup verification: Passed
+2026-09-09 14:56:00,310 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_2026_09_09_145600.zip | Size: 12747 bytes | Status: Success
+2026-09-09 14:56:00,326 - pms - INFO - Exit backup verification: Passed
+2026-09-09 14:59:56,782 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_2026_09_09_145956.zip | Size: 12751 bytes | Status: Success
+2026-09-09 14:59:56,800 - pms - INFO - Exit backup verification: Passed
+2026-09-09 15:06:25,450 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_2026_09_09_150625.zip | Size: 12749 bytes | Status: Success
+2026-09-09 15:06:25,479 - pms - INFO - Exit backup verification: Passed
+2026-09-09 15:10:41,532 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_2026_09_09_151041.zip | Size: 12750 bytes | Status: Success
+2026-09-09 15:10:41,551 - pms - INFO - Exit backup verification: Passed
+2026-09-09 15:12:55,784 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_2026_09_09_151255.zip | Size: 12748 bytes | Status: Success
+2026-09-09 15:12:55,803 - pms - INFO - Exit backup verification: Passed
+2026-09-09 15:16:29,629 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_2026_09_09_151629.zip | Size: 12756 bytes | Status: Success
+2026-09-09 15:16:29,651 - pms - INFO - Exit backup verification: Passed
+2026-09-09 15:17:01,121 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_2026_09_09_151629.zip)
+2026-09-09 15:17:05,883 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_2026_09_09_151629.zip)
+2026-09-09 15:17:31,065 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_2026_09_09_151731.zip | Size: 12753 bytes | Status: Success
+2026-09-09 15:17:31,079 - pms - INFO - Exit backup verification: Passed
+2026-09-09 15:18:59,653 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-09 15:18:59,778 - pms - INFO - Verified notifications table in database.
+2026-09-09 15:19:00,299 - pms - ERROR - Error checking backups in notification sync: 'BackupHistory' object has no attribute 'FileName'
+2026-09-09 15:19:00,319 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-09 15:19:12,816 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_09_09_2026_151912.zip | Size: 12930 bytes | Status: Success
+2026-09-09 15:19:13,696 - pms - INFO - Exit backup verification: Passed
+2026-09-09 15:19:40,256 - pms - ERROR - Error checking backups in notification sync: 'BackupHistory' object has no attribute 'FileName'
+2026-09-09 15:21:02,142 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_09_09_2026_152102.zip | Size: 12934 bytes | Status: Success
+2026-09-09 15:21:02,159 - pms - INFO - Exit backup verification: Passed
+2026-09-09 15:24:17,112 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_09_09_2026_152417.zip | Size: 12926 bytes | Status: Success
+2026-09-09 15:24:17,130 - pms - INFO - Exit backup verification: Passed
+2026-09-09 15:24:33,582 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_09_09_2026_152417.zip)
+2026-09-09 15:24:42,484 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_09_09_2026_152417.zip)
+2026-09-09 15:25:13,947 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_09_09_2026_152417.zip)
+2026-09-09 15:28:21,748 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_09_09_2026_152821.zip | Size: 12928 bytes | Status: Success
+2026-09-09 15:28:21,765 - pms - INFO - Exit backup verification: Passed
+2026-09-09 15:28:24,927 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_09_09_2026_152821.zip)
+2026-09-09 15:28:32,732 - pms - ERROR - PMSException caught: Incorrect username or password (status: 401) | Path: /api/v1/auth/login
+2026-09-09 15:28:41,652 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_09_09_2026_152821.zip)
+2026-09-09 15:28:52,502 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_09_09_2026_152821.zip)
+2026-09-09 15:28:59,984 - pms - ERROR - PMSException caught: Incorrect username or password (status: 401) | Path: /api/v1/auth/login
+2026-09-09 15:29:13,724 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_09_09_2026_152821.zip)
+2026-09-09 15:29:15,377 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_09_09_2026_152821.zip)
+2026-09-09 15:29:22,076 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_09_09_2026_152922.zip | Size: 12927 bytes | Status: Success
+2026-09-09 15:29:22,098 - pms - INFO - Exit backup verification: Passed
+2026-09-09 15:29:24,433 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_09_09_2026_152922.zip)
+2026-09-09 15:31:45,943 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_09_09_2026_153145.zip | Size: 12927 bytes | Status: Success
+2026-09-09 15:31:45,986 - pms - INFO - Exit backup verification: Passed
+2026-09-09 15:32:04,440 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_09_09_2026_153145.zip)
+2026-09-09 15:32:15,256 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_09_09_2026_153145.zip)
+2026-09-09 16:39:33,931 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-09 16:39:33,952 - pms - INFO - Verified notifications table in database.
+2026-09-09 16:39:34,167 - pms - ERROR - Error checking backups in notification sync: 'BackupHistory' object has no attribute 'FileName'
+2026-09-09 16:39:34,172 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-09 16:40:32,470 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_09_09_2026_164032.zip | Size: 13000 bytes | Status: Success
+2026-09-09 16:40:33,015 - pms - INFO - Exit backup verification: Passed
+2026-09-09 16:45:10,239 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_09_09_2026_164510.zip | Size: 13002 bytes | Status: Success
+2026-09-09 16:45:10,259 - pms - INFO - Exit backup verification: Passed
+2026-09-09 16:45:10,322 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_09_09_2026_164510.zip)
+2026-09-09 16:45:10,332 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_09_09_2026_164510.zip)
+2026-09-09 16:45:12,113 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_09_09_2026_164510.zip)
+2026-09-09 16:45:12,223 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_09_09_2026_164510.zip)
+2026-09-09 16:45:12,263 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_09_09_2026_164510.zip)
+2026-09-09 16:45:12,269 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_09_09_2026_164510.zip)
+2026-09-09 16:45:12,275 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_09_09_2026_164510.zip)
+2026-09-09 16:45:12,281 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_09_09_2026_164510.zip)
+2026-09-09 16:45:12,283 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_09_09_2026_164510.zip)
+2026-09-09 16:50:19,210 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-09 16:50:19,219 - pms - INFO - Verified notifications table in database.
+2026-09-09 16:50:19,374 - pms - ERROR - Error checking backups in notification sync: 'BackupHistory' object has no attribute 'FileName'
+2026-09-09 16:50:19,378 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-09 16:51:14,201 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_09_09_2026_165114.zip | Size: 13001 bytes | Status: Success
+2026-09-09 16:51:14,560 - pms - INFO - Exit backup verification: Passed
+2026-09-09 16:51:56,202 - pms - INFO - AUDIT: User admin updated user 'cashier 1' (role=cashier, active=False).
+2026-09-09 16:52:11,613 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_09_09_2026_165114.zip)
+2026-09-09 16:52:20,508 - pms - ERROR - PMSException caught: Inactive user (status: 401) | Path: /api/v1/auth/login
+2026-09-09 16:52:36,398 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_09_09_2026_165236.zip | Size: 13009 bytes | Status: Success
+2026-09-09 16:52:36,414 - pms - INFO - Exit backup verification: Passed
+2026-09-09 16:52:57,655 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_09_09_2026_165236.zip)
+2026-09-09 17:28:26,158 - pms - INFO - AUDIT: [SCREEN_LOCKED] Screen automatically locked due to inactivity (User: admin)
+2026-09-09 18:00:55,125 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_09_09_2026_180055.zip | Size: 13008 bytes | Status: Success
+2026-09-09 18:00:55,148 - pms - INFO - Exit backup verification: Passed
+2026-09-09 18:01:01,473 - pms - INFO - AUDIT: [SCREEN_UNLOCKED] Screen unlocked successfully by user (User: admin)
+2026-09-09 18:01:05,072 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_09_09_2026_180055.zip)
+2026-09-09 18:06:33,020 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_09_09_2026_180632.zip | Size: 13006 bytes | Status: Success
+2026-09-09 18:06:33,048 - pms - INFO - Exit backup verification: Passed
+2026-09-09 18:08:52,790 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-09 18:08:52,799 - pms - INFO - Verified notifications table in database.
+2026-09-09 18:08:53,090 - pms - ERROR - Error checking backups in notification sync: 'BackupHistory' object has no attribute 'FileName'
+2026-09-09 18:08:53,098 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-09 18:08:54,038 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_09_09_2026_180853.zip | Size: 13011 bytes | Status: Success
+2026-09-09 18:08:57,244 - pms - INFO - Exit backup verification: Passed
+2026-09-09 18:08:58,533 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_09_09_2026_180853.zip)
+2026-09-09 18:12:26,906 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_09_09_2026_181226.zip | Size: 13009 bytes | Status: Success
+2026-09-09 18:12:26,933 - pms - INFO - Exit backup verification: Passed
+2026-09-09 18:53:26,865 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_09_09_2026_185326.zip | Size: 13010 bytes | Status: Success
+2026-09-09 18:53:26,895 - pms - INFO - Exit backup verification: Passed
+2026-09-09 18:58:43,019 - pms - ERROR - Error checking backups in notification sync: 'BackupHistory' object has no attribute 'FileName'
+2026-09-09 18:59:03,719 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_09_09_2026_185903.zip | Size: 13008 bytes | Status: Success
+2026-09-09 18:59:03,740 - pms - INFO - Exit backup verification: Passed
+2026-09-09 18:59:11,392 - pms - ERROR - PMSException caught: Incorrect username or password (status: 401) | Path: /api/v1/auth/login
+2026-09-09 18:59:20,827 - pms - ERROR - PMSException caught: Inactive user (status: 401) | Path: /api/v1/auth/login
+2026-09-09 18:59:46,807 - pms - INFO - AUDIT: User admin updated user 'cashier 1' (role=cashier, active=True).
+2026-09-09 18:59:59,318 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_09_09_2026_185903.zip)
+2026-09-09 19:01:18,149 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_09_09_2026_190118.zip | Size: 12993 bytes | Status: Success
+2026-09-09 19:01:18,165 - pms - INFO - Exit backup verification: Passed
+2026-09-09 19:06:41,094 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_09_09_2026_190641.zip | Size: 13000 bytes | Status: Success
+2026-09-09 19:06:41,107 - pms - INFO - Exit backup verification: Passed
+2026-09-09 19:10:30,249 - pms - INFO - Safe Data Reset | SUCCESS | User: admin | Snapshot: pre_reset_snapshot_20260909_191030.sqlite
+2026-09-09 19:10:31,781 - pms - INFO - Clear Temp Data | User: admin | Deleted 3 files | Reclaimed: 1.88 KB
+2026-09-09 19:10:32,647 - pms - INFO - Clear Temp Data | User: admin | Deleted 0 files | Reclaimed: 0.00 KB
+2026-09-09 19:10:35,613 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_09_09_2026_191035.zip | Size: 8921 bytes | Status: Success
+2026-09-09 19:10:35,628 - pms - INFO - Exit backup verification: Passed
+2026-09-09 19:11:45,010 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_09_09_2026_191144.zip | Size: 9052 bytes | Status: Success
+2026-09-09 19:11:45,025 - pms - INFO - Exit backup verification: Passed
+2026-09-09 19:13:24,089 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_09_09_2026_191324.zip | Size: 9133 bytes | Status: Success
+2026-09-09 19:13:24,108 - pms - INFO - Exit backup verification: Passed
+2026-09-09 19:20:33,460 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_09_09_2026_192033.zip | Size: 9212 bytes | Status: Success
+2026-09-09 19:20:33,475 - pms - INFO - Exit backup verification: Passed
+2026-09-09 19:21:10,860 - pms - INFO - Backup Settings Updated | User: admin | AutoBackup: True | BackupOnExit: True
+2026-09-09 19:25:43,848 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_09_09_2026_192543.zip | Size: 9288 bytes | Status: Success
+2026-09-09 19:25:43,862 - pms - INFO - Exit backup verification: Passed
+2026-09-09 19:25:49,027 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_09_09_2026_192543.zip)
+2026-09-09 19:25:55,781 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_09_09_2026_192543.zip)
+2026-09-09 19:26:11,911 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_09_09_2026_192543.zip)
+2026-09-09 19:27:00,105 - pms - INFO - Database Restore Initiated | Creating safety snapshot: backups\safety\pre_restore_safety_snapshot.sqlite
+2026-09-09 19:27:00,124 - pms - INFO - Database Restore Successful | Restored from: C:/Users/Muhammad Saqib/Desktop/ExitBackup_09_09_2026_190641.zip by user admin
+2026-09-09 19:27:01,695 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_09_09_2026_192701.zip | Size: 13000 bytes | Status: Success
+2026-09-09 19:27:01,709 - pms - INFO - Exit backup verification: Passed
+2026-09-09 19:27:06,274 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_09_09_2026_192701.zip)
+2026-09-09 19:27:27,375 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_09_09_2026_192701.zip)
+2026-09-09 19:27:40,333 - pms - INFO - Backup Settings Updated | User: admin | AutoBackup: True | BackupOnExit: True
+2026-09-09 19:27:44,705 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_09_09_2026_192701.zip)
+2026-09-09 19:30:04,953 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_09_09_2026_193004.zip | Size: 12999 bytes | Status: Success
+2026-09-09 19:30:04,968 - pms - INFO - Exit backup verification: Passed
+2026-09-10 11:52:57,232 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-10 11:52:57,254 - pms - INFO - Verified notifications table in database.
+2026-09-10 11:52:57,435 - pms - ERROR - Error checking backups in notification sync: 'BackupHistory' object has no attribute 'FileName'
+2026-09-10 11:52:57,440 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-10 11:53:54,016 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_10_09_2026_115353.zip | Size: 13004 bytes | Status: Success
+2026-09-10 11:53:54,510 - pms - INFO - Exit backup verification: Passed
+2026-09-10 11:56:42,674 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_10_09_2026_115642.zip | Size: 13113 bytes | Status: Success
+2026-09-10 11:56:42,693 - pms - INFO - Exit backup verification: Passed
+2026-09-10 12:00:53,219 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_10_09_2026_120053.zip | Size: 13472 bytes | Status: Success
+2026-09-10 12:00:53,234 - pms - INFO - Exit backup verification: Passed
+2026-09-10 12:50:50,370 - pms - INFO - AUDIT: [SCREEN_LOCKED] Screen automatically locked due to inactivity (User: admin)
+2026-09-10 13:07:22,899 - pms - INFO - AUDIT: [SCREEN_UNLOCKED] Screen unlocked successfully by user (User: admin)
+2026-09-10 13:07:24,854 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_10_09_2026_130724.zip | Size: 13544 bytes | Status: Success
+2026-09-10 13:07:24,884 - pms - INFO - Exit backup verification: Passed
+2026-09-10 13:10:05,501 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_10_09_2026_131005.zip | Size: 13615 bytes | Status: Success
+2026-09-10 13:10:05,516 - pms - INFO - Exit backup verification: Passed
+2026-09-10 13:10:29,666 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_10_09_2026_131005.zip)
+2026-09-10 13:17:19,707 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_10_09_2026_131719.zip | Size: 13697 bytes | Status: Success
+2026-09-10 13:17:19,797 - pms - INFO - Exit backup verification: Passed
+2026-09-10 13:24:38,121 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_10_09_2026_132438.zip | Size: 13699 bytes | Status: Success
+2026-09-10 13:24:38,152 - pms - INFO - Exit backup verification: Passed
+2026-09-10 13:44:25,580 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_10_09_2026_134425.zip | Size: 13705 bytes | Status: Success
+2026-09-10 13:44:25,608 - pms - INFO - Exit backup verification: Passed
+2026-09-10 14:18:57,156 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_10_09_2026_141857.zip | Size: 13708 bytes | Status: Success
+2026-09-10 14:18:57,190 - pms - INFO - Exit backup verification: Passed
+2026-09-10 14:41:13,190 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_10_09_2026_144113.zip | Size: 13709 bytes | Status: Success
+2026-09-10 14:41:13,215 - pms - INFO - Exit backup verification: Passed
+2026-09-10 14:41:29,796 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_10_09_2026_144113.zip)
+2026-09-10 14:53:39,248 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_10_09_2026_145339.zip | Size: 13712 bytes | Status: Success
+2026-09-10 14:53:39,276 - pms - INFO - Exit backup verification: Passed
+2026-09-10 14:53:54,978 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_10_09_2026_145339.zip)
+2026-09-10 15:07:46,484 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_10_09_2026_150746.zip | Size: 13785 bytes | Status: Success
+2026-09-10 15:07:46,509 - pms - INFO - Exit backup verification: Passed
+2026-09-10 15:07:59,874 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_10_09_2026_150746.zip)
+2026-09-10 15:15:11,631 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_10_09_2026_151511.zip | Size: 13917 bytes | Status: Success
+2026-09-10 15:15:11,662 - pms - INFO - Exit backup verification: Passed
+2026-09-10 15:15:45,400 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_10_09_2026_151511.zip)
+2026-09-10 15:20:39,413 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_10_09_2026_152039.zip | Size: 13922 bytes | Status: Success
+2026-09-10 15:20:39,451 - pms - INFO - Exit backup verification: Passed
+2026-09-10 15:25:27,964 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_10_09_2026_152527.zip | Size: 13920 bytes | Status: Success
+2026-09-10 15:25:27,990 - pms - INFO - Exit backup verification: Passed
+2026-09-10 15:29:39,077 - pms - ERROR - Database Backup Failed | Type: Automatic | Name: ExitBackup_10_09_2026_152939 | Error: [WinError 32] The process cannot access the file because it is being used by another process: 'E:\\PMS Backup\\ExitBackup_10_09_2026_152939.sqlite'
+2026-09-10 15:29:39,183 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_10_09_2026_152939.zip | Size: 13921 bytes | Status: Success
+2026-09-10 15:29:39,242 - pms - INFO - Exit backup verification: Passed
+2026-09-10 15:30:00,444 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_10_09_2026_152939)
+2026-09-10 15:32:52,018 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_10_09_2026_153251.zip | Size: 13878 bytes | Status: Success
+2026-09-10 15:32:52,048 - pms - INFO - Exit backup verification: Passed
+2026-09-10 15:35:45,429 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_10_09_2026_153545.zip | Size: 13872 bytes | Status: Success
+2026-09-10 15:35:45,466 - pms - INFO - Exit backup verification: Passed
+2026-09-10 15:41:42,022 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_10_09_2026_154141.zip | Size: 13861 bytes | Status: Success
+2026-09-10 15:41:42,056 - pms - INFO - Exit backup verification: Passed
+2026-09-10 17:28:58,458 - pms - INFO - AUDIT: [SCREEN_LOCKED] Screen automatically locked due to inactivity (User: admin)
+2026-09-10 22:44:09,049 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-10 22:44:09,072 - pms - INFO - Verified notifications table in database.
+2026-09-10 22:44:09,316 - pms - ERROR - Error checking backups in notification sync: 'BackupHistory' object has no attribute 'FileName'
+2026-09-10 22:44:09,330 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-10 22:45:36,425 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_10_09_2026_224536.zip | Size: 13844 bytes | Status: Success
+2026-09-10 22:45:37,024 - pms - INFO - Exit backup verification: Passed
+2026-09-10 22:50:40,841 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-10 22:50:40,927 - pms - INFO - Verified notifications table in database.
+2026-09-10 22:50:41,525 - pms - ERROR - Error checking backups in notification sync: 'BackupHistory' object has no attribute 'FileName'
+2026-09-10 22:50:41,535 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-10 23:08:54,390 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_10_09_2026_230854.zip | Size: 13846 bytes | Status: Success
+2026-09-10 23:08:55,144 - pms - INFO - Exit backup verification: Passed
+2026-09-10 23:09:29,748 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_10_09_2026_230854.zip)
+2026-09-10 23:10:57,210 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_10_09_2026_231057.zip | Size: 13849 bytes | Status: Success
+2026-09-10 23:10:57,233 - pms - INFO - Exit backup verification: Passed
+2026-09-10 23:18:57,092 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_10_09_2026_231856.zip | Size: 13842 bytes | Status: Success
+2026-09-10 23:18:57,141 - pms - INFO - Exit backup verification: Passed
+2026-09-10 23:24:17,470 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_10_09_2026_232417.zip | Size: 13844 bytes | Status: Success
+2026-09-10 23:24:17,486 - pms - INFO - Exit backup verification: Passed
+2026-09-10 23:26:06,895 - pms - INFO - Safe Data Reset | SUCCESS | User: admin | Snapshot: pre_reset_snapshot_20260910_232606.sqlite
+2026-09-10 23:26:08,150 - pms - INFO - Clear Temp Data | User: admin | Deleted 2 files | Reclaimed: 1.47 KB
+2026-09-10 23:26:16,184 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_10_09_2026_232616.zip | Size: 8341 bytes | Status: Success
+2026-09-10 23:26:16,198 - pms - INFO - Exit backup verification: Passed
+2026-09-10 23:29:31,637 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_10_09_2026_232931.zip | Size: 8474 bytes | Status: Success
+2026-09-10 23:29:31,698 - pms - INFO - Exit backup verification: Passed
+2026-09-11 04:14:54,414 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-11 04:14:54,468 - pms - INFO - Verified notifications table in database.
+2026-09-11 04:14:54,830 - pms - ERROR - Error checking backups in notification sync: 'BackupHistory' object has no attribute 'FileName'
+2026-09-11 04:14:54,834 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-11 04:14:59,135 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_11_09_2026_041459.zip | Size: 8554 bytes | Status: Success
+2026-09-11 04:15:01,194 - pms - INFO - Exit backup verification: Passed
+2026-09-11 04:16:26,259 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_11_09_2026_041626.zip | Size: 8640 bytes | Status: Success
+2026-09-11 04:16:26,315 - pms - INFO - Exit backup verification: Passed
+2026-09-11 21:34:05,121 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-11 21:34:05,146 - pms - INFO - Verified notifications table in database.
+2026-09-11 21:34:05,371 - pms - ERROR - Error checking backups in notification sync: 'BackupHistory' object has no attribute 'FileName'
+2026-09-11 21:34:05,375 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-11 22:50:49,004 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-11 22:50:49,199 - pms - INFO - Verified notifications table in database.
+2026-09-11 22:50:49,271 - pms - ERROR - Error checking backups in notification sync: 'BackupHistory' object has no attribute 'FileName'
+2026-09-11 22:50:49,274 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-11 22:51:23,235 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_11_09_2026_225123.zip | Size: 8713 bytes | Status: Success
+2026-09-11 22:51:23,609 - pms - INFO - Exit backup verification: Passed
+2026-09-11 22:51:28,114 - pms - ERROR - PMSException caught: Incorrect username or password (status: 401) | Path: /api/v1/auth/login
+2026-09-11 22:53:56,553 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_11_09_2026_225356.zip | Size: 8795 bytes | Status: Success
+2026-09-11 22:53:56,573 - pms - INFO - Exit backup verification: Passed
+2026-09-11 23:22:15,418 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_11_09_2026_232215.zip | Size: 8865 bytes | Status: Success
+2026-09-11 23:22:15,474 - pms - INFO - Exit backup verification: Passed
+2026-09-11 23:22:17,328 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_11_09_2026_232215.zip)
+2026-09-11 23:22:27,374 - pms - INFO - Backup-on-exit skipped: duplicate request within 60 s (last: ExitBackup_11_09_2026_232215.zip)
+2026-09-11 23:47:52,259 - pms - INFO - Database Backup Executed | Type: Automatic | File: ExitBackup_11_09_2026_234752.zip | Size: 8940 bytes | Status: Success
+2026-09-11 23:47:52,286 - pms - INFO - Exit backup verification: Passed
+2026-09-12 07:46:28,516 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-12 07:46:28,517 - pms - INFO - AUTH-DEBUG: DB URL=sqlite:///./pharma_db.sqlite DATA_DIR=E:\Projects\PMS-Software\backend
+2026-09-12 07:46:28,762 - pms - INFO - Verified notifications table in database.
+2026-09-12 07:46:28,899 - pms - ERROR - Error checking backups in notification sync: 'BackupHistory' object has no attribute 'FileName'
+2026-09-12 07:46:28,908 - pms - INFO - Completed startup system notifications synchronization.

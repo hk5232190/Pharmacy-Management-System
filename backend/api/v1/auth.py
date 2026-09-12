@@ -52,13 +52,16 @@ def login_for_access_token(
     remember_me: bool = False
 ):
     user = db.query(User).filter(User.Username == form_data.username).first()
+    logger.info(f"AUTH-DEBUG: login attempt for username='{form_data.username}' user_found={user is not None}")
     if not user:
         raise AuthenticationError("Incorrect username or password")
     
     if not verify_password(form_data.password, user.PasswordHash, user.Salt):
+        logger.info("AUTH-DEBUG: password check failed")
         raise AuthenticationError("Incorrect username or password")
         
     if not user.IsActive:
+        logger.info("AUTH-DEBUG: user inactive")
         raise AuthenticationError("Inactive user")
 
     # Set expiry duration based on remember me and security settings
@@ -139,22 +142,31 @@ def upload_profile_photo(
 
     # Cleanup old photo
     if current_user.ProfilePhotoPath:
-        old_path = os.path.join(".", current_user.ProfilePhotoPath.lstrip("/"))
+        from core.config import DATA_DIR
+        old_path = os.path.join(DATA_DIR, current_user.ProfilePhotoPath.lstrip("/"))
         if os.path.exists(old_path):
             try:
                 os.unlink(old_path)
             except Exception as e:
                 logger.error(f"Failed to delete old profile photo: {e}")
 
+    from core.config import DATA_DIR
+    
     file_extension = file.filename.split(".")[-1]
     filename = f"user_{current_user.UserId}.{file_extension}"
-    file_path = f"uploads/profile/{filename}"
+    
+    # Save the file using the absolute persistent path
+    absolute_path = os.path.join(DATA_DIR, "uploads", "profile", filename)
+    
+    # Ensure directory exists just in case
+    os.makedirs(os.path.dirname(absolute_path), exist_ok=True)
 
-    with open(file_path, "wb") as buffer:
+    with open(absolute_path, "wb") as buffer:
         import shutil
         shutil.copyfileobj(file.file, buffer)
 
-    current_user.ProfilePhotoPath = f"/{file_path}"
+    # Database still stores the relative web route path
+    current_user.ProfilePhotoPath = f"/uploads/profile/{filename}"
     db.commit()
     db.refresh(current_user)
     

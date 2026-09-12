@@ -1,4 +1,5 @@
 "use client";
+import { getApiBaseUrl } from "@/lib/api-client";
 
 import React, { useEffect, useState, useCallback } from "react";
 import { fireExitBackupBeacon } from "@/lib/exit-backup";
@@ -49,7 +50,7 @@ export function SessionTimeoutWrapper({ children }: { children: React.ReactNode 
         if (payload.exp) setJwtExp(payload.exp * 1000);
       }
 
-      const res = await fetch("http://127.0.0.1:8000/api/v1/security/settings", {
+      const res = await fetch(`${getApiBaseUrl()}/security/settings`, {
         headers: { "Authorization": `Bearer ${token}` }
       });
       if (res.ok) {

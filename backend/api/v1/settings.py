@@ -14,9 +14,11 @@ from core.logger import logger
 
 router = APIRouter()
 
-UPLOAD_DIR = Path("uploads/logo")
+from core.config import DATA_DIR
+
+UPLOAD_DIR = Path(DATA_DIR) / "uploads" / "logo"
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
-UPLOAD_DIR_BG = Path("uploads/background")
+UPLOAD_DIR_BG = Path(DATA_DIR) / "uploads" / "background"
 UPLOAD_DIR_BG.mkdir(parents=True, exist_ok=True)
 
 ALLOWED_MIME_TYPES = ["image/png", "image/jpeg", "image/webp"]
@@ -145,7 +147,7 @@ def upload_receipt_logo(
         raise HTTPException(status_code=400, detail="File must be an image")
 
     # Ensure upload directory exists
-    upload_dir = Path("uploads/logo")
+    upload_dir = UPLOAD_DIR
     upload_dir.mkdir(parents=True, exist_ok=True)
 
     file_ext = Path(file.filename).suffix
@@ -525,7 +527,8 @@ def upload_login_background(
     file_path = UPLOAD_DIR_BG / filename
     
     if settings.LoginBackgroundPath:
-        old_file_path = Path(settings.LoginBackgroundPath.lstrip("/"))
+        from core.config import DATA_DIR
+        old_file_path = Path(DATA_DIR) / settings.LoginBackgroundPath.lstrip("/")
         if old_file_path.exists() and old_file_path != file_path:
             try:
                 os.unlink(old_file_path)

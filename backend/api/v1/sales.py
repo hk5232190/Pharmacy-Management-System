@@ -470,7 +470,8 @@ def print_thermal_receipt(
             logger.error(f"Physical print failed for {sale.InvoiceNumber}: {e}")
 
         # Save to spooler as backup
-        spooler_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "spooler")
+        from core.config import DATA_DIR
+        spooler_dir = os.path.join(DATA_DIR, "spooler")
         os.makedirs(spooler_dir, exist_ok=True)
         
         filename = f"{sale.InvoiceNumber}.bin"
@@ -901,7 +902,8 @@ def process_sales_return(
             except Exception as print_e:
                 logger.error(f"Physical print failed for return {ret_invoice_no}: {print_e}")
 
-            spooler_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "spooler")
+            from core.config import DATA_DIR
+            spooler_dir = os.path.join(DATA_DIR, "spooler")
             os.makedirs(spooler_dir, exist_ok=True)
             with open(os.path.join(spooler_dir, f"{ret_invoice_no}.bin"), 'wb') as f:
                 f.write(bytes_data)
@@ -1043,7 +1045,8 @@ def print_return_thermal(return_id: int, db: Session = Depends(get_db)):
         except Exception as e:
             logger.error(f"Physical print failed for return {ret.ReturnInvoiceNumber}: {e}")
         
-        spooler_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "spooler")
+        from core.config import DATA_DIR
+        spooler_dir = os.path.join(DATA_DIR, "spooler")
         os.makedirs(spooler_dir, exist_ok=True)
         with open(os.path.join(spooler_dir, f"{ret.ReturnInvoiceNumber}.bin"), 'wb') as f:
             f.write(bytes_data)

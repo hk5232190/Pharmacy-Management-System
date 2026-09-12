@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback, Suspense } from "react";
-import { apiClient } from "@/lib/api-client";
+import { apiClient, getApiBaseUrl } from "@/lib/api-client";
 import { toast } from "sonner";
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -1932,7 +1932,7 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
                 <div className="text-center mb-4 relative z-10">
                   {showLogoOnReceipt && (profile.ReceiptLogoPath || profile.LogoPath) && (
                     <div className="flex justify-center mb-2">
-                      <img src={`http://127.0.0.1:8000${(profile.ReceiptLogoPath || profile.LogoPath)?.startsWith('/') ? (profile.ReceiptLogoPath || profile.LogoPath) : '/' + (profile.ReceiptLogoPath || profile.LogoPath)}`} alt="Logo" className="w-12 h-12 object-contain grayscale" />
+                      <img src={`${getApiBaseUrl().replace("/api/v1","")}${(profile.ReceiptLogoPath || profile.LogoPath)?.startsWith('/') ? (profile.ReceiptLogoPath || profile.LogoPath) : '/' + (profile.ReceiptLogoPath || profile.LogoPath)}`} alt="Logo" className="w-12 h-12 object-contain grayscale" />
                     </div>
                   )}
                   <h2 className="font-bold text-base mb-1 uppercase">{profile.PharmacyName || "PHARMACY NAME"}</h2>

@@ -1,4 +1,5 @@
 "use client";
+import { resolveApiBaseUrl } from "@/lib/api-client";
 
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
@@ -13,15 +14,18 @@ export function StartupProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const initializeApp = async () => {
       try {
-        // Step 1: Check License
-        const licenseRes = await fetch("http://127.0.0.1:8000/api/v1/license/status");
+        // Step 1: Wait for backend to fully start and resolve its port
+        const baseUrl = await resolveApiBaseUrl();
+        
+        // Step 2: Check License
+        const licenseRes = await fetch(`${baseUrl}/license/status`);
         if (!licenseRes.ok) throw new Error("License server error");
         
         const licenseData = await licenseRes.json();
         
         if (licenseData.status !== "Active") {
-          // If not active, redirect to activate, unless we are already there
-          if (pathname !== "/activate") {
+          // If not active, enforce activation unless they are on the login page or activation page
+          if (pathname !== "/activate" && pathname !== "/") {
             router.push("/activate");
           }
           setIsReady(true);
@@ -42,7 +46,7 @@ export function StartupProvider({ children }: { children: React.ReactNode }) {
         }
 
         // Verify token validity
-        const authRes = await fetch("http://127.0.0.1:8000/api/v1/auth/me", {
+        const authRes = await fetch(`${baseUrl}/auth/me`, {
           headers: {
             Authorization: `Bearer ${token}`
           }
@@ -58,7 +62,7 @@ export function StartupProvider({ children }: { children: React.ReactNode }) {
                 return;
               }
               // Fetch SystemPreferences for StartupModule redirection
-              const prefRes = await fetch("http://127.0.0.1:8000/api/v1/settings/appearance");
+              const prefRes = await fetch(`${baseUrl}/settings/appearance`);
               if (prefRes.ok) {
                 const pref = await prefRes.json();
                 if (pref.StartupModule === "POS Terminal") {

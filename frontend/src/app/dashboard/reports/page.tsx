@@ -1,5 +1,6 @@
 "use client";
 
+import { getApiBaseUrl } from "@/lib/api-client";
 import html2canvas from "html2canvas-pro";
 import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
@@ -374,7 +375,7 @@ function ReportsPageInner({
   const exportReport = async (type: 'csv' | 'excel' | 'pdf') => {
     let endpoint = activeTab === 'sales' ? '/reports/sales/export/' + type : activeTab === 'purchases' ? '/reports/purchases/export/' + type : activeTab === 'inventory' ? '/reports/inventory/export/' + type : activeTab === 'financial' ? '/reports/financial/export/' + type : '/reports/medicine/export/' + type;
 
-    let url = `http://127.0.0.1:8000/api/v1${endpoint}`;
+    let url = `${getApiBaseUrl()}${endpoint}`;
 
     let params = `?timeframe=${timeframe}`;
     if (activeTab === 'medicine') {

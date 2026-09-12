@@ -1,4 +1,5 @@
 "use client";
+import { getApiBaseUrl } from "@/lib/api-client";
 
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { Bell, Calendar, User, Search, X, LayoutDashboard, ShoppingCart, Package, TrendingUp, BarChart3, Settings, Pill, Grid2X2, Building2, Truck, Users, Database, Loader2 } from "lucide-react";
@@ -238,7 +239,7 @@ export function Header() {
           <DropdownMenuTrigger className="flex items-center gap-2.5 hover:bg-secondary p-1.5 pr-3 rounded-full transition-colors outline-none focus:ring-2 focus:ring-primary/20">
             <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary border border-primary/20 overflow-hidden">
               {user.profile_photo_path ? (
-                <img src={`http://127.0.0.1:8000${user.profile_photo_path}`} alt="Profile" className="w-full h-full object-cover" />
+                <img src={`${getApiBaseUrl().replace("/api/v1","")}${user.profile_photo_path}`} alt="Profile" className="w-full h-full object-cover" />
               ) : (
                 <span className="text-xs font-bold tracking-wider">{getInitials(user.full_name || user.username || "")}</span>
               )}

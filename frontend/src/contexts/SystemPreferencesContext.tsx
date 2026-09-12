@@ -1,4 +1,5 @@
 "use client";
+import { getApiBaseUrl } from "@/lib/api-client";
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 
@@ -70,8 +71,8 @@ export function SystemPreferencesProvider({ children }: { children: ReactNode })
   const fetchPreferences = async () => {
     try {
       const [appRes, billRes] = await Promise.all([
-        fetch("http://127.0.0.1:8000/api/v1/settings/appearance"),
-        fetch("http://127.0.0.1:8000/api/v1/settings/billing")
+        fetch(`${getApiBaseUrl()}/settings/appearance`),
+        fetch(`${getApiBaseUrl()}/settings/billing`)
       ]);
 
       if (appRes.ok) {

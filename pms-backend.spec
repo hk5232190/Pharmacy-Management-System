@@ -1,0 +1,107 @@
+# -*- mode: python ; coding: utf-8 -*-
+import sys
+import os
+
+block_cipher = None
+
+# Ensure we're in the correct directory
+backend_dir = os.path.abspath('backend')
+
+# Add all backend subdirectories as modules
+hiddenimports = [
+    'uvicorn',
+    'fastapi',
+    'sqlalchemy',
+    'alembic',
+    'sqlite3',
+    'pydantic',
+    'pydantic_settings',
+    'jose',
+    'passlib',
+    'bcrypt',
+    'multipart',
+    'reportlab',
+    'openpyxl',
+    'plyer',
+    'apscheduler',
+    'PIL',
+    'tzlocal',
+    'tzdata',
+    'api.v1',
+    'api.v1.auth',
+    'api.v1.license',
+    'api.v1.category',
+    'api.v1.company',
+    'api.v1.supplier',
+    'api.v1.customer',
+    'api.v1.medicine',
+    'api.v1.purchase',
+    'api.v1.purchase_return',
+    'api.v1.inventory',
+    'api.v1.sales',
+    'api.v1.dashboard',
+    'api.v1.reports',
+    'api.v1.backup',
+    'api.v1.backup_settings',
+    'api.v1.settings',
+    'api.v1.security',
+    'api.v1.about',
+    'api.v1.system',
+    'api.v1.notification',
+    'api.v1.users',
+    'core',
+    'schemas',
+    'utils',
+    'main',
+    'database',
+    'models',
+]
+
+# Include frontend static files, database template, licenses, and keys
+datas = [
+    (os.path.abspath('frontend/out'), 'frontend'),
+    (os.path.abspath('backend/pharma_db.sqlite'), 'data_template'),
+    (os.path.abspath('backend/licenses'), 'data_template/licenses'),
+    (os.path.abspath('backend/utils/keys'), 'data_template/keys'),
+    (os.path.abspath('backend/.env'), 'data_template'),
+]
+
+a = Analysis(
+    [os.path.abspath('backend/launcher.py')],
+    pathex=[backend_dir],
+    binaries=[],
+    datas=datas,
+    hiddenimports=hiddenimports,
+    hookspath=[],
+    hooksconfig={},
+    runtime_hooks=[],
+    excludes=[],
+    win_no_prefer_redirects=False,
+    win_private_assemblies=False,
+    cipher=block_cipher,
+    noarchive=False,
+)
+pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
+
+exe = EXE(
+    pyz,
+    a.scripts,
+    a.binaries,
+    a.zipfiles,
+    a.datas,
+    [],
+    name='pms-backend-x86_64-pc-windows-msvc',
+    debug=False,
+    bootloader_ignore_signals=False,
+    strip=False,
+    upx=True,
+    upx_exclude=[],
+    runtime_tmpdir=None,
+    console=True,
+    disable_windowed_traceback=False,
+    argv_emulation=False,
+    target_arch=None,
+    codesign_identity=None,
+    entitlements_file=None,
+    icon=os.path.abspath('frontend/src-tauri/icons/icon.ico')
+)

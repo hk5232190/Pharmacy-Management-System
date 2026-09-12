@@ -1,4 +1,5 @@
 "use client";
+import { getApiBaseUrl } from "@/lib/api-client";
 
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
@@ -56,7 +57,7 @@ export default function GeneralSettingsPage() {
 
   const fetchSettings = async () => {
     try {
-      const profileRes = await fetch("http://127.0.0.1:8000/api/v1/settings/profile", { headers: getAuthHeaders() });
+      const profileRes = await fetch(`${getApiBaseUrl()}/settings/profile`, { headers: getAuthHeaders() });
       if (profileRes.ok) {
         const pData = await profileRes.json();
         setProfile({ PharmacyName: pData.PharmacyName, LogoPath: pData.LogoPath });
@@ -71,7 +72,7 @@ export default function GeneralSettingsPage() {
   const handleSaveProfileText = async () => {
     setIsSavingProfile(true);
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/v1/settings/profile", {
+      const res = await fetch(`${getApiBaseUrl()}/settings/profile`, {
         method: "PUT",
         headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify({ PharmacyName: profile.PharmacyName })
@@ -129,7 +130,7 @@ export default function GeneralSettingsPage() {
     formData.append("file", logoFile);
 
     try {
-      const res = await fetch(`http://127.0.0.1:8000/api/v1/settings/profile/logo`, {
+      const res = await fetch(`${getApiBaseUrl()}/settings/profile/logo`, {
         method: "POST",
         headers: getAuthHeaders(),
         body: formData,
@@ -154,7 +155,7 @@ export default function GeneralSettingsPage() {
 
   const removeFile = async () => {
     try {
-      const res = await fetch(`http://127.0.0.1:8000/api/v1/settings/profile/logo`, {
+      const res = await fetch(`${getApiBaseUrl()}/settings/profile/logo`, {
         method: "DELETE",
         headers: getAuthHeaders(),
       });
@@ -215,7 +216,7 @@ export default function GeneralSettingsPage() {
                 <div className="w-36 h-36 shrink-0 border-2 border-dashed border-indigo-200 dark:border-slate-700 rounded-[2rem] flex items-center justify-center bg-gradient-to-br from-indigo-50/50 to-white dark:from-transparent dark:to-transparent overflow-hidden relative group transition-colors hover:border-indigo-400 dark:hover:border-slate-500 shadow-sm">
                   {(logoPreview || profile.LogoPath) ? (
                     <img 
-                      src={logoPreview || `http://127.0.0.1:8000${profile.LogoPath}?t=${timestamp}`} 
+                      src={logoPreview || `${getApiBaseUrl().replace("/api/v1","")}${profile.LogoPath}?t=${timestamp}`} 
                       alt="Logo Preview" 
                       className="w-full h-full object-contain p-3 group-hover:scale-105 transition-transform duration-500"
                     />

@@ -1,4 +1,5 @@
 "use client";
+import { getApiBaseUrl } from "@/lib/api-client";
 
 import { useState, useEffect } from "react";
 import { 
@@ -170,7 +171,7 @@ function BackupRestorePageInner({
     setIsLoadingHistory(true);
     try {
       const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
-      const res = await fetch("http://127.0.0.1:8000/api/v1/backup/history", {
+      const res = await fetch(`${getApiBaseUrl()}/backup/history`, {
         headers: { "Authorization": `Bearer ${token}` }
       });
       if (res.ok) {
@@ -187,7 +188,7 @@ function BackupRestorePageInner({
   const fetchSettings = async () => {
     try {
       const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
-      const res = await fetch("http://127.0.0.1:8000/api/v1/backup-settings", {
+      const res = await fetch(`${getApiBaseUrl()}/backup-settings`, {
         headers: { "Authorization": `Bearer ${token}` }
       });
       if (res.ok) {
@@ -202,7 +203,7 @@ function BackupRestorePageInner({
   const fetchDbInfo = async () => {
     try {
       const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
-      const res = await fetch("http://127.0.0.1:8000/api/v1/backup/db-info", {
+      const res = await fetch(`${getApiBaseUrl()}/backup/db-info`, {
         headers: { "Authorization": `Bearer ${token}` }
       });
       if (res.ok) {
@@ -218,7 +219,7 @@ function BackupRestorePageInner({
   const autoCheckHealth = async () => {
     try {
       const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
-      const res = await fetch("http://127.0.0.1:8000/api/v1/backup/db-health", {
+      const res = await fetch(`${getApiBaseUrl()}/backup/db-health`, {
         headers: { "Authorization": `Bearer ${token}` }
       });
       if (res.ok) {
@@ -232,7 +233,7 @@ function BackupRestorePageInner({
 
   const fetchDiskSpace = async (path: string) => {
     try {
-      const res = await fetch(`http://127.0.0.1:8000/api/v1/backup/disk-space?path=${encodeURIComponent(path)}`);
+      const res = await fetch(`${getApiBaseUrl()}/backup/disk-space?path=${encodeURIComponent(path)}`);
       if (res.ok) {
         const data = await res.json();
         if (data.free_readable) setDiskSpace(data.free_readable);
@@ -246,7 +247,7 @@ function BackupRestorePageInner({
     setIsCheckingHealth(true);
     try {
       const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
-      const res = await fetch("http://127.0.0.1:8000/api/v1/backup/db-health", {
+      const res = await fetch(`${getApiBaseUrl()}/backup/db-health`, {
         headers: { "Authorization": `Bearer ${token}` }
       });
       if (res.ok) {
@@ -266,7 +267,7 @@ function BackupRestorePageInner({
     setIsSavingSettings(true);
     try {
       const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
-      const res = await fetch("http://127.0.0.1:8000/api/v1/backup-settings", {
+      const res = await fetch(`${getApiBaseUrl()}/backup-settings`, {
         method: "PUT",
         headers: { 
           "Authorization": `Bearer ${token}`,
@@ -305,7 +306,7 @@ function BackupRestorePageInner({
 
     try {
       const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
-      const res = await fetch("http://127.0.0.1:8000/api/v1/backup/manual", {
+      const res = await fetch(`${getApiBaseUrl()}/backup/manual`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -358,7 +359,7 @@ function BackupRestorePageInner({
     try {
       const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
       
-      const res = await fetch("http://127.0.0.1:8000/api/v1/backup/restore", {
+      const res = await fetch(`${getApiBaseUrl()}/backup/restore`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -393,7 +394,7 @@ function BackupRestorePageInner({
   const handleBrowseFolder = async () => {
     try {
       const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
-      const res = await fetch("http://127.0.0.1:8000/api/v1/backup/browse-folder", {
+      const res = await fetch(`${getApiBaseUrl()}/backup/browse-folder`, {
         headers: { "Authorization": `Bearer ${token}` }
       });
       if (!res.ok) throw new Error("Request failed");
@@ -409,7 +410,7 @@ function BackupRestorePageInner({
   const handleBrowseSettingsFolder = async () => {
     try {
       const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
-      const res = await fetch("http://127.0.0.1:8000/api/v1/backup/browse-folder", {
+      const res = await fetch(`${getApiBaseUrl()}/backup/browse-folder`, {
         headers: { "Authorization": `Bearer ${token}` }
       });
       if (!res.ok) throw new Error("Request failed");
@@ -425,7 +426,7 @@ function BackupRestorePageInner({
   const handleBrowseFile = async () => {
     try {
       const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
-      const res = await fetch("http://127.0.0.1:8000/api/v1/backup/browse-file", {
+      const res = await fetch(`${getApiBaseUrl()}/backup/browse-file`, {
         headers: { "Authorization": `Bearer ${token}` }
       });
       if (!res.ok) throw new Error("Request failed");
@@ -443,7 +444,7 @@ function BackupRestorePageInner({
     
     try {
       const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
-      const res = await fetch(`http://127.0.0.1:8000/api/v1/backup/history/${id}`, {
+      const res = await fetch(`${getApiBaseUrl()}/backup/history/${id}`, {
         method: "DELETE",
         headers: { "Authorization": `Bearer ${token}` }
       });
@@ -465,7 +466,7 @@ function BackupRestorePageInner({
     setIsVerifyModalOpen(true);
     try {
       const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
-      const res = await fetch(`http://127.0.0.1:8000/api/v1/backup/history/${id}/verify`, {
+      const res = await fetch(`${getApiBaseUrl()}/backup/history/${id}/verify`, {
         method: "POST",
         headers: { "Authorization": `Bearer ${token}` }
       });
@@ -487,7 +488,7 @@ function BackupRestorePageInner({
   const handleOpenFolder = async (id: number) => {
     try {
       const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
-      const res = await fetch(`http://127.0.0.1:8000/api/v1/backup/history/${id}/open-folder`, {
+      const res = await fetch(`${getApiBaseUrl()}/backup/history/${id}/open-folder`, {
         method: "POST",
         headers: { "Authorization": `Bearer ${token}` }
       });

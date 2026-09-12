@@ -1,3 +1,4 @@
+import { getApiBaseUrl } from "@/lib/api-client";
 /**
  * exit-backup.ts
  * Shared utility for triggering backup-on-exit calls.
@@ -6,7 +7,7 @@
  * fireExitBackupBeacon   - keepalive fire-and-forget, used in window beforeunload
  */
 
-const BACKUP_ON_EXIT_URL = 'http://127.0.0.1:8000/api/v1/backup/backup-on-exit';
+const BACKUP_ON_EXIT_URL = `${getApiBaseUrl()}/backup/backup-on-exit`;
 
 export interface ExitBackupResult {
   success: boolean;

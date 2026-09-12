@@ -1,4 +1,5 @@
 "use client";
+import { getApiBaseUrl } from "@/lib/api-client";
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -70,9 +71,9 @@ export default function PrinterSettingsPage() {
   const fetchSettings = async () => {
     try {
       const [printerRes, profileRes, billingRes] = await Promise.all([
-        fetch("http://127.0.0.1:8000/api/v1/settings/printer"),
-        fetch("http://127.0.0.1:8000/api/v1/settings/pharmacy-profile"),
-        fetch("http://127.0.0.1:8000/api/v1/settings/billing")
+        fetch(`${getApiBaseUrl()}/settings/printer`),
+        fetch(`${getApiBaseUrl()}/settings/pharmacy-profile`),
+        fetch(`${getApiBaseUrl()}/settings/billing`)
       ]);
       
       if (printerRes.ok) {
@@ -103,7 +104,7 @@ export default function PrinterSettingsPage() {
   const fetchOsPrinters = async () => {
     setIsLoadingPrinters(true);
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/v1/settings/printer/list");
+      const res = await fetch(`${getApiBaseUrl()}/settings/printer/list`);
       if (res.ok) {
         const data = await res.json();
         setOsPrinters(data.data || []);
@@ -119,7 +120,7 @@ export default function PrinterSettingsPage() {
     setIsSaving(true);
     try {
       const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token") || "";
-      const res = await fetch("http://127.0.0.1:8000/api/v1/settings/printer", {
+      const res = await fetch(`${getApiBaseUrl()}/settings/printer`, {
         method: "PUT",
         headers: { 
           "Content-Type": "application/json",
@@ -143,7 +144,7 @@ export default function PrinterSettingsPage() {
     setIsTesting(true);
     try {
       const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token") || "";
-      const res = await fetch("http://127.0.0.1:8000/api/v1/settings/printer/test", {
+      const res = await fetch(`${getApiBaseUrl()}/settings/printer/test`, {
         method: "POST",
         headers: { "Authorization": `Bearer ${token}` }
       });
@@ -164,7 +165,7 @@ export default function PrinterSettingsPage() {
     setIsTestingDrawer(true);
     try {
       const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token") || "";
-      const res = await fetch("http://127.0.0.1:8000/api/v1/settings/printer/test-drawer", {
+      const res = await fetch(`${getApiBaseUrl()}/settings/printer/test-drawer`, {
         method: "POST",
         headers: { "Authorization": `Bearer ${token}` }
       });

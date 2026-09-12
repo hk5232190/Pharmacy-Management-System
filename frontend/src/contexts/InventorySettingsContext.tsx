@@ -1,4 +1,5 @@
 "use client";
+import { getApiBaseUrl } from "@/lib/api-client";
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 
@@ -43,7 +44,7 @@ export function InventorySettingsProvider({ children }: { children: ReactNode })
 
   const fetchSettings = async () => {
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/v1/settings/inventory");
+      const res = await fetch(`${getApiBaseUrl()}/settings/inventory`);
       if (res.ok) {
         const data = await res.json();
         setInventorySettings({ ...DEFAULT_SETTINGS, ...data });

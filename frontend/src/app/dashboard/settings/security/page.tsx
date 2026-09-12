@@ -1,4 +1,5 @@
 "use client";
+import { getApiBaseUrl } from "@/lib/api-client";
 
 import { useState, useEffect, useCallback } from "react";
 import {
@@ -22,7 +23,7 @@ import {
 import { toast } from "sonner";
 import { SaveButton } from "@/components/ui/save-button";
 
-const API = "http://127.0.0.1:8000/api/v1";
+const API = getApiBaseUrl();
 
 function getToken() {
   return localStorage.getItem("access_token") || sessionStorage.getItem("access_token") || "";

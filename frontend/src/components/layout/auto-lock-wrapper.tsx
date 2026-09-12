@@ -1,4 +1,5 @@
 "use client";
+import { getApiBaseUrl } from "@/lib/api-client";
 
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -23,7 +24,7 @@ export function AutoLockWrapper({ children }: { children: React.ReactNode }) {
       try {
         const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
         if (!token) return;
-        const res = await fetch("http://127.0.0.1:8000/api/v1/security/settings", {
+        const res = await fetch(`${getApiBaseUrl()}/security/settings`, {
           headers: { "Authorization": `Bearer ${token}` }
         });
         if (res.ok) {
@@ -42,7 +43,7 @@ export function AutoLockWrapper({ children }: { children: React.ReactNode }) {
     try {
       const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
       if (!token) return;
-      await fetch("http://127.0.0.1:8000/api/v1/security/audit-log", {
+      await fetch(`${getApiBaseUrl()}/security/audit-log`, {
         method: "POST",
         headers: { 
           "Authorization": `Bearer ${token}`,
@@ -172,7 +173,7 @@ export function AutoLockWrapper({ children }: { children: React.ReactNode }) {
       formData.append("username", user.username);
       formData.append("password", password);
 
-      const res = await fetch("http://127.0.0.1:8000/api/v1/auth/login", {
+      const res = await fetch(`${getApiBaseUrl()}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: formData.toString(),
@@ -216,7 +217,7 @@ export function AutoLockWrapper({ children }: { children: React.ReactNode }) {
 
             <div className="relative z-10 w-24 h-24 rounded-full flex items-center justify-center mb-6 ring-4 ring-slate-50 dark:ring-slate-900 shadow-xl overflow-hidden bg-gradient-to-tr from-slate-100 to-slate-50 dark:from-slate-800 dark:to-slate-900">
               {user.profile_photo_path ? (
-                <img src={`http://127.0.0.1:8000${user.profile_photo_path}`} alt="Profile" className="w-full h-full object-cover" />
+                <img src={`${getApiBaseUrl().replace("/api/v1","")}${user.profile_photo_path}`} alt="Profile" className="w-full h-full object-cover" />
               ) : (
                 <Lock className="w-10 h-10 text-slate-400 dark:text-slate-500" />
               )}
