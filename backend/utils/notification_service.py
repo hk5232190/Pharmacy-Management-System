@@ -294,7 +294,7 @@ def sync_system_notifications(db: Session) -> dict:
                             Notification(
                                 Type="BACKUP_SUCCESS",
                                 Title=f"Backup Successful ({bkp.BackupType})",
-                                Message=f"Backup '{bkp.FileName}' ({bkp.FileSize}) was created successfully.",
+                                Message=f"Backup '{bkp.BackupName}' ({bkp.SizeBytes} bytes) was created successfully.",
                                 Priority="Low",
                                 RelatedModule="backup",
                                 RelatedRecordId=str(bkp.BackupId),
@@ -309,7 +309,7 @@ def sync_system_notifications(db: Session) -> dict:
                             Notification(
                                 Type="BACKUP_FAILED",
                                 Title=f"Backup Failed ({bkp.BackupType})",
-                                Message=f"Automatic or manual backup '{bkp.FileName}' failed to complete.",
+                                Message=f"Automatic or manual backup '{bkp.BackupName}' failed to complete.",
                                 Priority="High",
                                 RelatedModule="backup",
                                 RelatedRecordId=str(bkp.BackupId),

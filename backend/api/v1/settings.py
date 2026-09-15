@@ -218,7 +218,8 @@ def get_billing_settings(db: Session = Depends(get_db)) -> Any:
 @router.put("/billing", response_model=BillingSettingsResponse)
 def update_billing_settings(
     settings_in: BillingSettingsUpdate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_admin_user)
 ) -> Any:
     """
     Update the billing & POS settings.
@@ -252,7 +253,8 @@ def get_inventory_settings(db: Session = Depends(get_db)) -> Any:
 @router.put("/inventory", response_model=InventorySettingsResponse)
 def update_inventory_settings(
     settings_in: InventorySettingsUpdate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_admin_user)
 ) -> Any:
     """
     Update the inventory & medicine settings.
@@ -287,7 +289,8 @@ def get_printer_settings(db: Session = Depends(get_db)) -> Any:
 @router.put("/printer", response_model=PrinterSettingsResponse)
 def update_printer_settings(
     settings_in: PrinterSettingsUpdate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_admin_user)
 ) -> Any:
     """
     Update the printer settings.

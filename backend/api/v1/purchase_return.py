@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import desc
 from typing import List
 from decimal import Decimal
+from datetime import date, timedelta
 
 from models import PurchaseReturn, PurchaseReturnItem, StockBatch, Supplier, Medicine, Purchase, PurchaseItem, InventorySettings
 from schemas.purchase_return import PurchaseReturnCreate, PurchaseReturnResponse
@@ -54,6 +55,10 @@ def create_purchase_return(
                 db.rollback()
                 raise HTTPException(status_code=404, detail=f"Medicine ID {item.MedicineId} not found")
                 
+            if item.ReturnQuantity <= 0:
+                db.rollback()
+                raise HTTPException(status_code=400, detail=f"Return quantity must be positive for {medicine.BrandName}.")
+                
             new_item = PurchaseReturnItem(
                 ReturnId=new_return.ReturnId,
                 MedicineId=item.MedicineId,
@@ -70,6 +75,9 @@ def create_purchase_return(
                 PurchaseItem.MedicineId == item.MedicineId,
                 PurchaseItem.BatchCode == item.BatchCode
             ).first()
+            if purchase_item and (purchase_item.ReturnedQuantity + item.ReturnQuantity) > purchase_item.Quantity:
+                db.rollback()
+                raise HTTPException(status_code=400, detail=f"Cannot return more than purchased for {medicine.BrandName} (Batch {item.BatchCode}). Already returned {purchase_item.ReturnedQuantity} of {purchase_item.Quantity}.")
             if purchase_item:
                 purchase_item.ReturnedQuantity += item.ReturnQuantity
             
@@ -85,14 +93,15 @@ def create_purchase_return(
                     db.rollback()
                     raise HTTPException(status_code=400, detail=f"Batch {item.BatchCode} for medicine {medicine.BrandName} not found in stock.")
                 else:
-                    # Create dummy negative batch if allowed
+                    # Create dummy negative batch if allowed (ExpiryDate is NOT NULL in the schema)
+                    fallback_expiry = purchase_item.ExpiryDate if (purchase_item and purchase_item.ExpiryDate) else (date.today() + timedelta(days=365))
                     existing_batch = StockBatch(
                         MedicineId=item.MedicineId,
                         BatchCode=item.BatchCode,
                         Quantity=0,
                         CostPrice=0,
                         SellingPrice=0,
-                        ExpiryDate=None
+                        ExpiryDate=fallback_expiry
                     )
                     db.add(existing_batch)
                     db.flush()

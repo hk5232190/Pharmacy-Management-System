@@ -484,7 +484,10 @@ def print_thermal_receipt(
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/kpi", response_model=BaseResponse[dict], summary="Get Sales KPIs")
-def get_sales_kpi(db: Session = Depends(get_db)):
+def get_sales_kpi(
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
     try:
         from datetime import datetime, timezone
         from models import SaleItem
@@ -969,7 +972,11 @@ def get_return_history(
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/return/{return_id}", response_model=BaseResponse[dict], summary="Get return details")
-def get_return_details(return_id: int, db: Session = Depends(get_db)):
+def get_return_details(
+    return_id: int,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
     try:
         ret = db.query(SaleReturn).filter(SaleReturn.ReturnId == return_id).first()
         if not ret:
@@ -1002,7 +1009,11 @@ def get_return_details(return_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/return/{return_id}/print-thermal", response_model=BaseResponse[dict], summary="Print return receipt")
-def print_return_thermal(return_id: int, db: Session = Depends(get_db)):
+def print_return_thermal(
+    return_id: int,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
     try:
         ret = db.query(SaleReturn).filter(SaleReturn.ReturnId == return_id).first()
         if not ret:

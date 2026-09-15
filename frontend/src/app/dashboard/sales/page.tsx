@@ -202,6 +202,12 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
 
   const [isReprintMode, setIsReprintMode] = useState(false);
 
+  // --- In-flight guards (prevent duplicate sale/return submissions via double-click or F10) ---
+  const completingSaleRef = useRef(false);
+  const submittingReturnRef = useRef(false);
+  const [isCompletingSale, setIsCompletingSale] = useState(false);
+  const [isSubmittingReturn, setIsSubmittingReturn] = useState(false);
+
   // --- KPIs ---
   const [kpis, setKpis] = useState({
     todaysSales: 0,
@@ -501,6 +507,7 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
 
   const handleCompleteSale = async (skipPinCheck: boolean | React.MouseEvent = false) => {
     const isSkip = typeof skipPinCheck === 'boolean' ? skipPinCheck : false;
+    if (completingSaleRef.current) return;
     if (cart.length === 0) return;
 
     // Auto-fill exact amount if user didn't enter anything for non-credit sales
@@ -524,6 +531,8 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
     }
 
     try {
+      completingSaleRef.current = true;
+      setIsCompletingSale(true);
       const payload = {
         CustomerId: selectedCustomerId === 'walkin' ? null : parseInt(selectedCustomerId),
         SubTotal: subtotal,
@@ -572,6 +581,9 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
       }
     } catch (err: any) {
       toast.error(err.message || "An error occurred during checkout");
+    } finally {
+      completingSaleRef.current = false;
+      setIsCompletingSale(false);
     }
   };
 
@@ -790,6 +802,7 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
   }, 0);
 
   const handleSubmitReturn = async () => {
+    if (submittingReturnRef.current) return;
     const itemsToReturn = returnItems.filter(i => i.ReturnQuantity > 0);
     if (itemsToReturn.length === 0) return toast.error("Select at least one item to return");
 
@@ -800,6 +813,8 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
     const combinedReason = reasons.join('; ');
 
     try {
+      submittingReturnRef.current = true;
+      setIsSubmittingReturn(true);
       const payload = {
         InvoiceNumber: returnInvoiceData.InvoiceNumber,
         Reason: combinedReason,
@@ -823,6 +838,9 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
       }
     } catch (err: any) {
       toast.error(err.message || "Failed to process return");
+    } finally {
+      submittingReturnRef.current = false;
+      setIsSubmittingReturn(false);
     }
   };
 
@@ -1469,7 +1487,7 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
                 </div>
 
                 <div className="mt-6 space-y-3">
-                  <Button id="complete-sale-btn" onClick={handleCompleteSale} className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white text-base font-bold shadow-lg shadow-blue-500/20" disabled={cart.length === 0}>
+                  <Button id="complete-sale-btn" onClick={handleCompleteSale} className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white text-base font-bold shadow-lg shadow-blue-500/20" disabled={cart.length === 0 || isCompletingSale}>
                     Complete Sale <ArrowRight className="ml-2 w-5 h-5" />
                   </Button>
                   <Button variant="outline" onClick={() => { toast("Sale held temporarily. Cart preserved."); }} className="w-full h-11 border-blue-200 text-blue-600 hover:bg-blue-50 dark:border-blue-900/50 dark:text-blue-400 font-medium">
@@ -1621,7 +1639,7 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
                       </div>
                     )}
                   </div>
-                  <Button onClick={handleSubmitReturn} size="lg" className="bg-rose-600 hover:bg-rose-700 text-white shadow-lg px-8" disabled={totalRefundPreview === 0}>
+                  <Button onClick={handleSubmitReturn} size="lg" className="bg-rose-600 hover:bg-rose-700 text-white shadow-lg px-8" disabled={totalRefundPreview === 0 || isSubmittingReturn}>
                     <Printer className="mr-2 w-4 h-4" /> Process Return & Print Slip <ArrowRight className="ml-2 w-4 h-4" />
                   </Button>
                 </div>

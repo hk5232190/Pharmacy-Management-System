@@ -269,6 +269,28 @@ def get_database_health(db: Session = Depends(get_db), current_user: User = Depe
     except Exception as e:
         return DatabaseHealthResponse(status="Error", message=f"Failed to run integrity check: {str(e)}")
 
+@router.get("/disk-space")
+def get_disk_space(path: str = ""):
+    """Return free disk space (in bytes and human-readable) for the given folder."""
+    try:
+        if not path:
+            usage = shutil.disk_usage(os.getcwd())
+        else:
+            target = Path(path).resolve()
+            target.mkdir(parents=True, exist_ok=True)
+            usage = shutil.disk_usage(target)
+        free = usage.free
+        # Human-readable formatting (B/KB/MB/GB/TB)
+        size = float(free)
+        for unit in ["B", "KB", "MB", "GB", "TB"]:
+            if size < 1024 or unit == "TB":
+                break
+            size /= 1024
+        readable = f"{size:.2f} {unit}"
+        return {"free_bytes": free, "free_readable": readable}
+    except Exception:
+        return {"free_bytes": None, "free_readable": None}
+
 @router.post("/manual", response_model=BackupResponse)
 def create_manual_backup(
     req: BackupRequest,

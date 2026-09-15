@@ -75,9 +75,10 @@ export default function BillingSettingsPage() {
   const handleSave = async () => {
     setIsSaving(true);
     try {
+      const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token") || "";
       const res = await fetch(`${getApiBaseUrl()}/settings/billing`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
         body: JSON.stringify(settings)
       });
       if (res.ok) {

@@ -233,7 +233,10 @@ function BackupRestorePageInner({
 
   const fetchDiskSpace = async (path: string) => {
     try {
-      const res = await fetch(`${getApiBaseUrl()}/backup/disk-space?path=${encodeURIComponent(path)}`);
+      const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
+      const res = await fetch(`${getApiBaseUrl()}/backup/disk-space?path=${encodeURIComponent(path)}`, {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
       if (res.ok) {
         const data = await res.json();
         if (data.free_readable) setDiskSpace(data.free_readable);

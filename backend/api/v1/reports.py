@@ -1285,31 +1285,31 @@ def export_medicine_report_excel(
     ws.title = f"Medicine {report_type.capitalize()} Report"
     
     if report_type == 'expiry':
-        headers = ['Medicine ID', 'Brand Name', 'Batch Number', 'Stock Qty', 'Expiry Date', 'Days to Expire', 'Risk Level']
+        headers = ['Brand Name', 'Batch Number', 'Stock Qty', 'Expiry Date', 'Days to Expire', 'Status']
     elif report_type == 'low_stock':
-        headers = ['Medicine ID', 'Brand Name', 'Current Stock', 'Min Stock Level', 'Suggested Reorder Qty', 'Status']
+        headers = ['Brand Name', 'Current Stock', 'Min Stock Level', 'Suggested Reorder Qty', 'Status']
     else:
-        headers = ['Medicine ID', 'Brand Name', 'Total Qty Sold', 'Total Revenue', 'Avg Daily Sales', 'Current Stock', 'Classification']
-        
+        headers = ['Brand Name', 'Total Qty Sold', 'Total Revenue', 'Avg Daily Sales', 'Classification']
+
     ws.append(headers)
     for cell in ws[1]:
         cell.font = Font(bold=True)
         cell.fill = PatternFill(start_color="DDDDDD", end_color="DDDDDD", fill_type="solid")
-    
+
     if report_type == 'expiry':
         items = report_data.expiry_items
     elif report_type == 'low_stock':
         items = report_data.low_stock_items
     else:
         items = report_data.movement_items
-        
+
     for t in items:
         if report_type == 'expiry':
-            ws.append([t.MedicineId, t.MedicineName, getattr(t, 'BatchNumber', 'N/A'), getattr(t, 'StockQuantity', 0), getattr(t, 'ExpiryDate', '').strftime("%Y-%m-%d") if getattr(t, 'ExpiryDate', None) else 'N/A', getattr(t, 'DaysToExpiry', 0), getattr(t, 'RiskLevel', 'Unknown')])
+            ws.append([t.MedicineName, t.BatchCode, t.Quantity, t.ExpiryDate.strftime("%Y-%m-%d") if t.ExpiryDate else 'N/A', t.DaysToExpiry, t.Status])
         elif report_type == 'low_stock':
-            ws.append([getattr(t, 'MedicineId', 'N/A'), t.MedicineName, getattr(t, 'CurrentStock', 0), getattr(t, 'ReorderLevel', 0), getattr(t, 'SuggestedReorderQty', 0), 'Low Stock'])
+            ws.append([t.MedicineName, t.CurrentStock, t.ReorderLevel, t.SuggestedReorderQty, 'Low Stock'])
         else:
-            ws.append([getattr(t, 'MedicineId', 'N/A'), t.MedicineName, getattr(t, 'SoldQuantity', 0), round(getattr(t, 'Revenue', 0.0), 2), round(getattr(t, 'SalesVelocity', 0.0), 2), 0, getattr(t, 'Classification', 'Unknown')])
+            ws.append([t.MedicineName, t.SoldQuantity, round(t.Revenue, 2), round(t.SalesVelocity, 2), t.Classification])
             
     for col in ws.columns:
         max_length = 0
@@ -1839,7 +1839,7 @@ def export_financial_report_csv(
     writer.writerow(['Total Revenue', round(report_data.summary.TotalRevenue, 2)])
     writer.writerow(['Total COGS', round(report_data.summary.TotalCOGS, 2)])
     writer.writerow(['Gross Profit', round(report_data.summary.GrossProfit, 2)])
-    writer.writerow(['Operating Expenses', round(report_data.summary.OperatingExpenses, 2)])
+    writer.writerow(['Operating Expenses', round(report_data.summary.TotalExpenses, 2)])
     writer.writerow(['Net Profit', round(report_data.summary.NetProfit, 2)])
     writer.writerow(['Profit Margin', f'{round(report_data.summary.ProfitMargin, 2)}%'])
     
