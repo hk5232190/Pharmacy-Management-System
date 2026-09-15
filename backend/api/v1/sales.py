@@ -409,6 +409,8 @@ def print_thermal_receipt(
         
         bytes_data += f"Date: {date_str}\n".encode()
         bytes_data += f"Time: {time_str}\n".encode()
+        customer_name = sale.customer.Name if sale.customer else "Walk-in Customer"
+        bytes_data += f"Customer: {customer_name}\n".encode()
         bytes_data += b"------------------------------------------\n"
         
         # Table Header

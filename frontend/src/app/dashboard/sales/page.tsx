@@ -126,6 +126,9 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
   const [discountEnabled, setDiscountEnabled] = useState(false);
   const [customers, setCustomers] = useState<any[]>([]);
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>("walkin");
+  const [customerSearchQuery, setCustomerSearchQuery] = useState("");
+  const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
+  const customerSearchInputRef = useRef<HTMLInputElement | null>(null);
   const [salesperson, setSalesperson] = useState("");
 
   const [isAdminPinModalOpen, setIsAdminPinModalOpen] = useState(false);
@@ -159,6 +162,10 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
       setAddingCustomer(false);
     }
   };
+
+  const selectedCustomerName = selectedCustomerId === "walkin"
+    ? "Walk-in Customer"
+    : (customers.find((c: any) => String(c.CustomerId) === selectedCustomerId)?.Name ?? "Walk-in Customer");
 
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<ProductSearchResponse[]>([]);
@@ -563,6 +570,7 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
           SalesId: res.data.SalesId,
           Date: `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')} ${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`,
           Cashier: salesperson,
+          CustomerName: selectedCustomerName,
           Items: cart,
           SubTotal: subtotal,
           Discount: totalDiscount,
@@ -574,6 +582,8 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
 
         setCart([]);
         setPaidAmount(0);
+        setSelectedCustomerId("walkin");
+        setCustomerSearchQuery("");
         fetchInitData(); // get next invoice number
         fetchKpis(); // update KPIs
       } else {
@@ -1065,6 +1075,7 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
           SalesId: res.data.SalesId,
           Date: res.data.TransactionDate,
           Cashier: cashierName,
+          CustomerName: res.data.CustomerName || "Walk-in Customer",
           Items: res.data.Items.map((i: any) => ({
             id: i.SalesItemId,
             MedicineName: i.MedicineName,
@@ -1096,6 +1107,7 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
           SalesId: res.data.SalesId,
           Date: res.data.TransactionDate,
           Cashier: cashierName,
+          CustomerName: res.data.CustomerName || "Walk-in Customer",
           Items: res.data.Items.map((i: any) => ({
             id: i.SalesItemId,
             MedicineName: i.MedicineName,
@@ -1227,6 +1239,139 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
 
             {/* Middle Column (Search & Cart) */}
             <div className="lg:col-span-9 space-y-6 flex flex-col">
+
+              {/* ── 1. Select Customer ── */}
+              <div className="bg-white dark:bg-card rounded-xl border border-border shadow-sm p-4 relative z-30">
+                <h3 className="font-semibold text-foreground mb-3 flex items-center justify-between">
+                  <span>1. Select Customer</span>
+                  {selectedCustomerId !== "walkin" && (
+                    <button
+                      type="button"
+                      onClick={() => { setSelectedCustomerId("walkin"); setCustomerSearchQuery(""); setShowCustomerDropdown(false); }}
+                      className="text-xs text-muted-foreground hover:text-rose-500 transition-colors"
+                    >
+                      ✕ Clear
+                    </button>
+                  )}
+                </h3>
+                <div className="relative">
+                  <div className={cn(
+                    "flex items-center gap-2 rounded-lg border transition-all",
+                    showCustomerDropdown ? "border-primary ring-1 ring-primary/30" : "border-input",
+                    selectedCustomerId !== "walkin" && !showCustomerDropdown
+                      ? "bg-blue-50/50 dark:bg-blue-900/10 border-blue-200 dark:border-blue-700"
+                      : ""
+                  )}>
+                    <User className="w-4 h-4 text-muted-foreground ml-3 shrink-0" />
+                    <input
+                      id="customer-select"
+                      ref={customerSearchInputRef}
+                      type="text"
+                      className={cn(
+                        "flex-1 bg-transparent border-none outline-none text-sm py-2.5 pr-2 text-foreground placeholder:text-muted-foreground min-w-0",
+                        !showCustomerDropdown && "cursor-pointer select-none"
+                      )}
+                      placeholder="Walk-in Customer"
+                      value={showCustomerDropdown ? customerSearchQuery : (selectedCustomerId === "walkin" ? "Walk-in Customer" : selectedCustomerName)}
+                      readOnly={!showCustomerDropdown}
+                      onFocus={() => { setShowCustomerDropdown(true); setCustomerSearchQuery(""); }}
+                      onBlur={() => setTimeout(() => setShowCustomerDropdown(false), 180)}
+                      onChange={e => setCustomerSearchQuery(e.target.value)}
+                      onKeyDown={e => { if (e.key === "Escape") { setShowCustomerDropdown(false); setCustomerSearchQuery(""); (e.target as HTMLInputElement).blur(); } }}
+                    />
+                    {selectedCustomerId !== "walkin" && !showCustomerDropdown && (
+                      <span className="mr-2 inline-flex items-center gap-1 bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-[11px] font-semibold px-2 py-0.5 rounded-full border border-blue-200 dark:border-blue-700 shrink-0">
+                        <User className="w-2.5 h-2.5" />
+                        Registered
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Customer dropdown */}
+                  {showCustomerDropdown && (
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-card border border-border rounded-lg shadow-xl overflow-hidden z-50">
+                      {/* Walk-in option */}
+                      <div
+                        className={cn(
+                          "flex items-center gap-3 px-3 py-2.5 cursor-pointer transition-colors border-b border-border",
+                          selectedCustomerId === "walkin" ? "bg-blue-50 dark:bg-blue-900/20" : "hover:bg-secondary/30"
+                        )}
+                        onMouseDown={e => e.preventDefault()}
+                        onClick={() => { setSelectedCustomerId("walkin"); setCustomerSearchQuery(""); setShowCustomerDropdown(false); customerSearchInputRef.current?.blur(); }}
+                      >
+                        <div className="w-7 h-7 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center shrink-0">
+                          <User className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-foreground">Walk-in Customer</p>
+                          <p className="text-xs text-muted-foreground">No account — cash sale</p>
+                        </div>
+                        {selectedCustomerId === "walkin" && <Check className="w-4 h-4 text-blue-600 shrink-0" />}
+                      </div>
+
+                      {/* Registered customer list */}
+                      <div className="max-h-52 overflow-y-auto custom-scrollbar">
+                        {(() => {
+                          const q = customerSearchQuery.trim().toLowerCase();
+                          const filtered = q
+                            ? customers.filter((c: any) =>
+                                c.Name?.toLowerCase().includes(q) ||
+                                c.Phone?.toLowerCase().includes(q)
+                              )
+                            : customers;
+                          if (filtered.length === 0 && q) {
+                            return (
+                              <div className="px-3 py-4 text-center text-sm text-muted-foreground">
+                                No customers found for &ldquo;{customerSearchQuery}&rdquo;
+                              </div>
+                            );
+                          }
+                          if (customers.length === 0) {
+                            return (
+                              <div className="px-3 py-4 text-center text-sm text-muted-foreground">
+                                No registered customers yet.
+                              </div>
+                            );
+                          }
+                          return filtered.map((c: any) => (
+                            <div
+                              key={c.CustomerId}
+                              className={cn(
+                                "flex items-center gap-3 px-3 py-2.5 cursor-pointer transition-colors",
+                                selectedCustomerId === String(c.CustomerId)
+                                  ? "bg-blue-50 dark:bg-blue-900/20"
+                                  : "hover:bg-secondary/30"
+                              )}
+                              onMouseDown={e => e.preventDefault()}
+                              onClick={() => { setSelectedCustomerId(String(c.CustomerId)); setCustomerSearchQuery(""); setShowCustomerDropdown(false); customerSearchInputRef.current?.blur(); }}
+                            >
+                              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shrink-0">
+                                <span className="text-white text-[10px] font-bold">{c.Name?.charAt(0)?.toUpperCase()}</span>
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-foreground truncate">{c.Name}</p>
+                                {c.Phone && <p className="text-xs text-muted-foreground">{c.Phone}</p>}
+                              </div>
+                              {selectedCustomerId === String(c.CustomerId) && <Check className="w-4 h-4 text-blue-600 shrink-0" />}
+                            </div>
+                          ));
+                        })()}
+                      </div>
+
+                      {/* Add new customer shortcut */}
+                      <div
+                        className="flex items-center gap-2 px-3 py-2.5 cursor-pointer text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 border-t border-border transition-colors"
+                        onMouseDown={e => e.preventDefault()}
+                        onClick={() => { setShowCustomerDropdown(false); setCustomerSearchQuery(""); setIsAddCustomerOpen(true); }}
+                      >
+                        <Plus className="w-4 h-4 shrink-0" />
+                        <span className="text-sm font-medium">Add New Customer</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
               <div className="bg-white dark:bg-card rounded-xl border border-border shadow-sm p-4 relative z-20">
                 <h3 className="font-semibold text-foreground mb-3 flex justify-between items-center">
                   2. Search Medicine
@@ -1405,7 +1550,18 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
             {/* Right Column (Bill Summary) */}
             <div className="lg:col-span-3 space-y-6">
               <div className="bg-white dark:bg-card rounded-xl border border-border shadow-sm p-4 sticky top-6">
-                <h3 className="font-semibold text-foreground mb-4">4. Bill Summary</h3>
+                <h3 className="font-semibold text-foreground mb-3">4. Bill Summary</h3>
+
+                {/* Selected customer badge */}
+                <div className={cn(
+                  "flex items-center gap-2 rounded-lg px-3 py-2 mb-3 border text-sm",
+                  selectedCustomerId !== "walkin"
+                    ? "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700 text-blue-700 dark:text-blue-300"
+                    : "bg-secondary/40 border-border text-muted-foreground"
+                )}>
+                  <User className="w-3.5 h-3.5 shrink-0" />
+                  <span className="font-medium text-sm truncate">{selectedCustomerName}</span>
+                </div>
 
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between text-muted-foreground">
@@ -1968,6 +2124,7 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
                   <p>Invoice: {completedReceipt.InvoiceNumber}</p>
                   <p>Date: {completedReceipt.Date}</p>
                   <p>Cashier: {completedReceipt.Cashier}</p>
+                  <p>Customer: {completedReceipt.CustomerName || "Walk-in Customer"}</p>
                 </div>
 
                 <div className="mb-4">
