@@ -24,7 +24,7 @@ import tempfile
 import subprocess
 import sys
 
-router = APIRouter(tags=["backup"], dependencies=[Depends(get_current_admin_user)])
+router = APIRouter(tags=["backup"], dependencies=[Depends(get_current_user)])
 
 # Separate router for the logout/exit auto-backup - reachable by ANY authenticated user
 # (including cashiers), since it fires automatically on their logout/beforeunload.

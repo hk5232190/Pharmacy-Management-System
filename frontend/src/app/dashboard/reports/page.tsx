@@ -388,7 +388,7 @@ function ReportsPageInner({
     if (type === 'pdf') {
       try {
         setLoading(true);
-        toast.info('Generating PDF with charts... please wait.');
+        toast.info('Generating PDF with charts… please wait.');
         let chartImageBase64 = null;
         const chartEl = document.getElementById('report-charts');
         if (chartEl) {
@@ -398,19 +398,38 @@ function ReportsPageInner({
 
         const payload = {
           timeframe: timeframe,
-          start_date: dateRange?.start,
-          end_date: dateRange?.end,
+          start_date: dateRange?.start ?? null,
+          end_date: dateRange?.end ?? null,
           chart_image: chartImageBase64,
           report_type: activeTab === 'medicine' ? activeMedicineTab : undefined
         };
 
-        const res = await fetch(url + (url.includes('?') ? '&' : '?') + params.replace('?', ''), {
+        // Retrieve auth token — check both storage locations
+        const token =
+          localStorage.getItem('access_token') ||
+          sessionStorage.getItem('access_token') ||
+          '';
+
+        const finalUrl = url + params;
+
+        const res = await fetch(finalUrl, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
           body: JSON.stringify(payload)
         });
 
-        if (!res.ok) throw new Error('PDF Generation failed');
+        if (!res.ok) {
+          // Try to extract the real server error detail
+          let errDetail = `PDF Generation failed (HTTP ${res.status})`;
+          try {
+            const errJson = await res.json();
+            if (errJson?.detail) errDetail = errJson.detail;
+          } catch { /* response body was not JSON */ }
+          throw new Error(errDetail);
+        }
 
         const blob = await res.blob();
         const downloadUrl = window.URL.createObjectURL(blob);
@@ -421,7 +440,7 @@ function ReportsPageInner({
         a.click();
         window.URL.revokeObjectURL(downloadUrl);
         a.remove();
-        toast.success('PDF Downloaded successfully');
+        toast.success('PDF downloaded successfully!');
       } catch (err: any) {
         toast.error(err.message || 'Error generating PDF');
       } finally {
@@ -431,6 +450,7 @@ function ReportsPageInner({
       window.open(url + params, '_blank');
     }
   };
+
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {

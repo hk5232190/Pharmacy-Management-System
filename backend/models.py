@@ -16,6 +16,9 @@ class User(Base):
     ProfilePhotoPath = Column(String(255), nullable=True)
     IsActive = Column(Boolean, default=True)
     Role = Column(String(20), nullable=False, default="admin")
+    # JSON-encoded list of module keys granted to this cashier, e.g. '["sales","purchases"]'
+    # Admins always bypass this field — it only applies to role=="cashier".
+    Permissions = Column(Text, nullable=True, default='["sales"]')
     CreatedAt = Column(DateTime, server_default=func.now())
 
     sales = relationship("Sale", back_populates="user")
@@ -396,15 +399,37 @@ class PrinterSettings(Base):
     SettingsId = Column(Integer, primary_key=True, autoincrement=True)
     PrinterType = Column(String(50), nullable=False, default="ESC/POS Thermal")
     PaperSize = Column(String(50), nullable=False, default="80mm")
+    CustomPaperWidthMm = Column(Integer, nullable=True, default=None) # For custom paper width
     SelectedPrinterName = Column(String(255), nullable=True, default="")
     ConnectionPort = Column(String(50), nullable=False, default="USB")
     CustomRawByteSequence = Column(Text, nullable=True, default="\\x1B\\x70\\x00\\x19\\xFA") # Standard cash drawer kick
+    # Printer behaviour
+    Copies = Column(Integer, nullable=False, default=1)
+    OpenPrintDialog = Column(Boolean, default=False, nullable=False)
+    AutoCutPaper = Column(Boolean, default=True, nullable=False)
+    OpenCashDrawer = Column(Boolean, default=True, nullable=False)
+    # Receipt layout
+    ReceiptTitle = Column(String(100), nullable=True, default="SALE RECEIPT")
+    FontScale = Column(Integer, nullable=False, default=100)  # percentage: 80, 90, 100, 110, 120
+    CharactersPerLine = Column(Integer, nullable=False, default=42)  # 32 for 58mm, 42 for 80mm
+    ItemNameWidth = Column(Integer, nullable=False, default=16)  # columns reserved for medicine name
+    ReceiptFooterMessage = Column(Text, nullable=True, default="Thank you for your visit! Wishing you good health.")
+    # Content visibility toggles
     ShowLogo = Column(Boolean, default=True, nullable=False)
     ShowPharmacyName = Column(Boolean, default=True, nullable=False)
     ShowAddress = Column(Boolean, default=True, nullable=False)
-    ReceiptFooterMessage = Column(Text, nullable=True, default="Thank you for your visit! Wishing you good health.")
-    AutoCutPaper = Column(Boolean, default=True, nullable=False)
-    OpenCashDrawer = Column(Boolean, default=True, nullable=False)
+    ShowPhoneNumber = Column(Boolean, default=True, nullable=False)
+    ShowInvoiceNumber = Column(Boolean, default=True, nullable=False)
+    ShowDate = Column(Boolean, default=True, nullable=False)
+    ShowTime = Column(Boolean, default=True, nullable=False)
+    ShowCashier = Column(Boolean, default=True, nullable=False)
+    ShowCustomerName = Column(Boolean, default=True, nullable=False)
+    ShowSubtotal = Column(Boolean, default=True, nullable=False)
+    ShowDiscount = Column(Boolean, default=True, nullable=False)
+    ShowTax = Column(Boolean, default=True, nullable=False)
+    ShowAmountPaid = Column(Boolean, default=True, nullable=False)
+    ShowChangeDue = Column(Boolean, default=True, nullable=False)
+    ShowPaymentMethod = Column(Boolean, default=True, nullable=False)
     PrintBatchAndExpiry = Column(Boolean, default=True, nullable=False)
     PrintLicenseAndNtn = Column(Boolean, default=False, nullable=False)
     PrintDoctorAndPatient = Column(Boolean, default=False, nullable=False)

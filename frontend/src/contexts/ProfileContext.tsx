@@ -52,7 +52,11 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
 
   const fetchProfile = async () => {
     try {
-      const res = await fetch(`${getApiBaseUrl()}/settings/profile`);
+      const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token") || "";
+      const res = await fetch(`${getApiBaseUrl()}/settings/profile`, {
+        headers: token ? { "Authorization": `Bearer ${token}` } : {},
+        cache: "no-store",
+      });
       if (res.ok) {
         const data = await res.json();
         if (data.LogoPath) {

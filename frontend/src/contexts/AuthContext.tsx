@@ -4,6 +4,14 @@ import { getAccessToken, resolveApiBaseUrl } from "@/lib/api-client";
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { clearStoredTokens } from "@/lib/auth-session";
 
+/** All module keys that exist in the system. */
+export const ALL_MODULES = [
+  "sales", "dashboard", "purchases", "inventory",
+  "medicines", "suppliers", "customers", "reports", "settings",
+] as const;
+
+export type ModuleKey = typeof ALL_MODULES[number];
+
 export interface UserProfile {
   id: number;
   username: string;
@@ -13,6 +21,8 @@ export interface UserProfile {
   profile_photo_path: string | null;
   is_active: boolean;
   role: string;
+  /** Module keys the user is allowed to access. Admins receive ALL_MODULES. */
+  permissions: string[];
 }
 
 const DEFAULT_USER: UserProfile = {
@@ -23,7 +33,8 @@ const DEFAULT_USER: UserProfile = {
   full_name: "Admin",
   phone_number: "",
   profile_photo_path: null,
-  role: "admin"
+  role: "admin",
+  permissions: [...ALL_MODULES],
 };
 
 interface AuthContextType {
@@ -32,6 +43,8 @@ interface AuthContextType {
   refreshUser: () => Promise<void>;
   login: (accessToken: string) => Promise<UserProfile | null>;
   logout: () => void;
+  /** Returns true if the current user can access the given module. Admins always return true. */
+  hasPermission: (module: string) => boolean;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -40,6 +53,7 @@ const AuthContext = createContext<AuthContextType>({
   refreshUser: async () => {},
   login: async () => null,
   logout: () => {},
+  hasPermission: () => true,
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -55,7 +69,11 @@ async function fetchProfileByToken(token: string): Promise<UserProfile | null> {
       if (data.profile_photo_path) {
         data.profile_photo_path = `${data.profile_photo_path}?t=${new Date().getTime()}`;
       }
-      return { ...DEFAULT_USER, ...data };
+      return {
+        ...DEFAULT_USER,
+        ...data,
+        permissions: Array.isArray(data.permissions) ? data.permissions : [...ALL_MODULES],
+      };
     }
     if (res.status === 401) {
       clearStoredTokens();
@@ -71,6 +89,12 @@ async function fetchProfileByToken(token: string): Promise<UserProfile | null> {
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserProfile>(DEFAULT_USER);
   const [loading, setLoading] = useState(true);
+
+  const hasPermission = useCallback((module: string): boolean => {
+    // Admins always have full access
+    if (user.role === "admin") return true;
+    return user.permissions.includes(module);
+  }, [user]);
 
   const refreshUser = useCallback(async () => {
     const token = getAccessToken();
@@ -135,7 +159,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, refreshUser, login, logout }}>
+    <AuthContext.Provider value={{ user, loading, refreshUser, login, logout, hasPermission }}>
       {children}
     </AuthContext.Provider>
   );

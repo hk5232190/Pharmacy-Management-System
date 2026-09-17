@@ -30,16 +30,11 @@ app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    # Next.js development and the Tauri WebView use different origins. Keep
-    # this explicit (rather than "*") because authenticated API calls carry
-    # credentials/tokens and wildcard origins are not production-safe.
-    allow_origins=[
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-        "http://tauri.localhost",
-        "https://tauri.localhost",
-        "tauri://localhost",
-    ],
+    # Origins are configured via the CORS_ORIGINS environment variable
+    # (comma-separated). The default list covers Next.js dev and the Tauri
+    # WebView. Keep this explicit (rather than "*") because authenticated API
+    # calls carry credentials/tokens and wildcard origins are not production-safe.
+    allow_origins=settings.CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -83,37 +78,20 @@ async def startup_event():
 
     from database import SessionLocal, engine
     from models import BackupSettings, BackupHistory
-    from sqlalchemy import text
+
+    # ── Schema: single authority = Alembic (Problem #4) ─────────────────────
+    # All historical inline DDL (CurrencySymbol, BackupOnExit, and the
+    # notifications table) was removed in favour of the programmatic Alembic
+    # runner. The runner is guarded + idempotent, never raises, and never
+    # touches a database it could harm — preserving the exact startup behaviour
+    # of the previous inline migrations on BOTH clean and existing databases.
+    from core.migrations import run_migrations
+    run_migrations(engine)
 
     db = SessionLocal()
     try:
-        # ── Inline migrations ────────────────────────────────────────────────
+        # ── System notifications (data seed only — schema owned by Alembic) ──
         try:
-            result = db.execute(text("PRAGMA table_info(billing_settings)")).fetchall()
-            columns = [row[1] for row in result]
-            if "CurrencySymbol" not in columns:
-                logger.info("Migrating billing_settings: adding CurrencySymbol column.")
-                db.execute(text("ALTER TABLE billing_settings ADD COLUMN CurrencySymbol VARCHAR(10) DEFAULT 'Rs'"))
-                db.commit()
-        except Exception as e:
-            logger.error(f"Migration error for CurrencySymbol: {e}")
-
-        # Add BackupOnExit column if it doesn't exist (safe for existing DBs)
-        try:
-            result = db.execute(text("PRAGMA table_info(backup_settings)")).fetchall()
-            columns = [row[1] for row in result]
-            if "BackupOnExit" not in columns:
-                logger.info("Migrating backup_settings: adding BackupOnExit column.")
-                db.execute(text("ALTER TABLE backup_settings ADD COLUMN BackupOnExit BOOLEAN DEFAULT 1"))
-                db.commit()
-        except Exception as e:
-            logger.error(f"Migration error for BackupOnExit: {e}")
-
-        # ── Notifications ────────────────────────────────────────────────────
-        try:
-            from models import Notification
-            Notification.__table__.create(bind=engine, checkfirst=True)
-            logger.info("Verified notifications table in database.")
             from utils.notification_service import sync_system_notifications
             sync_system_notifications(db)
             logger.info("Completed startup system notifications synchronization.")

@@ -1,10 +1,11 @@
+import json
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 
 from api.deps import get_db, get_current_admin_user
 from models import User
-from schemas.users import UserCreate, UserUpdate, UserResponse, VALID_ROLES
+from schemas.users import UserCreate, UserUpdate, UserPermissionsUpdate, UserResponse, VALID_ROLES, DEFAULT_CASHIER_PERMISSIONS
 from core.security import get_password_hash_and_salt
 from core.logger import logger
 
@@ -15,8 +16,21 @@ def active_admin_count(db: Session) -> int:
     return db.query(User).filter(User.Role == "admin", User.IsActive == True).count()  # noqa: E712
 
 
+def _parse_permissions(user: User) -> list[str]:
+    """Return the parsed permissions list for a user."""
+    if user.Role == "admin":
+        return []  # admins have full access — no explicit list needed
+    try:
+        perms = json.loads(user.Permissions or "[]")
+        return perms if isinstance(perms, list) else DEFAULT_CASHIER_PERMISSIONS
+    except (json.JSONDecodeError, TypeError):
+        return DEFAULT_CASHIER_PERMISSIONS
+
+
 def serialize_user(user: User) -> dict:
-    return UserResponse.model_validate(user).model_dump()
+    base = UserResponse.model_validate(user).model_dump()
+    base["Permissions"] = _parse_permissions(user)
+    return base
 
 
 @router.get("", summary="List all users")
@@ -38,13 +52,16 @@ def create_user(
         raise HTTPException(status_code=400, detail="Username already exists.")
 
     hash_str, salt_str = get_password_hash_and_salt(user_in.password)
+    # New cashiers start with Sales-only access
+    default_perms = json.dumps(DEFAULT_CASHIER_PERMISSIONS) if user_in.role == "cashier" else None
     new_user = User(
         Username=user_in.username,
         FullName=user_in.full_name,
         PasswordHash=hash_str,
         Salt=salt_str,
         IsActive=True,
-        Role=user_in.role
+        Role=user_in.role,
+        Permissions=default_perms,
     )
     db.add(new_user)
     try:
@@ -91,6 +108,11 @@ def update_user(
         user.FullName = user_in.full_name
     if role is not None:
         user.Role = role
+        # When promoted to admin clear permissions; when demoted to cashier set defaults
+        if role == "admin":
+            user.Permissions = None
+        elif user.Permissions is None:
+            user.Permissions = json.dumps(DEFAULT_CASHIER_PERMISSIONS)
     if is_active is not None:
         user.IsActive = is_active
     if user_in.password:
@@ -103,3 +125,30 @@ def update_user(
 
     logger.info(f"AUDIT: User {current_user.Username} updated user '{user.Username}' (role={user.Role}, active={user.IsActive}).")
     return {"success": True, "data": serialize_user(user), "message": "User updated successfully"}
+
+
+@router.put("/{user_id}/permissions", summary="Set module permissions for a cashier")
+def update_user_permissions(
+    user_id: int,
+    perms_in: UserPermissionsUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin_user)
+):
+    user = db.query(User).filter(User.UserId == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found.")
+    if user.Role == "admin":
+        raise HTTPException(status_code=400, detail="Admin accounts always have full access — permissions cannot be restricted.")
+
+    # Sanitise: keep only known modules; always include "sales"
+    from schemas.users import ALL_MODULES
+    valid = [m for m in perms_in.permissions if m in ALL_MODULES]
+    if "sales" not in valid:
+        valid = ["sales"] + valid  # sales is always on
+
+    user.Permissions = json.dumps(valid)
+    db.commit()
+    db.refresh(user)
+
+    logger.info(f"AUDIT: Admin {current_user.Username} updated permissions for '{user.Username}': {valid}")
+    return {"success": True, "data": serialize_user(user), "message": "Permissions updated successfully"}

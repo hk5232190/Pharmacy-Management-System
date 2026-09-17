@@ -118,6 +118,8 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
   const { inventorySettings } = useInventorySettings();
   const { profile } = useProfile();
   const [showLogoOnReceipt, setShowLogoOnReceipt] = useState(false);
+  const [printerSettings, setPrinterSettings] = useState<any>(null);
+  const [isPrintRetrying, setIsPrintRetrying] = useState(false);
   // (activeTab is now managed by the wrapper so it survives a refresh reset)
   const [loadingInit, setLoadingInit] = useState(true);
   const [invoiceNo, setInvoiceNo] = useState("");
@@ -278,6 +280,7 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
       const printerRes = await apiClient.get('/settings/printer');
       if (printerRes.success && printerRes.data) {
         setShowLogoOnReceipt(printerRes.data.ShowLogo);
+        setPrinterSettings(printerRes.data);
       }
 
       const userStr = localStorage.getItem('user');
@@ -597,8 +600,9 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
     }
   };
 
-  const handleThermalPrint = async (): Promise<boolean> => {
+  const handleThermalPrint = async (isRetry = false): Promise<boolean> => {
     if (!completedReceipt) return false;
+    if (isRetry) setIsPrintRetrying(true);
     try {
       let endpoint: string;
       if (completedReceipt.type === 'return' && completedReceipt.ReturnId) {
@@ -618,12 +622,28 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
         toast.success("Receipt sent to thermal printer");
         return true;
       } else {
-        toast.error(res.error || "Thermal print failed");
+        const errMsg = res.error || "Thermal print failed";
+        toast.error(errMsg, {
+          action: {
+            label: "Retry Print",
+            onClick: () => handleThermalPrint(true)
+          },
+          duration: 8000
+        });
         return false;
       }
     } catch (err: any) {
-      toast.error(err.message || "Thermal print failed");
+      const errMsg = err.message || "Thermal print failed";
+      toast.error(errMsg, {
+        action: {
+          label: "Retry Print",
+          onClick: () => handleThermalPrint(true)
+        },
+        duration: 8000
+      });
       return false;
+    } finally {
+      if (isRetry) setIsPrintRetrying(false);
     }
   };
 
@@ -631,11 +651,12 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
     const printContent = document.getElementById("print-area");
     if (!printContent) return;
 
+    const paperWidth = printerSettings?.PaperSize === "58mm" ? "58mm" : "80mm";
     const iframe = document.createElement("iframe");
     iframe.style.position = "absolute";
     iframe.style.left = "-9999px";
     iframe.style.top = "0";
-    iframe.style.width = "80mm";
+    iframe.style.width = paperWidth;
     iframe.style.height = "100vh";
     iframe.style.border = "0";
     document.body.appendChild(iframe);
@@ -650,17 +671,18 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
             <title>Receipt</title>
             <style>
               @page { 
-                margin: 0; 
+                margin: 0;
+                size: ${printerSettings?.PaperSize === "58mm" ? "58mm" : "80mm"} auto;
               }
               html, body { 
                 margin: 0 !important; 
                 padding: 0 !important;
-                width: 80mm;
+                width: ${printerSettings?.PaperSize === "58mm" ? "58mm" : "80mm"};
                 height: auto !important;
                 background: white;
                 color: black;
                 font-family: monospace;
-                font-size: 12px;
+                font-size: ${Math.round(12 * (printerSettings?.FontScale || 100) / 100)}px;
               }
               
               /* Tailwind Utility Classes */
@@ -1980,24 +2002,7 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
                               <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-500 hover:bg-slate-100" onClick={() => handleReprint(item.InvoiceNumber, item.CashierName || "", item.PaymentMethod)} title="Reprint">
                                 <Printer className="w-4 h-4" />
                               </Button>
-                              {challanDataMap[item.InvoiceNumber] ? (
-                                <ChallanPrint
-                                  data={challanDataMap[item.InvoiceNumber]!}
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-7 w-7 text-emerald-500 hover:bg-emerald-50"
-                                />
-                              ) : (
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-7 w-7 text-emerald-500 hover:bg-emerald-50"
-                                  onClick={() => handleChallanClick(item.InvoiceNumber)}
-                                  title="Print Challan"
-                                >
-                                  <FileText className="w-4 h-4" />
-                                </Button>
-                              )}
+
                               <Button 
                                 variant="ghost" 
                                 size="icon" 

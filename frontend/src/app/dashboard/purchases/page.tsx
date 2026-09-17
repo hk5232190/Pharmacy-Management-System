@@ -1276,24 +1276,7 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
                             >
                               <Printer className="h-4 w-4" />
                             </Button>
-                            {challanDataMap[String(inv.PurchaseId)] ? (
-                              <ChallanPrint
-                                data={challanDataMap[String(inv.PurchaseId)]!}
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 w-8 p-0 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-900/20"
-                              />
-                            ) : (
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                className="h-8 w-8 p-0 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-900/20"
-                                onClick={() => handleChallanClick(inv.PurchaseId)}
-                                title="Print Challan"
-                              >
-                                <FileText className="h-4 w-4" />
-                              </Button>
-                            )}
+
                             <Button 
                               variant="ghost" 
                               size="sm" 

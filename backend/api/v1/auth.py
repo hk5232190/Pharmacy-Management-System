@@ -3,9 +3,10 @@ from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 import os
 import pathlib
+import json
 
 from api.deps import get_db, get_current_user
 from models import User, SecuritySettings
@@ -32,6 +33,7 @@ class UserProfile(BaseModel):
     phone_number: Optional[str] = None
     profile_photo_path: Optional[str] = None
     role: str = "admin"
+    permissions: List[str] = []
 
 class UserProfileUpdate(BaseModel):
     FullName: Optional[str] = None
@@ -100,6 +102,17 @@ def refresh_access_token(
 
 @router.get("/me", response_model=UserProfile, summary="Get Current User Profile")
 def read_users_me(current_user: User = Depends(get_current_user)):
+    from schemas.users import ALL_MODULES, DEFAULT_CASHIER_PERMISSIONS
+    # Admins get the full module list; cashiers get their stored permissions
+    if getattr(current_user, "Role", "admin") == "admin":
+        permissions = ALL_MODULES
+    else:
+        try:
+            perms = json.loads(current_user.Permissions or "[]")
+            permissions = perms if isinstance(perms, list) else DEFAULT_CASHIER_PERMISSIONS
+        except (json.JSONDecodeError, TypeError):
+            permissions = DEFAULT_CASHIER_PERMISSIONS
+
     return UserProfile(
         id=current_user.UserId,
         username=current_user.Username,
@@ -108,7 +121,8 @@ def read_users_me(current_user: User = Depends(get_current_user)):
         full_name=current_user.FullName,
         phone_number=current_user.PhoneNumber,
         profile_photo_path=current_user.ProfilePhotoPath,
-        role=getattr(current_user, "Role", "admin") or "admin"
+        role=getattr(current_user, "Role", "admin") or "admin",
+        permissions=permissions,
     )
 
 @router.put("/me", summary="Update Current User Profile")

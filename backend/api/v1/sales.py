@@ -14,7 +14,7 @@ def utc_to_local_str(dt_obj):
         return ""
     return dt_obj.replace(tzinfo=timezone.utc).astimezone().strftime('%d/%m/%Y, %I:%M %p')
 
-from models import Sale, Medicine, StockBatch, Customer, StockAdjustment, SaleReturn, BillingSettings, InventorySettings, PharmacyProfile, PrinterSettings
+from models import Sale, Medicine, StockBatch, Customer, StockAdjustment, SaleReturn, BillingSettings, InventorySettings, PharmacyProfile, PrinterSettings, SaleItem
 from schemas.base import BaseResponse
 from schemas.sales import SaleInitResponse, ProductSearchResponse, ProductSearchBatch, SaleReturnHistoryItem, SaleReturnHistoryPagedResponse
 from api.deps import get_current_user, get_db
@@ -357,6 +357,221 @@ def complete_sale(
 
 import os
 
+def _build_receipt_bytes(sale, profile, ps, is_reprint: bool, billing_settings=None) -> bytes:
+    """
+    Build a complete ESC/POS byte sequence for a sale receipt.
+    ps = PrinterSettings ORM object (may be None; falls back to safe defaults).
+    Returns raw bytes ready to send to a thermal printer.
+    """
+    # ── ESC/POS constants ────────────────────────────────────────────────────
+    ESC           = b'\x1b'
+    GS            = b'\x1d'
+    LF            = b'\x0a'
+    INIT          = ESC + b'@'
+    ALIGN_CENTER  = ESC + b'a\x01'
+    ALIGN_LEFT    = ESC + b'a\x00'
+    BOLD_ON       = ESC + b'E\x01'
+    BOLD_OFF      = ESC + b'E\x00'
+    DOUBLE_HEIGHT = ESC + b'!\x10'
+    NORMAL_SIZE   = ESC + b'!\x00'
+    CUT           = GS  + b'V\x00'
+
+    # ── Settings with safe defaults ──────────────────────────────────────────
+    cpl           = int(getattr(ps, 'CharactersPerLine', 42)) if ps else 42
+    item_w        = int(getattr(ps, 'ItemNameWidth', 16))     if ps else 16
+    separator     = ('-' * cpl + '\n').encode()
+
+    def _get(attr, default):
+        return getattr(ps, attr, default) if ps else default
+
+    show_logo          = _get('ShowLogo',         True)
+    show_pharm_name    = _get('ShowPharmacyName',  True)
+    show_address       = _get('ShowAddress',       True)
+    show_phone         = _get('ShowPhoneNumber',   True)
+    show_license_ntn   = _get('PrintLicenseAndNtn', False)
+    show_inv_no        = _get('ShowInvoiceNumber', True)
+    show_date          = _get('ShowDate',          True)
+    show_time          = _get('ShowTime',          True)
+    show_cashier       = _get('ShowCashier',       True)
+    show_customer      = _get('ShowCustomerName',  True)
+    show_batch_expiry  = _get('PrintBatchAndExpiry', True)
+    show_subtotal      = _get('ShowSubtotal',      True)
+    show_discount      = _get('ShowDiscount',      True)
+    show_tax           = _get('ShowTax',           True)
+    show_paid          = _get('ShowAmountPaid',    True)
+    show_change        = _get('ShowChangeDue',     True)
+    show_pay_method    = _get('ShowPaymentMethod', True)
+    autocut            = _get('AutoCutPaper',      True)
+    receipt_title      = (_get('ReceiptTitle', 'SALE RECEIPT') or 'SALE RECEIPT').strip().upper()
+    footer_msg         = _get('ReceiptFooterMessage', None)
+
+    # ── Helper: right-align a KV line ────────────────────────────────────────
+    def kv_line(label: str, value: str) -> bytes:
+        val = str(value)
+        pad = cpl - len(label) - len(val)
+        if pad < 1:
+            pad = 1
+        return f"{label}{' ' * pad}{val}\n".encode()
+
+    # ── Helper: safe word-wrap within a fixed width ───────────────────────────
+    def wrap_text(text: str, width: int):
+        """Return list of strings each <= width chars."""
+        words = text.split()
+        lines, current = [], ''
+        for word in words:
+            if len(current) + len(word) + (1 if current else 0) <= width:
+                current = current + (' ' if current else '') + word
+            else:
+                if current:
+                    lines.append(current)
+                current = word[:width]
+        if current:
+            lines.append(current)
+        return lines or ['']
+
+    # ── Helper: truncate + pad name to fixed column width ────────────────────
+    def fmt_name(name: str, width: int) -> str:
+        if len(name) > width:
+            name = name[:width - 1] + '~'
+        return name.ljust(width)
+
+    # ── Pharmacy profile data ─────────────────────────────────────────────────
+    pharmacy_name    = (profile.PharmacyName   if profile and profile.PharmacyName   else 'PHARMACY')
+    pharmacy_address = (profile.Address        if profile and profile.Address         else '')
+    pharmacy_phone   = (profile.PhoneNumber    if profile and profile.PhoneNumber     else '')
+    drug_license     = (profile.DrugLicenseNumber if profile and profile.DrugLicenseNumber else '')
+    ntn_strn         = (profile.NtnStrn        if profile and profile.NtnStrn         else '')
+    footer1          = footer_msg or (profile.ReceiptFooter1 if profile and profile.ReceiptFooter1 else 'Thank you for your visit!')
+    footer2          = profile.ReceiptFooter2 if profile and profile.ReceiptFooter2 else ''
+
+    buf = bytearray()
+    buf += INIT
+
+    # ── HEADER ────────────────────────────────────────────────────────────────
+    buf += ALIGN_CENTER
+    if show_pharm_name:
+        buf += BOLD_ON + DOUBLE_HEIGHT + f"{pharmacy_name}\n".encode() + NORMAL_SIZE + BOLD_OFF
+    # Receipt title
+    buf += BOLD_ON + f"{receipt_title}\n".encode() + BOLD_OFF
+    if show_address and pharmacy_address:
+        for ln in wrap_text(pharmacy_address, cpl):
+            buf += f"{ln}\n".encode()
+    if show_phone and pharmacy_phone:
+        buf += f"Tel: {pharmacy_phone}\n".encode()
+    if show_license_ntn:
+        if drug_license:
+            buf += f"Lic: {drug_license}\n".encode()
+        if ntn_strn:
+            buf += f"NTN/STRN: {ntn_strn}\n".encode()
+
+    if is_reprint:
+        buf += separator
+        buf += BOLD_ON + b"* DUPLICATE / REPRINT *\n" + BOLD_OFF
+
+    buf += separator
+
+    # ── INVOICE INFO ──────────────────────────────────────────────────────────
+    buf += ALIGN_LEFT
+    tx_date = sale.TransactionDate.replace(tzinfo=timezone.utc).astimezone() if sale.TransactionDate else datetime.now()
+    if show_inv_no:
+        buf += f"Invoice : {sale.InvoiceNumber}\n".encode()
+    if show_date:
+        buf += f"Date    : {tx_date.strftime('%d-%b-%Y')}\n".encode()
+    if show_time:
+        buf += f"Time    : {tx_date.strftime('%I:%M %p')}\n".encode()
+    customer_name = sale.customer.Name if sale.customer else 'Walk-in Customer'
+    if show_customer:
+        buf += f"Customer: {customer_name}\n".encode()
+    if show_cashier and sale.user:
+        cashier = sale.user.FullName or sale.user.Username
+        buf += f"Cashier : {cashier}\n".encode()
+    if show_pay_method:
+        buf += f"Payment : {sale.PaymentMethod or 'Cash'}\n".encode()
+
+    buf += separator
+
+    # ── ITEMS TABLE ────────────────────────────────────────────────────────────
+    # Column widths: name_w | qty(3) | price(7) | total(8) — all sum to cpl
+    qty_w   = 3
+    price_w = 7
+    total_w = cpl - item_w - qty_w - price_w - 3  # 3 spaces separating cols
+    if total_w < 5:
+        total_w = 5
+
+    header_row = (
+        'Item'.ljust(item_w) + ' ' +
+        'Qty'.rjust(qty_w)   + ' ' +
+        'Price'.rjust(price_w) + ' ' +
+        'Total'.rjust(total_w) + '\n'
+    )
+    buf += header_row.encode()
+    buf += separator
+
+    for item in sale.items:
+        med_name = item.batch.medicine.BrandName if (item.batch and item.batch.medicine) else 'Unknown'
+        qty_str   = str(item.Quantity).rjust(qty_w)
+        price_str = f"{float(item.UnitPrice):.2f}".rjust(price_w)
+        total_str = f"{float(item.TotalPrice):.2f}".rjust(total_w)
+
+        # First line: name + numbers
+        buf += (
+            fmt_name(med_name, item_w) + ' ' +
+            qty_str + ' ' + price_str + ' ' + total_str + '\n'
+        ).encode()
+
+        # Optional batch/expiry sub-line
+        if show_batch_expiry and item.batch:
+            batch_code  = item.batch.BatchCode or ''
+            expiry_date = item.batch.ExpiryDate.strftime('%m/%y') if item.batch.ExpiryDate else ''
+            sub = f"  Batch:{batch_code}  Exp:{expiry_date}"
+            if len(sub) > cpl:
+                sub = sub[:cpl]
+            buf += f"{sub}\n".encode()
+
+        # Discount per item (if any)
+        if item.Discount and float(item.Discount) > 0:
+            disc_str = f"  Disc: -{float(item.Discount):.2f}"
+            buf += disc_str.encode() + b'\n'
+
+    buf += separator
+
+    # ── TOTALS ─────────────────────────────────────────────────────────────────
+    if show_subtotal:
+        buf += kv_line("Subtotal:", f"{float(sale.SubTotal):.2f}")
+    if show_discount and float(sale.DiscountAmount) > 0:
+        buf += kv_line("Discount:", f"-{float(sale.DiscountAmount):.2f}")
+    if show_tax and float(sale.TaxAmount) > 0:
+        buf += kv_line("Tax:", f"{float(sale.TaxAmount):.2f}")
+
+    buf += separator
+    buf += BOLD_ON + kv_line("TOTAL:", f"{float(sale.GrandTotal):.2f}") + BOLD_OFF
+    buf += separator
+
+    if show_paid:
+        buf += kv_line("Paid:", f"{float(sale.PaidAmount):.2f}")
+    if show_change:
+        change = max(0.0, float(sale.PaidAmount) - float(sale.GrandTotal))
+        if change > 0:
+            buf += kv_line("Change:", f"{change:.2f}")
+
+    # ── FOOTER ────────────────────────────────────────────────────────────────
+    buf += b'\n'
+    buf += ALIGN_CENTER
+    if footer1:
+        for ln in wrap_text(footer1, cpl):
+            buf += f"{ln}\n".encode()
+    if footer2:
+        for ln in wrap_text(footer2, cpl):
+            buf += f"{ln}\n".encode()
+
+    # Paper feed + cut
+    buf += LF * 3
+    if autocut:
+        buf += CUT
+
+    return bytes(buf)
+
+
 @router.post("/{sales_id}/print-thermal", response_model=BaseResponse[dict], summary="Spool ESC/POS receipt for thermal printer")
 def print_thermal_receipt(
     sales_id: int,
@@ -364,126 +579,70 @@ def print_thermal_receipt(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
+    """
+    Build a settings-driven ESC/POS receipt and send it to the configured printer.
+    This endpoint NEVER creates or modifies any sale, stock, or payment data.
+    It is safe to call multiple times (reprint) without any side-effects.
+    """
     try:
-        sale = db.query(Sale).filter(Sale.SalesId == sales_id).first()
+        sale = db.query(Sale).options(
+            selectinload(Sale.items).selectinload(SaleItem.batch).selectinload(StockBatch.medicine),
+            selectinload(Sale.customer),
+            selectinload(Sale.user),
+        ).filter(Sale.SalesId == sales_id).first()
+
         if not sale:
             raise HTTPException(status_code=404, detail="Sale not found")
-        profile = db.query(PharmacyProfile).first()
-        pharmacy_name = profile.PharmacyName if profile and profile.PharmacyName else "PHARMACY NAME"
-        pharmacy_contact = profile.PhoneNumber if profile and profile.PhoneNumber else "mobile number"
-        pharmacy_address = profile.Address if profile and profile.Address else "Pharmacy address"
-        
-        # Build ESC/POS bytes
-        ESC = b'\x1b'
-        GS = b'\x1d'
-        LF = b'\x0a'
-        
-        INIT = ESC + b'@'
-        ALIGN_CENTER = ESC + b'a\x01'
-        ALIGN_LEFT = ESC + b'a\x00'
-        BOLD_ON = ESC + b'E\x01'
-        BOLD_OFF = ESC + b'E\x00'
-        CUT = GS + b'V\x00'
-        
-        bytes_data = bytearray()
-        bytes_data += INIT
-        
-        # Header
-        bytes_data += ALIGN_CENTER
-        bytes_data += BOLD_ON + f"{pharmacy_name}\n".encode() + BOLD_OFF
-        bytes_data += f"Contact: {pharmacy_contact}\n".encode()
-        bytes_data += f"Address: {pharmacy_address}\n".encode()
-        bytes_data += b"------------------------------------------\n"
-        
-        if is_reprint:
-            bytes_data += BOLD_ON + b"*** DUPLICATE / REPRINT ***\n" + BOLD_OFF
-        
-        # Details
-        bytes_data += ALIGN_LEFT
-        bytes_data += f"Receipt #: {sale.InvoiceNumber}\n".encode()
-        
-        # Parse date and time separately
-        tx_date = sale.TransactionDate.replace(tzinfo=timezone.utc).astimezone() if sale.TransactionDate else datetime.now()
-        date_str = tx_date.strftime('%d-%b-%Y')
-        time_str = tx_date.strftime('%I:%M %p')
-        
-        bytes_data += f"Date: {date_str}\n".encode()
-        bytes_data += f"Time: {time_str}\n".encode()
-        customer_name = sale.customer.Name if sale.customer else "Walk-in Customer"
-        bytes_data += f"Customer: {customer_name}\n".encode()
-        bytes_data += b"------------------------------------------\n"
-        
-        # Table Header
-        bytes_data += b"Item       Qty Price Total\n"
-        bytes_data += b"------------------------------------------\n"
-        
-        # Items
-        for item in sale.items:
-            med_name = item.batch.medicine.BrandName if item.batch and item.batch.medicine else "Unknown"
-            med_name = (med_name[:10] + '..') if len(med_name) > 12 else med_name.ljust(12)
-            
-            qty_str = str(item.Quantity).rjust(3)
-            price_str = f"{item.UnitPrice:.2f}".rjust(6)
-            total_str = f"{item.TotalPrice:.2f}".rjust(7)
-            
-            # med_name(12) + " " + qty(3) + " " + price(6) + " " + total(7) => ~31 chars, fits easily in 42
-            # Let's align properly.
-            # Template:
-            # Panadol      2  50.00  100.00
-            # 123456789012345678901234567890123456789012
-            # Item       Qty Price Total
-            # Panadol      2  50.00  100.00
-            
-            line = f"{med_name.ljust(11)} {qty_str.rjust(3)} {price_str.rjust(6)} {total_str.rjust(7)}"
-            
-            bytes_data += f"{line}\n".encode()
-            
-        bytes_data += b"------------------------------------------\n"
-        
-        # Totals
-        def add_total_line(label, amount):
-            amt_str = f"{amount:.2f}"
-            spaces = 42 - len(label) - len(amt_str)
-            if spaces < 1: spaces = 1
-            return f"{label}{' ' * spaces}{amt_str}\n".encode()
-            
-        bytes_data += add_total_line("Subtotal:", sale.SubTotal)
-        bytes_data += add_total_line("Discount:", sale.DiscountAmount)
-        bytes_data += add_total_line("Tax:", sale.TaxAmount)
-        bytes_data += b"------------------------------------------\n"
-        bytes_data += BOLD_ON + add_total_line("TOTAL:", sale.GrandTotal) + BOLD_OFF
-        bytes_data += b"------------------------------------------\n"
-        
-        footer_line1 = profile.ReceiptFooter1 if profile and profile.ReceiptFooter1 else "Thank you for your visit!"
-        footer_line2 = profile.ReceiptFooter2 if profile and profile.ReceiptFooter2 else "Software provided by Eagle Nest Creations"
-        
-        # Footer
-        bytes_data += b"\n"
-        bytes_data += ALIGN_CENTER
-        bytes_data += f"{footer_line1}\n\n".encode()
-        bytes_data += f"{footer_line2}\n".encode()
-        bytes_data += LF * 4 + CUT
-        
-        # Send to physical printer
-        printer_settings = db.query(PrinterSettings).first()
-        try:
-            send_to_printer(printer_settings, bytes(bytes_data))
-        except Exception as e:
-            logger.error(f"Physical print failed for {sale.InvoiceNumber}: {e}")
 
-        # Save to spooler as backup
-        spooler_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "spooler")
-        os.makedirs(spooler_dir, exist_ok=True)
-        
-        filename = f"{sale.InvoiceNumber}.bin"
-        filepath = os.path.join(spooler_dir, filename)
-        
-        with open(filepath, 'wb') as f:
-            f.write(bytes_data)
-            
-        return {"success": True, "data": {"message": f"Receipt spooled to {filename}"}}
+        profile         = db.query(PharmacyProfile).first()
+        printer_settings = db.query(PrinterSettings).first()
+        billing_settings = db.query(BillingSettings).first()
+
+        # Build the full ESC/POS byte payload
+        receipt_bytes = _build_receipt_bytes(
+            sale, profile, printer_settings, is_reprint, billing_settings
+        )
+
+        copies = int(getattr(printer_settings, 'Copies', 1) or 1)
+        copies = max(1, min(copies, 5))  # clamp 1–5 for safety
+
+        # ── Dispatch to printer (isolated — failure won't corrupt transaction) ──
+        print_error = None
+        for _ in range(copies):
+            try:
+                send_to_printer(printer_settings, receipt_bytes)
+            except Exception as e:
+                print_error = str(e)
+                logger.error(f"Physical print failed for {sale.InvoiceNumber}: {e}")
+                break  # don't retry bad hardware on the same job
+
+        # ── Spooler: save latest bytes as fallback / audit ────────────────────
+        try:
+            spooler_dir = os.path.join(
+                os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "spooler"
+            )
+            os.makedirs(spooler_dir, exist_ok=True)
+            filename = f"{sale.InvoiceNumber}.bin"
+            with open(os.path.join(spooler_dir, filename), 'wb') as f:
+                f.write(receipt_bytes)
+        except Exception as e:
+            logger.warning(f"Spooler write failed for {sale.InvoiceNumber}: {e}")
+
+        if print_error:
+            return {
+                "success": False,
+                "data": {"message": f"Receipt built but hardware print failed: {print_error}"},
+                "error": print_error
+            }
+
+        return {"success": True, "data": {"message": f"Printed {copies} copy/copies for {sale.InvoiceNumber}"}}
+
+    except HTTPException:
+        raise
     except Exception as e:
+        logger.error(f"print_thermal_receipt error: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.get("/kpi", response_model=BaseResponse[dict], summary="Get Sales KPIs")
 def get_sales_kpi(

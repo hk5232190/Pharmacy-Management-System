@@ -1,4 +1,5 @@
-from typing import Generator
+import json
+from typing import Generator, Callable
 from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
@@ -39,7 +40,43 @@ def get_current_user(
     return user
 
 def get_current_admin_user(current_user: User = Depends(get_current_user)) -> User:
-    # Ensure this user has admin rights.
+    """Ensure this user has admin rights."""
     if getattr(current_user, "Role", "admin") != "admin":
         raise HTTPException(status_code=403, detail="Admin access required")
     return current_user
+
+
+def require_permission(module: str) -> Callable:
+    """
+    Dependency factory — returns a FastAPI dependency that enforces module-level access.
+
+    Usage:
+        router = APIRouter(dependencies=[Depends(require_permission("purchases"))])
+    
+    - Admins always pass.
+    - Cashiers pass only if `module` is in their Permissions JSON column.
+    - Anyone else gets HTTP 403.
+    """
+    def _check(current_user: User = Depends(get_current_user)) -> User:
+        role = getattr(current_user, "Role", "admin")
+        if role == "admin":
+            return current_user  # admins bypass all permission checks
+
+        # Parse the stored permissions
+        try:
+            from schemas.users import DEFAULT_CASHIER_PERMISSIONS
+            perms = json.loads(current_user.Permissions or "[]")
+            if not isinstance(perms, list):
+                perms = DEFAULT_CASHIER_PERMISSIONS
+        except (json.JSONDecodeError, TypeError):
+            from schemas.users import DEFAULT_CASHIER_PERMISSIONS
+            perms = DEFAULT_CASHIER_PERMISSIONS
+
+        if module not in perms:
+            raise HTTPException(
+                status_code=403,
+                detail=f"Access denied: your account does not have permission to access the '{module}' module."
+            )
+        return current_user
+
+    return _check

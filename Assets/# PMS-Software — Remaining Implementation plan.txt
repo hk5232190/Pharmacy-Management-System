@@ -1,0 +1,90 @@
+# PMS-Software — Remaining Implementation Plan (Phase 3 -> 8)
+
+Status: Phase 0, 1, 2 are COMPLETE and byte-verified (Phase 2D battery PASS,
+LIVE+CLEAN sha256 byte-identical throughout). This doc is the Phase 3-8 plan.
+Nothing below has been implemented yet.
+
+
+
+## Phase 3 — Single-DB-Authority Bootflow Hardening
+Gate already passed (read-only audit, ASCII gate PASS): LIVE is stamped at head
+`b3c4d5e6f7a8b9c0d1e2f3`, has notifications table, billing_settings
+CurrencySymbol, backup_settings BackupOnExit; LIVE+CLEAN byte-identical after.
+
+### 3A — Schema drift + single-head proof (read-only)
+- Audit LIVE schema: exactly the 28 alembic revisions, single head
+  `b3c4d5e6f7a8b9c0d1e2f3`, notifications table present, CurrencySymbol +
+  BackupOnExit columns present meeting migrations.py guarantee.
+- Gate LIVE+CLEAN sha256 byte-identical before/after (already PASS).
+
+### 3B — Bootflow equivalence (isolated temp DB only)
+- Boot the REAL FastAPI startup path (create_engine -> run_migrations ->
+  sync_system_notifications, then /health responds) against an ISOLATED temp
+  copy of LIVE and of CLEAN.
+- Assert: stamped at head, notifications seeded, /health 200.
+- SHA256-verify LIVE+CLEAN byte-identical before/after. Never touches LIVE.
+
+### 3C — Fresh-install determinism (read-only/isolated)
+- Unstamped CLEAN -> run_migrations stamps deterministically to head.
+- Stamped-behind -> upgrade to head only.
+- Stamped-at-head -> byte-identical no-op (already proven in 2D battery).
+- Document single-authority rule in core/migrations.py docstring. No code
+  change unless 3A/3B reveal drift.
+
+
+
+## Phase 4 — Database Concurrency & FK Delete-Flow Audit
+(database.py comment explicitly deferred this)
+- 4A: Read-only audit of WAL + busy_timeout=5000 + synchronous=NORMAL pragmas
+      on every write path; no inline PRAGMA overrides remain (Phase 2 removed
+      them from main.py). Confirm PRAGMA foreign_keys stays=ON policy decision.
+- 4B: Delete-flow integrity: inventory every route that deletes and relies on
+      FK-unenforced orphan removal; produce fix list (cascade ordering).
+- Gate: read-only inventory first; fixes only after explicit approval.
+
+
+
+## Phase 5 — Notification Seed & Backup Pipeline Correctness
+- 5A: Prove sync_system_notifications is idempotent upsert (no dupes) across
+      repeated boots (isolated copies).
+- 5B: Audit backup pipeline: BackupOnStartup/IsAutoBackupEnabled gating,
+      BackupHistory rows, backup-name rotation, no backup while DB locked.
+      Read-only + isolated-copy tests.
+
+
+
+## Phase 6 — Print/Receipt Settings Data Consistency
+- 6A: Verify per-flag print settings columns exist in schema and are seeded
+      identically in CLEAN+LIVE (matching printing_system_architecture.md).
+- 6B: Confirm PrintSettings/ReceiptResponse DTO <-> column mapping matches the
+      three renderers (React preview, HTML string, Rust thermal).
+
+
+
+## Phase 7 — Frontend Print-Preview / Thermal Renderer Parity
+- 7A: React preview + HTML-string (Path A) and Rust thermal (Path B) render
+      identical output for a fixed ReceiptResponse fixture (single logical DTO,
+      toggle-driven toggles).
+- 7B: PDF path (Path C) byte-determinism check.
+
+
+
+## Phase 8 — Final Regression & Deployment Gate
+- 8A: Full smoke suite (backend tests + bootflow battery) re-run end-to-end;
+      LIVE+CLEAN sha256 byte-verified through EVERY phase.
+- 8B: .env.example completeness + SECRET_KEY rotation checklist; alembic head
+      single-authority re-confirmed.
+
+
+
+- 8C: Handoff summary: 10-verified-critical-problems -> resolved-status matrix.
+
+## Ground Rules carried forward
+- NEVER write to LIVE (backend/pharma_db.sqlite) or CLEAN
+  (build_assets/clean_pharma_db.sqlite); all tests on isolated temp copies,
+  sha256-verified before/after.
+- Single schema authority = core/migrations.py (run_migrations); alembic head
+  always b3c4d5e6f7a8b9c0d1e2f3.
+- Bash/python = ground truth for paths; Write tool = byte-exact authoring.
+- All verifying evidence must be a clean PASS; no code until the prior gate is
+  byte-verified.

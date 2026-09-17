@@ -6,9 +6,9 @@ import shutil
 import subprocess
 import datetime
 
-from api.deps import get_current_admin_user
+from api.deps import get_current_user
 
-router = APIRouter(dependencies=[Depends(get_current_admin_user)])
+router = APIRouter(dependencies=[Depends(get_current_user)])
 
 # App is started at import time – track startup
 _STARTUP_TIME = datetime.datetime.now()

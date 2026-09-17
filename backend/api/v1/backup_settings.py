@@ -6,7 +6,7 @@ from schemas.backup_settings import BackupSettingsResponse, BackupSettingsUpdate
 
 from core.logger import logger
 
-router = APIRouter(dependencies=[Depends(get_current_admin_user)])
+router = APIRouter(dependencies=[Depends(get_current_user)])
 
 def get_or_create_settings(db: Session) -> BackupSettings:
     settings = db.query(BackupSettings).first()

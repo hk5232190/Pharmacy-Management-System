@@ -3,6 +3,7 @@ backend/venv/
 backend/__pycache__/
 backend/.pytest_cache/
 *.pyc
+__pycache__/
 
 # Environment Variables (Never push secrets!)
 .env
@@ -28,3 +29,13 @@ backend/spooler/
 backend/temp/
 *.pdf
 *.tmp
+
+# Runtime database + logs (use testenv for isolated runs; keep only the clean seed)
+backend/pharma_db.sqlite
+backend/pharma_db.sqlite-*
+backend/*.log
+backend/spool/*
+backend/dist/
+
+# Stale backups / scratch
+*.bak

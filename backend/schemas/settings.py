@@ -79,17 +79,43 @@ class InventorySettingsResponse(InventorySettingsBase):
         from_attributes = True
 
 class PrinterSettingsBase(BaseModel):
-    PrinterType: str
-    PaperSize: str
+    # Hardware
+    PrinterType: str = "ESC/POS Thermal"
+    PaperSize: str = "80mm"
+    CustomPaperWidthMm: Optional[int] = None
     SelectedPrinterName: Optional[str] = None
-    ConnectionPort: str
+    ConnectionPort: str = "USB"
     CustomRawByteSequence: Optional[str] = None
-    ShowLogo: bool
-    ShowPharmacyName: bool
-    ShowAddress: bool
-    ReceiptFooterMessage: Optional[str] = None
+    # Printer behaviour
+    Copies: int = 1
+    OpenPrintDialog: bool = False
     AutoCutPaper: bool = True
     OpenCashDrawer: bool = True
+    # Receipt layout
+    ReceiptTitle: Optional[str] = "SALE RECEIPT"
+    FontScale: int = 100
+    CharactersPerLine: int = 42
+    ItemNameWidth: int = 16
+    ReceiptFooterMessage: Optional[str] = None
+    # Header toggles
+    ShowLogo: bool = True
+    ShowPharmacyName: bool = True
+    ShowAddress: bool = True
+    ShowPhoneNumber: bool = True
+    # Invoice info toggles
+    ShowInvoiceNumber: bool = True
+    ShowDate: bool = True
+    ShowTime: bool = True
+    ShowCashier: bool = True
+    ShowCustomerName: bool = True
+    # Totals toggles
+    ShowSubtotal: bool = True
+    ShowDiscount: bool = True
+    ShowTax: bool = True
+    ShowAmountPaid: bool = True
+    ShowChangeDue: bool = True
+    ShowPaymentMethod: bool = True
+    # Item detail toggles
     PrintBatchAndExpiry: bool = True
     PrintLicenseAndNtn: bool = False
     PrintDoctorAndPatient: bool = False
@@ -102,6 +128,7 @@ class PrinterSettingsResponse(PrinterSettingsBase):
 
     class Config:
         from_attributes = True
+
 
 class SystemPreferencesBase(BaseModel):
     Theme: str

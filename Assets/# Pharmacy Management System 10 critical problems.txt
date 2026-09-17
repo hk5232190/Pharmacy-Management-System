@@ -1,6 +1,5 @@
 # Pharmacy Management System Architecture
 
-## System context
 
 PMS is a single-machine desktop application. A Tauri host launches a bundled
 FastAPI process and renders a statically exported Next.js application. The UI
@@ -8,53 +7,7 @@ discovers the sidecar's loopback port at runtime and communicates through JSON
 HTTP. FastAPI persists operational data in SQLite and stores files such as
 licenses, uploads, logs, and backups on the local filesystem.
 
-```text
-User
-  -> Tauri/WebView2 (window, installer, sidecar lifecycle)
-     -> Next.js/React static UI (screens and client state)
-        -> HTTP client / raw fetch calls
-           -> FastAPI routers and dependencies
-              -> route-level business logic
-                 -> SQLAlchemy ORM -> SQLite
-                 -> filesystem -> licenses/uploads/backups/logs/spooler
-                 -> OS integrations -> printers/dialogs/processes
-```
 
-The deployment topology is appropriate for an offline, single-workstation
-pharmacy. It is not currently a client/server multi-tenant architecture.
-
-## Runtime data flow
-
-1. Tauri starts the Python sidecar and reads `PMS_PORT:<port>` from stdout.
-2. The frontend polls the Tauri command and caches the resolved API base URL.
-3. `StartupProvider` checks the device license, then checks the stored bearer
-   token and selects the initial route.
-4. Feature pages call FastAPI, mostly through direct `fetch`; a smaller subset
-   uses the shared API client.
-5. Authentication dependencies decode the JWT and load the active user.
-6. Route handlers query and mutate SQLAlchemy models, commit transactions, and
-   format response payloads.
-7. Sales/purchases update invoices, stock batches, balances, returns, and audit
-   records. Reports aggregate those transactional tables.
-8. Backup, license, printing, update, and diagnostics routes cross the OS and
-   filesystem boundary.
-9. The NSIS installer replaces binaries under Program Files; mutable user data
-   must remain outside the installation directory.
-
-## Current module responsibilities
-
-| Area | Current implementation | Intended boundary |
-|---|---|---|
-| Desktop host | `frontend/src-tauri` | Window and sidecar lifecycle only |
-| Presentation | `frontend/src/app`, components | Render state and collect input |
-| Client state | React contexts/hooks | Session and cross-screen UI state |
-| HTTP transport | `frontend/src/lib/api-client.ts` plus raw fetch | One typed transport boundary |
-| API composition | `backend/api/router.py` | Prefix/tag registration only |
-| HTTP endpoints | `backend/api/v1` | Validate/translate request and response |
-| Domain workflows | Mostly embedded in route files | Application services/use cases |
-| Persistence | `models.py`, `database.py` | Repositories/unit of work |
-| Infrastructure | backup/license/printer helpers | Explicit filesystem and OS adapters |
-| Schema evolution | Alembic plus startup SQL/scripts | Alembic only |
 
 ## Critical problem areas
 
@@ -162,76 +115,8 @@ increasing accidental leakage and noisy diffs.
 Target: unit, integration, contract, and installer test layers; generated
 artifacts outside source control; sanitized fixtures only.
 
-## Refactoring strategy
 
-### Phase 1: establish safety rails
 
-- Snapshot current OpenAPI and add a route uniqueness assertion.
-- Add integration tests for sale, sale return, purchase, purchase return,
-  authentication, licensing, backup/restore, and historical DB upgrade.
-- Define performance fixtures representing multiple years of transactions.
-- Record SQLite query plans and endpoint latency before optimizing.
-
-### Phase 2: normalize boundaries
-
-- Route all frontend traffic through one typed HTTP adapter.
-- Introduce feature API modules without redesigning screens.
-- Move router registration to the composition root (started in
-  `backend/api/router.py`).
-- Use the canonical database dependency everywhere.
-- Standardize errors and response envelopes while retaining compatibility.
-
-### Phase 3: extract workflows
-
-- Extract sales, returns, purchasing, inventory adjustment, and backup services
-  one endpoint at a time.
-- Give each write workflow one explicit unit-of-work boundary.
-- Move calculations into pure functions and cover edge cases with unit tests.
-- Put OS/filesystem behavior behind adapters.
-
-Suggested backend dependency direction:
-
-```text
-api -> application -> domain
-                    -> ports <- infrastructure
-```
-
-The domain and application layers must not import FastAPI, Tauri, or concrete
-filesystem/database implementations.
-
-### Phase 4: split UI features
-
-For each large screen, retain the page as a composition component and extract:
-
-```text
-features/sales/
-  api.ts
-  types.ts
-  use-sale-session.ts
-  pricing.ts
-  components/
-```
-
-Use reducers for multi-step transactional forms, memoize only measured hot
-paths, and virtualize large tables. Do not introduce global state for state that
-belongs to one workflow.
-
-### Phase 5: optimize from evidence
-
-- Replace sales-history N+1 queries with eager/batched loading.
-- Push report aggregation into SQL and stream export rows.
-- Add bounded pagination to every history/list endpoint.
-- Configure and test SQLite WAL, foreign keys, busy timeout, and checkpoints.
-- Add indexes only when representative `EXPLAIN QUERY PLAN` output justifies
-  them; excessive indexes slow every stock-changing transaction.
-
-### Phase 6: harden release engineering
-
-- Make Alembic the sole schema authority.
-- Test upgrades from every supported release fixture.
-- Build from a clean checkout and produce checksums/SBOM.
-- Run installer tests for active-process update, clean install, rollback, and
-  AppData preservation.
 
 ## Production-grade implementation rules
 

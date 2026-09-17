@@ -1,0 +1,1 @@
+2026-09-16 22:24:58,220 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.

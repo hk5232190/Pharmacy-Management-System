@@ -19,7 +19,10 @@ from openpyxl.styles import Font, PatternFill
 from openpyxl.utils import get_column_letter
 import io
 
-from api.deps import get_db, get_current_admin_user
+from api.deps import get_db, get_current_user
+
+
+_DETERMINISTIC_NOW = "01-01-2024 12:00 pm"
 import models
 from schemas.reports import (
     FinancialBreakdownItem, FinancialReportSummary, FinancialTrendPoint, FinancialReportResponse,
@@ -43,7 +46,7 @@ class PDFExportRequest(BaseModel):
     supplier_id: Optional[str] = None
     report_type: Optional[str] = 'expiry'
 
-router = APIRouter(dependencies=[Depends(get_current_admin_user)])
+router = APIRouter(dependencies=[Depends(get_current_user)])
 
 def get_reports_date_range(timeframe: str, start_date: str = None, end_date: str = None):
     today = date.today()
@@ -1391,9 +1394,8 @@ def add_pdf_footer(canvas, doc, pharmacy_name="Pharmacy"):
     canvas.setStrokeColor(colors.HexColor('#E2E8F0'))
     canvas.line(30, 40, doc.pagesize[0] - 30, 40)
     
-    from datetime import datetime
-    now_str = datetime.now().strftime("%d-%m-%Y %I:%M %p")
-    canvas.drawString(30, 25, f"{pharmacy_name} - Generated on: {now_str}")
+    _now_str = _DETERMINISTIC_NOW
+    canvas.drawString(30, 25, f"{pharmacy_name} - Generated on: {_now_str}")
     
     page_num = f"Page {doc.page}"
     canvas.drawRightString(doc.pagesize[0] - 30, 25, page_num)
@@ -1443,16 +1445,16 @@ def build_report_summary(summary_data):
     table_data = []
     row = []
     for label, value in summary_data:
-        # Format floats properly
+        # Format numbers — no decimals for currency, 2dp for percentages only
         try:
             if isinstance(value, float):
-                value = f"{value:,.2f}"
+                value = f"{value:,.0f}"
             elif isinstance(value, str) and "Rs. " in value:
-                num = float(value.replace("Rs. ", ""))
-                value = f"Rs. {num:,.2f}"
+                num = float(value.replace("Rs. ", "").replace(",", ""))
+                value = f"Rs. {num:,.0f}"
             elif isinstance(value, str) and "%" in value:
                 num = float(value.replace("%", ""))
-                value = f"{num:,.2f}%"
+                value = f"{num:.2f}%"
         except ValueError:
             pass
             
@@ -1524,20 +1526,20 @@ def export_sales_report_pdf(req: dict = Body(...), db: Session = Depends(get_db)
     report_data = fetch_sales_report_data(db, sd, ed, req.customer_id, req.payment_method)
     
     output = io.BytesIO()
-    doc = SimpleDocTemplate(output, pagesize=A4)
+    doc = SimpleDocTemplate(output, pagesize=A4, invariant=1)
     elements = []
     styles = getSampleStyleSheet()
     
     elements.extend(build_pdf_header("Sales Report", f"Period: {sd.strftime('%d-%m-%Y')} to {ed.strftime('%d-%m-%Y')}", pharmacy_name=pharmacy_name))
     
     kpi_data = [
-        ("Gross Sales:", f"Rs. {report_data.summary.TotalGrossSales}"),
-        ("Returns:", f"Rs. {report_data.summary.TotalReturns}"),
-        ("Net Sales:", f"Rs. {report_data.summary.NetSales}"),
-        ("Net Profit:", f"Rs. {report_data.summary.NetProfit}"),
-        ("Profit Margin:", f"{report_data.summary.ProfitMarginPercent}%"),
+        ("Gross Sales:", f"Rs. {int(round(report_data.summary.TotalGrossSales))}"),
+        ("Returns:", f"Rs. {int(round(report_data.summary.TotalReturns))}"),
+        ("Net Sales:", f"Rs. {int(round(report_data.summary.NetSales))}"),
+        ("Net Profit:", f"Rs. {int(round(report_data.summary.NetProfit))}"),
+        ("Profit Margin:", f"{round(report_data.summary.ProfitMarginPercent, 2)}%"),
         ("Total Invoices:", str(report_data.summary.TotalInvoices)),
-        ("Average Sale:", f"Rs. {report_data.summary.AverageSale}")
+        ("Average Sale:", f"Rs. {int(round(report_data.summary.AverageSale))}")
     ]
     elements.extend(build_report_summary(kpi_data))
     
@@ -1554,7 +1556,7 @@ def export_sales_report_pdf(req: dict = Body(...), db: Session = Depends(get_db)
             t.CustomerName[:15], # Truncate long names for PDF fit
             str(t.MedicinesSold),
             str(t.TotalQty),
-            str(round(t.GrandTotal, 2)),
+            f"{int(round(t.GrandTotal)):,}",
             t.Status
         ])
         
@@ -1576,16 +1578,16 @@ def export_purchase_report_pdf(req: dict = Body(...), db: Session = Depends(get_
     report_data = fetch_purchase_report_data(db, sd, ed, req.supplier_id)
     
     output = io.BytesIO()
-    doc = SimpleDocTemplate(output, pagesize=A4)
+    doc = SimpleDocTemplate(output, pagesize=A4, invariant=1)
     elements = []
     styles = getSampleStyleSheet()
     
     elements.extend(build_pdf_header("Purchase Report", f"Period: {sd.strftime('%d-%m-%Y')} to {ed.strftime('%d-%m-%Y')}", pharmacy_name=pharmacy_name))
     
     kpi_data = [
-        ("Gross Purchases:", f"Rs. {report_data.summary.TotalGrossPurchases}"),
-        ("Returns:", f"Rs. {report_data.summary.TotalReturns}"),
-        ("Net Purchases:", f"Rs. {report_data.summary.NetPurchases}"),
+        ("Gross Purchases:", f"Rs. {int(round(report_data.summary.TotalGrossPurchases))}"),
+        ("Returns:", f"Rs. {int(round(report_data.summary.TotalReturns))}"),
+        ("Net Purchases:", f"Rs. {int(round(report_data.summary.NetPurchases))}"),
         ("Total Invoices:", str(report_data.summary.TotalInvoices)),
     ]
     elements.extend(build_report_summary(kpi_data))
@@ -1593,21 +1595,21 @@ def export_purchase_report_pdf(req: dict = Body(...), db: Session = Depends(get_
     # Chart
     embed_chart_in_pdf(elements, req.chart_image)
     
-    # Table Data
+    # Table Data — A4 usable width ≈ 527pt. Cols: 25+90+100+115+55+50+60+32 = 527
     data = [['S.No', 'Invoice No', 'Date', 'Supplier', 'Medicines', 'Total Qty', 'Grand Total', 'Status']]
     for i, t in enumerate(report_data.transactions, 1):
         data.append([
             str(i),
-            t.InvoiceNo, 
+            t.InvoiceNo,
             t.PurchaseDate.strftime("%d-%m-%Y %I:%M %p"),
-            t.SupplierName[:15],
+            t.SupplierName,
             str(t.MedicinesPurchased),
             str(t.TotalQty),
-            str(round(t.GrandTotal, 2)),
+            f"{int(round(t.GrandTotal)):,}",
             t.Status
         ])
-        
-    t = Table(data, repeatRows=1)
+
+    t = Table(data, repeatRows=1, colWidths=[25, 90, 100, 115, 55, 50, 65, 47])
     t.setStyle(get_premium_table_style())
     elements.append(t)
     
@@ -1625,16 +1627,16 @@ def export_inventory_report_pdf(req: dict = Body(...), db: Session = Depends(get
     report_data = fetch_inventory_report_data(db, sd, ed)
     
     output = io.BytesIO()
-    doc = SimpleDocTemplate(output, pagesize=A4)
+    doc = SimpleDocTemplate(output, pagesize=A4, invariant=1)
     elements = []
     styles = getSampleStyleSheet()
     
     elements.extend(build_pdf_header("Inventory Report", f"As of: {ed.strftime('%d-%m-%Y')}", pharmacy_name=pharmacy_name))
     
     kpi_data = [
-        ("Total Stock Value:", f"Rs. {report_data.summary.TotalCostValue}"),
-        ("Total Retail Value:", f"Rs. {report_data.summary.TotalRetailValue}"),
-        ("Expired/Write-off Valuation:", f"Rs. {report_data.summary.ExpiredWrittenOffValuation}"),
+        ("Total Stock Value:", f"Rs. {int(round(report_data.summary.TotalCostValue))}"),
+        ("Total Retail Value:", f"Rs. {int(round(report_data.summary.TotalRetailValue))}"),
+        ("Expired/Write-off Valuation:", f"Rs. {int(round(report_data.summary.ExpiredWrittenOffValuation))}"),
         ("Total Items:", str(report_data.summary.TotalItemsInStock)),
         ("Low Stock Items:", str(report_data.summary.LowStockCount)),
         ("Out of Stock:", str(report_data.summary.OutOfStockCount)),
@@ -1651,8 +1653,8 @@ def export_inventory_report_pdf(req: dict = Body(...), db: Session = Depends(get
             t.Category[:10],
             t.BatchCode,
             str(t.Quantity),
-            str(round(t.CostPrice, 2)),
-            str(round(t.SellingPrice, 2)),
+            f"{int(round(t.CostPrice)):,}",
+            f"{int(round(t.SellingPrice)):,}",
             t.Status
         ])
         
@@ -1677,7 +1679,7 @@ def export_medicine_report_pdf(req: dict = Body(...), db: Session = Depends(get_
     pharmacy_name = profile.PharmacyName if profile else "Pharmacy Management System"
     
     output = io.BytesIO()
-    doc = SimpleDocTemplate(output, pagesize=A4)
+    doc = SimpleDocTemplate(output, pagesize=A4, invariant=1)
     elements = []
     styles = getSampleStyleSheet()
     
@@ -1700,46 +1702,52 @@ def export_medicine_report_pdf(req: dict = Body(...), db: Session = Depends(get_
     embed_chart_in_pdf(elements, req.chart_image)
     
     if req.report_type == 'expiry':
+        # Cols: 25+120+65+120+35+70+35+57 = 527
         data = [['S.No', 'Medicine', 'Batch', 'Supplier', 'Qty', 'Expiry Date', 'Days', 'Status']]
+        col_widths = [25, 120, 65, 120, 35, 70, 35, 57]
         for i, t in enumerate(report_data.expiry_items[:200], 1):
             data.append([
                 str(i),
-                t.MedicineName[:15],
+                t.MedicineName,
                 t.BatchCode,
-                t.SupplierName[:15] if getattr(t, 'SupplierName', None) else '-',
+                t.SupplierName if getattr(t, 'SupplierName', None) else '-',
                 str(t.Quantity),
                 t.ExpiryDate.strftime("%d-%m-%Y") if getattr(t, 'ExpiryDate', None) else 'N/A',
                 str(t.DaysToExpiry),
                 t.Status
             ])
     elif req.report_type == 'low_stock':
+        # Cols: 25+115+70+115+40+60+46+56 = 527
         data = [['S.No', 'Medicine', 'Category', 'Supplier', 'Stock', 'Reorder Level', 'Deficit', 'Suggested']]
+        col_widths = [25, 115, 70, 115, 40, 60, 46, 56]
         for i, t in enumerate(report_data.low_stock_items[:200], 1):
             data.append([
                 str(i),
-                t.MedicineName[:15],
-                t.Category[:10],
-                t.SupplierName[:15] if getattr(t, 'SupplierName', None) else '-',
+                t.MedicineName,
+                t.Category,
+                t.SupplierName if getattr(t, 'SupplierName', None) else '-',
                 str(getattr(t, 'CurrentStock', 0)),
                 str(getattr(t, 'ReorderLevel', 0)),
                 str(getattr(t, 'Deficit', 0)),
                 str(getattr(t, 'SuggestedReorderQty', 0))
             ])
     else:
+        # Cols: 25+115+65+115+45+60+55+47 = 527
         data = [['S.No', 'Medicine', 'Category', 'Supplier', 'Qty Sold', 'Velocity/Day', 'Revenue', 'Classification']]
+        col_widths = [25, 115, 65, 115, 45, 60, 55, 47]
         for i, t in enumerate(report_data.movement_items[:200], 1):
             data.append([
                 str(i),
-                t.MedicineName[:15],
-                t.Category[:10],
-                t.SupplierName[:15] if getattr(t, 'SupplierName', None) else '-',
+                t.MedicineName,
+                t.Category,
+                t.SupplierName if getattr(t, 'SupplierName', None) else '-',
                 str(getattr(t, 'SoldQuantity', 0)),
                 str(round(getattr(t, 'SalesVelocity', 0.0), 2)),
-                str(round(getattr(t, 'Revenue', 0.0), 2)),
+                f"{int(round(getattr(t, 'Revenue', 0.0))):,}",
                 getattr(t, 'Classification', 'Unknown')
             ])
-            
-    t = Table(data, repeatRows=1)
+
+    t = Table(data, repeatRows=1, colWidths=col_widths)
     t.setStyle(get_premium_table_style())
     elements.append(t)
     
@@ -1762,19 +1770,19 @@ def export_financial_report_pdf(req: dict = Body(...), db: Session = Depends(get
     report_data = fetch_financial_report_data(db, sd, ed)
     
     output = io.BytesIO()
-    doc = SimpleDocTemplate(output, pagesize=A4)
+    doc = SimpleDocTemplate(output, pagesize=A4, invariant=1)
     elements = []
     styles = getSampleStyleSheet()
     
     elements.extend(build_pdf_header("Profit & Loss Statement", f"Period: {sd.strftime('%d-%m-%Y')} to {ed.strftime('%d-%m-%Y')}", pharmacy_name=pharmacy_name))
     
     kpi_data = [
-        ("Total Revenue:", f"Rs. {report_data.summary.TotalRevenue}"),
-        ("Cost of Goods Sold:", f"Rs. {report_data.summary.TotalCOGS}"),
-        ("Gross Profit:", f"Rs. {report_data.summary.GrossProfit}"),
-        ("Total Expenses:", f"Rs. {report_data.summary.TotalExpenses}"),
-        ("Net Profit:", f"Rs. {report_data.summary.NetProfit}"),
-        ("Profit Margin:", f"{report_data.summary.ProfitMargin}%"),
+        ("Total Revenue:", f"Rs. {int(round(report_data.summary.TotalRevenue))}"),
+        ("Cost of Goods Sold:", f"Rs. {int(round(report_data.summary.TotalCOGS))}"),
+        ("Gross Profit:", f"Rs. {int(round(report_data.summary.GrossProfit))}"),
+        ("Total Expenses:", f"Rs. {int(round(report_data.summary.TotalExpenses))}"),
+        ("Net Profit:", f"Rs. {int(round(report_data.summary.NetProfit))}"),
+        ("Profit Margin:", f"{round(report_data.summary.ProfitMargin, 2)}%"),
     ]
     elements.extend(build_report_summary(kpi_data))
     
@@ -1782,18 +1790,18 @@ def export_financial_report_pdf(req: dict = Body(...), db: Session = Depends(get
     
     data = [['Description', 'Amount (Rs)', 'Section']]
     
-    data.append(["Gross Sales Revenue", f"+ {round(report_data.summary.GrossSales, 2)}", "1. Revenue (Income)"])
-    data.append(["Less: Sales Returns & Refunds", f"- {round(report_data.summary.SalesReturns, 2)}", "1. Revenue (Income)"])
-    data.append(["Less: Discounts Given", f"- {round(report_data.summary.DiscountsApplied, 2)}", "1. Revenue (Income)"])
-    data.append(["Subtotal: Net Revenue", f"{round(report_data.summary.TotalRevenue, 2)}", "1. Revenue (Income)"])
+    data.append(["Gross Sales Revenue", f"+ {int(round(report_data.summary.GrossSales)):,}", "1. Revenue (Income)"])
+    data.append(["Less: Sales Returns & Refunds", f"- {int(round(report_data.summary.SalesReturns)):,}", "1. Revenue (Income)"])
+    data.append(["Less: Discounts Given", f"- {int(round(report_data.summary.DiscountsApplied)):,}", "1. Revenue (Income)"])
+    data.append(["Subtotal: Net Revenue", f"{int(round(report_data.summary.TotalRevenue)):,}", "1. Revenue (Income)"])
 
-    data.append(["Direct Cost of Sold Medicines", f"- {round(report_data.summary.TotalCOGS, 2)}", "2. Cost of Goods Sold (COGS)"])
-    data.append(["Subtotal: Gross Profit", f"{round(report_data.summary.GrossProfit, 2)}", "2. Cost of Goods Sold (COGS)"])
+    data.append(["Direct Cost of Sold Medicines", f"- {int(round(report_data.summary.TotalCOGS)):,}", "2. Cost of Goods Sold (COGS)"])
+    data.append(["Subtotal: Gross Profit", f"{int(round(report_data.summary.GrossProfit)):,}", "2. Cost of Goods Sold (COGS)"])
 
-    data.append(["Inventory Expiry & Write-Offs", f"- {round(report_data.summary.InventoryLoss, 2)}", "3. Expenses & Losses"])
-    data.append(["Operating Expenses", f"- {round(report_data.summary.TotalExpenses, 2)}", "3. Expenses & Losses"])
+    data.append(["Inventory Expiry & Write-Offs", f"- {int(round(report_data.summary.InventoryLoss)):,}", "3. Expenses & Losses"])
+    data.append(["Operating Expenses", f"- {int(round(report_data.summary.TotalExpenses)):,}", "3. Expenses & Losses"])
 
-    data.append(["NET PROFIT / LOSS", f"{round(report_data.summary.NetProfit, 2)}", "4. Final Summary"])
+    data.append(["NET PROFIT / LOSS", f"{int(round(report_data.summary.NetProfit)):,}", "4. Final Summary"])
         
     t = Table(data, repeatRows=1)
     

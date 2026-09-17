@@ -15,7 +15,6 @@ import {
   Truck,
   Users,
   BarChart3,
-  Database,
   Settings,
   ChevronDown,
   ChevronRight,
@@ -33,7 +32,9 @@ interface NavItem {
   href: string;
   activePrefixes?: string[];
   subItems?: { title: string; icon: any; href: string }[];
-  roles?: string[];
+  /** If set, this item is shown when the user has this module permission.
+   *  If omitted, the item is admin-only. Admins always see all items. */
+  permission?: string;
 }
 
 const NAV_ITEMS: NavItem[] = [
@@ -41,25 +42,25 @@ const NAV_ITEMS: NavItem[] = [
     title: "Dashboard",
     icon: LayoutDashboard,
     href: "/dashboard",
-    roles: ["admin"],
+    permission: "dashboard",
   },
   {
     title: "Sales & POS Billing",
     icon: TrendingUp,
     href: "/dashboard/sales",
-    roles: ["admin", "cashier"],
+    permission: "sales",
   },
   {
     title: "Purchases",
     icon: ShoppingCart,
     href: "/dashboard/purchases",
-    roles: ["admin"],
+    permission: "purchases",
   },
   {
     title: "Inventory",
     icon: Package,
     href: "/dashboard/inventory",
-    roles: ["admin"],
+    permission: "inventory",
   },
   {
     title: "Medicines",
@@ -70,31 +71,31 @@ const NAV_ITEMS: NavItem[] = [
       "/dashboard/masters/categories",
       "/dashboard/masters/companies",
     ],
-    roles: ["admin"],
+    permission: "medicines",
   },
   {
     title: "Suppliers",
     icon: Truck,
     href: "/dashboard/masters/suppliers",
-    roles: ["admin"],
+    permission: "suppliers",
   },
   {
     title: "Customers",
     icon: Users,
     href: "/dashboard/masters/customers",
-    roles: ["admin"],
+    permission: "customers",
   },
   {
     title: "Reports",
     icon: BarChart3,
     href: "/dashboard/reports",
-    roles: ["admin"],
+    permission: "reports",
   },
   {
     title: "Settings",
     icon: Settings,
     href: "/dashboard/settings",
-    roles: ["admin"],
+    permission: "settings",
   },
 ];
 
@@ -102,7 +103,7 @@ export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { profile, isLoading } = useProfile();
-  const { user, logout } = useAuth();
+  const { user, logout, hasPermission } = useAuth();
 
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
@@ -129,8 +130,15 @@ export function Sidebar() {
     router.push("/");
   };
 
-  // Manage open states for items with sub-menus. By default, open if the current path matches.
-  const visibleNavItems = NAV_ITEMS.filter(item => !item.roles || item.roles.includes(user.role));
+  // Filter nav items based on permissions.
+  // - Items with no `permission` key are admin-only (e.g. Settings).
+  // - Admins see everything (hasPermission always returns true for admins).
+  // - Cashiers see only items whose permission key is in their granted list.
+  const visibleNavItems = NAV_ITEMS.filter(item => {
+    if (!item.permission) return user.role === "admin";
+    return hasPermission(item.permission);
+  });
+
   const [openStates, setOpenStates] = useState<Record<string, boolean>>(() => {
     const initialState: Record<string, boolean> = {};
     visibleNavItems.forEach(item => {
@@ -199,8 +207,8 @@ export function Sidebar() {
                     onClick={() => toggleOpen(item.title)}
                     className={cn(
                       "w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 group",
-                      isItemActive 
-                        ? "text-white" 
+                      isItemActive
+                        ? "text-white"
                         : "text-slate-400 hover:text-slate-200 hover:bg-white/5"
                     )}
                   >
@@ -215,8 +223,8 @@ export function Sidebar() {
                     href={item.href}
                     className={cn(
                       "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 group",
-                      isItemActive 
-                        ? "bg-slate-200 text-slate-900 shadow-sm" 
+                      isItemActive
+                        ? "bg-slate-200 text-slate-900 shadow-sm"
                         : "text-slate-400 hover:text-slate-200 hover:bg-white/5"
                     )}
                   >
@@ -236,8 +244,8 @@ export function Sidebar() {
                           href={subItem.href}
                           className={cn(
                             "flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium transition-colors ml-4",
-                            isSubActive 
-                              ? "bg-slate-200 text-slate-900 shadow-sm" 
+                            isSubActive
+                              ? "bg-slate-200 text-slate-900 shadow-sm"
                               : "text-slate-400 hover:text-slate-200 hover:bg-white/5"
                           )}
                         >
@@ -256,7 +264,7 @@ export function Sidebar() {
 
       {/* Footer */}
       <div className="p-4 shrink-0 border-t border-white/5 mt-auto">
-        <button 
+        <button
           onClick={handleLogout}
           disabled={isLoggingOut}
           className="flex items-center justify-start gap-3 w-full py-2.5 px-4 rounded-xl text-sm font-semibold transition-all duration-300 bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white border border-red-500/20 hover:shadow-[0_0_15px_rgba(239,68,68,0.3)] hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed"
