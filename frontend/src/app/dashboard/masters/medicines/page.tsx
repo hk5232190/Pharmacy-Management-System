@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef } from "react";
 import { Search, Plus, Download, Upload, RefreshCcw, Eye, Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SmartCombobox } from "@/components/ui/smart-combobox";
+import { ImportPreviewModal } from "@/components/medicines/import-preview-modal";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -71,6 +73,8 @@ export default function MedicinesPage() {
   // Import/Export State
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isImporting, setIsImporting] = useState(false);
+  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
+  const [previewData, setPreviewData] = useState<any[]>([]);
   const [isExporting, setIsExporting] = useState(false);
   
   // Dialog State
@@ -82,6 +86,39 @@ export default function MedicinesPage() {
     DefaultCostPrice: 0, DefaultSellingPrice: 0, IsActive: true
   });
   const [isSaving, setIsSaving] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const brandNameInputRef = useRef<HTMLInputElement>(null);
+
+  const handleCreateCategory = async (name: string) => {
+    try {
+      const res = await apiClient.post("/categories", { CategoryName: name, IsActive: true });
+      if (res.success && res.data) {
+        setCategories([...categories, res.data]);
+        setCurrentMedicine(prev => ({ ...prev, CategoryId: res.data.CategoryId }));
+        toast.success(`Category "${name}" added`);
+      } else {
+        toast.error(res.error || "Failed to create category");
+      }
+    } catch (error) {
+      toast.error("Error creating category");
+    }
+  };
+
+  const handleCreateCompany = async (name: string) => {
+    try {
+      const res = await apiClient.post("/companies", { CompanyName: name, IsActive: true });
+      if (res.success && res.data) {
+        setCompanies([...companies, res.data]);
+        setCurrentMedicine(prev => ({ ...prev, CompanyId: res.data.CompanyId }));
+        toast.success(`Company "${name}" added`);
+      } else {
+        toast.error(res.error || "Failed to create company");
+      }
+    } catch (error) {
+      toast.error("Error creating company");
+    }
+  };
+
 
   const fetchMedicines = async () => {
     setLoading(true);
@@ -177,7 +214,19 @@ export default function MedicinesPage() {
       
       if (data.success) {
         toast.success(data.message);
-        setIsDialogOpen(false);
+        if (!isEditing) {
+          setCurrentMedicine({
+            BrandName: "", GenericName: "", CategoryId: 0, CompanyId: 0, RackNumber: "",
+            ReorderLevel: 10, 
+            RequiresPrescription: false, 
+            Unit: "Box", 
+            DosageForm: "", Strength: "", Barcode: "",
+            DefaultCostPrice: 0, DefaultSellingPrice: 0, IsActive: true
+          });
+          setTimeout(() => brandNameInputRef.current?.focus(), 100);
+        } else {
+          setIsDialogOpen(false);
+        }
         fetchMedicines();
       } else {
         toast.error(data.error || "Failed to save medicine");
@@ -247,6 +296,63 @@ export default function MedicinesPage() {
     }
   };
 
+  
+  const handleConfirmImport = async (validData: any[]) => {
+    setIsImporting(true);
+    try {
+      const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
+      const res = await fetch(`${API_BASE_URL}/medicines/import-bulk`, {
+        method: "POST",
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(validData),
+      });
+      
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast.success(data.message || "Import successful");
+        setIsPreviewModalOpen(false);
+        fetchMedicines();
+      } else {
+        toast.error(data.detail || data.message || "Failed to import");
+      }
+    } catch (err) {
+      toast.error("Network error during import");
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
+  const handleDownloadTemplate = async () => {
+    const toastId = toast.loading("Generating smart template...");
+    try {
+      const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
+      const res = await fetch(`${API_BASE_URL}/medicines/import-template`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (!res.ok) throw new Error("Template download failed");
+      
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "medicines_import_template.xlsx";
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      toast.dismiss(toastId);
+      toast.success("Template downloaded successfully");
+    } catch (err) {
+      toast.dismiss(toastId);
+      toast.error("Failed to download template");
+    }
+  };
+
   const handleImportClick = () => {
     fileInputRef.current?.click();
   };
@@ -261,25 +367,21 @@ export default function MedicinesPage() {
       formData.append("file", file);
       
       const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
-      const res = await fetch(`${API_BASE_URL}/medicines/import`, {
+      const res = await fetch(`${API_BASE_URL}/medicines/import-preview`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
       });
       
       const data = await res.json();
-      if (res.ok && data.data) {
-        toast.success(`Imported: ${data.data.imported_count}, Skipped: ${data.data.skipped_count}`);
-        if (data.data.errors?.length > 0) {
-          console.warn("Import errors:", data.data.errors);
-          toast.error(`There were ${data.data.errors.length} errors. Check console.`);
-        }
-        fetchMedicines();
+      if (res.ok && data.success) {
+        setPreviewData(data.data);
+        setIsPreviewModalOpen(true);
       } else {
-        toast.error(data.detail || data.message || "Failed to import");
+        toast.error(data.detail || data.message || "Failed to parse file");
       }
     } catch (err) {
-      toast.error("Network error during import");
+      toast.error("Network error during file processing");
     } finally {
       setIsImporting(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -346,8 +448,11 @@ export default function MedicinesPage() {
           
           <input type="file" accept=".csv, .xlsx, .xls" className="hidden" ref={fileInputRef} onChange={handleFileChange} />
           
+          <Button variant="outline" className="h-10 bg-background text-foreground hidden sm:flex" onClick={handleDownloadTemplate}>
+            <Download className="mr-2 h-4 w-4" /> Template
+          </Button>
           <Button variant="outline" className="h-10 bg-background text-foreground hidden sm:flex" onClick={handleImportClick} disabled={isImporting}>
-            <Download className="mr-2 h-4 w-4" /> {isImporting ? "Importing..." : "Import CSV"}
+            <Upload className="mr-2 h-4 w-4" /> {isImporting ? "Importing..." : "Import CSV"}
           </Button>
           <Button variant="outline" className="h-10 bg-background text-foreground hidden sm:flex" onClick={handleExport} disabled={isExporting}>
             <Upload className="mr-2 h-4 w-4" /> {isExporting ? "Exporting..." : "Export CSV"}
@@ -489,63 +594,70 @@ export default function MedicinesPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
             
             <div className="space-y-2 md:col-span-2 text-primary font-semibold border-b pb-1">
-              Basic Information
+              Essential Information
             </div>
 
             <div className="space-y-2">
               <label className="text-sm font-semibold text-foreground">Brand Name *</label>
               <Input 
+                id="brand-name-input"
+                ref={brandNameInputRef}
                 value={currentMedicine.BrandName || ""}
                 onChange={e => setCurrentMedicine({...currentMedicine, BrandName: e.target.value})}
                 placeholder="e.g. Panadol"
                 className="h-10"
+                onKeyDown={e => {
+                  if(e.key === 'Enter') { e.preventDefault(); document.getElementById('formula-input')?.focus(); }
+                }}
               />
             </div>
             
             <div className="space-y-2">
               <label className="text-sm font-semibold text-foreground">Formula *</label>
               <Input 
+                id="formula-input"
                 value={currentMedicine.GenericName || ""}
                 onChange={e => setCurrentMedicine({...currentMedicine, GenericName: e.target.value})}
                 placeholder="e.g. Paracetamol"
                 className="h-10"
+                onKeyDown={e => {
+                  if(e.key === 'Enter') { e.preventDefault(); document.getElementById('category-input')?.focus(); }
+                }}
               />
             </div>
 
             <div className="space-y-2">
               <label className="text-sm font-semibold text-foreground">Category *</label>
-              <select 
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                value={currentMedicine.CategoryId || 0}
-                onChange={e => setCurrentMedicine({...currentMedicine, CategoryId: Number(e.target.value)})}
-              >
-                <option value={0} disabled>Select Category</option>
-                {categories.map(c => (
-                  <option key={c.CategoryId} value={c.CategoryId}>{c.CategoryName}</option>
-                ))}
-              </select>
+              <SmartCombobox
+                id="category-input"
+                options={categories.map(c => ({ value: c.CategoryId, label: c.CategoryName }))}
+                value={currentMedicine.CategoryId}
+                onChange={val => setCurrentMedicine({...currentMedicine, CategoryId: Number(val)})}
+                onCreateNew={handleCreateCategory}
+                placeholder="Type to search or add..."
+              />
             </div>
 
             <div className="space-y-2">
               <label className="text-sm font-semibold text-foreground">Company *</label>
-              <select 
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                value={currentMedicine.CompanyId || 0}
-                onChange={e => setCurrentMedicine({...currentMedicine, CompanyId: Number(e.target.value)})}
-              >
-                <option value={0} disabled>Select Company</option>
-                {companies.map(c => (
-                  <option key={c.CompanyId} value={c.CompanyId}>{c.CompanyName}</option>
-                ))}
-              </select>
+              <SmartCombobox
+                options={companies.map(c => ({ value: c.CompanyId, label: c.CompanyName }))}
+                value={currentMedicine.CompanyId}
+                onChange={val => setCurrentMedicine({...currentMedicine, CompanyId: Number(val)})}
+                onCreateNew={handleCreateCompany}
+                placeholder="Type to search or add..."
+              />
             </div>
 
             <div className="space-y-2">
               <label className="text-sm font-semibold text-foreground">Unit</label>
               <select 
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 value={currentMedicine.Unit || "Box"}
                 onChange={e => setCurrentMedicine({...currentMedicine, Unit: e.target.value})}
+                onKeyDown={e => {
+                  if(e.key === 'Enter') { e.preventDefault(); handleSave(); }
+                }}
               >
                 <option value="Box">Box</option>
                 <option value="Strip">Strip</option>
@@ -559,7 +671,7 @@ export default function MedicinesPage() {
             <div className="space-y-2">
               <label className="text-sm font-semibold text-foreground">Dosage Form</label>
               <select 
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 value={currentMedicine.DosageForm || ""}
                 onChange={e => setCurrentMedicine({...currentMedicine, DosageForm: e.target.value})}
               >
@@ -574,149 +686,149 @@ export default function MedicinesPage() {
                 <option value="Other">Other</option>
               </select>
             </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-foreground">Strength</label>
-              <Input 
-                value={currentMedicine.Strength || ""}
-                onChange={e => setCurrentMedicine({...currentMedicine, Strength: e.target.value})}
-                placeholder="e.g. 500mg, 10ml"
-                className="h-10"
-              />
+            
+            <div className="md:col-span-2 pt-2">
+              <Button type="button" variant="ghost" className="w-full text-muted-foreground text-xs" onClick={() => setShowAdvanced(!showAdvanced)}>
+                {showAdvanced ? "Hide Advanced Details" : "Show Advanced Details (Prices, Dosage, etc)"}
+              </Button>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-foreground">Barcode</label>
-              <div className="flex gap-2">
-                <Input 
-                  value={currentMedicine.Barcode || ""}
-                  onChange={e => setCurrentMedicine({...currentMedicine, Barcode: e.target.value})}
-                  placeholder="Scan or type barcode"
-                  className="h-10 font-mono"
-                />
-                <Button type="button" variant="outline" onClick={generateBarcode} className="h-10 px-3 whitespace-nowrap text-xs">
-                  Generate
-                </Button>
-              </div>
-            </div>
-
-            <div className="space-y-2 md:col-span-2 text-primary font-semibold border-b pb-1 mt-2">
-              Pricing & Inventory Metadata
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-foreground">Default Cost Price</label>
-              <Input 
-                type="number"
-                min="0"
-                step="0.01"
-                value={currentMedicine.DefaultCostPrice}
-                onChange={e => {
-                  const cost = Number(e.target.value);
-                  const margin = inventorySettings.DefaultProfitMargin || 0;
-                  const newSelling = Number((cost * (1 + margin / 100)).toFixed(2));
-                  setCurrentMedicine({
-                    ...currentMedicine, 
-                    DefaultCostPrice: cost,
-                    DefaultSellingPrice: newSelling
-                  });
-                }}
-                className="h-10"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-foreground">Default Selling Price</label>
-              <Input 
-                type="number"
-                min="0"
-                step="0.01"
-                value={currentMedicine.DefaultSellingPrice}
-                onChange={e => setCurrentMedicine({...currentMedicine, DefaultSellingPrice: Number(e.target.value)})}
-                className="h-10"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-foreground">Reorder Level (Min Stock)</label>
-              <Input 
-                type="number"
-                min="0"
-                value={currentMedicine.ReorderLevel}
-                onChange={e => setCurrentMedicine({...currentMedicine, ReorderLevel: Number(e.target.value)})}
-                className="h-10"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-foreground">Rack Number</label>
-              <Input 
-                value={currentMedicine.RackNumber || ""}
-                onChange={e => setCurrentMedicine({...currentMedicine, RackNumber: e.target.value})}
-                placeholder="e.g. A-12"
-                className="h-10"
-              />
-            </div>
-
-            <div className="space-y-2 md:col-span-2 pt-2">
-              <div className="flex items-center space-x-2">
-                <Checkbox 
-                  id="prescription" 
-                  checked={currentMedicine.RequiresPrescription} 
-                  onCheckedChange={(c) => setCurrentMedicine({...currentMedicine, RequiresPrescription: c as boolean})}
-                />
-                <label htmlFor="prescription" className="text-sm font-medium leading-none">
-                  Requires Prescription?
-                </label>
-              </div>
-            </div>
-
-            {/* Status Toggle — shown for both Add and Edit */}
-            <div className="space-y-2 md:col-span-2 mt-2">
-              <label className="text-sm font-semibold text-foreground">Status</label>
-              <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-secondary/30">
-                <div className="flex items-center gap-3">
-                  <span className={cn(
-                    "w-2.5 h-2.5 rounded-full",
-                    currentMedicine.IsActive ? "bg-emerald-500" : "bg-rose-500"
-                  )} />
-                  <span className={cn(
-                    "text-sm font-semibold",
-                    currentMedicine.IsActive ? "text-emerald-700 dark:text-emerald-400" : "text-rose-700 dark:text-rose-400"
-                  )}>
-                    {currentMedicine.IsActive ? "Active" : "Inactive"}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    {currentMedicine.IsActive ? "Medicine is visible in catalog" : "Medicine is hidden from catalog"}
-                  </span>
+            {showAdvanced && (
+              <>
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-foreground">Strength</label>
+                  <Input 
+                    value={currentMedicine.Strength || ""}
+                    onChange={e => setCurrentMedicine({...currentMedicine, Strength: e.target.value})}
+                    placeholder="e.g. 500mg, 10ml"
+                    className="h-10"
+                  />
                 </div>
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={currentMedicine.IsActive}
-                  onClick={() => setCurrentMedicine({...currentMedicine, IsActive: !currentMedicine.IsActive})}
-                  className={cn(
-                    "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary/30",
-                    currentMedicine.IsActive ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"
-                  )}
-                >
-                  <span className={cn(
-                    "pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-lg ring-0 transition-transform duration-200 ease-in-out",
-                    currentMedicine.IsActive ? "translate-x-5" : "translate-x-0"
-                  )} />
-                </button>
-              </div>
-            </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-foreground">Barcode</label>
+                  <div className="flex gap-2">
+                    <Input 
+                      value={currentMedicine.Barcode || ""}
+                      onChange={e => setCurrentMedicine({...currentMedicine, Barcode: e.target.value})}
+                      placeholder="Scan or type barcode"
+                      className="h-10 font-mono"
+                    />
+                    <Button type="button" variant="outline" onClick={generateBarcode} className="h-10 px-3 whitespace-nowrap text-xs">
+                      Generate
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-foreground">Default Cost Price</label>
+                  <Input 
+                    type="number" min="0" step="0.01"
+                    value={currentMedicine.DefaultCostPrice}
+                    onChange={e => {
+                      const cost = Number(e.target.value);
+                      const margin = inventorySettings.DefaultProfitMargin || 0;
+                      const newSelling = Number((cost * (1 + margin / 100)).toFixed(2));
+                      setCurrentMedicine({ ...currentMedicine, DefaultCostPrice: cost, DefaultSellingPrice: newSelling });
+                    }}
+                    className="h-10"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-foreground">Default Selling Price</label>
+                  <Input 
+                    type="number" min="0" step="0.01"
+                    value={currentMedicine.DefaultSellingPrice}
+                    onChange={e => setCurrentMedicine({...currentMedicine, DefaultSellingPrice: Number(e.target.value)})}
+                    className="h-10"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-foreground">Reorder Level (Min Stock)</label>
+                  <Input 
+                    type="number" min="0"
+                    value={currentMedicine.ReorderLevel}
+                    onChange={e => setCurrentMedicine({...currentMedicine, ReorderLevel: Number(e.target.value)})}
+                    className="h-10"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-foreground">Rack Number</label>
+                  <Input 
+                    value={currentMedicine.RackNumber || ""}
+                    onChange={e => setCurrentMedicine({...currentMedicine, RackNumber: e.target.value})}
+                    placeholder="e.g. A-12"
+                    className="h-10"
+                  />
+                </div>
+
+                <div className="space-y-2 md:col-span-2 pt-2">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox 
+                      id="prescription" 
+                      checked={currentMedicine.RequiresPrescription} 
+                      onCheckedChange={(c) => setCurrentMedicine({...currentMedicine, RequiresPrescription: c as boolean})}
+                    />
+                    <label htmlFor="prescription" className="text-sm font-medium leading-none">
+                      Requires Prescription?
+                    </label>
+                  </div>
+                </div>
+
+                <div className="space-y-2 md:col-span-2 mt-2">
+                  <label className="text-sm font-semibold text-foreground">Status</label>
+                  <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-secondary/30">
+                    <div className="flex items-center gap-3">
+                      <span className={cn("w-2.5 h-2.5 rounded-full", currentMedicine.IsActive ? "bg-emerald-500" : "bg-rose-500")} />
+                      <span className={cn("text-sm font-semibold", currentMedicine.IsActive ? "text-emerald-700 dark:text-emerald-400" : "text-rose-700 dark:text-rose-400")}>
+                        {currentMedicine.IsActive ? "Active" : "Inactive"}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={currentMedicine.IsActive}
+                      onClick={() => setCurrentMedicine({...currentMedicine, IsActive: !currentMedicine.IsActive})}
+                      className={cn(
+                        "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary/30",
+                        currentMedicine.IsActive ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"
+                      )}
+                    >
+                      <span className={cn(
+                        "pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-lg ring-0 transition-transform duration-200 ease-in-out",
+                        currentMedicine.IsActive ? "translate-x-5" : "translate-x-0"
+                      )} />
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
             
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isSaving}>Cancel</Button>
+            <Button variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isSaving}>Close</Button>
             <Button onClick={handleSave} disabled={isSaving}>
-              {isSaving ? "Saving..." : "Save Medicine Profile"}
+              {isSaving ? "Saving..." : (currentMedicine.MedicineId ? "Save Changes" : "Save & Add Another")}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ImportPreviewModal
+        isOpen={isPreviewModalOpen}
+        onClose={() => setIsPreviewModalOpen(false)}
+        initialData={previewData}
+        categories={categories}
+        companies={companies}
+        onConfirm={handleConfirmImport}
+        isSaving={isImporting}
+        setCategories={setCategories}
+        setCompanies={setCompanies}
+      />
+
       
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent className="sm:max-w-[425px] border-rose-500/20">
@@ -738,6 +850,19 @@ export default function MedicinesPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ImportPreviewModal
+        isOpen={isPreviewModalOpen}
+        onClose={() => setIsPreviewModalOpen(false)}
+        initialData={previewData}
+        categories={categories}
+        companies={companies}
+        onConfirm={handleConfirmImport}
+        isSaving={isImporting}
+        setCategories={setCategories}
+        setCompanies={setCompanies}
+      />
+
       
       {/* View Dialog */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
@@ -815,6 +940,19 @@ export default function MedicinesPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ImportPreviewModal
+        isOpen={isPreviewModalOpen}
+        onClose={() => setIsPreviewModalOpen(false)}
+        initialData={previewData}
+        categories={categories}
+        companies={companies}
+        onConfirm={handleConfirmImport}
+        isSaving={isImporting}
+        setCategories={setCategories}
+        setCompanies={setCompanies}
+      />
+
 
     </div>
   );
