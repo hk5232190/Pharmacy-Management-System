@@ -437,16 +437,16 @@ export default function UsersManagementPage() {
         <CardContent className="flex-1 overflow-auto p-0 custom-scrollbar">
           <div className="border-b border-border rounded-xl overflow-hidden">
             <Table>
-              <TableHeader className="bg-secondary/50">
+              <TableHeader className="bg-secondary/50 text-left">
                 <TableRow className="hover:bg-transparent">
                   <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-10 text-center">#</TableHead>
-                  <TableHead className="font-semibold text-slate-700 dark:text-slate-300">Username</TableHead>
-                  <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-1/4">Full Name</TableHead>
-                  <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-28">Role</TableHead>
-                  <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-36">Permissions</TableHead>
+                  <TableHead className="font-semibold text-slate-700 dark:text-slate-300 text-left">Username</TableHead>
+                  <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-1/4 text-left">Full Name</TableHead>
+                  <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-28 text-center">Role</TableHead>
+                  <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-36 text-left">Permissions</TableHead>
                   <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-28 text-center">Status</TableHead>
-                  <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-32">Created</TableHead>
-                  <TableHead className="font-semibold text-slate-700 dark:text-slate-300 text-right pr-6 w-24">Actions</TableHead>
+                  <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-32 text-left">Created</TableHead>
+                  <TableHead className="font-semibold text-slate-700 dark:text-slate-300 text-center pr-6 w-24">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -464,7 +464,7 @@ export default function UsersManagementPage() {
                   filtered.map((u, idx) => (
                     <TableRow key={u.UserId} className="hover:bg-secondary/50 transition-colors h-14">
                       <TableCell className="text-center py-3 text-[#111827] dark:text-gray-200 font-medium text-[14px]">{idx + 1}</TableCell>
-                      <TableCell className="py-3 font-semibold text-[#111827] dark:text-white text-[14px]">
+                      <TableCell className="py-3 font-semibold text-[#111827] dark:text-white text-[14px] text-center">
                         <span className="flex items-center gap-2">
                           {u.Username}
                           {u.UserId === currentUser.id && (
@@ -472,14 +472,14 @@ export default function UsersManagementPage() {
                           )}
                         </span>
                       </TableCell>
-                      <TableCell className="py-3 text-[#111827] dark:text-gray-200 text-[14px]">{u.FullName || "—"}</TableCell>
-                      <TableCell className="py-3"><RoleBadge role={u.Role} /></TableCell>
-                      <TableCell className="py-3"><PermsBadge role={u.Role} permissions={u.Permissions} /></TableCell>
+                      <TableCell className="py-3 text-[#111827] dark:text-gray-200 text-[14px] text-left">{u.FullName || "—"}</TableCell>
+                      <TableCell className="py-3 text-center"><RoleBadge role={u.Role} /></TableCell>
+                      <TableCell className="py-3 text-center"><PermsBadge role={u.Role} permissions={u.Permissions} /></TableCell>
                       <TableCell className="text-center py-3"><StatusBadge isActive={u.IsActive} /></TableCell>
-                      <TableCell className="py-3 text-[#111827] dark:text-gray-200 text-[13px]">
+                      <TableCell className="py-3 text-[#111827] dark:text-gray-200 text-[13px] text-left">
                         {u.CreatedAt ? new Date(u.CreatedAt).toLocaleDateString("en-GB") : "—"}
                       </TableCell>
-                      <TableCell className="text-right pr-6">
+                      <TableCell className="text-center pr-6">
                         <div className="flex items-center justify-end gap-3 text-muted-foreground">
                           {/* Permissions button — only for cashiers */}
                           {u.Role === "cashier" && (

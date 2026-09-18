@@ -1077,14 +1077,14 @@ function BackupRestorePageInner({
               <CardContent className="p-0">
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm text-left text-muted-foreground">
-                    <thead className="text-xs uppercase bg-secondary/40 text-muted-foreground border-b border-border">
+                    <thead className="text-xs uppercase bg-secondary/40 text-muted-foreground border-b border-border text-left">
                       <tr>
                         <th className="px-4 py-3 font-semibold w-12">#</th>
-                        <th className="px-4 py-3 font-semibold">Date</th>
-                        <th className="px-4 py-3 font-semibold">Name</th>
-                        <th className="px-4 py-3 font-semibold">Type</th>
-                        <th className="px-4 py-3 font-semibold">Status</th>
-                        <th className="px-4 py-3 font-semibold text-right">Size</th>
+                        <th className="px-4 py-3 font-semibold text-left">Date</th>
+                        <th className="px-4 py-3 font-semibold text-left">Name</th>
+                        <th className="px-4 py-3 font-semibold text-left">Type</th>
+                        <th className="px-4 py-3 font-semibold text-center">Status</th>
+                        <th className="px-4 py-3 font-semibold text-center">Size</th>
                         <th className="px-4 py-3 font-semibold text-center w-[120px]">Actions</th>
                       </tr>
                     </thead>
@@ -1115,19 +1115,19 @@ function BackupRestorePageInner({
                           <>
                             {paginatedHistory.map((backup, index) => (
                               <tr key={backup.BackupId} className="border-b border-border last:border-0 hover:bg-slate-50/50 dark:hover:bg-secondary/30 transition-colors">
-                                <td className="px-4 py-3 text-slate-500">{(historyPage - 1) * historyPageSize + index + 1}</td>
-                                <td className="px-4 py-3 font-medium text-slate-900 dark:text-white whitespace-nowrap">
+                                <td className="px-4 py-3 text-slate-500 text-left">{(historyPage - 1) * historyPageSize + index + 1}</td>
+                                <td className="px-4 py-3 font-medium text-slate-900 dark:text-white whitespace-nowrap text-left">
                                   {format(new Date(backup.CreatedAt + "Z"), "dd MMM yyyy, hh:mm a")}
                                 </td>
-                                <td className="px-4 py-3 font-medium text-slate-900 dark:text-white">{backup.BackupName}</td>
-                                <td className="px-4 py-3 whitespace-nowrap">{backup.BackupType}</td>
-                                <td className="px-4 py-3 whitespace-nowrap">
+                                <td className="px-4 py-3 font-medium text-slate-900 dark:text-white text-left">{backup.BackupName}</td>
+                                <td className="px-4 py-3 whitespace-nowrap text-left">{backup.BackupType}</td>
+                                <td className="px-4 py-3 whitespace-nowrap text-center">
                                   <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${backup.Status === "Success" ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"}`}>
                                     {backup.Status}
                                   </span>
                                 </td>
-                                <td className="px-4 py-3 whitespace-nowrap text-right">{formatBytes(backup.SizeBytes)}</td>
-                                <td className="px-4 py-3 whitespace-nowrap">
+                                <td className="px-4 py-3 whitespace-nowrap text-center">{formatBytes(backup.SizeBytes)}</td>
+                                <td className="px-4 py-3 whitespace-nowrap text-center">
                                   <div className="flex items-center justify-center space-x-1">
                                     {backup.Status === "Success" && (
                                       <Button 
@@ -1159,7 +1159,7 @@ function BackupRestorePageInner({
                             {/* Pagination */}
                             {totalItems > 0 && (
                               <tr className="bg-transparent border-t">
-                                <td colSpan={7} className="px-4 py-4">
+                                <td colSpan={7} className="px-4 py-4 text-center">
                                   <div className="flex items-center justify-between w-full">
                                     <div className="text-sm text-slate-500 dark:text-slate-400">
                                       Showing <span className="font-semibold text-slate-900 dark:text-slate-100">{(historyPage - 1) * historyPageSize + 1}</span> - <span className="font-semibold text-slate-900 dark:text-slate-100">{Math.min(historyPage * historyPageSize, totalItems)}</span> of <span className="font-semibold text-slate-900 dark:text-slate-100">{totalItems}</span> backups

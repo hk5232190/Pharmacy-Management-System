@@ -182,3 +182,8 @@ input::-ms-clear {
     background: white !important;
   }
 }
+@layer base {
+  table tr {
+    @apply divide-x divide-border;
+  }
+}

@@ -1480,17 +1480,17 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
                 </div>
                 <div className="flex-1 overflow-auto custom-scrollbar">
                   <table className="w-full text-left text-sm border-collapse min-w-[700px]">
-                    <thead className="sticky top-0 z-10 bg-white dark:bg-card shadow-sm">
+                    <thead className="sticky top-0 z-10 bg-white dark:bg-card shadow-sm text-left">
                       <tr className="text-muted-foreground text-[11px] uppercase tracking-wider border-b border-border">
                         <th className="px-3 py-3 font-semibold">#</th>
-                        <th className="px-3 py-3 font-semibold">Medicine</th>
-                        <th className="px-3 py-3 font-semibold">Batch</th>
+                        <th className="px-3 py-3 font-semibold text-left">Medicine</th>
+                        <th className="px-3 py-3 font-semibold text-left">Batch</th>
                         <th className="px-3 py-3 font-semibold text-center">Avail. Stock</th>
-                        <th className="px-3 py-3 font-semibold text-right">Unit Price</th>
+                        <th className="px-3 py-3 font-semibold text-center">Unit Price</th>
                         <th className="px-3 py-3 font-semibold text-center w-28">Qty</th>
                         <th className="px-3 py-3 font-semibold text-center">Disc (%)</th>
                         <th className="px-3 py-3 font-semibold text-center">Tax (%)</th>
-                        <th className="px-3 py-3 font-semibold text-right">Line Total</th>
+                        <th className="px-3 py-3 font-semibold text-center">Line Total</th>
                         <th className="px-3 py-3 font-semibold text-center"></th>
                       </tr>
                     </thead>
@@ -1506,14 +1506,14 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
                       ) : (
                         cart.map((item, idx) => (
                           <tr key={item.id} className="hover:bg-secondary/10 transition-colors">
-                            <td className="px-3 py-3 text-muted-foreground">{idx + 1}</td>
-                            <td className="px-3 py-3 font-medium text-foreground">
+                            <td className="px-3 py-3 text-muted-foreground text-center">{idx + 1}</td>
+                            <td className="px-3 py-3 font-medium text-foreground text-left">
                               {item.MedicineName}
 
                             </td>
-                            <td className="px-3 py-3 font-mono text-xs text-muted-foreground">{item.BatchCode}</td>
+                            <td className="px-3 py-3 font-mono text-xs text-muted-foreground text-left">{item.BatchCode}</td>
                             <td className="px-3 py-3 text-center text-muted-foreground text-xs">{item.AvailableStock}</td>
-                            <td className="px-3 py-3 text-right">{formatCurrency(item.UnitPrice)}</td>
+                            <td className="px-3 py-3 text-center">{formatCurrency(item.UnitPrice)}</td>
                             <td className="px-3 py-3 text-center">
                               <div className="flex items-center border border-input rounded-md overflow-hidden h-8">
                                 <button onClick={() => updateCartItem(item.id, 'Quantity', item.Quantity - 1)} className="px-2 bg-secondary/50 hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors">-</button>
@@ -1535,7 +1535,7 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
                                 <button onClick={() => updateCartItem(item.id, 'Quantity', item.Quantity + 1)} className="px-2 bg-secondary/50 hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors">+</button>
                               </div>
                             </td>
-                            <td className="px-3 py-3">
+                            <td className="px-3 py-3 text-center">
                               <Input
                                 type="number"
                                 max="100"
@@ -1552,7 +1552,7 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
                                 onChange={(e) => updateCartItem(item.id, 'TaxPercent', parseFloat(e.target.value) || 0)}
                               />
                             </td>
-                            <td className="px-3 py-3 text-right font-bold">{formatCurrency(item.LineTotal)}</td>
+                            <td className="px-3 py-3 text-center font-bold">{formatCurrency(item.LineTotal)}</td>
                             <td className="px-3 py-3 text-center">
                               <Button onClick={() => removeCartItem(item.id)} variant="ghost" size="icon" className="h-8 w-8 text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30">
                                 <Trash2 className="w-4 h-4" />
@@ -1730,15 +1730,15 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
 
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-sm border-collapse min-w-[900px]">
-                    <thead className="bg-secondary/50 border-b border-border">
+                    <thead className="bg-secondary/50 border-b border-border text-left">
                       <tr className="text-muted-foreground text-[11px] uppercase tracking-wider">
                         <th className="px-3 py-3 font-semibold">Medicine Name</th>
-                        <th className="px-3 py-3 font-semibold">Batch No.</th>
-                        <th className="px-3 py-3 font-semibold text-right">Sold Price</th>
+                        <th className="px-3 py-3 font-semibold text-left">Batch No.</th>
+                        <th className="px-3 py-3 font-semibold text-center">Sold Price</th>
                         <th className="px-3 py-3 font-semibold text-center">Sold Qty</th>
                         <th className="px-3 py-3 font-semibold text-center w-24">Return Qty</th>
-                        <th className="px-3 py-3 font-semibold w-52">Return Reason</th>
-                        <th className="px-3 py-3 font-semibold text-right">Refund Total</th>
+                        <th className="px-3 py-3 font-semibold w-52 text-left">Return Reason</th>
+                        <th className="px-3 py-3 font-semibold text-center">Refund Total</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
@@ -1749,9 +1749,9 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
 
                         return (
                           <tr key={item.SalesItemId} className={isFullyReturned ? "opacity-50 bg-secondary/20" : "hover:bg-secondary/10"}>
-                            <td className="px-3 py-3 font-medium text-foreground">{item.MedicineName}</td>
-                            <td className="px-3 py-3 font-mono text-xs text-muted-foreground">{item.BatchCode}</td>
-                            <td className="px-3 py-3 text-right">{formatCurrency(item.UnitPrice)}</td>
+                            <td className="px-3 py-3 font-medium text-foreground text-left">{item.MedicineName}</td>
+                            <td className="px-3 py-3 font-mono text-xs text-muted-foreground text-left">{item.BatchCode}</td>
+                            <td className="px-3 py-3 text-center">{formatCurrency(item.UnitPrice)}</td>
                             <td className="px-3 py-3 text-center">{item.Quantity}</td>
                             <td className="px-3 py-3 text-center">
                               <Input
@@ -1764,7 +1764,7 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
                                 className="w-16 text-center h-8 mx-auto"
                               />
                             </td>
-                            <td className="px-3 py-3">
+                            <td className="px-3 py-3 text-left">
                               <select
                                 disabled={isFullyReturned || item.ReturnQuantity === 0}
                                 value={item.ReturnReason}
@@ -1778,7 +1778,7 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
                                 <option value="Damaged / Defective">Damaged / Defective</option>
                               </select>
                             </td>
-                            <td className="px-3 py-3 text-right font-bold text-emerald-600">{formatCurrency(refund)}</td>
+                            <td className="px-3 py-3 text-center font-bold text-emerald-600">{formatCurrency(refund)}</td>
                           </tr>
                         );
                       })}
@@ -1839,15 +1839,15 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
             <h2 className="text-xl font-bold mb-4 text-foreground flex items-center gap-2"><FileText className="w-5 h-5 text-muted-foreground" /> Returns History</h2>
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm border-collapse min-w-[800px]">
-                <thead className="bg-secondary/50 border-b border-border">
+                <thead className="bg-secondary/50 border-b border-border text-left">
                   <tr className="text-muted-foreground text-[11px] uppercase tracking-wider">
                     <th className="px-3 py-3 font-semibold w-12 text-center">#</th>
-                    <th className="px-3 py-3 font-semibold">Date</th>
-                    <th className="px-3 py-3 font-semibold">Return No.</th>
-                    <th className="px-3 py-3 font-semibold">Original Inv. No.</th>
-                    <th className="px-3 py-3 font-semibold">Customer</th>
-                    <th className="px-3 py-3 font-semibold text-right">Refund Amount</th>
-                    <th className="px-3 py-3 font-semibold">Refund Mode</th>
+                    <th className="px-3 py-3 font-semibold text-left">Date</th>
+                    <th className="px-3 py-3 font-semibold text-left">Return No.</th>
+                    <th className="px-3 py-3 font-semibold text-left">Original Inv. No.</th>
+                    <th className="px-3 py-3 font-semibold text-left">Customer</th>
+                    <th className="px-3 py-3 font-semibold text-center">Refund Amount</th>
+                    <th className="px-3 py-3 font-semibold text-center">Refund Mode</th>
                     <th className="px-3 py-3 font-semibold text-center">Actions</th>
                   </tr>
                 </thead>
@@ -1860,12 +1860,12 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
                     returnHistoryItems.map((ret, index) => (
                       <tr key={ret.ReturnId} className="hover:bg-secondary/10 transition-colors">
                         <td className="px-3 py-3 text-center font-medium text-muted-foreground">{(returnHistoryPage - 1) * returnHistoryPageSize + index + 1}</td>
-                        <td className="px-3 py-3 text-muted-foreground">{ret.ReturnDate}</td>
-                        <td className="px-3 py-3 font-mono text-xs font-medium text-foreground">{ret.ReturnInvoiceNumber}</td>
-                        <td className="px-3 py-3 font-mono text-xs text-muted-foreground">{ret.OriginalInvoiceNumber}</td>
-                        <td className="px-3 py-3 font-medium text-foreground">{ret.CustomerName}</td>
-                        <td className="px-3 py-3 text-right font-bold text-rose-600">{formatCurrency(ret.TotalRefundAmount)}</td>
-                        <td className="px-3 py-3">
+                        <td className="px-3 py-3 text-muted-foreground text-left">{ret.ReturnDate}</td>
+                        <td className="px-3 py-3 font-mono text-xs font-medium text-foreground text-left">{ret.ReturnInvoiceNumber}</td>
+                        <td className="px-3 py-3 font-mono text-xs text-muted-foreground text-left">{ret.OriginalInvoiceNumber}</td>
+                        <td className="px-3 py-3 font-medium text-foreground text-left">{ret.CustomerName}</td>
+                        <td className="px-3 py-3 text-center font-bold text-rose-600">{formatCurrency(ret.TotalRefundAmount)}</td>
+                        <td className="px-3 py-3 text-center">
                           <span className={cn(
                             "text-xs font-medium px-2 py-1 rounded-full",
                             ret.RefundMode === "Balance"
@@ -1947,15 +1947,15 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
 
             <div className="overflow-x-auto rounded-lg border border-border">
               <table className="w-full text-left text-sm border-collapse min-w-[1000px]">
-                <thead className="bg-secondary/50 border-b border-border">
+                <thead className="bg-secondary/50 border-b border-border text-left">
                   <tr className="text-muted-foreground text-[11px] uppercase tracking-wider">
                     <th className="px-3 py-3 font-semibold w-12 text-center">#</th>
-                    <th className="px-3 py-3 font-semibold">Date & Time</th>
-                    <th className="px-3 py-3 font-semibold">Invoice No.</th>
-                    <th className="px-3 py-3 font-semibold">Customer</th>
-                    <th className="px-3 py-3 font-semibold text-right">Total Amount</th>
-                    <th className="px-3 py-3 font-semibold text-right">Paid</th>
-                    <th className="px-3 py-3 font-semibold text-right">Balance Due</th>
+                    <th className="px-3 py-3 font-semibold text-left">Date & Time</th>
+                    <th className="px-3 py-3 font-semibold text-left">Invoice No.</th>
+                    <th className="px-3 py-3 font-semibold text-left">Customer</th>
+                    <th className="px-3 py-3 font-semibold text-center">Total Amount</th>
+                    <th className="px-3 py-3 font-semibold text-center">Paid</th>
+                    <th className="px-3 py-3 font-semibold text-center">Balance Due</th>
                     <th className="px-3 py-3 font-semibold text-center">Status</th>
                     <th className="px-3 py-3 font-semibold text-center">Actions</th>
                   </tr>
@@ -1985,15 +1985,15 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
                       return (
                         <tr key={item.SalesId} className="hover:bg-secondary/10">
                           <td className="px-3 py-3 text-center font-medium text-muted-foreground">{(historyPage - 1) * historyPageSize + index + 1}</td>
-                          <td className="px-3 py-3 font-medium text-muted-foreground">{item.TransactionDate}</td>
-                          <td className="px-3 py-3 font-mono font-bold text-foreground">{item.InvoiceNumber}</td>
-                          <td className="px-3 py-3">{item.CustomerName}</td>
-                          <td className="px-3 py-3 text-right font-bold">
+                          <td className="px-3 py-3 font-medium text-muted-foreground text-left">{item.TransactionDate}</td>
+                          <td className="px-3 py-3 font-mono font-bold text-foreground text-left">{item.InvoiceNumber}</td>
+                          <td className="px-3 py-3 text-left">{item.CustomerName}</td>
+                          <td className="px-3 py-3 text-center font-bold">
                             {formatCurrency(effectiveTotal)}
                             {item.ReturnedAmount > 0 && <div className="text-[10px] text-rose-500 font-normal">-{formatCurrency(item.ReturnedAmount)} (Ret)</div>}
                           </td>
-                          <td className="px-3 py-3 text-right font-medium text-emerald-600">{formatCurrency(item.PaidAmount || 0)}</td>
-                          <td className={cn("px-3 py-3 text-right font-bold", balanceDue > 0 ? "text-rose-500" : "text-muted-foreground")}>
+                          <td className="px-3 py-3 text-center font-medium text-emerald-600">{formatCurrency(item.PaidAmount || 0)}</td>
+                          <td className={cn("px-3 py-3 text-center font-bold", balanceDue > 0 ? "text-rose-500" : "text-muted-foreground")}>
                             {formatCurrency(balanceDue)}
                           </td>
                           <td className="px-3 py-3 text-center">

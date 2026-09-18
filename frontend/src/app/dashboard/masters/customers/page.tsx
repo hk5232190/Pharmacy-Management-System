@@ -118,16 +118,16 @@ export default function CustomersPage() {
       <div className="flex-1 overflow-auto p-4 custom-scrollbar">
         <div className="border border-border rounded-xl overflow-hidden bg-background">
           <Table>
-            <TableHeader className="bg-secondary/50">
+            <TableHeader className="bg-secondary/50 text-left">
               <TableRow className="hover:bg-transparent">
                 <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-10 text-center">#</TableHead>
-                <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-28">Code</TableHead>
-                <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-1/4">Customer Name</TableHead>
-                <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-36">Phone</TableHead>
-                <TableHead className="font-semibold text-slate-700 dark:text-slate-300">Address</TableHead>
+                <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-28 text-center">Code</TableHead>
+                <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-1/4 text-left">Customer Name</TableHead>
+                <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-36 text-left">Phone</TableHead>
+                <TableHead className="font-semibold text-slate-700 dark:text-slate-300 text-left">Address</TableHead>
                 <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-32 text-center">Loyalty Points</TableHead>
                 <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-32 text-center">Status</TableHead>
-                <TableHead className="font-semibold text-slate-700 dark:text-slate-300 text-right pr-6 w-32">Actions</TableHead>
+                <TableHead className="font-semibold text-slate-700 dark:text-slate-300 text-center pr-6 w-32">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -143,17 +143,17 @@ export default function CustomersPage() {
                 customers.map((customer, idx) => (
                   <TableRow key={customer.CustomerId} className="hover:bg-secondary/50 transition-colors h-14">
                     <TableCell className="text-center py-3 text-[#111827] dark:text-gray-200 font-medium text-[14px]">{(page - 1) * pageSize + idx + 1}</TableCell>
-                    <TableCell className="py-3 font-mono text-[14px] font-semibold text-[#111827] dark:text-gray-200">
+                    <TableCell className="py-3 font-mono text-[14px] font-semibold text-[#111827] dark:text-gray-200 text-left">
                       CUST-{customer.CustomerId.toString().padStart(5, '0')}
                     </TableCell>
-                    <TableCell className="py-3 font-bold text-[#111827] dark:text-white text-[15px]">
+                    <TableCell className="py-3 font-bold text-[#111827] dark:text-white text-[15px] text-left">
                       {customer.Name}
                       {customer.CustomerId === 0 && <span className="ml-2 text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full">Default</span>}
                     </TableCell>
-                    <TableCell className="py-3 text-[#111827] dark:text-gray-200 text-[14px]">
+                    <TableCell className="py-3 text-[#111827] dark:text-gray-200 text-[14px] text-left">
                       {customer.Phone || "—"}
                     </TableCell>
-                    <TableCell className="py-3 text-[#111827] dark:text-gray-200 text-[14px] max-w-[200px] truncate" title={customer.Address || ""}>
+                    <TableCell className="py-3 text-[#111827] dark:text-gray-200 text-[14px] max-w-[200px] truncate text-left" title={customer.Address || ""}>
                       {customer.Address || "—"}
                     </TableCell>
                     <TableCell className="text-center py-3">
@@ -176,7 +176,7 @@ export default function CustomersPage() {
                         {customer.IsActive ? "Active" : "Inactive"}
                       </button>
                     </TableCell>
-                    <TableCell className="text-right pr-6 py-3">
+                    <TableCell className="text-center pr-6 py-3">
                       <div className="flex items-center justify-end gap-3 text-muted-foreground">
                         <button onClick={() => openViewDialog(customer)} className="hover:text-primary transition-colors"><Eye className="h-4 w-4" /></button>
                         <button onClick={() => openEditDialog(customer)} disabled={customer.CustomerId === 0} className={cn("hover:text-blue-500 transition-colors", customer.CustomerId === 0 && "opacity-30 cursor-not-allowed")}><Edit className="h-4 w-4" /></button>

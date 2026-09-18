@@ -128,17 +128,17 @@ export default function SuppliersPage() {
       <div className="flex-1 overflow-auto p-4 custom-scrollbar">
         <div className="border border-border rounded-xl overflow-hidden bg-background">
           <Table>
-            <TableHeader className="bg-secondary/50">
+            <TableHeader className="bg-secondary/50 text-left">
               <TableRow className="hover:bg-transparent">
                 <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-10 text-center">#</TableHead>
-                <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-28">Code</TableHead>
-                <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-1/4">Supplier Name</TableHead>
-                <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-40">Contact Person</TableHead>
-                <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-36">Phone</TableHead>
-                <TableHead className="font-semibold text-slate-700 dark:text-slate-300">Address</TableHead>
-                <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-32">Current Balance</TableHead>
+                <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-28 text-center">Code</TableHead>
+                <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-1/4 text-left">Supplier Name</TableHead>
+                <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-40 text-left">Contact Person</TableHead>
+                <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-36 text-left">Phone</TableHead>
+                <TableHead className="font-semibold text-slate-700 dark:text-slate-300 text-left">Address</TableHead>
+                <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-32 text-center">Current Balance</TableHead>
                 <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-28 text-center">Status</TableHead>
-                <TableHead className="font-semibold text-slate-700 dark:text-slate-300 text-right pr-6 w-32">Actions</TableHead>
+                <TableHead className="font-semibold text-slate-700 dark:text-slate-300 text-center pr-6 w-32">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -154,22 +154,22 @@ export default function SuppliersPage() {
                 suppliers.map((supplier, idx) => (
                   <TableRow key={supplier.SupplierId} className="hover:bg-secondary/50 transition-colors h-14">
                     <TableCell className="text-center py-3 text-[#111827] dark:text-gray-200 font-medium text-[14px]">{idx + 1}</TableCell>
-                    <TableCell className="py-3 font-mono text-[14px] font-semibold text-[#111827] dark:text-gray-200">
+                    <TableCell className="py-3 font-mono text-[14px] font-semibold text-[#111827] dark:text-gray-200 text-left">
                       SUP-{supplier.SupplierId.toString().padStart(5, '0')}
                     </TableCell>
-                    <TableCell className="py-3 font-bold text-[#111827] dark:text-white text-[15px]">
+                    <TableCell className="py-3 font-bold text-[#111827] dark:text-white text-[15px] text-left">
                       {supplier.Name}
                     </TableCell>
-                    <TableCell className="py-3 text-[#111827] dark:text-gray-200 text-[14px] max-w-[200px] truncate">
+                    <TableCell className="py-3 text-[#111827] dark:text-gray-200 text-[14px] max-w-[200px] truncate text-left">
                       {supplier.ContactPerson || "—"}
                     </TableCell>
-                    <TableCell className="py-3 text-[#111827] dark:text-gray-200 text-[14px]">
+                    <TableCell className="py-3 text-[#111827] dark:text-gray-200 text-[14px] text-left">
                       {supplier.Phone || "—"}
                     </TableCell>
-                    <TableCell className="py-3 text-[#111827] dark:text-gray-200 text-[14px] max-w-[200px] truncate" title={supplier.Address || ""}>
+                    <TableCell className="py-3 text-[#111827] dark:text-gray-200 text-[14px] max-w-[200px] truncate text-left" title={supplier.Address || ""}>
                       {supplier.Address || "—"}
                     </TableCell>
-                    <TableCell className="py-3 font-bold text-emerald-600 dark:text-emerald-400 text-[14px]">
+                    <TableCell className="py-3 font-bold text-emerald-600 dark:text-emerald-400 text-[14px] text-center">
                       {formatCurrency(Number(supplier.CurrentBalance || 0))}
                     </TableCell>
                     <TableCell className="text-center py-3">
@@ -185,7 +185,7 @@ export default function SuppliersPage() {
                         {supplier.IsActive ? "Active" : "Inactive"}
                       </button>
                     </TableCell>
-                    <TableCell className="text-right pr-6">
+                    <TableCell className="text-center pr-6">
                       <div className="flex items-center justify-end gap-3 text-muted-foreground">
                         <button onClick={() => openViewDialog(supplier)} className="hover:text-primary transition-colors"><Eye className="h-4 w-4" /></button>
                         <button onClick={() => openEditDialog(supplier)} className="hover:text-blue-500 transition-colors"><Edit className="h-4 w-4" /></button>

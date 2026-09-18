@@ -466,18 +466,18 @@ export default function MedicinesPage() {
       <div className="flex-1 overflow-auto p-4 custom-scrollbar">
         <div className="border border-border rounded-xl overflow-hidden bg-background">
           <Table>
-            <TableHeader className="bg-secondary/50">
+            <TableHeader className="bg-secondary/50 text-left">
               <TableRow className="hover:bg-transparent">
 
                 <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-10 text-center">#</TableHead>
-                <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-24">Code</TableHead>
-                <TableHead className="font-semibold text-slate-700 dark:text-slate-300">Medicine Name</TableHead>
-                <TableHead className="font-semibold text-slate-700 dark:text-slate-300">Formula</TableHead>
-                <TableHead className="font-semibold text-slate-700 dark:text-slate-300">Category</TableHead>
-                <TableHead className="font-semibold text-slate-700 dark:text-slate-300">Company</TableHead>
-                <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-20">Unit</TableHead>
+                <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-24 text-center">Code</TableHead>
+                <TableHead className="font-semibold text-slate-700 dark:text-slate-300 text-left">Medicine Name</TableHead>
+                <TableHead className="font-semibold text-slate-700 dark:text-slate-300 text-left">Formula</TableHead>
+                <TableHead className="font-semibold text-slate-700 dark:text-slate-300 text-left">Category</TableHead>
+                <TableHead className="font-semibold text-slate-700 dark:text-slate-300 text-left">Company</TableHead>
+                <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-20 text-left">Unit</TableHead>
                 <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-28 text-center">Status</TableHead>
-                <TableHead className="font-semibold text-slate-700 dark:text-slate-300 text-right pr-6 w-32">Actions</TableHead>
+                <TableHead className="font-semibold text-slate-700 dark:text-slate-300 text-center pr-6 w-32">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -494,22 +494,22 @@ export default function MedicinesPage() {
                   <TableRow key={med.MedicineId} className="hover:bg-secondary/50 transition-colors h-14">
 
                     <TableCell className="text-center py-3 text-[#111827] dark:text-gray-200 font-medium text-[14px]">{idx + 1}</TableCell>
-                    <TableCell className="py-3 font-mono text-[14px] font-semibold text-[#111827] dark:text-gray-200">
+                    <TableCell className="py-3 font-mono text-[14px] font-semibold text-[#111827] dark:text-gray-200 text-left">
                       MED-{med.MedicineId.toString().padStart(4, '0')}
                     </TableCell>
-                    <TableCell className="py-3 font-bold text-[#111827] dark:text-white text-[15px]">
+                    <TableCell className="py-3 font-bold text-[#111827] dark:text-white text-[15px] text-left">
                       {med.BrandName}
                     </TableCell>
-                    <TableCell className="py-3 text-[#111827] dark:text-gray-200 text-[14px] font-medium">
+                    <TableCell className="py-3 text-[#111827] dark:text-gray-200 text-[14px] font-medium text-left">
                       {med.GenericName}
                     </TableCell>
-                    <TableCell className="py-3 text-[#111827] dark:text-gray-200 text-[14px] font-medium">
+                    <TableCell className="py-3 text-[#111827] dark:text-gray-200 text-[14px] font-medium text-left">
                       {med.CategoryName || "—"}
                     </TableCell>
-                    <TableCell className="py-3 text-[#111827] dark:text-gray-200 text-[14px] font-medium">
+                    <TableCell className="py-3 text-[#111827] dark:text-gray-200 text-[14px] font-medium text-left">
                       {med.CompanyName || "—"}
                     </TableCell>
-                    <TableCell className="py-3 text-[#111827] dark:text-gray-200 text-[14px] font-medium">
+                    <TableCell className="py-3 text-[#111827] dark:text-gray-200 text-[14px] font-medium text-left">
                       {med.Unit}
                     </TableCell>
                     <TableCell className="text-center py-3">
@@ -525,7 +525,7 @@ export default function MedicinesPage() {
                         {med.IsActive ? "Active" : "Inactive"}
                       </button>
                     </TableCell>
-                    <TableCell className="text-right pr-6">
+                    <TableCell className="text-center pr-6">
                       <div className="flex items-center justify-end gap-3 text-muted-foreground">
                         <button onClick={() => { setCurrentMedicine(med); setIsViewDialogOpen(true); }} className="hover:text-primary transition-colors"><Eye className="h-4 w-4" /></button>
                         <button onClick={() => openEditDialog(med)} className="hover:text-blue-500 transition-colors"><Edit className="h-4 w-4" /></button>

@@ -993,20 +993,20 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
               
               <div className="flex-1 overflow-x-auto custom-scrollbar">
                 <table className="w-full min-w-[1200px] text-left text-sm border-collapse">
-                  <thead>
+                  <thead className="text-left">
                     <tr className="bg-secondary/40 text-muted-foreground text-xs uppercase tracking-wider border-b border-border">
                       <th className="px-3 py-2.5 font-semibold w-10 text-center">#</th>
-                      <th className="px-3 py-2.5 font-semibold w-56">Medicine Name</th>
-                      <th className="px-3 py-2.5 font-semibold w-32">Batch No. <span className="text-rose-500">*</span></th>
-                      <th className="px-3 py-2.5 font-semibold w-36">Mfg Date</th>
-                      <th className="px-3 py-2.5 font-semibold w-36">Expiry Date <span className="text-rose-500">*</span></th>
-                      <th className="px-3 py-2.5 font-semibold w-28">Pur. Price</th>
-                      <th className="px-3 py-2.5 font-semibold w-28">Sale Price</th>
-                      <th className="px-3 py-2.5 font-semibold w-20">Qty</th>
-                      <th className="px-3 py-2.5 font-semibold w-20">Free</th>
-                      <th className="px-3 py-2.5 font-semibold w-24">Disc %</th>
-                      <th className="px-3 py-2.5 font-semibold w-20">Tax %</th>
-                      <th className="px-3 py-2.5 font-semibold w-28">Line Total</th>
+                      <th className="px-3 py-2.5 font-semibold w-56 text-left">Medicine Name</th>
+                      <th className="px-3 py-2.5 font-semibold w-32 text-left">Batch No. <span className="text-rose-500">*</span></th>
+                      <th className="px-3 py-2.5 font-semibold w-36 text-left">Mfg Date</th>
+                      <th className="px-3 py-2.5 font-semibold w-36 text-left">Expiry Date <span className="text-rose-500">*</span></th>
+                      <th className="px-3 py-2.5 font-semibold w-28 text-center">Pur. Price</th>
+                      <th className="px-3 py-2.5 font-semibold w-28 text-center">Sale Price</th>
+                      <th className="px-3 py-2.5 font-semibold w-20 text-center">Qty</th>
+                      <th className="px-3 py-2.5 font-semibold w-20 text-center">Free</th>
+                      <th className="px-3 py-2.5 font-semibold w-24 text-left">Disc %</th>
+                      <th className="px-3 py-2.5 font-semibold w-20 text-center">Tax %</th>
+                      <th className="px-3 py-2.5 font-semibold w-28 text-center">Line Total</th>
                       <th className="px-3 py-2.5 font-semibold w-16 text-center">Act</th>
                     </tr>
                   </thead>
@@ -1025,8 +1025,8 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
                       items.map((item, idx) => (
                         <tr key={item.id} className="hover:bg-secondary/10 transition-colors">
                           <td className="px-3 py-2 text-center text-muted-foreground">{idx + 1}</td>
-                          <td className="px-3 py-2 font-medium text-slate-700 dark:text-slate-300">{item.MedicineName}</td>
-                          <td className="px-3 py-2">
+                          <td className="px-3 py-2 font-medium text-slate-700 dark:text-slate-300 text-left">{item.MedicineName}</td>
+                          <td className="px-3 py-2 text-left">
                             <Input 
                               id={`batch-${item.id}`}
                               value={item.BatchCode} 
@@ -1036,7 +1036,7 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
                               placeholder="Required"
                             />
                           </td>
-                          <td className="px-3 py-2">
+                          <td className="px-3 py-2 text-left">
                             <Input 
                               id={`mfg-${item.id}`}
                               type="date"
@@ -1046,7 +1046,7 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
                               className="h-8 text-xs px-2"
                             />
                           </td>
-                          <td className="px-3 py-2">
+                          <td className="px-3 py-2 text-left">
                             <Input 
                               id={`expiry-${item.id}`}
                               type="date"
@@ -1056,7 +1056,7 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
                               className="h-8 text-xs px-2"
                             />
                           </td>
-                          <td className="px-3 py-2">
+                          <td className="px-3 py-2 text-center">
                             <Input 
                               id={`cost-${item.id}`}
                               type="number" min="0" step="0.01"
@@ -1066,7 +1066,7 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
                               className="h-8 text-xs px-2 text-right"
                             />
                           </td>
-                          <td className="px-3 py-2">
+                          <td className="px-3 py-2 text-center">
                             <Input 
                               id={`sale-${item.id}`}
                               type="number" min="0" step="0.01"
@@ -1076,7 +1076,7 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
                               className="h-8 text-xs px-2 text-right"
                             />
                           </td>
-                          <td className="px-3 py-2">
+                          <td className="px-3 py-2 text-center">
                             <Input 
                               id={`qty-${item.id}`}
                               type="number" min="1"
@@ -1086,7 +1086,7 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
                               className="h-8 text-xs px-2 text-right"
                             />
                           </td>
-                          <td className="px-3 py-2">
+                          <td className="px-3 py-2 text-center">
                             <Input 
                               id={`free-${item.id}`}
                               type="number" min="0"
@@ -1096,7 +1096,7 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
                               className="h-8 text-xs px-2 text-right"
                             />
                           </td>
-                          <td className="px-3 py-2">
+                          <td className="px-3 py-2 text-center">
                             <Input 
                               id={`disc-${item.id}`}
                               type="number" min="0" max="100" step="0.1"
@@ -1106,7 +1106,7 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
                               className="h-8 text-xs px-2 text-right"
                             />
                           </td>
-                          <td className="px-3 py-2">
+                          <td className="px-3 py-2 text-left">
                             <Input 
                               id={`tax-${item.id}`}
                               type="number" min="0" max="100"
@@ -1116,7 +1116,7 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
                               className="h-8 text-xs px-2 text-right"
                             />
                           </td>
-                          <td className="px-3 py-2 text-right font-semibold text-slate-700 dark:text-slate-300">
+                          <td className="px-3 py-2 text-center font-semibold text-slate-700 dark:text-slate-300">
                             ₨ {formatNumber(Number(item.LineTotal || 0))}
                           </td>
                           <td className="px-3 py-2 text-center">
@@ -1181,15 +1181,15 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
             
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm border-collapse">
-                <thead>
+                <thead className="text-left">
                   <tr className="bg-secondary/40 text-muted-foreground text-xs uppercase tracking-wider border-b border-border">
                     <th className="px-6 py-3 font-semibold w-12 text-center">#</th>
-                    <th className="px-6 py-3 font-semibold">Date</th>
-                    <th className="px-6 py-3 font-semibold">Invoice No.</th>
-                    <th className="px-6 py-3 font-semibold">Supplier</th>
-                    <th className="px-6 py-3 font-semibold text-right">Grand Total</th>
-                    <th className="px-6 py-3 font-semibold text-right">Paid</th>
-                    <th className="px-6 py-3 font-semibold text-right">Due / Balance</th>
+                    <th className="px-6 py-3 font-semibold text-left">Date</th>
+                    <th className="px-6 py-3 font-semibold text-left">Invoice No.</th>
+                    <th className="px-6 py-3 font-semibold text-left">Supplier</th>
+                    <th className="px-6 py-3 font-semibold text-center">Grand Total</th>
+                    <th className="px-6 py-3 font-semibold text-center">Paid</th>
+                    <th className="px-6 py-3 font-semibold text-center">Due / Balance</th>
                     <th className="px-6 py-3 font-semibold text-center">Status</th>
                     <th className="px-6 py-3 font-semibold text-center">Actions</th>
                   </tr>
@@ -1224,18 +1224,18 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
                         onClick={() => setViewingInvoice(inv)}
                       >
                         <td className="px-6 py-3 text-center font-medium text-muted-foreground">{(historyCurrentPage - 1) * historyPageSize + index + 1}</td>
-                        <td className="px-6 py-3 text-muted-foreground">{format(new Date(inv.PurchaseDate), "dd/MM/yyyy, hh:mm a")}</td>
-                        <td className="px-6 py-3">
+                        <td className="px-6 py-3 text-muted-foreground text-left">{format(new Date(inv.PurchaseDate), "dd/MM/yyyy, hh:mm a")}</td>
+                        <td className="px-6 py-3 text-left">
                            <div className="font-medium text-slate-800 dark:text-slate-200">{inv.InvoiceNumber}</div>
                            {(inv as any).SupplierInvNo && <div className="text-xs text-slate-500 mt-0.5">Ref: {(inv as any).SupplierInvNo}</div>}
                         </td>
-                        <td className="px-6 py-3">{inv.SupplierName || 'Unknown Supplier'}</td>
-                        <td className="px-6 py-3 text-right font-semibold">
+                        <td className="px-6 py-3 text-left">{inv.SupplierName || 'Unknown Supplier'}</td>
+                        <td className="px-6 py-3 text-center font-semibold">
                           ₨ {formatNumber(Number(effectiveTotal || 0))}
                           {(inv as any).ReturnedAmount > 0 && <div className="text-[10px] text-rose-500 font-normal">-₨ {formatNumber(Number((inv as any).ReturnedAmount))} (Ret)</div>}
                         </td>
-                        <td className="px-6 py-3 text-right text-emerald-600">₨ {formatNumber(Number(inv.PaidAmount || 0))}</td>
-                        <td className="px-6 py-3 text-right">
+                        <td className="px-6 py-3 text-center text-emerald-600">₨ {formatNumber(Number(inv.PaidAmount || 0))}</td>
+                        <td className="px-6 py-3 text-center">
                           {balance > 0 ? (
                             <span className="font-semibold text-rose-500">₨ {formatNumber(balance)}</span>
                           ) : (
@@ -1382,25 +1382,25 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
                   </div>
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm border-collapse">
-                      <thead>
+                      <thead className="text-left">
                         <tr className="bg-secondary/40 text-muted-foreground text-xs uppercase tracking-wider border-b border-border">
                           <th className="px-4 py-2 font-semibold">Medicine</th>
-                          <th className="px-4 py-2 font-semibold">Batch Code</th>
+                          <th className="px-4 py-2 font-semibold text-center">Batch Code</th>
                           <th className="px-4 py-2 font-semibold text-center">Orig. Qty</th>
-                          <th className="px-4 py-2 font-semibold text-right">Unit Price</th>
+                          <th className="px-4 py-2 font-semibold text-center">Unit Price</th>
                           <th className="px-4 py-2 font-semibold text-center text-primary">Return Qty</th>
                           <th className="px-4 py-2 font-semibold text-center">Reason</th>
-                          <th className="px-4 py-2 font-semibold text-right text-rose-500">Refund Amt</th>
+                          <th className="px-4 py-2 font-semibold text-center text-rose-500">Refund Amt</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-border">
                         {returnItems.map(item => (
                           <tr key={item.PurchaseItemId} className="hover:bg-secondary/10 transition-colors">
-                            <td className="px-4 py-2 font-medium">{item.MedicineName}</td>
-                            <td className="px-4 py-2 font-mono text-xs">{item.BatchCode}</td>
+                            <td className="px-4 py-2 font-medium text-left">{item.MedicineName}</td>
+                            <td className="px-4 py-2 font-mono text-xs text-left">{item.BatchCode}</td>
                             <td className="px-4 py-2 text-center text-muted-foreground">{item.OriginalQty}</td>
-                            <td className="px-4 py-2 text-right font-mono text-xs">₨ {formatNumber(Number(item.CostPrice || 0))}</td>
-                            <td className="px-4 py-2">
+                            <td className="px-4 py-2 text-center font-mono text-xs">₨ {formatNumber(Number(item.CostPrice || 0))}</td>
+                            <td className="px-4 py-2 text-center">
                               <div className="flex justify-center">
                                 <Input 
                                   type="number" min="0" max={item.OriginalQty}
@@ -1410,7 +1410,7 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
                                 />
                               </div>
                             </td>
-                            <td className="px-4 py-2">
+                            <td className="px-4 py-2 text-left">
                               <div className="flex justify-center">
                                 <select
                                   className="h-8 rounded-md border border-input bg-background px-2 py-1 text-xs shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring w-[120px]"
@@ -1425,7 +1425,7 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
                                 </select>
                               </div>
                             </td>
-                            <td className="px-4 py-2 text-right font-semibold text-rose-500 font-mono text-xs">
+                            <td className="px-4 py-2 text-center font-semibold text-rose-500 font-mono text-xs">
                               ₨ {formatNumber(Number(item.RefundAmount || 0))}
                             </td>
                           </tr>
@@ -1443,15 +1443,15 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-sm border-collapse">
-                    <thead>
+                    <thead className="text-left">
                       <tr className="bg-secondary/40 text-muted-foreground text-xs uppercase tracking-wider border-b border-border">
                         <th className="px-4 py-2 font-semibold w-12 text-center">#</th>
-                        <th className="px-4 py-2 font-semibold">Date</th>
-                        <th className="px-4 py-2 font-semibold">Debit Note</th>
-                        <th className="px-4 py-2 font-semibold">Original Inv.</th>
-                        <th className="px-4 py-2 font-semibold">Supplier</th>
-                        <th className="px-4 py-2 font-semibold">Settlement Type</th>
-                        <th className="px-4 py-2 font-semibold text-right">Refund Amount</th>
+                        <th className="px-4 py-2 font-semibold text-left">Date</th>
+                        <th className="px-4 py-2 font-semibold text-left">Debit Note</th>
+                        <th className="px-4 py-2 font-semibold text-left">Original Inv.</th>
+                        <th className="px-4 py-2 font-semibold text-left">Supplier</th>
+                        <th className="px-4 py-2 font-semibold text-left">Settlement Type</th>
+                        <th className="px-4 py-2 font-semibold text-center">Refund Amount</th>
                         <th className="px-4 py-2 font-semibold text-center">Actions</th>
                       </tr>
                     </thead>
@@ -1464,18 +1464,18 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
                           .map((r, index) => (
                           <tr key={r.ReturnId} className="hover:bg-secondary/10 transition-colors">
                             <td className="px-4 py-2 text-center font-medium text-muted-foreground">{(returnsCurrentPage - 1) * returnsPageSize + index + 1}</td>
-                            <td className="px-4 py-2 text-muted-foreground">{format(new Date(r.ReturnDate), "dd/MM/yyyy, hh:mm a")}</td>
-                            <td className="px-4 py-2 font-medium">{r.ReturnInvoiceNumber}</td>
-                            <td className="px-4 py-2 text-slate-600">{r.OriginalInvoiceNumber || "-"}</td>
-                            <td className="px-4 py-2">{r.SupplierName}</td>
-                            <td className="px-4 py-2">
+                            <td className="px-4 py-2 text-muted-foreground text-left">{format(new Date(r.ReturnDate), "dd/MM/yyyy, hh:mm a")}</td>
+                            <td className="px-4 py-2 font-medium text-left">{r.ReturnInvoiceNumber}</td>
+                            <td className="px-4 py-2 text-slate-600 text-left">{r.OriginalInvoiceNumber || "-"}</td>
+                            <td className="px-4 py-2 text-left">{r.SupplierName}</td>
+                            <td className="px-4 py-2 text-center">
                               <span className={cn("px-2 py-1 rounded-full text-[10px] font-bold tracking-wide", 
                                 r.SettlementType === 'Cash Refund' ? "bg-emerald-100 text-emerald-700" : "bg-blue-100 text-blue-700"
                               )}>
                                 {r.SettlementType || 'Ledger Adjusted'}
                               </span>
                             </td>
-                            <td className="px-4 py-2 text-right font-bold text-rose-500 font-mono">₨ {formatNumber(Number(r.TotalRefundAmount || 0))}</td>
+                            <td className="px-4 py-2 text-center font-bold text-rose-500 font-mono">₨ {formatNumber(Number(r.TotalRefundAmount || 0))}</td>
                             <td className="px-4 py-2 text-center" onClick={(e) => e.stopPropagation()}>
                               <div className="flex items-center justify-center gap-2">
                                 <Button 
@@ -1651,27 +1651,27 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
               {/* Items Table */}
               <div className="rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
                 <table className="w-full text-left text-sm border-collapse">
-                  <thead>
+                  <thead className="text-left">
                     <tr className="bg-slate-50 dark:bg-slate-900 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider border-b border-slate-200 dark:border-slate-800">
                       <th className="px-5 py-3.5 font-bold">Medicine</th>
-                      <th className="px-5 py-3.5 font-bold">Batch</th>
-                      <th className="px-5 py-3.5 font-bold">Expiry</th>
+                      <th className="px-5 py-3.5 font-bold text-left">Batch</th>
+                      <th className="px-5 py-3.5 font-bold text-left">Expiry</th>
                       <th className="px-5 py-3.5 font-bold text-center">Qty</th>
                       <th className="px-5 py-3.5 font-bold text-center">Free</th>
-                      <th className="px-5 py-3.5 font-bold text-right">Cost</th>
-                      <th className="px-5 py-3.5 font-bold text-right">Total</th>
+                      <th className="px-5 py-3.5 font-bold text-center">Cost</th>
+                      <th className="px-5 py-3.5 font-bold text-center">Total</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
                     {printData.items.map((item: any, idx: number) => (
                       <tr key={item.PurchaseItemId || idx} className="hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors">
-                        <td className="px-5 py-4 font-semibold text-slate-800 dark:text-slate-200">{item.MedicineName}</td>
-                        <td className="px-5 py-4 font-mono text-xs text-slate-600 dark:text-slate-400">{item.BatchCode || "-"}</td>
-                        <td className="px-5 py-4 text-slate-600 dark:text-slate-400">{item.ExpiryDate || "-"}</td>
+                        <td className="px-5 py-4 font-semibold text-slate-800 dark:text-slate-200 text-left">{item.MedicineName}</td>
+                        <td className="px-5 py-4 font-mono text-xs text-slate-600 dark:text-slate-400 text-left">{item.BatchCode || "-"}</td>
+                        <td className="px-5 py-4 text-slate-600 dark:text-slate-400 text-left">{item.ExpiryDate || "-"}</td>
                         <td className="px-5 py-4 text-center font-medium text-slate-800 dark:text-slate-200">{item.Quantity}</td>
                         <td className="px-5 py-4 text-center text-slate-500">{item.FreeQty || 0}</td>
-                        <td className="px-5 py-4 text-right text-slate-600 dark:text-slate-400">₨ {formatNumber(Number(item.CostPrice || 0))}</td>
-                        <td className="px-5 py-4 text-right font-bold text-slate-900 dark:text-white">₨ {formatNumber(Number(item.LineTotal || 0))}</td>
+                        <td className="px-5 py-4 text-center text-slate-600 dark:text-slate-400">₨ {formatNumber(Number(item.CostPrice || 0))}</td>
+                        <td className="px-5 py-4 text-center font-bold text-slate-900 dark:text-white">₨ {formatNumber(Number(item.LineTotal || 0))}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -1772,20 +1772,20 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
           {/* Items Table */}
           <div className="mb-10 overflow-hidden rounded-xl border border-slate-200">
             <table className="w-full text-left border-collapse text-sm">
-               <thead>
+               <thead className="text-left">
                  <tr className="bg-slate-900 text-white">
                    <th className="py-3 px-4 font-semibold text-xs uppercase tracking-wider w-[40%]">Item Description</th>
-                   <th className="py-3 px-4 font-semibold text-xs uppercase tracking-wider">Batch/Exp</th>
+                   <th className="py-3 px-4 font-semibold text-xs uppercase tracking-wider text-left">Batch/Exp</th>
                    <th className="py-3 px-4 font-semibold text-xs uppercase tracking-wider text-center">Qty</th>
-                   <th className="py-3 px-4 font-semibold text-xs uppercase tracking-wider text-right">Unit Price</th>
-                   <th className="py-3 px-4 font-semibold text-xs uppercase tracking-wider text-right">Total</th>
+                   <th className="py-3 px-4 font-semibold text-xs uppercase tracking-wider text-center">Unit Price</th>
+                   <th className="py-3 px-4 font-semibold text-xs uppercase tracking-wider text-center">Total</th>
                  </tr>
                </thead>
                <tbody className="divide-y divide-slate-200">
                  {printData.items.map((item: any, idx: number) => (
                    <tr key={idx} className={idx % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
-                     <td className="py-3 px-4 text-slate-900 font-bold">{item.MedicineName}</td>
-                     <td className="py-3 px-4">
+                     <td className="py-3 px-4 text-slate-900 font-bold text-left">{item.MedicineName}</td>
+                     <td className="py-3 px-4 text-left">
                        <div className="text-slate-800 font-mono text-xs font-semibold">{item.BatchCode || "N/A"}</div>
                        <div className="text-slate-400 text-[10px] mt-0.5">Exp: {item.ExpiryDate || "N/A"}</div>
                      </td>
@@ -1793,8 +1793,8 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
                         {item.Quantity}
                         {item.FreeQty > 0 && <span className="text-slate-400 text-xs ml-1">(+{item.FreeQty})</span>}
                      </td>
-                     <td className="py-3 px-4 text-right text-slate-600 font-mono text-xs">₨ {formatNumber(Number(item.CostPrice || 0))}</td>
-                     <td className="py-3 px-4 text-right font-bold text-slate-900 font-mono">₨ {formatNumber(Number(item.LineTotal || 0))}</td>
+                     <td className="py-3 px-4 text-center text-slate-600 font-mono text-xs">₨ {formatNumber(Number(item.CostPrice || 0))}</td>
+                     <td className="py-3 px-4 text-center font-bold text-slate-900 font-mono">₨ {formatNumber(Number(item.LineTotal || 0))}</td>
                    </tr>
                  ))}
                </tbody>

@@ -847,18 +847,18 @@ function ReportsPageInner({
                 </div>
                 <div className="overflow-x-auto relative">
                   <table className="w-full text-sm text-left">
-                    <thead className="bg-secondary/40 text-muted-foreground border-b border-border">
+                    <thead className="bg-secondary/40 text-muted-foreground border-b border-border text-left">
                       <tr>
                         <th className="px-4 py-3 font-medium w-12">#</th>
-                        <th className="px-4 py-3 font-medium">Invoice No.</th>
-                        <th className="px-4 py-3 font-medium">Date</th>
-                        <th className="px-4 py-3 font-medium">Customer</th>
-                        <th className="px-4 py-3 font-medium text-right">Items</th>
-                        <th className="px-4 py-3 font-medium text-right">Qty</th>
-                        <th className="px-4 py-3 font-medium text-right">Grand Total</th>
-                        <th className="px-4 py-3 font-medium text-right">Profit</th>
-                        <th className="px-4 py-3 font-medium">Payment</th>
-                        <th className="px-4 py-3 font-medium">Status</th>
+                        <th className="px-4 py-3 font-medium text-left">Invoice No.</th>
+                        <th className="px-4 py-3 font-medium text-left">Date</th>
+                        <th className="px-4 py-3 font-medium text-left">Customer</th>
+                        <th className="px-4 py-3 font-medium text-center">Items</th>
+                        <th className="px-4 py-3 font-medium text-center">Qty</th>
+                        <th className="px-4 py-3 font-medium text-center">Grand Total</th>
+                        <th className="px-4 py-3 font-medium text-center">Profit</th>
+                        <th className="px-4 py-3 font-medium text-center">Payment</th>
+                        <th className="px-4 py-3 font-medium text-center">Status</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
@@ -880,16 +880,16 @@ function ReportsPageInner({
                             {paginatedTransactions.length > 0 ? (
                               paginatedTransactions.map((t: any, idx: number) => (
                                 <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-secondary/30 cursor-pointer" onClick={() => setSelectedInvoice(t)}>
-                                  <td className="px-4 py-3 text-muted-foreground">{startIndex + idx + 1}</td>
-                                  <td className="px-4 py-3 font-medium text-blue-600">{t.InvoiceNo}</td>
-                                  <td className="px-4 py-3">{format(new Date(t.TransactionDate), "dd/MM/yyyy")}</td>
-                                  <td className="px-4 py-3">{t.CustomerName}</td>
-                                  <td className="px-4 py-3 text-right tabular-nums">{t.MedicinesSold}</td>
-                                  <td className="px-4 py-3 text-right tabular-nums">{t.TotalQty}</td>
-                                  <td className="px-4 py-3 text-right font-medium tabular-nums">{formatCurrency(t.GrandTotal)}</td>
-                                  <td className="px-4 py-3 text-right font-medium text-emerald-600 tabular-nums">{formatCurrency(t.Profit || 0)}</td>
-                                  <td className="px-4 py-3">{t.PaymentMethod}</td>
-                                  <td className="px-4 py-3">
+                                  <td className="px-4 py-3 text-muted-foreground text-left">{startIndex + idx + 1}</td>
+                                  <td className="px-4 py-3 font-medium text-blue-600 text-left">{t.InvoiceNo}</td>
+                                  <td className="px-4 py-3 text-left">{format(new Date(t.TransactionDate), "dd/MM/yyyy")}</td>
+                                  <td className="px-4 py-3 text-left">{t.CustomerName}</td>
+                                  <td className="px-4 py-3 text-center tabular-nums">{t.MedicinesSold}</td>
+                                  <td className="px-4 py-3 text-center tabular-nums">{t.TotalQty}</td>
+                                  <td className="px-4 py-3 text-center font-medium tabular-nums">{formatCurrency(t.GrandTotal)}</td>
+                                  <td className="px-4 py-3 text-center font-medium text-emerald-600 tabular-nums">{formatCurrency(t.Profit || 0)}</td>
+                                  <td className="px-4 py-3 text-center">{t.PaymentMethod}</td>
+                                  <td className="px-4 py-3 text-center">
                                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${t.Status === 'Completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
                                       {t.Status}
                                     </span>
@@ -906,10 +906,10 @@ function ReportsPageInner({
                             {/* Sticky Footer */}
                             {filteredSalesTransactions.length > 0 && (
                               <tr className="bg-slate-50/80 dark:bg-secondary/50 border-t-2 border-border font-semibold sticky bottom-0">
-                                <td colSpan={6} className="px-4 py-3 text-right">Totals (Filtered):</td>
-                                <td className="px-4 py-3 text-right tabular-nums text-foreground">{formatCurrency(totalGrandTotal)}</td>
-                                <td className="px-4 py-3 text-right tabular-nums text-emerald-600">{formatCurrency(totalProfit)}</td>
-                                <td colSpan={2}></td>
+                                <td colSpan={6} className="px-4 py-3 text-center">Totals (Filtered):</td>
+                                <td className="px-4 py-3 text-center tabular-nums text-foreground">{formatCurrency(totalGrandTotal)}</td>
+                                <td className="px-4 py-3 text-center tabular-nums text-emerald-600">{formatCurrency(totalProfit)}</td>
+                                <td colSpan={2} className="text-left"></td>
                               </tr>
                             )}
                           </>
@@ -978,14 +978,14 @@ function ReportsPageInner({
               ]}
             >
               <table className="w-full text-sm text-left border-collapse">
-                <thead className="bg-slate-800 text-white">
+                <thead className="bg-slate-800 text-white text-left">
                   <tr>
                     <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800">Invoice No</th>
-                    <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800">Date & Time</th>
-                    <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800">Customer</th>
-                    <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-right">Items</th>
-                    <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-right">Total Qty</th>
-                    <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-right">Grand Total</th>
+                    <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-left">Date & Time</th>
+                    <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-left">Customer</th>
+                    <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-center">Items</th>
+                    <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-center">Total Qty</th>
+                    <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-center">Grand Total</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -999,19 +999,19 @@ function ReportsPageInner({
                       <>
                         {printData.map((t: any, idx: number) => (
                           <tr key={idx} className="border-b border-gray-200 even:bg-gray-50">
-                            <td className="px-3 py-2 font-mono font-bold text-gray-800">{t.InvoiceNo}</td>
-                            <td className="px-3 py-2 text-gray-600">{new Date(t.TransactionDate).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}</td>
-                            <td className="px-3 py-2 text-gray-800">{t.CustomerName || '-'}</td>
-                            <td className="px-3 py-2 text-right tabular-nums text-gray-600">{t.MedicinesSold}</td>
-                            <td className="px-3 py-2 text-right tabular-nums text-gray-600">{t.TotalQty}</td>
-                            <td className="px-3 py-2 text-right tabular-nums font-semibold text-gray-900">{t.GrandTotal}</td>
+                            <td className="px-3 py-2 font-mono font-bold text-gray-800 text-left">{t.InvoiceNo}</td>
+                            <td className="px-3 py-2 text-gray-600 text-left">{new Date(t.TransactionDate).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}</td>
+                            <td className="px-3 py-2 text-gray-800 text-left">{t.CustomerName || '-'}</td>
+                            <td className="px-3 py-2 text-center tabular-nums text-gray-600">{t.MedicinesSold}</td>
+                            <td className="px-3 py-2 text-center tabular-nums text-gray-600">{t.TotalQty}</td>
+                            <td className="px-3 py-2 text-center tabular-nums font-semibold text-gray-900">{t.GrandTotal}</td>
                           </tr>
                         ))}
                         <tr className="border-t-2 border-gray-800 bg-gray-100">
-                          <td colSpan={3} className="px-3 py-3 text-right font-bold text-gray-900 uppercase text-xs">Total for Period:</td>
-                          <td className="px-3 py-3 text-right font-bold text-gray-900 tabular-nums">{totalItems}</td>
-                          <td className="px-3 py-3 text-right font-bold text-gray-900 tabular-nums">{totalQty}</td>
-                          <td className="px-3 py-3 text-right font-bold text-gray-900 tabular-nums text-base">Rs. {totalGrand}</td>
+                          <td colSpan={3} className="px-3 py-3 text-center font-bold text-gray-900 uppercase text-xs">Total for Period:</td>
+                          <td className="px-3 py-3 text-center font-bold text-gray-900 tabular-nums">{totalItems}</td>
+                          <td className="px-3 py-3 text-center font-bold text-gray-900 tabular-nums">{totalQty}</td>
+                          <td className="px-3 py-3 text-center font-bold text-gray-900 tabular-nums text-base">Rs. {totalGrand}</td>
                         </tr>
                       </>
                     );
@@ -1161,18 +1161,18 @@ function ReportsPageInner({
                 </div>
                 <div className="overflow-x-auto max-h-[500px]">
                   <table className="w-full text-sm text-left relative">
-                    <thead className="bg-secondary/40 text-muted-foreground border-b border-border sticky top-0 z-10 shadow-sm">
+                    <thead className="bg-secondary/40 text-muted-foreground border-b border-border sticky top-0 z-10 shadow-sm text-left">
                       <tr>
                         <th className="px-4 py-3 font-medium text-left w-12">#</th>
                         <th className="px-4 py-3 font-medium text-left">Medicine</th>
                         <th className="px-4 py-3 font-medium text-left">Category</th>
                         <th className="px-4 py-3 font-medium text-left">Batch</th>
-                        <th className="px-4 py-3 font-medium text-right">Qty</th>
-                        <th className="px-4 py-3 font-medium text-right">Cost</th>
-                        <th className="px-4 py-3 font-medium text-right">Retail</th>
-                        <th className="px-4 py-3 font-medium text-right">Total Cost</th>
-                        <th className="px-4 py-3 font-medium text-right">Total Retail</th>
-                        <th className="px-4 py-3 font-medium text-right">Potential Margin (Rs.)</th>
+                        <th className="px-4 py-3 font-medium text-center">Qty</th>
+                        <th className="px-4 py-3 font-medium text-center">Cost</th>
+                        <th className="px-4 py-3 font-medium text-center">Retail</th>
+                        <th className="px-4 py-3 font-medium text-center">Total Cost</th>
+                        <th className="px-4 py-3 font-medium text-center">Total Retail</th>
+                        <th className="px-4 py-3 font-medium text-center">Potential Margin (Rs.)</th>
                         <th className="px-4 py-3 font-medium text-left">Status</th>
                       </tr>
                     </thead>
@@ -1206,16 +1206,16 @@ function ReportsPageInner({
                           const margin = (t.TotalRetailValue || 0) - (t.TotalCostValue || 0);
                           return (
                             <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-secondary/30">
-                              <td className="px-4 py-3 text-muted-foreground">{startIndex + idx + 1}</td>
+                              <td className="px-4 py-3 text-muted-foreground text-left">{startIndex + idx + 1}</td>
                               <td className="px-4 py-3 font-medium text-foreground text-left">{t.MedicineName}</td>
                               <td className="px-4 py-3 text-muted-foreground text-left">{t.Category}</td>
                               <td className="px-4 py-3 text-left">{t.BatchCode}</td>
-                              <td className="px-4 py-3 text-right tabular-nums">{t.Quantity}</td>
-                              <td className="px-4 py-3 text-right tabular-nums">{formatCurrency(t.CostPrice)}</td>
-                              <td className="px-4 py-3 text-right tabular-nums">{formatCurrency(t.SellingPrice)}</td>
-                              <td className="px-4 py-3 text-right font-medium tabular-nums">{formatCurrency(t.TotalCostValue)}</td>
-                              <td className="px-4 py-3 text-right font-medium tabular-nums text-emerald-600">{formatCurrency(t.TotalRetailValue)}</td>
-                              <td className="px-4 py-3 text-right font-medium tabular-nums text-blue-600">{formatCurrency(margin)}</td>
+                              <td className="px-4 py-3 text-center tabular-nums">{t.Quantity}</td>
+                              <td className="px-4 py-3 text-center tabular-nums">{formatCurrency(t.CostPrice)}</td>
+                              <td className="px-4 py-3 text-center tabular-nums">{formatCurrency(t.SellingPrice)}</td>
+                              <td className="px-4 py-3 text-center font-medium tabular-nums">{formatCurrency(t.TotalCostValue)}</td>
+                              <td className="px-4 py-3 text-center font-medium tabular-nums text-emerald-600">{formatCurrency(t.TotalRetailValue)}</td>
+                              <td className="px-4 py-3 text-center font-medium tabular-nums text-blue-600">{formatCurrency(margin)}</td>
                               <td className="px-4 py-3 text-left">
                                 <span className={cn(
                                   "px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap",
@@ -1242,13 +1242,13 @@ function ReportsPageInner({
                             )}
                             {filteredStock.length > 0 && (
                               <tr className="bg-slate-100 dark:bg-secondary/50 border-t-2 border-border sticky bottom-0 z-10">
-                                <td colSpan={4} className="px-4 py-3 text-right font-bold text-foreground uppercase text-xs tracking-wider">Filtered Totals:</td>
-                                <td className="px-4 py-3 text-right font-bold tabular-nums text-foreground">{sumQty}</td>
-                                <td colSpan={2}></td>
-                                <td className="px-4 py-3 text-right font-bold tabular-nums text-foreground">{formatCurrency(sumCost)}</td>
-                                <td className="px-4 py-3 text-right font-bold tabular-nums text-emerald-600">{formatCurrency(sumRetail)}</td>
-                                <td className="px-4 py-3 text-right font-bold tabular-nums text-blue-600">{formatCurrency(sumMargin)}</td>
-                                <td></td>
+                                <td colSpan={4} className="px-4 py-3 text-center font-bold text-foreground uppercase text-xs tracking-wider">Filtered Totals:</td>
+                                <td className="px-4 py-3 text-center font-bold tabular-nums text-foreground">{sumQty}</td>
+                                <td colSpan={2} className="text-left"></td>
+                                <td className="px-4 py-3 text-center font-bold tabular-nums text-foreground">{formatCurrency(sumCost)}</td>
+                                <td className="px-4 py-3 text-center font-bold tabular-nums text-emerald-600">{formatCurrency(sumRetail)}</td>
+                                <td className="px-4 py-3 text-center font-bold tabular-nums text-blue-600">{formatCurrency(sumMargin)}</td>
+                                <td className="text-left"></td>
                               </tr>
                             )}
                           </>
@@ -1306,16 +1306,16 @@ function ReportsPageInner({
                   </div>
                   <div className="overflow-x-auto max-h-96">
                     <table className="w-full text-sm text-left">
-                      <thead className="bg-secondary/40 text-muted-foreground border-b border-border sticky top-0">
+                      <thead className="bg-secondary/40 text-muted-foreground border-b border-border sticky top-0 text-left">
                         <tr>
                           <th className="px-4 py-3 font-medium w-12">#</th>
-                          <th className="px-4 py-3 font-medium">Medicine</th>
-                          <th className="px-4 py-3 font-medium text-right">Start Stock</th>
-                          <th className="px-4 py-3 font-medium text-right text-emerald-600">Purchased</th>
-                          <th className="px-4 py-3 font-medium text-right text-blue-600">Sold</th>
-                          <th className="px-4 py-3 font-medium text-right text-purple-600">Adjusted</th>
-                          <th className="px-4 py-3 font-medium text-right text-rose-600">Expired</th>
-                          <th className="px-4 py-3 font-medium text-right">Close Stock</th>
+                          <th className="px-4 py-3 font-medium text-left">Medicine</th>
+                          <th className="px-4 py-3 font-medium text-center">Start Stock</th>
+                          <th className="px-4 py-3 font-medium text-center text-emerald-600">Purchased</th>
+                          <th className="px-4 py-3 font-medium text-center text-blue-600">Sold</th>
+                          <th className="px-4 py-3 font-medium text-center text-purple-600">Adjusted</th>
+                          <th className="px-4 py-3 font-medium text-center text-rose-600">Expired</th>
+                          <th className="px-4 py-3 font-medium text-center">Close Stock</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-border">
@@ -1346,14 +1346,14 @@ function ReportsPageInner({
 
                             return (
                               <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-secondary/30">
-                                <td className="px-4 py-3 text-muted-foreground">{startIndex + idx + 1}</td>
+                                <td className="px-4 py-3 text-muted-foreground text-left">{startIndex + idx + 1}</td>
                                 <td className="px-4 py-3 font-medium text-foreground text-left">{t.MedicineName}</td>
-                                <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">{t.StartingStock || 0}</td>
-                                <td className="px-4 py-3 text-right tabular-nums text-emerald-600">+{t.PurchasedQty || 0}</td>
-                                <td className="px-4 py-3 text-right tabular-nums text-blue-600">-{t.SoldQty || 0}</td>
-                                <td className="px-4 py-3 text-right tabular-nums text-purple-600">{(t.AdjustedQty || 0) > 0 ? `+${t.AdjustedQty}` : (t.AdjustedQty || 0)}</td>
-                                <td className="px-4 py-3 text-right tabular-nums text-rose-600">-{t.ExpiredQty || 0}</td>
-                                <td className="px-4 py-3 text-right tabular-nums font-medium">{calculatedCloseStock}</td>
+                                <td className="px-4 py-3 text-center tabular-nums text-muted-foreground">{t.StartingStock || 0}</td>
+                                <td className="px-4 py-3 text-center tabular-nums text-emerald-600">+{t.PurchasedQty || 0}</td>
+                                <td className="px-4 py-3 text-center tabular-nums text-blue-600">-{t.SoldQty || 0}</td>
+                                <td className="px-4 py-3 text-center tabular-nums text-purple-600">{(t.AdjustedQty || 0) > 0 ? `+${t.AdjustedQty}` : (t.AdjustedQty || 0)}</td>
+                                <td className="px-4 py-3 text-center tabular-nums text-rose-600">-{t.ExpiredQty || 0}</td>
+                                <td className="px-4 py-3 text-center tabular-nums font-medium">{calculatedCloseStock}</td>
                               </tr>
                             );
                           });
@@ -1369,13 +1369,13 @@ function ReportsPageInner({
                               )}
                               {data.movement_items.length > 0 && (
                                 <tr className="bg-slate-100 dark:bg-secondary/50 border-t-2 border-border sticky bottom-0 z-10">
-                                  <td colSpan={2} className="px-4 py-3 text-right font-bold text-foreground uppercase text-xs tracking-wider">Totals:</td>
-                                  <td className="px-4 py-3 text-right font-bold tabular-nums text-muted-foreground">{sumStart}</td>
-                                  <td className="px-4 py-3 text-right font-bold tabular-nums text-emerald-600">+{sumPurchased}</td>
-                                  <td className="px-4 py-3 text-right font-bold tabular-nums text-blue-600">-{sumSold}</td>
-                                  <td className="px-4 py-3 text-right font-bold tabular-nums text-purple-600">{(sumAdjusted > 0 ? `+${sumAdjusted}` : sumAdjusted)}</td>
-                                  <td className="px-4 py-3 text-right font-bold tabular-nums text-rose-600">-{sumExpired}</td>
-                                  <td className="px-4 py-3 text-right font-bold tabular-nums text-foreground">{sumClose}</td>
+                                  <td colSpan={2} className="px-4 py-3 text-center font-bold text-foreground uppercase text-xs tracking-wider">Totals:</td>
+                                  <td className="px-4 py-3 text-center font-bold tabular-nums text-muted-foreground">{sumStart}</td>
+                                  <td className="px-4 py-3 text-center font-bold tabular-nums text-emerald-600">+{sumPurchased}</td>
+                                  <td className="px-4 py-3 text-center font-bold tabular-nums text-blue-600">-{sumSold}</td>
+                                  <td className="px-4 py-3 text-center font-bold tabular-nums text-purple-600">{(sumAdjusted > 0 ? `+${sumAdjusted}` : sumAdjusted)}</td>
+                                  <td className="px-4 py-3 text-center font-bold tabular-nums text-rose-600">-{sumExpired}</td>
+                                  <td className="px-4 py-3 text-center font-bold tabular-nums text-foreground">{sumClose}</td>
                                 </tr>
                               )}
                             </>
@@ -1437,16 +1437,16 @@ function ReportsPageInner({
               ]}
             >
               <table className="w-full text-sm text-left border-collapse">
-                <thead className="bg-slate-800 text-white">
+                <thead className="bg-slate-800 text-white text-left">
                   <tr>
                     <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800">Medicine</th>
-                    <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800">Batch</th>
-                    <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800">Category</th>
-                    <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-right">Qty</th>
-                    <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-right">Cost Price</th>
-                    <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-right">Retail Price</th>
-                    <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-right">Total Cost</th>
-                    <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-right">Total Retail</th>
+                    <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-left">Batch</th>
+                    <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-left">Category</th>
+                    <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-center">Qty</th>
+                    <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-center">Cost Price</th>
+                    <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-center">Retail Price</th>
+                    <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-center">Total Cost</th>
+                    <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-center">Total Retail</th>
                     <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-left">Status</th>
                   </tr>
                 </thead>
@@ -1464,14 +1464,14 @@ function ReportsPageInner({
                       
                       return (
                         <tr key={idx} className="border-b border-gray-200 even:bg-gray-50">
-                          <td className="px-3 py-2 font-semibold text-gray-900">{t.MedicineName}</td>
-                          <td className="px-3 py-2 text-gray-600">{t.BatchCode}</td>
-                          <td className="px-3 py-2 text-gray-600">{t.Category}</td>
-                          <td className="px-3 py-2 text-right tabular-nums text-gray-900">{t.Quantity}</td>
-                          <td className="px-3 py-2 text-right tabular-nums text-gray-600">{t.CostPrice}</td>
-                          <td className="px-3 py-2 text-right tabular-nums text-gray-600">{t.SellingPrice}</td>
-                          <td className="px-3 py-2 text-right tabular-nums text-gray-900 font-semibold">{t.TotalCostValue}</td>
-                          <td className="px-3 py-2 text-right tabular-nums text-emerald-700 font-semibold">{t.TotalRetailValue}</td>
+                          <td className="px-3 py-2 font-semibold text-gray-900 text-left">{t.MedicineName}</td>
+                          <td className="px-3 py-2 text-gray-600 text-left">{t.BatchCode}</td>
+                          <td className="px-3 py-2 text-gray-600 text-left">{t.Category}</td>
+                          <td className="px-3 py-2 text-center tabular-nums text-gray-900">{t.Quantity}</td>
+                          <td className="px-3 py-2 text-center tabular-nums text-gray-600">{t.CostPrice}</td>
+                          <td className="px-3 py-2 text-center tabular-nums text-gray-600">{t.SellingPrice}</td>
+                          <td className="px-3 py-2 text-center tabular-nums text-gray-900 font-semibold">{t.TotalCostValue}</td>
+                          <td className="px-3 py-2 text-center tabular-nums text-emerald-700 font-semibold">{t.TotalRetailValue}</td>
                           <td className="px-3 py-2 text-left text-gray-600">{t.Status}</td>
                         </tr>
                       );
@@ -1481,12 +1481,12 @@ function ReportsPageInner({
                       <>
                         {rows}
                         <tr className="border-t-2 border-gray-800 bg-gray-100">
-                          <td colSpan={3} className="px-3 py-3 text-right font-bold text-gray-900 uppercase text-xs">Total Valuation:</td>
-                          <td className="px-3 py-3 text-right font-bold text-gray-900 tabular-nums">{sumQty}</td>
-                          <td colSpan={2}></td>
-                          <td className="px-3 py-3 text-right font-bold text-gray-900 tabular-nums text-base">Rs. {sumCost}</td>
-                          <td className="px-3 py-3 text-right font-bold text-emerald-700 tabular-nums text-base">Rs. {sumRetail}</td>
-                          <td></td>
+                          <td colSpan={3} className="px-3 py-3 text-center font-bold text-gray-900 uppercase text-xs">Total Valuation:</td>
+                          <td className="px-3 py-3 text-center font-bold text-gray-900 tabular-nums">{sumQty}</td>
+                          <td colSpan={2} className="text-left"></td>
+                          <td className="px-3 py-3 text-center font-bold text-gray-900 tabular-nums text-base">Rs. {sumCost}</td>
+                          <td className="px-3 py-3 text-center font-bold text-emerald-700 tabular-nums text-base">Rs. {sumRetail}</td>
+                          <td className="text-left"></td>
                         </tr>
                       </>
                     );
@@ -1691,17 +1691,17 @@ function ReportsPageInner({
                 </div>
                 <div className="overflow-x-auto max-h-[500px]">
                   <table className="w-full text-sm text-left relative">
-                    <thead className="bg-secondary/40 text-muted-foreground border-b border-border sticky top-0 z-10 shadow-sm">
+                    <thead className="bg-secondary/40 text-muted-foreground border-b border-border sticky top-0 z-10 shadow-sm text-left">
                       <tr>
                         <th className="px-4 py-3 font-medium text-left w-12">#</th>
-                        <th className="px-4 py-3 font-medium">Invoice No.</th>
-                        <th className="px-4 py-3 font-medium">Date</th>
-                        <th className="px-4 py-3 font-medium">Supplier</th>
-                        <th className="px-4 py-3 font-medium text-right">Items</th>
-                        <th className="px-4 py-3 font-medium text-right">Qty</th>
-                        <th className="px-4 py-3 font-medium text-right">Grand Total</th>
-                        <th className="px-4 py-3 font-medium text-right">Paid</th>
-                        <th className="px-4 py-3 font-medium text-right">Balance Due</th>
+                        <th className="px-4 py-3 font-medium text-left">Invoice No.</th>
+                        <th className="px-4 py-3 font-medium text-left">Date</th>
+                        <th className="px-4 py-3 font-medium text-left">Supplier</th>
+                        <th className="px-4 py-3 font-medium text-center">Items</th>
+                        <th className="px-4 py-3 font-medium text-center">Qty</th>
+                        <th className="px-4 py-3 font-medium text-center">Grand Total</th>
+                        <th className="px-4 py-3 font-medium text-center">Paid</th>
+                        <th className="px-4 py-3 font-medium text-center">Balance Due</th>
                         <th className="px-4 py-3 font-medium text-center">Status</th>
                       </tr>
                     </thead>
@@ -1745,15 +1745,15 @@ function ReportsPageInner({
 
                           return (
                             <tr key={idx} className="hover:bg-slate-50/80 dark:hover:bg-secondary/30 cursor-pointer transition-colors" onClick={() => setSelectedPurchaseTransaction(t)}>
-                              <td className="px-4 py-3 text-muted-foreground">{startIndex + idx + 1}</td>
-                              <td className="px-4 py-3 font-medium text-blue-600">{t.InvoiceNo}</td>
-                              <td className="px-4 py-3 whitespace-nowrap">{format(new Date(t.PurchaseDate), "dd/MM/yyyy")}</td>
-                              <td className="px-4 py-3 font-medium">{t.SupplierName}</td>
-                              <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">{t.MedicinesPurchased}</td>
-                              <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">{t.TotalQty}</td>
-                              <td className="px-4 py-3 text-right font-semibold tabular-nums text-foreground">{formatCurrency(t.GrandTotal)}</td>
-                              <td className="px-4 py-3 text-right tabular-nums text-emerald-600">{formatCurrency(paid)}</td>
-                              <td className="px-4 py-3 text-right tabular-nums text-rose-600">{formatCurrency(balance)}</td>
+                              <td className="px-4 py-3 text-muted-foreground text-left">{startIndex + idx + 1}</td>
+                              <td className="px-4 py-3 font-medium text-blue-600 text-left">{t.InvoiceNo}</td>
+                              <td className="px-4 py-3 whitespace-nowrap text-left">{format(new Date(t.PurchaseDate), "dd/MM/yyyy")}</td>
+                              <td className="px-4 py-3 font-medium text-left">{t.SupplierName}</td>
+                              <td className="px-4 py-3 text-center tabular-nums text-muted-foreground">{t.MedicinesPurchased}</td>
+                              <td className="px-4 py-3 text-center tabular-nums text-muted-foreground">{t.TotalQty}</td>
+                              <td className="px-4 py-3 text-center font-semibold tabular-nums text-foreground">{formatCurrency(t.GrandTotal)}</td>
+                              <td className="px-4 py-3 text-center tabular-nums text-emerald-600">{formatCurrency(paid)}</td>
+                              <td className="px-4 py-3 text-center tabular-nums text-rose-600">{formatCurrency(balance)}</td>
                               <td className="px-4 py-3 text-center">
                                 <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${isPaid ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400'
                                   }`}>
@@ -1775,13 +1775,13 @@ function ReportsPageInner({
                             )}
                             {rows.length > 0 && (
                               <tr className="bg-slate-100 dark:bg-secondary/50 border-t-2 border-border sticky bottom-0 z-10">
-                                <td colSpan={4} className="px-4 py-3 text-right font-bold text-foreground uppercase text-xs tracking-wider">Filtered Totals:</td>
-                                <td className="px-4 py-3 text-right font-bold tabular-nums text-foreground">{totalItems}</td>
-                                <td className="px-4 py-3 text-right font-bold tabular-nums text-foreground">{totalQty}</td>
-                                <td className="px-4 py-3 text-right font-bold tabular-nums text-primary">{formatCurrency(totalGrand)}</td>
-                                <td className="px-4 py-3 text-right font-bold tabular-nums text-emerald-600">{formatCurrency(totalPaid)}</td>
-                                <td className="px-4 py-3 text-right font-bold tabular-nums text-rose-600">{formatCurrency(totalBalance)}</td>
-                                <td></td>
+                                <td colSpan={4} className="px-4 py-3 text-center font-bold text-foreground uppercase text-xs tracking-wider">Filtered Totals:</td>
+                                <td className="px-4 py-3 text-center font-bold tabular-nums text-foreground">{totalItems}</td>
+                                <td className="px-4 py-3 text-center font-bold tabular-nums text-foreground">{totalQty}</td>
+                                <td className="px-4 py-3 text-center font-bold tabular-nums text-primary">{formatCurrency(totalGrand)}</td>
+                                <td className="px-4 py-3 text-center font-bold tabular-nums text-emerald-600">{formatCurrency(totalPaid)}</td>
+                                <td className="px-4 py-3 text-center font-bold tabular-nums text-rose-600">{formatCurrency(totalBalance)}</td>
+                                <td className="text-left"></td>
                               </tr>
                             )}
                           </>
@@ -1872,7 +1872,7 @@ function ReportsPageInner({
                     </h4>
                     <div className="border border-border rounded-lg overflow-hidden shadow-sm">
                       <table className="w-full text-sm text-left">
-                        <thead className="bg-secondary/40 text-muted-foreground border-b border-border">
+                        <thead className="bg-secondary/40 text-muted-foreground border-b border-border text-left">
                           <tr>
                             <th className="px-4 py-3 font-medium">Detailed Batch View</th>
                           </tr>
@@ -1910,15 +1910,15 @@ function ReportsPageInner({
               ]}
             >
               <table className="w-full text-sm text-left border-collapse">
-                <thead className="bg-slate-800 text-white">
+                <thead className="bg-slate-800 text-white text-left">
                   <tr>
                     <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800">Invoice No</th>
-                    <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800">Date</th>
-                    <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800">Supplier</th>
-                    <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-right">Items</th>
-                    <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-right">Qty</th>
-                    <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-right">Grand Total</th>
-                    <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-right">Status</th>
+                    <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-left">Date</th>
+                    <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-left">Supplier</th>
+                    <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-center">Items</th>
+                    <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-center">Qty</th>
+                    <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-center">Grand Total</th>
+                    <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-center">Status</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1932,21 +1932,21 @@ function ReportsPageInner({
                       <>
                         {printData.map((t: any, idx: number) => (
                           <tr key={idx} className="border-b border-gray-200 even:bg-gray-50">
-                            <td className="px-3 py-2 font-mono font-bold text-gray-800">{t.InvoiceNo}</td>
-                            <td className="px-3 py-2 text-gray-600">{new Date(t.PurchaseDate).toLocaleDateString('en-GB')}</td>
-                            <td className="px-3 py-2 text-gray-800">{t.SupplierName || '-'}</td>
-                            <td className="px-3 py-2 text-right tabular-nums text-gray-600">{t.MedicinesPurchased}</td>
-                            <td className="px-3 py-2 text-right tabular-nums text-gray-600">{t.TotalQty}</td>
-                            <td className="px-3 py-2 text-right tabular-nums font-semibold text-gray-900">{t.GrandTotal}</td>
-                            <td className="px-3 py-2 text-right text-gray-600">{t.Status}</td>
+                            <td className="px-3 py-2 font-mono font-bold text-gray-800 text-left">{t.InvoiceNo}</td>
+                            <td className="px-3 py-2 text-gray-600 text-left">{new Date(t.PurchaseDate).toLocaleDateString('en-GB')}</td>
+                            <td className="px-3 py-2 text-gray-800 text-left">{t.SupplierName || '-'}</td>
+                            <td className="px-3 py-2 text-center tabular-nums text-gray-600">{t.MedicinesPurchased}</td>
+                            <td className="px-3 py-2 text-center tabular-nums text-gray-600">{t.TotalQty}</td>
+                            <td className="px-3 py-2 text-center tabular-nums font-semibold text-gray-900">{t.GrandTotal}</td>
+                            <td className="px-3 py-2 text-center text-gray-600">{t.Status}</td>
                           </tr>
                         ))}
                         <tr className="border-t-2 border-gray-800 bg-gray-100">
-                          <td colSpan={3} className="px-3 py-3 text-right font-bold text-gray-900 uppercase text-xs">Total for Period:</td>
-                          <td className="px-3 py-3 text-right font-bold text-gray-900 tabular-nums">{totalItems}</td>
-                          <td className="px-3 py-3 text-right font-bold text-gray-900 tabular-nums">{totalQty}</td>
-                          <td className="px-3 py-3 text-right font-bold text-gray-900 tabular-nums text-base">Rs. {totalGrand}</td>
-                          <td></td>
+                          <td colSpan={3} className="px-3 py-3 text-center font-bold text-gray-900 uppercase text-xs">Total for Period:</td>
+                          <td className="px-3 py-3 text-center font-bold text-gray-900 tabular-nums">{totalItems}</td>
+                          <td className="px-3 py-3 text-center font-bold text-gray-900 tabular-nums">{totalQty}</td>
+                          <td className="px-3 py-3 text-center font-bold text-gray-900 tabular-nums text-base">Rs. {totalGrand}</td>
+                          <td className="text-left"></td>
                         </tr>
                       </>
                     );
@@ -2044,15 +2044,15 @@ function ReportsPageInner({
 
                     {activeMedicineTab === 'expiry' && (
                       <>
-                        <thead className="bg-secondary/40 text-muted-foreground border-b border-border sticky top-0">
+                        <thead className="bg-secondary/40 text-muted-foreground border-b border-border sticky top-0 text-left">
                           <tr>
                             <th className="px-4 py-3 font-medium text-left w-12">#</th>
                             <th className="px-4 py-3 font-medium text-left">Medicine</th>
                             <th className="px-4 py-3 font-medium text-left">Batch</th>
                             <th className="px-4 py-3 font-medium text-left">Supplier</th>
-                            <th className="px-4 py-3 font-medium text-right">Qty</th>
-                            <th className="px-4 py-3 font-medium text-right">Expiry Date</th>
-                            <th className="px-4 py-3 font-medium text-right">Days Left</th>
+                            <th className="px-4 py-3 font-medium text-center">Qty</th>
+                            <th className="px-4 py-3 font-medium text-center">Expiry Date</th>
+                            <th className="px-4 py-3 font-medium text-center">Days Left</th>
                             <th className="px-4 py-3 font-medium text-left">Status</th>
                           </tr>
                         </thead>
@@ -2060,13 +2060,13 @@ function ReportsPageInner({
                           {data.expiry_items && data.expiry_items.length > 0 ? (
                             data.expiry_items.map((t: any, idx: number) => (
                               <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-secondary/30">
-                                <td className="px-4 py-3 text-muted-foreground">{idx + 1}</td>
+                                <td className="px-4 py-3 text-muted-foreground text-center">{idx + 1}</td>
                                 <td className="px-4 py-3 font-medium text-foreground text-left">{t.MedicineName}</td>
                                 <td className="px-4 py-3 text-left">{t.BatchCode}</td>
                                 <td className="px-4 py-3 text-left">{t.SupplierName || '-'}</td>
-                                <td className="px-4 py-3 text-right">{t.Quantity}</td>
-                                <td className="px-4 py-3 text-right">{new Date(t.ExpiryDate).toLocaleDateString()}</td>
-                                <td className="px-4 py-3 text-right font-medium">{t.DaysToExpiry}</td>
+                                <td className="px-4 py-3 text-center">{t.Quantity}</td>
+                                <td className="px-4 py-3 text-center">{new Date(t.ExpiryDate).toLocaleDateString()}</td>
+                                <td className="px-4 py-3 text-center font-medium">{t.DaysToExpiry}</td>
                                 <td className="px-4 py-3 text-left">
                                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${t.Status === 'Expired' ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700'
                                     }`}>
@@ -2084,30 +2084,30 @@ function ReportsPageInner({
 
                     {activeMedicineTab === 'low_stock' && (
                       <>
-                        <thead className="bg-secondary/40 text-muted-foreground border-b border-border sticky top-0">
+                        <thead className="bg-secondary/40 text-muted-foreground border-b border-border sticky top-0 text-left">
                           <tr>
                             <th className="px-4 py-3 font-medium text-left w-12">#</th>
                             <th className="px-4 py-3 font-medium text-left">Medicine</th>
                             <th className="px-4 py-3 font-medium text-left">Category</th>
                             <th className="px-4 py-3 font-medium text-left">Supplier</th>
-                            <th className="px-4 py-3 font-medium text-right text-rose-600">Current Stock</th>
-                            <th className="px-4 py-3 font-medium text-right">Reorder Level</th>
-                            <th className="px-4 py-3 font-medium text-right">Deficit</th>
-                            <th className="px-4 py-3 font-medium text-right text-emerald-600">Suggested Order</th>
+                            <th className="px-4 py-3 font-medium text-center text-rose-600">Current Stock</th>
+                            <th className="px-4 py-3 font-medium text-center">Reorder Level</th>
+                            <th className="px-4 py-3 font-medium text-center">Deficit</th>
+                            <th className="px-4 py-3 font-medium text-center text-emerald-600">Suggested Order</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-border">
                           {data.low_stock_items && data.low_stock_items.length > 0 ? (
                             data.low_stock_items.map((t: any, idx: number) => (
                               <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-secondary/30">
-                                <td className="px-4 py-3 text-muted-foreground">{idx + 1}</td>
+                                <td className="px-4 py-3 text-muted-foreground text-center">{idx + 1}</td>
                                 <td className="px-4 py-3 font-medium text-foreground text-left">{t.MedicineName}</td>
                                 <td className="px-4 py-3 text-left">{t.Category}</td>
                                 <td className="px-4 py-3 text-left">{t.SupplierName || '-'}</td>
-                                <td className="px-4 py-3 text-right font-bold text-rose-600">{t.CurrentStock}</td>
-                                <td className="px-4 py-3 text-right">{t.ReorderLevel}</td>
-                                <td className="px-4 py-3 text-right">{t.Deficit}</td>
-                                <td className="px-4 py-3 text-right font-bold text-emerald-600">{t.SuggestedReorderQty}</td>
+                                <td className="px-4 py-3 text-center font-bold text-rose-600">{t.CurrentStock}</td>
+                                <td className="px-4 py-3 text-center">{t.ReorderLevel}</td>
+                                <td className="px-4 py-3 text-center">{t.Deficit}</td>
+                                <td className="px-4 py-3 text-center font-bold text-emerald-600">{t.SuggestedReorderQty}</td>
                               </tr>
                             ))
                           ) : (
@@ -2119,15 +2119,15 @@ function ReportsPageInner({
 
                     {activeMedicineTab === 'moving' && (
                       <>
-                        <thead className="bg-secondary/40 text-muted-foreground border-b border-border sticky top-0">
+                        <thead className="bg-secondary/40 text-muted-foreground border-b border-border sticky top-0 text-left">
                           <tr>
                             <th className="px-4 py-3 font-medium text-left w-12">#</th>
                             <th className="px-4 py-3 font-medium text-left">Medicine</th>
                             <th className="px-4 py-3 font-medium text-left">Category</th>
                             <th className="px-4 py-3 font-medium text-left">Supplier</th>
-                            <th className="px-4 py-3 font-medium text-right">Sold Quantity</th>
-                            <th className="px-4 py-3 font-medium text-right">Velocity (Units/Day)</th>
-                            <th className="px-4 py-3 font-medium text-right">Revenue</th>
+                            <th className="px-4 py-3 font-medium text-center">Sold Quantity</th>
+                            <th className="px-4 py-3 font-medium text-center">Velocity (Units/Day)</th>
+                            <th className="px-4 py-3 font-medium text-center">Revenue</th>
                             <th className="px-4 py-3 font-medium text-left">Classification</th>
                           </tr>
                         </thead>
@@ -2135,13 +2135,13 @@ function ReportsPageInner({
                           {data.movement_items && data.movement_items.length > 0 ? (
                             data.movement_items.map((t: any, idx: number) => (
                               <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-secondary/30">
-                                <td className="px-4 py-3 text-muted-foreground">{idx + 1}</td>
+                                <td className="px-4 py-3 text-muted-foreground text-center">{idx + 1}</td>
                                 <td className="px-4 py-3 font-medium text-foreground text-left">{t.MedicineName}</td>
                                 <td className="px-4 py-3 text-left">{t.Category}</td>
                                 <td className="px-4 py-3 text-left">{t.SupplierName || '-'}</td>
-                                <td className="px-4 py-3 text-right font-medium">{t.SoldQuantity}</td>
-                                <td className="px-4 py-3 text-right">{t.SalesVelocity}</td>
-                                <td className="px-4 py-3 text-right text-muted-foreground">{formatCurrency(t.Revenue)}</td>
+                                <td className="px-4 py-3 text-center font-medium">{t.SoldQuantity}</td>
+                                <td className="px-4 py-3 text-center">{t.SalesVelocity}</td>
+                                <td className="px-4 py-3 text-center text-muted-foreground">{formatCurrency(t.Revenue)}</td>
                                 <td className="px-4 py-3 text-left">
                                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${t.Classification === 'Fast Moving' ? 'bg-emerald-100 text-emerald-700' :
                                       t.Classification === 'Slow Moving' ? 'bg-amber-100 text-amber-700' :
@@ -2210,67 +2210,67 @@ function ReportsPageInner({
               }
             >
               <table className="w-full text-sm text-left border-collapse">
-                <thead className="bg-slate-800 text-white">
+                <thead className="bg-slate-800 text-white text-left">
                   {activeMedicineTab === 'expiry' && (
                     <tr>
                       <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800">Medicine</th>
-                      <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800">Batch Code</th>
-                      <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800">Supplier</th>
-                      <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-right">Qty</th>
-                      <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800">Expiry Date</th>
-                      <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800">Status</th>
+                      <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-center">Batch Code</th>
+                      <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-left">Supplier</th>
+                      <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-center">Qty</th>
+                      <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-left">Expiry Date</th>
+                      <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-center">Status</th>
                     </tr>
                   )}
                   {activeMedicineTab === 'low_stock' && (
                     <tr>
-                      <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800">Medicine</th>
-                      <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800">Category</th>
-                      <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-right">Current Stock</th>
-                      <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-right">Min Stock</th>
-                      <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-right">Deficit</th>
-                      <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800">Status</th>
+                      <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-left">Medicine</th>
+                      <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-left">Category</th>
+                      <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-center">Current Stock</th>
+                      <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-center">Min Stock</th>
+                      <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-center">Deficit</th>
+                      <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-center">Status</th>
                     </tr>
                   )}
                   {activeMedicineTab === 'moving' && (
                     <tr>
-                      <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800">Medicine</th>
-                      <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800">Category</th>
-                      <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-right">Sold Qty</th>
-                      <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-right">Velocity</th>
-                      <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-right">Revenue</th>
-                      <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800">Classification</th>
+                      <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-left">Medicine</th>
+                      <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-left">Category</th>
+                      <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-center">Sold Qty</th>
+                      <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-center">Velocity</th>
+                      <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-center">Revenue</th>
+                      <th className="px-3 py-2 font-semibold uppercase text-[11px] tracking-wider border border-slate-800 text-left">Classification</th>
                     </tr>
                   )}
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {activeMedicineTab === 'expiry' && data.expiry_items?.map((t: any, idx: number) => (
                     <tr key={idx} className="even:bg-gray-50 border-b border-gray-200">
-                      <td className="px-3 py-2 text-gray-900 font-semibold">{t.MedicineName}</td>
-                      <td className="px-3 py-2 text-gray-600">{t.BatchCode}</td>
-                      <td className="px-3 py-2 text-gray-600">{t.SupplierName || '-'}</td>
-                      <td className="px-3 py-2 text-right tabular-nums text-gray-900">{t.Quantity}</td>
-                      <td className="px-3 py-2 text-gray-600">{new Date(t.ExpiryDate).toLocaleDateString('en-GB')}</td>
-                      <td className="px-3 py-2 text-gray-900">{t.Status}</td>
+                      <td className="px-3 py-2 text-gray-900 font-semibold text-left">{t.MedicineName}</td>
+                      <td className="px-3 py-2 text-gray-600 text-left">{t.BatchCode}</td>
+                      <td className="px-3 py-2 text-gray-600 text-left">{t.SupplierName || '-'}</td>
+                      <td className="px-3 py-2 text-center tabular-nums text-gray-900">{t.Quantity}</td>
+                      <td className="px-3 py-2 text-gray-600 text-left">{new Date(t.ExpiryDate).toLocaleDateString('en-GB')}</td>
+                      <td className="px-3 py-2 text-gray-900 text-center">{t.Status}</td>
                     </tr>
                   ))}
                   {activeMedicineTab === 'low_stock' && data.low_stock_items?.map((t: any, idx: number) => (
                     <tr key={idx} className="even:bg-gray-50 border-b border-gray-200">
-                      <td className="px-3 py-2 text-gray-900 font-semibold">{t.MedicineName}</td>
-                      <td className="px-3 py-2 text-gray-600">{t.Category}</td>
-                      <td className="px-3 py-2 text-right tabular-nums text-rose-600 font-medium">{t.CurrentStock}</td>
-                      <td className="px-3 py-2 text-right tabular-nums text-gray-600">{t.MinStockLevel}</td>
-                      <td className="px-3 py-2 text-right tabular-nums text-rose-600 font-bold">{t.Deficit}</td>
-                      <td className="px-3 py-2 text-gray-900">{t.Status}</td>
+                      <td className="px-3 py-2 text-gray-900 font-semibold text-left">{t.MedicineName}</td>
+                      <td className="px-3 py-2 text-gray-600 text-left">{t.Category}</td>
+                      <td className="px-3 py-2 text-center tabular-nums text-rose-600 font-medium">{t.CurrentStock}</td>
+                      <td className="px-3 py-2 text-center tabular-nums text-gray-600">{t.MinStockLevel}</td>
+                      <td className="px-3 py-2 text-center tabular-nums text-rose-600 font-bold">{t.Deficit}</td>
+                      <td className="px-3 py-2 text-gray-900 text-center">{t.Status}</td>
                     </tr>
                   ))}
                   {activeMedicineTab === 'moving' && data.movement_items?.map((t: any, idx: number) => (
                     <tr key={idx} className="even:bg-gray-50 border-b border-gray-200">
-                      <td className="px-3 py-2 text-gray-900 font-semibold">{t.MedicineName}</td>
-                      <td className="px-3 py-2 text-gray-600">{t.Category}</td>
-                      <td className="px-3 py-2 text-right tabular-nums text-gray-900">{t.SoldQuantity}</td>
-                      <td className="px-3 py-2 text-right tabular-nums text-gray-600">{t.SalesVelocity}</td>
-                      <td className="px-3 py-2 text-right tabular-nums text-gray-900 font-semibold">Rs. {t.Revenue}</td>
-                      <td className="px-3 py-2 text-gray-900">{t.Classification}</td>
+                      <td className="px-3 py-2 text-gray-900 font-semibold text-left">{t.MedicineName}</td>
+                      <td className="px-3 py-2 text-gray-600 text-left">{t.Category}</td>
+                      <td className="px-3 py-2 text-center tabular-nums text-gray-900">{t.SoldQuantity}</td>
+                      <td className="px-3 py-2 text-center tabular-nums text-gray-600">{t.SalesVelocity}</td>
+                      <td className="px-3 py-2 text-center tabular-nums text-gray-900 font-semibold">Rs. {t.Revenue}</td>
+                      <td className="px-3 py-2 text-gray-900 text-left">{t.Classification}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -2430,54 +2430,54 @@ function ReportsPageInner({
                     <tbody className="divide-y divide-border">
                       {/* 1. Revenue (Income) Section */}
                       <tr className="bg-slate-50/50 dark:bg-secondary/30">
-                        <td colSpan={2} className="px-6 py-2.5 font-bold text-foreground">1. Revenue (Income)</td>
+                        <td colSpan={2} className="px-6 py-2.5 font-bold text-foreground text-left">1. Revenue (Income)</td>
                       </tr>
                       <tr className="hover:bg-slate-50/50 dark:hover:bg-secondary/30">
-                        <td className="px-6 py-2.5 text-muted-foreground pl-10">Gross Sales Revenue</td>
-                        <td className="px-6 py-2.5 text-right font-medium text-emerald-600 dark:text-emerald-400">+ {formatCurrency(data?.summary?.GrossSales || '0.00')}</td>
+                        <td className="px-6 py-2.5 text-muted-foreground pl-10 text-left">Gross Sales Revenue</td>
+                        <td className="px-6 py-2.5 text-center font-medium text-emerald-600 dark:text-emerald-400">+ {formatCurrency(data?.summary?.GrossSales || '0.00')}</td>
                       </tr>
                       <tr className="hover:bg-slate-50/50 dark:hover:bg-secondary/30">
-                        <td className="px-6 py-2.5 text-muted-foreground pl-10">Less: Sales Returns & Refunds</td>
-                        <td className="px-6 py-2.5 text-right font-medium text-rose-600 dark:text-rose-400">- {formatCurrency(data?.summary?.SalesReturns || '0.00')}</td>
+                        <td className="px-6 py-2.5 text-muted-foreground pl-10 text-left">Less: Sales Returns & Refunds</td>
+                        <td className="px-6 py-2.5 text-center font-medium text-rose-600 dark:text-rose-400">- {formatCurrency(data?.summary?.SalesReturns || '0.00')}</td>
                       </tr>
                       <tr className="hover:bg-slate-50/50 dark:hover:bg-secondary/30">
-                        <td className="px-6 py-2.5 text-muted-foreground pl-10">Less: Discounts Given</td>
-                        <td className="px-6 py-2.5 text-right font-medium text-rose-600 dark:text-rose-400">- {formatCurrency(data?.summary?.DiscountsApplied || '0.00')}</td>
+                        <td className="px-6 py-2.5 text-muted-foreground pl-10 text-left">Less: Discounts Given</td>
+                        <td className="px-6 py-2.5 text-center font-medium text-rose-600 dark:text-rose-400">- {formatCurrency(data?.summary?.DiscountsApplied || '0.00')}</td>
                       </tr>
                       <tr className="border-t-2 border-border bg-blue-50/30 dark:bg-secondary/30">
-                        <td className="px-6 py-3 font-bold text-right text-blue-700 dark:text-blue-400">Subtotal: Net Revenue</td>
-                        <td className="px-6 py-3 text-right font-bold text-blue-700 dark:text-blue-400">{formatCurrency(data?.summary?.TotalRevenue || '0.00')}</td>
+                        <td className="px-6 py-3 font-bold text-center text-blue-700 dark:text-blue-400">Subtotal: Net Revenue</td>
+                        <td className="px-6 py-3 text-center font-bold text-blue-700 dark:text-blue-400">{formatCurrency(data?.summary?.TotalRevenue || '0.00')}</td>
                       </tr>
 
                       {/* 2. Cost of Goods Sold (COGS) Section */}
                       <tr className="bg-slate-50/50 dark:bg-secondary/30">
-                        <td colSpan={2} className="px-6 py-2.5 font-bold text-foreground">2. Cost of Goods Sold (COGS)</td>
+                        <td colSpan={2} className="px-6 py-2.5 font-bold text-foreground text-left">2. Cost of Goods Sold (COGS)</td>
                       </tr>
                       <tr className="hover:bg-slate-50/50 dark:hover:bg-secondary/30">
-                        <td className="px-6 py-2.5 text-muted-foreground pl-10">Direct Cost of Sold Medicines</td>
-                        <td className="px-6 py-2.5 text-right font-medium text-rose-600 dark:text-rose-400">- {formatCurrency(data?.summary?.TotalCOGS || '0.00')}</td>
+                        <td className="px-6 py-2.5 text-muted-foreground pl-10 text-left">Direct Cost of Sold Medicines</td>
+                        <td className="px-6 py-2.5 text-center font-medium text-rose-600 dark:text-rose-400">- {formatCurrency(data?.summary?.TotalCOGS || '0.00')}</td>
                       </tr>
                       <tr className="border-t-2 border-border bg-slate-100 dark:bg-secondary/40">
-                        <td className="px-6 py-3 font-bold text-right text-foreground">Subtotal: Gross Profit</td>
-                        <td className="px-6 py-3 text-right font-bold text-foreground">{formatCurrency(data?.summary?.GrossProfit || '0.00')}</td>
+                        <td className="px-6 py-3 font-bold text-center text-foreground">Subtotal: Gross Profit</td>
+                        <td className="px-6 py-3 text-center font-bold text-foreground">{formatCurrency(data?.summary?.GrossProfit || '0.00')}</td>
                       </tr>
 
                       {/* 3. Expenses & Operational Losses Section */}
                       <tr className="bg-slate-50/50 dark:bg-secondary/30">
-                        <td colSpan={2} className="px-6 py-2.5 font-bold text-foreground">3. Expenses & Operational Losses</td>
+                        <td colSpan={2} className="px-6 py-2.5 font-bold text-foreground text-left">3. Expenses & Operational Losses</td>
                       </tr>
                       <tr className="hover:bg-slate-50/50 dark:hover:bg-secondary/30">
-                        <td className="px-6 py-2.5 text-muted-foreground pl-10">Inventory Expiry & Write-Offs</td>
-                        <td className="px-6 py-2.5 text-right font-medium text-rose-600 dark:text-rose-400">- {formatCurrency(data?.summary?.InventoryLoss || '0.00')}</td>
+                        <td className="px-6 py-2.5 text-muted-foreground pl-10 text-left">Inventory Expiry & Write-Offs</td>
+                        <td className="px-6 py-2.5 text-center font-medium text-rose-600 dark:text-rose-400">- {formatCurrency(data?.summary?.InventoryLoss || '0.00')}</td>
                       </tr>
                       <tr className="hover:bg-slate-50/50 dark:hover:bg-secondary/30">
-                        <td className="px-6 py-2.5 text-muted-foreground pl-10">Operating Expenses (Rent, Utilities, etc.)</td>
-                        <td className="px-6 py-2.5 text-right font-medium text-rose-600 dark:text-rose-400">- {formatCurrency(data?.summary?.TotalExpenses || '0.00')}</td>
+                        <td className="px-6 py-2.5 text-muted-foreground pl-10 text-left">Operating Expenses (Rent, Utilities, etc.)</td>
+                        <td className="px-6 py-2.5 text-center font-medium text-rose-600 dark:text-rose-400">- {formatCurrency(data?.summary?.TotalExpenses || '0.00')}</td>
                       </tr>
 
                       {/* 4. Final Summary Footer */}
                       <tr className="border-t-4 border-double border-border bg-slate-100 dark:bg-secondary/50">
-                        <td className="px-6 py-5 font-black text-lg text-right">NET PROFIT / LOSS</td>
+                        <td className="px-6 py-5 font-black text-lg text-center">NET PROFIT / LOSS</td>
                         <td className={`px-6 py-5 text-right font-black text-2xl ${data?.summary?.NetProfit >= 0 ? 'text-emerald-600 dark:text-emerald-500' : 'text-rose-600 dark:text-rose-500'}`}>
                           {data?.summary?.NetProfit >= 0 ? '+ ' : '- '}{formatCurrency(Math.abs(data?.summary?.NetProfit || 0))}
                         </td>
@@ -2502,51 +2502,51 @@ function ReportsPageInner({
                 <table className="w-full text-sm text-left border-collapse border border-gray-300">
                   <tbody className="divide-y divide-gray-200">
                     <tr className="bg-gray-100">
-                      <td colSpan={2} className="px-6 py-2 font-bold text-gray-900 border-b border-gray-300">1. Revenue (Income)</td>
+                      <td colSpan={2} className="px-6 py-2 font-bold text-gray-900 border-b border-gray-300 text-left">1. Revenue (Income)</td>
                     </tr>
                     <tr>
-                      <td className="px-6 py-2 text-gray-700 pl-10 border-r border-gray-300">Gross Sales Revenue</td>
-                      <td className="px-6 py-2 text-right font-medium text-gray-900">+ {formatCurrency(data?.summary?.GrossSales || '0.00')}</td>
+                      <td className="px-6 py-2 text-gray-700 pl-10 border-r border-gray-300 text-left">Gross Sales Revenue</td>
+                      <td className="px-6 py-2 text-center font-medium text-gray-900">+ {formatCurrency(data?.summary?.GrossSales || '0.00')}</td>
                     </tr>
                     <tr>
-                      <td className="px-6 py-2 text-gray-700 pl-10 border-r border-gray-300">Less: Sales Returns & Refunds</td>
-                      <td className="px-6 py-2 text-right font-medium text-rose-700">- {formatCurrency(data?.summary?.SalesReturns || '0.00')}</td>
+                      <td className="px-6 py-2 text-gray-700 pl-10 border-r border-gray-300 text-left">Less: Sales Returns & Refunds</td>
+                      <td className="px-6 py-2 text-center font-medium text-rose-700">- {formatCurrency(data?.summary?.SalesReturns || '0.00')}</td>
                     </tr>
                     <tr>
-                      <td className="px-6 py-2 text-gray-700 pl-10 border-r border-gray-300">Less: Discounts Given</td>
-                      <td className="px-6 py-2 text-right font-medium text-rose-700">- {formatCurrency(data?.summary?.DiscountsApplied || '0.00')}</td>
+                      <td className="px-6 py-2 text-gray-700 pl-10 border-r border-gray-300 text-left">Less: Discounts Given</td>
+                      <td className="px-6 py-2 text-center font-medium text-rose-700">- {formatCurrency(data?.summary?.DiscountsApplied || '0.00')}</td>
                     </tr>
                     <tr className="border-t-2 border-gray-400 bg-gray-50">
-                      <td className="px-6 py-3 font-bold text-right text-gray-900 border-r border-gray-300">Subtotal: Net Revenue</td>
-                      <td className="px-6 py-3 text-right font-bold text-gray-900">{formatCurrency(data?.summary?.TotalRevenue || '0.00')}</td>
+                      <td className="px-6 py-3 font-bold text-center text-gray-900 border-r border-gray-300">Subtotal: Net Revenue</td>
+                      <td className="px-6 py-3 text-center font-bold text-gray-900">{formatCurrency(data?.summary?.TotalRevenue || '0.00')}</td>
                     </tr>
 
                     <tr className="bg-gray-100">
-                      <td colSpan={2} className="px-6 py-2 font-bold text-gray-900 border-b border-gray-300">2. Cost of Goods Sold (COGS)</td>
+                      <td colSpan={2} className="px-6 py-2 font-bold text-gray-900 border-b border-gray-300 text-left">2. Cost of Goods Sold (COGS)</td>
                     </tr>
                     <tr>
-                      <td className="px-6 py-2 text-gray-700 pl-10 border-r border-gray-300">Direct Cost of Sold Medicines</td>
-                      <td className="px-6 py-2 text-right font-medium text-rose-700">- {formatCurrency(data?.summary?.TotalCOGS || '0.00')}</td>
+                      <td className="px-6 py-2 text-gray-700 pl-10 border-r border-gray-300 text-left">Direct Cost of Sold Medicines</td>
+                      <td className="px-6 py-2 text-center font-medium text-rose-700">- {formatCurrency(data?.summary?.TotalCOGS || '0.00')}</td>
                     </tr>
                     <tr className="border-t-2 border-gray-400 bg-gray-50">
-                      <td className="px-6 py-3 font-bold text-right text-gray-900 border-r border-gray-300">Subtotal: Gross Profit</td>
-                      <td className="px-6 py-3 text-right font-bold text-gray-900">{formatCurrency(data?.summary?.GrossProfit || '0.00')}</td>
+                      <td className="px-6 py-3 font-bold text-center text-gray-900 border-r border-gray-300">Subtotal: Gross Profit</td>
+                      <td className="px-6 py-3 text-center font-bold text-gray-900">{formatCurrency(data?.summary?.GrossProfit || '0.00')}</td>
                     </tr>
 
                     <tr className="bg-gray-100">
-                      <td colSpan={2} className="px-6 py-2 font-bold text-gray-900 border-b border-gray-300">3. Expenses & Operational Losses</td>
+                      <td colSpan={2} className="px-6 py-2 font-bold text-gray-900 border-b border-gray-300 text-left">3. Expenses & Operational Losses</td>
                     </tr>
                     <tr>
-                      <td className="px-6 py-2 text-gray-700 pl-10 border-r border-gray-300">Inventory Expiry & Write-Offs</td>
-                      <td className="px-6 py-2 text-right font-medium text-rose-700">- {formatCurrency(data?.summary?.InventoryLoss || '0.00')}</td>
+                      <td className="px-6 py-2 text-gray-700 pl-10 border-r border-gray-300 text-left">Inventory Expiry & Write-Offs</td>
+                      <td className="px-6 py-2 text-center font-medium text-rose-700">- {formatCurrency(data?.summary?.InventoryLoss || '0.00')}</td>
                     </tr>
                     <tr>
-                      <td className="px-6 py-2 text-gray-700 pl-10 border-r border-gray-300">Operating Expenses (Rent, Utilities, etc.)</td>
-                      <td className="px-6 py-2 text-right font-medium text-rose-700">- {formatCurrency(data?.summary?.TotalExpenses || '0.00')}</td>
+                      <td className="px-6 py-2 text-gray-700 pl-10 border-r border-gray-300 text-left">Operating Expenses (Rent, Utilities, etc.)</td>
+                      <td className="px-6 py-2 text-center font-medium text-rose-700">- {formatCurrency(data?.summary?.TotalExpenses || '0.00')}</td>
                     </tr>
 
                     <tr className="border-t-4 border-double border-gray-800 bg-gray-200">
-                      <td className="px-6 py-4 font-black text-lg text-right text-gray-900 border-r border-gray-400">NET PROFIT / LOSS</td>
+                      <td className="px-6 py-4 font-black text-lg text-center text-gray-900 border-r border-gray-400">NET PROFIT / LOSS</td>
                       <td className={`px-6 py-4 text-right font-black text-xl ${data?.summary?.NetProfit >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
                         {data?.summary?.NetProfit >= 0 ? '+ ' : '- '}{formatCurrency(Math.abs(data?.summary?.NetProfit || 0))}
                       </td>

@@ -472,21 +472,21 @@ function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTa
       const expExtra  = days < 0 ? " (Expired)" : days <= 90 ? ` (${days}d)` : "";
       return `
         <tr style="background:${idx % 2 === 0 ? "#ffffff" : "#f9fafb"}">
-          <td style="padding:8px 10px;color:#6b7280;font-size:11px">${idx + 1}</td>
-          <td style="padding:8px 10px;font-family:monospace;font-size:11px;color:#111827">${item.CodeBarcode}</td>
-          <td style="padding:8px 10px;font-weight:700;color:#111827;font-size:12px">${item.MedicineName}</td>
-          <td style="padding:8px 10px;color:#374151;font-size:11px">${item.CategoryName}</td>
-          <td style="padding:8px 10px;font-family:monospace;font-size:10px;color:#6366f1">${item.RackNumber || "—"}</td>
-          <td style="padding:8px 10px;font-family:monospace;font-size:11px;color:#111827">${item.BatchCode}</td>
-          <td style="padding:8px 10px;font-size:11px;color:${expColour};font-weight:600">${expStr}${expExtra}</td>
-          <td style="padding:8px 10px;text-align:right;font-size:11px;color:#374151">${formatCurrency(item.PurchasePrice)}</td>
-          <td style="padding:8px 10px;text-align:right;font-size:11px;color:#374151">${formatCurrency(item.SellingPrice)}</td>
-          <td style="padding:8px 10px;text-align:right;font-weight:700;font-size:12px;color:#111827">${item.CurrentStock}</td>
-          <td style="padding:8px 10px;text-align:right;color:#6b7280;font-size:11px">${item.MinStock}</td>
-          <td style="padding:8px 10px;text-align:center">
+          <td style="padding:8px 10px;color:#6b7280;font-size:11px" className="text-center">${idx + 1}</td>
+          <td style="padding:8px 10px;font-family:monospace;font-size:11px;color:#111827" className="text-left">${item.CodeBarcode}</td>
+          <td style="padding:8px 10px;font-weight:700;color:#111827;font-size:12px" className="text-left">${item.MedicineName}</td>
+          <td style="padding:8px 10px;color:#374151;font-size:11px" className="text-left">${item.CategoryName}</td>
+          <td style="padding:8px 10px;font-family:monospace;font-size:10px;color:#6366f1" className="text-left">${item.RackNumber || "—"}</td>
+          <td style="padding:8px 10px;font-family:monospace;font-size:11px;color:#111827" className="text-left">${item.BatchCode}</td>
+          <td style="padding:8px 10px;font-size:11px;color:${expColour};font-weight:600" className="text-left">${expStr}${expExtra}</td>
+          <td style="padding:8px 10px;text-align:right;font-size:11px;color:#374151" className="text-center">${formatCurrency(item.PurchasePrice)}</td>
+          <td style="padding:8px 10px;text-align:right;font-size:11px;color:#374151" className="text-center">${formatCurrency(item.SellingPrice)}</td>
+          <td style="padding:8px 10px;text-align:right;font-weight:700;font-size:12px;color:#111827" className="text-center">${item.CurrentStock}</td>
+          <td style="padding:8px 10px;text-align:right;color:#6b7280;font-size:11px" className="text-center">${item.MinStock}</td>
+          <td style="padding:8px 10px;text-align:center" className="text-center">
             <span style="display:inline-block;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:700;background:${statusBg(item.Status)};color:${statusColour(item.Status)}">${item.Status}</span>
           </td>
-          <td style="padding:8px 10px;text-align:right;font-weight:600;font-size:11px">${formatCurrency(item.StockValue)}</td>
+          <td style="padding:8px 10px;text-align:right;font-weight:600;font-size:11px" className="text-center">${formatCurrency(item.StockValue)}</td>
         </tr>`;
     }).join("");
 
@@ -549,13 +549,13 @@ function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTa
     <!-- Table -->
     <div style="padding:0 24px;margin-top:8px">
       <table>
-        <thead>
+        <thead className="text-left">
           <tr>
-            <th>#</th><th>Barcode</th><th>Medicine Name</th><th>Category</th>
-            <th>Rack</th><th>Batch</th><th>Expiry</th>
-            <th style="text-align:right">Pur. Price</th><th style="text-align:right">Sell. Price</th>
-            <th style="text-align:right">Stock</th><th style="text-align:right">Min</th>
-            <th style="text-align:center">Status</th><th style="text-align:right">Value (Rs)</th>
+            <th>#</th><th className="text-left">Barcode</th><th className="text-left">Medicine Name</th><th className="text-left">Category</th>
+            <th className="text-left">Rack</th><th className="text-left">Batch</th><th className="text-left">Expiry</th>
+            <th style="text-align:right" className="text-center">Pur. Price</th><th style="text-align:right" className="text-center">Sell. Price</th>
+            <th style="text-align:right" className="text-center">Stock</th><th style="text-align:right" className="text-left">Min</th>
+            <th style="text-align:center" className="text-center">Status</th><th style="text-align:right" className="text-center">Value (Rs)</th>
           </tr>
         </thead>
         <tbody>${rows}</tbody>
@@ -1057,21 +1057,21 @@ function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTa
             {/* Data Table */}
             <div className="overflow-auto flex-1 custom-scrollbar">
               <table className="w-full text-left text-sm border-collapse min-w-[1200px]">
-                <thead className="sticky top-0 z-10 bg-white dark:bg-card">
+                <thead className="sticky top-0 z-10 bg-white dark:bg-card text-left">
                   <tr className="bg-secondary/40 text-muted-foreground text-xs uppercase tracking-wider border-b border-border">
                     <th className="px-4 py-3 font-semibold">#</th>
-                    <th className="px-4 py-3 font-semibold min-w-[140px]">Code / Barcode</th>
-                    <th className="px-4 py-3 font-semibold">Medicine Name</th>
-                    <th className="px-4 py-3 font-semibold">Category</th>
-                    <th className="px-4 py-3 font-semibold">Rack / Shelf</th>
-                    <th className="px-4 py-3 font-semibold">Company</th>
-                    <th className="px-4 py-3 font-semibold">Batch No.</th>
-                    <th className="px-4 py-3 font-semibold">Expiry Date</th>
-                    <th className="px-4 py-3 font-semibold text-right">Pur. Price</th>
-                    <th className="px-4 py-3 font-semibold text-right">Sell. Price</th>
-                    <th className="px-4 py-3 font-semibold text-right">Current Stock</th>
-                    <th className="px-4 py-3 font-semibold text-right">Min. Stock</th>
-                    <th className="px-4 py-3 font-semibold">Status</th>
+                    <th className="px-4 py-3 font-semibold min-w-[140px] text-center">Code / Barcode</th>
+                    <th className="px-4 py-3 font-semibold text-left">Medicine Name</th>
+                    <th className="px-4 py-3 font-semibold text-left">Category</th>
+                    <th className="px-4 py-3 font-semibold text-left">Rack / Shelf</th>
+                    <th className="px-4 py-3 font-semibold text-left">Company</th>
+                    <th className="px-4 py-3 font-semibold text-left">Batch No.</th>
+                    <th className="px-4 py-3 font-semibold text-left">Expiry Date</th>
+                    <th className="px-4 py-3 font-semibold text-center">Pur. Price</th>
+                    <th className="px-4 py-3 font-semibold text-center">Sell. Price</th>
+                    <th className="px-4 py-3 font-semibold text-center">Current Stock</th>
+                    <th className="px-4 py-3 font-semibold text-center">Min. Stock</th>
+                    <th className="px-4 py-3 font-semibold text-center">Status</th>
                     <th className="px-4 py-3 font-semibold text-center">Actions</th>
                   </tr>
                 </thead>
@@ -1099,18 +1099,18 @@ function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTa
                             ? "bg-amber-50/30 hover:bg-amber-100/40 dark:bg-amber-950/10 dark:hover:bg-amber-900/20"
                             : "hover:bg-secondary/10"
                         )}>
-                          <td className="px-4 py-3 text-muted-foreground">{idx + 1}</td>
-                          <td className="px-4 py-3 font-mono text-xs min-w-[140px]">{item.CodeBarcode}</td>
-                          <td className="px-4 py-3 font-semibold text-foreground">{item.MedicineName}</td>
-                          <td className="px-4 py-3 text-muted-foreground">{item.CategoryName}</td>
-                          <td className="px-4 py-3">
+                          <td className="px-4 py-3 text-muted-foreground text-center">{idx + 1}</td>
+                          <td className="px-4 py-3 font-mono text-xs min-w-[140px] text-left">{item.CodeBarcode}</td>
+                          <td className="px-4 py-3 font-semibold text-foreground text-left">{item.MedicineName}</td>
+                          <td className="px-4 py-3 text-muted-foreground text-left">{item.CategoryName}</td>
+                          <td className="px-4 py-3 text-left">
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-slate-100 dark:bg-secondary/60 text-xs font-mono text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-border">
                               {item.RackNumber || "—"}
                             </span>
                           </td>
-                          <td className="px-4 py-3 text-muted-foreground">{item.CompanyName}</td>
-                          <td className="px-4 py-3 font-mono text-xs text-primary">{item.BatchCode}</td>
-                          <td className="px-4 py-3">
+                          <td className="px-4 py-3 text-muted-foreground text-left">{item.CompanyName}</td>
+                          <td className="px-4 py-3 font-mono text-xs text-primary text-left">{item.BatchCode}</td>
+                          <td className="px-4 py-3 text-left">
                             <div className="flex items-center gap-1.5 whitespace-nowrap">
                               <span
                                 title={isExpired ? "This batch has expired" : isNearExpiry ? `Expires in ${daysToExpiry} day${daysToExpiry === 1 ? "" : "s"}` : ""}
@@ -1137,16 +1137,16 @@ function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTa
                               )}
                             </div>
                           </td>
-                          <td className="px-4 py-3 text-right tabular-nums">{formatCurrency(item.PurchasePrice)}</td>
-                          <td className="px-4 py-3 text-right tabular-nums">{formatCurrency(item.SellingPrice)}</td>
-                          <td className="px-4 py-3 text-right font-bold tabular-nums">{item.CurrentStock}</td>
-                          <td className="px-4 py-3 text-right text-muted-foreground tabular-nums">
+                          <td className="px-4 py-3 text-center tabular-nums">{formatCurrency(item.PurchasePrice)}</td>
+                          <td className="px-4 py-3 text-center tabular-nums">{formatCurrency(item.SellingPrice)}</td>
+                          <td className="px-4 py-3 text-center font-bold tabular-nums">{item.CurrentStock}</td>
+                          <td className="px-4 py-3 text-center text-muted-foreground tabular-nums">
                             <div className="flex flex-col items-end">
                               <span>{item.MinStock}</span>
                               <span className="text-[10px] opacity-70">({item.ThresholdSource || "Global Setting"})</span>
                             </div>
                           </td>
-                          <td className="px-4 py-3">
+                          <td className="px-4 py-3 text-center">
                             <span className={cn(
                               "px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap",
                               item.Status === "In Stock" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" :
@@ -1276,17 +1276,17 @@ function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTa
 
             <div className="overflow-auto flex-1 custom-scrollbar">
               <table className="w-full text-left text-sm border-collapse min-w-[1000px]">
-                <thead className="sticky top-0 z-10 bg-white dark:bg-card">
+                <thead className="sticky top-0 z-10 bg-white dark:bg-card text-left">
                   <tr className="bg-secondary/40 text-muted-foreground text-xs uppercase tracking-wider border-b border-border">
                     <th className="px-4 py-3 font-semibold w-12 text-center">#</th>
-                    <th className="px-4 py-3 font-semibold">Date</th>
-                    <th className="px-4 py-3 font-semibold">Medicine Name</th>
-                    <th className="px-4 py-3 font-semibold">Batch No.</th>
+                    <th className="px-4 py-3 font-semibold text-left">Date</th>
+                    <th className="px-4 py-3 font-semibold text-left">Medicine Name</th>
+                    <th className="px-4 py-3 font-semibold text-left">Batch No.</th>
                     <th className="px-4 py-3 font-semibold text-center">Type</th>
-                    <th className="px-4 py-3 font-semibold text-right">Previous Qty</th>
-                    <th className="px-4 py-3 font-semibold text-right">Adjusted Qty</th>
-                    <th className="px-4 py-3 font-semibold text-right">New Qty</th>
-                    <th className="px-4 py-3 font-semibold">Reason / Justification</th>
+                    <th className="px-4 py-3 font-semibold text-center">Previous Qty</th>
+                    <th className="px-4 py-3 font-semibold text-center">Adjusted Qty</th>
+                    <th className="px-4 py-3 font-semibold text-center">New Qty</th>
+                    <th className="px-4 py-3 font-semibold text-left">Reason / Justification</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -1298,11 +1298,11 @@ function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTa
                     pagedAdjHistory.map((adj, index) => (
                       <tr key={adj.AdjustmentId} className="hover:bg-secondary/10 transition-colors">
                         <td className="px-4 py-3 text-center font-medium text-muted-foreground">{(adjCurrentPage - 1) * adjPageSize + index + 1}</td>
-                        <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
+                        <td className="px-4 py-3 text-muted-foreground whitespace-nowrap text-left">
                           {format(new Date(adj.AdjustmentDate), "dd/MM/yyyy, hh:mm a")}
                         </td>
-                        <td className="px-4 py-3 font-semibold text-foreground">{adj.MedicineName}</td>
-                        <td className="px-4 py-3 font-mono text-xs">{adj.BatchCode}</td>
+                        <td className="px-4 py-3 font-semibold text-foreground text-left">{adj.MedicineName}</td>
+                        <td className="px-4 py-3 font-mono text-xs text-left">{adj.BatchCode}</td>
                         <td className="px-4 py-3 text-center">
                           <span className={cn(
                             "px-2 py-1 rounded-full text-[10px] font-bold uppercase",
@@ -1311,16 +1311,16 @@ function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTa
                             {adj.AdjustmentType}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-right text-muted-foreground">
+                        <td className="px-4 py-3 text-center text-muted-foreground">
                           {adj.PreviousQuantity !== null && adj.PreviousQuantity !== undefined ? adj.PreviousQuantity : "—"}
                         </td>
-                        <td className={cn("px-4 py-3 text-right font-bold", adj.AdjustmentType === "Increase" ? "text-emerald-600 dark:text-emerald-400" : "text-rose-500 dark:text-rose-400")}>
+                        <td className={cn("px-4 py-3 text-center font-bold", adj.AdjustmentType === "Increase" ? "text-emerald-600 dark:text-emerald-400" : "text-rose-500 dark:text-rose-400")}>
                           {adj.AdjustmentType === "Increase" ? "+" : "-"}{adj.Quantity}
                         </td>
-                        <td className="px-4 py-3 text-right font-semibold">
+                        <td className="px-4 py-3 text-center font-semibold">
                           {adj.NewQuantity !== null && adj.NewQuantity !== undefined ? adj.NewQuantity : "—"}
                         </td>
-                        <td className="px-4 py-3 text-muted-foreground max-w-[300px] truncate" title={adj.Reason}>{adj.Reason}</td>
+                        <td className="px-4 py-3 text-muted-foreground max-w-[300px] truncate text-left" title={adj.Reason}>{adj.Reason}</td>
                       </tr>
                     ))
                   )}
@@ -1427,16 +1427,16 @@ function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTa
               {/* Table */}
               <div className="overflow-auto flex-1 custom-scrollbar" id="print-area">
                 <table className="w-full text-left text-sm border-collapse min-w-[1100px]">
-                  <thead className="sticky top-0 z-10 bg-white dark:bg-card">
+                  <thead className="sticky top-0 z-10 bg-white dark:bg-card text-left">
                     <tr className="bg-secondary/40 text-muted-foreground text-[11px] uppercase tracking-wider border-b border-border">
                       <th className="px-4 py-3 font-semibold w-12 text-center">#</th>
-                      <th className="px-4 py-3 font-semibold">Medicine Name</th>
-                      <th className="px-4 py-3 font-semibold">Batch No.</th>
-                      <th className="px-4 py-3 font-semibold">Supplier</th>
+                      <th className="px-4 py-3 font-semibold text-left">Medicine Name</th>
+                      <th className="px-4 py-3 font-semibold text-left">Batch No.</th>
+                      <th className="px-4 py-3 font-semibold text-left">Supplier</th>
                       <th className="px-4 py-3 font-semibold text-center">Stock Remaining</th>
                       <th className="px-4 py-3 font-semibold text-center">Expiry Date</th>
                       <th className="px-4 py-3 font-semibold text-center">Days Remaining</th>
-                      <th className="px-4 py-3 font-semibold text-right">Value at Risk (Rs.)</th>
+                      <th className="px-4 py-3 font-semibold text-center">Value at Risk (Rs.)</th>
                       <th className="px-4 py-3 font-semibold text-center">Status</th>
                       <th className="px-4 py-3 font-semibold text-center">Actions</th>
                     </tr>
@@ -1453,9 +1453,9 @@ function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTa
                           item.DaysToExpiry < 0 ? "bg-rose-50/30 dark:bg-rose-950/10" : ""
                         )}>
                           <td className="px-4 py-3 text-center font-medium text-muted-foreground">{(expiryPage - 1) * expiryPageSize + index + 1}</td>
-                          <td className="px-4 py-3 font-semibold text-foreground">{item.MedicineName}</td>
-                          <td className="px-4 py-3 font-mono text-xs">{item.BatchCode}</td>
-                          <td className="px-4 py-3 text-muted-foreground truncate max-w-[150px]" title={item.SupplierName}>{item.SupplierName}</td>
+                          <td className="px-4 py-3 font-semibold text-foreground text-left">{item.MedicineName}</td>
+                          <td className="px-4 py-3 font-mono text-xs text-left">{item.BatchCode}</td>
+                          <td className="px-4 py-3 text-muted-foreground truncate max-w-[150px] text-left" title={item.SupplierName}>{item.SupplierName}</td>
                           <td className="px-4 py-3 text-center font-bold text-foreground">{item.CurrentStock}</td>
                           <td className="px-4 py-3 text-center text-muted-foreground">
                             {new Date(item.ExpiryDate).toLocaleDateString('en-GB', { day:'2-digit', month: 'short', year: 'numeric' })}
@@ -1470,7 +1470,7 @@ function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTa
                               {item.DaysToExpiry < 0 ? "Expired" : `${item.DaysToExpiry} Days`}
                             </span>
                           </td>
-                          <td className="px-4 py-3 text-right font-bold text-foreground">
+                          <td className="px-4 py-3 text-center font-bold text-foreground">
                             {formatCurrency(item.ValueAtRisk)}
                           </td>
                           <td className="px-4 py-3 text-center">
@@ -1651,16 +1651,16 @@ function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTa
               {/* Table */}
               <div className="overflow-auto flex-1 custom-scrollbar" id="print-area">
                 <table className="w-full text-left text-sm border-collapse min-w-[900px]">
-                  <thead className="sticky top-0 z-10 bg-white dark:bg-card">
+                  <thead className="sticky top-0 z-10 bg-white dark:bg-card text-left">
                     <tr className="bg-secondary/40 text-muted-foreground text-xs uppercase tracking-wider border-b border-border">
                       <th className="px-4 py-3 font-semibold w-12 text-center">#</th>
-                      <th className="px-4 py-3 font-semibold whitespace-nowrap">Date &amp; Time</th>
-                      <th className="px-4 py-3 font-semibold">Medicine Name</th>
-                      <th className="px-4 py-3 font-semibold">Batch No.</th>
+                      <th className="px-4 py-3 font-semibold whitespace-nowrap text-left">Date &amp; Time</th>
+                      <th className="px-4 py-3 font-semibold text-left">Medicine Name</th>
+                      <th className="px-4 py-3 font-semibold text-left">Batch No.</th>
                       <th className="px-4 py-3 font-semibold text-center">Movement Type</th>
                       <th className="px-4 py-3 font-semibold text-center">Qty Change</th>
-                      <th className="px-4 py-3 font-semibold text-right">Balance Stock</th>
-                      <th className="px-4 py-3 font-semibold">Reference No.</th>
+                      <th className="px-4 py-3 font-semibold text-center">Balance Stock</th>
+                      <th className="px-4 py-3 font-semibold text-left">Reference No.</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
@@ -1672,11 +1672,11 @@ function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTa
                       pagedMovements.map((mov, idx) => (
                         <tr key={idx} className="hover:bg-secondary/10 transition-colors">
                           <td className="px-4 py-3 text-center font-medium text-muted-foreground">{(safePage - 1) * movPageSize + idx + 1}</td>
-                          <td className="px-4 py-3 text-muted-foreground whitespace-nowrap text-xs">
+                          <td className="px-4 py-3 text-muted-foreground whitespace-nowrap text-xs text-left">
                             {format(new Date(mov.Date), "dd/MM/yyyy, hh:mm a")}
                           </td>
-                          <td className="px-4 py-3 font-semibold text-foreground">{mov.MedicineName}</td>
-                          <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{mov.BatchCode}</td>
+                          <td className="px-4 py-3 font-semibold text-foreground text-left">{mov.MedicineName}</td>
+                          <td className="px-4 py-3 font-mono text-xs text-muted-foreground text-left">{mov.BatchCode}</td>
                           {/* Movement Type Badge */}
                           <td className="px-4 py-3 text-center">
                             <span className={cn(
@@ -1694,11 +1694,11 @@ function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTa
                             {mov.QuantityChange > 0 ? "+" : ""}{mov.QuantityChange}
                           </td>
                           {/* Balance Stock */}
-                          <td className="px-4 py-3 text-right font-semibold text-foreground tabular-nums">
+                          <td className="px-4 py-3 text-center font-semibold text-foreground tabular-nums">
                             {mov.BalanceStock ?? "—"}
                           </td>
                           {/* Reference No. */}
-                          <td className="px-4 py-3 text-muted-foreground text-xs max-w-[220px] truncate" title={mov.Reference}>
+                          <td className="px-4 py-3 text-muted-foreground text-xs max-w-[220px] truncate text-left" title={mov.Reference}>
                             {mov.SourceId && (mov.MovementType === "Purchase" || mov.MovementType === "POS Sale" || mov.MovementType === "Purchase Return") ? (
                                 <button 
                                   onClick={() => openPreview(mov)}
@@ -1775,13 +1775,13 @@ function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTa
             </div>
             <div className="overflow-auto flex-1 custom-scrollbar" id="print-area">
               <table className="w-full text-left text-sm border-collapse min-w-[1000px]">
-                <thead className="sticky top-0 z-10 bg-white dark:bg-card">
+                <thead className="sticky top-0 z-10 bg-white dark:bg-card text-left">
                   <tr className="bg-secondary/40 text-muted-foreground text-xs uppercase tracking-wider border-b border-border">
                     <th className="px-4 py-3 font-semibold">Log ID</th>
-                    <th className="px-4 py-3 font-semibold">Timestamp</th>
-                    <th className="px-4 py-3 font-semibold">Action</th>
-                    <th className="px-4 py-3 font-semibold">Description</th>
-                    <th className="px-4 py-3 font-semibold">User</th>
+                    <th className="px-4 py-3 font-semibold text-left">Timestamp</th>
+                    <th className="px-4 py-3 font-semibold text-left">Action</th>
+                    <th className="px-4 py-3 font-semibold text-left">Description</th>
+                    <th className="px-4 py-3 font-semibold text-left">User</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border font-mono text-xs">
@@ -1792,13 +1792,13 @@ function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTa
                   ) : (
                     auditLogs.map(log => (
                       <tr key={log.LogId} className="hover:bg-secondary/10 transition-colors">
-                        <td className="px-4 py-3 text-muted-foreground">#{log.LogId}</td>
-                        <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
+                        <td className="px-4 py-3 text-muted-foreground text-left">#{log.LogId}</td>
+                        <td className="px-4 py-3 text-muted-foreground whitespace-nowrap text-left">
                           {new Date(log.Timestamp).toLocaleString('en-GB', { day:'2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute:'2-digit', second:'2-digit', hour12: true }).toUpperCase()}
                         </td>
-                        <td className="px-4 py-3 font-bold text-indigo-600 dark:text-indigo-400">{log.Action}</td>
-                        <td className="px-4 py-3 text-foreground break-words max-w-md">{log.Description}</td>
-                        <td className="px-4 py-3 text-muted-foreground">{log.UserName}</td>
+                        <td className="px-4 py-3 font-bold text-indigo-600 dark:text-indigo-400 text-left">{log.Action}</td>
+                        <td className="px-4 py-3 text-foreground break-words max-w-md text-left">{log.Description}</td>
+                        <td className="px-4 py-3 text-muted-foreground text-left">{log.UserName}</td>
                       </tr>
                     ))
                   )}
@@ -2343,23 +2343,23 @@ function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTa
                     </h3>
                     <div className="border border-border rounded-lg overflow-hidden">
                       <table className="w-full text-left text-sm">
-                        <thead className="bg-secondary/50 text-muted-foreground text-[11px] uppercase tracking-wider">
+                        <thead className="bg-secondary/50 text-muted-foreground text-[11px] uppercase tracking-wider text-left">
                           <tr>
                             <th className="px-4 py-2.5 font-semibold">Medicine</th>
-                            <th className="px-4 py-2.5 font-semibold">Batch</th>
-                            <th className="px-4 py-2.5 font-semibold text-right">Qty</th>
-                            <th className="px-4 py-2.5 font-semibold text-right">Unit Price</th>
-                            <th className="px-4 py-2.5 font-semibold text-right">Total</th>
+                            <th className="px-4 py-2.5 font-semibold text-left">Batch</th>
+                            <th className="px-4 py-2.5 font-semibold text-center">Qty</th>
+                            <th className="px-4 py-2.5 font-semibold text-center">Unit Price</th>
+                            <th className="px-4 py-2.5 font-semibold text-center">Total</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-border">
                           {previewData.items?.map((item: any, idx: number) => (
                             <tr key={idx} className="hover:bg-secondary/20">
-                              <td className="px-4 py-2.5 font-medium">{item.MedicineName || "—"}</td>
-                              <td className="px-4 py-2.5 font-mono text-xs text-muted-foreground">{item.BatchCode || "—"}</td>
-                              <td className="px-4 py-2.5 text-right font-semibold">{item.Quantity || item.ReturnQuantity || 0}</td>
-                              <td className="px-4 py-2.5 text-right text-muted-foreground">{formatCurrency((item.SellingPrice || item.CostPrice || item.UnitRefundPrice || 0))}</td>
-                              <td className="px-4 py-2.5 text-right font-medium">{formatCurrency((item.LineTotal || item.TotalRefund || 0))}</td>
+                              <td className="px-4 py-2.5 font-medium text-left">{item.MedicineName || "—"}</td>
+                              <td className="px-4 py-2.5 font-mono text-xs text-muted-foreground text-left">{item.BatchCode || "—"}</td>
+                              <td className="px-4 py-2.5 text-center font-semibold">{item.Quantity || item.ReturnQuantity || 0}</td>
+                              <td className="px-4 py-2.5 text-center text-muted-foreground">{formatCurrency((item.SellingPrice || item.CostPrice || item.UnitRefundPrice || 0))}</td>
+                              <td className="px-4 py-2.5 text-center font-medium">{formatCurrency((item.LineTotal || item.TotalRefund || 0))}</td>
                             </tr>
                           ))}
                           {!previewData.items || previewData.items.length === 0 && (
