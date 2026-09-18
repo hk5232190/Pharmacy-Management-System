@@ -2,38 +2,6 @@ from pydantic import BaseModel, Field
 from typing import Optional
 from datetime import datetime
 
-class PharmacyProfileBase(BaseModel):
-    PharmacyName: str
-    OwnerName: Optional[str] = None
-    PharmacySlogan: Optional[str] = None
-    RegistrationNumber: Optional[str] = None
-    DrugLicenseNumber: Optional[str] = None
-    NtnStrn: Optional[str] = None
-    PhoneNumber: Optional[str] = Field(None, pattern=r'^(?:(?:\+92|0)[-\s]?\d{2,4}[-\s]?\d{6,8})?$')
-    EmailAddress: Optional[str] = None
-    Address: Optional[str] = None
-    City: Optional[str] = None
-    State: Optional[str] = None
-    Country: Optional[str] = None
-    PostalCode: Optional[str] = None
-    Website: Optional[str] = None
-    LogoPath: Optional[str] = None
-    ReceiptLogoPath: Optional[str] = None
-    ReceiptFooter1: Optional[str] = None
-    ReceiptFooter2: Optional[str] = None
-
-class PharmacyProfileCreate(PharmacyProfileBase):
-    pass
-
-class PharmacyProfileUpdate(PharmacyProfileBase):
-    pass
-
-class PharmacyProfileResponse(PharmacyProfileBase):
-    ProfileId: int
-    UpdatedAt: Optional[datetime] = None
-
-    class Config:
-        from_attributes = True
 
 class BillingSettingsBase(BaseModel):
     Currency: str
@@ -79,6 +47,15 @@ class InventorySettingsResponse(InventorySettingsBase):
         from_attributes = True
 
 class PrinterSettingsBase(BaseModel):
+    # Pharmacy Branding
+    PharmacyName: str = "My Pharmacy"
+    PharmacyAddress: Optional[str] = None
+    PharmacyPhone: Optional[str] = None
+    DrugLicenseNumber: Optional[str] = None
+    NtnStrn: Optional[str] = None
+    Website: Optional[str] = None
+    ReceiptLogoPath: Optional[str] = None
+    
     # Hardware
     PrinterType: str = "ESC/POS Thermal"
     PaperSize: str = "80mm"
@@ -115,10 +92,7 @@ class PrinterSettingsBase(BaseModel):
     ShowAmountPaid: bool = True
     ShowChangeDue: bool = True
     ShowPaymentMethod: bool = True
-    # Item detail toggles
-    PrintBatchAndExpiry: bool = True
     PrintLicenseAndNtn: bool = False
-    PrintDoctorAndPatient: bool = False
 
 class PrinterSettingsUpdate(PrinterSettingsBase):
     pass

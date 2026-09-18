@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback, Suspense } from "react";
 import { apiClient, getApiBaseUrl } from "@/lib/api-client";
 import { toast } from "sonner";
+import { ReceiptPreview } from "@/components/receipt-preview";
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import {
@@ -117,7 +118,6 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
   const { formatNumber, formatCurrency, currencySymbol } = useSystemPreferences();
   const { inventorySettings } = useInventorySettings();
   const { profile } = useProfile();
-  const [showLogoOnReceipt, setShowLogoOnReceipt] = useState(false);
   const [printerSettings, setPrinterSettings] = useState<any>(null);
   const [isPrintRetrying, setIsPrintRetrying] = useState(false);
   // (activeTab is now managed by the wrapper so it survives a refresh reset)
@@ -277,10 +277,10 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
         setShowKeyboardShortcuts(initRes.data.ShowKeyboardShortcuts ?? true);
       }
       
-      const printerRes = await apiClient.get('/settings/printer');
-      if (printerRes.success && printerRes.data) {
-        setShowLogoOnReceipt(printerRes.data.ShowLogo);
-        setPrinterSettings(printerRes.data);
+      const printerRes = await apiClient.get<any>('/settings/printer');
+      if (printerRes && !printerRes.error) {
+        // Handle both wrapped and unwrapped responses just in case
+        setPrinterSettings(printerRes.data || printerRes);
       }
 
       const userStr = localStorage.getItem('user');
@@ -2100,91 +2100,36 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
             <div className="p-6 overflow-y-auto bg-slate-100 flex justify-center">
 
               {/* Actual Printable Receipt (Styled like Thermal) */}
-              <div id="print-area" className="bg-white p-6 shadow-sm w-full max-w-[80mm] text-black font-mono text-xs mx-auto relative">
-
-                {isReprintMode && (
-                  <div className="absolute inset-0 pointer-events-none flex items-center justify-center opacity-10 overflow-hidden">
-                    <span className="text-4xl font-bold transform -rotate-45 whitespace-nowrap text-black">DUPLICATE / REPRINT</span>
-                  </div>
-                )}
-
-                <div className="text-center mb-4 relative z-10">
-                  {showLogoOnReceipt && (profile.ReceiptLogoPath || profile.LogoPath) && (
-                    <div className="flex justify-center mb-2">
-                      <img src={`${getApiBaseUrl().replace("/api/v1","")}${(profile.ReceiptLogoPath || profile.LogoPath)?.startsWith('/') ? (profile.ReceiptLogoPath || profile.LogoPath) : '/' + (profile.ReceiptLogoPath || profile.LogoPath)}`} alt="Logo" className="w-12 h-12 object-contain grayscale" />
-                    </div>
-                  )}
-                  <h2 className="font-bold text-base mb-1 uppercase">{profile.PharmacyName || "PHARMACY NAME"}</h2>
-                  <p>Contact: {profile.PhoneNumber || "mobile number"}</p>
-                  <p>Address: {profile.Address || "Pharmacy address"}</p>
-                </div>
-
-                {isReprintMode && (
-                  <div className="text-center font-bold text-sm mb-4 border-y border-black py-1 relative z-10">
-                    *** DUPLICATE / REPRINT ***
-                  </div>
-                )}
-
-                <div className="mb-4 pb-2 border-b border-dashed border-gray-400 relative z-10 text-left">
-                  <p>Invoice: {completedReceipt.InvoiceNumber}</p>
-                  <p>Date: {completedReceipt.Date}</p>
-                  <p>Cashier: {completedReceipt.Cashier}</p>
-                  <p>Customer: {completedReceipt.CustomerName || "Walk-in Customer"}</p>
-                </div>
-
-                <div className="mb-4">
-                  <div className="flex justify-between font-bold border-b border-dashed border-gray-400 pb-1 mb-2">
-                    <span className="flex-[2]">Item</span>
-                    <span className="flex-1 text-center">Qty</span>
-                    <span className="flex-1 text-right">Price</span>
-                    <span className="flex-1 text-right">Total</span>
-                  </div>
-                  {completedReceipt.Items.map((item: CartItem) => (
-                    <div key={item.id} className="mb-2">
-                      <div className="flex text-slate-900 dark:text-slate-100 items-start">
-                        <span className="flex-[2] pr-1 font-semibold break-words leading-tight">{item.MedicineName}</span>
-                        <span className="flex-1 text-center">{item.Quantity}</span>
-                        <span className="flex-1 text-right">{item.UnitPrice.toFixed(2)}</span>
-                        <span className="flex-1 text-right">{item.LineTotal.toFixed(2)}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="border-t border-dashed border-gray-400 pt-2 mb-4 space-y-1">
-                  <div className="flex justify-between">
-                    <span>Subtotal:</span>
-                    <span>{formatCurrency(completedReceipt.SubTotal)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Discount:</span>
-                    <span>- {formatCurrency(completedReceipt.Discount)}</span>
-                  </div>
-                  <div className="flex justify-between font-bold text-sm mt-2">
-                    <span>GRAND TOTAL:</span>
-                    <span>{formatCurrency(completedReceipt.GrandTotal)}</span>
-                  </div>
-                </div>
-
-                <div className="border-t border-dashed border-gray-400 pt-2 mb-6 space-y-1">
-                  <div className="flex justify-between">
-                    <span>Paid:</span>
-                    <span>{formatCurrency(completedReceipt.PaidAmount)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Change Due:</span>
-                    <span>{formatCurrency(completedReceipt.ChangeDue)}</span>
-                  </div>
-                </div>
-
-                <div className="text-center text-[10px] text-gray-500">
-                  <p className="mb-1">{profile.ReceiptFooter1 || "Thank you for your visit!"}</p>
-                  <p>{profile.ReceiptFooter2 || "Software provided by Eagle Nest Creations"}</p>
-                </div>
-              </div>
-
+              {printerSettings ? (
+                <ReceiptPreview 
+                  settings={printerSettings}
+                  currency={currencySymbol}
+                  isReprint={isReprintMode}
+                  invoiceNumber={completedReceipt.InvoiceNumber}
+                  date={completedReceipt.Date?.split(' ')[0] || completedReceipt.Date}
+                  time={completedReceipt.Date?.split(' ').slice(1).join(' ') || ""}
+                  customerName={completedReceipt.CustomerName || "Walk-in Customer"}
+                  cashierName={completedReceipt.Cashier}
+                  paymentMethod={completedReceipt.PaymentMethod || "Cash"}
+                  items={completedReceipt.Items.map((item: any) => ({
+                    name: item.MedicineName,
+                    qty: item.Quantity,
+                    price: item.UnitPrice,
+                    total: item.LineTotal,
+                    batch: item.BatchCode,
+                    exp: item.ExpiryDate,
+                  }))}
+                  subtotal={completedReceipt.SubTotal}
+                  discount={completedReceipt.Discount}
+                  tax={completedReceipt.Tax || completedReceipt.TaxAmount || 0}
+                  grandTotal={completedReceipt.GrandTotal}
+                  paidAmount={completedReceipt.PaidAmount}
+                  changeDue={completedReceipt.ChangeDue}
+                />
+              ) : (
+                <div className="p-4 text-center text-slate-500">Loading printer configuration...</div>
+              )}
             </div>
-
             {/* Print Buttons Footer */}
             <div className="p-4 border-t border-border bg-slate-50 flex flex-col gap-3">
               <Button onClick={() => { autoPrintRef.current = false; handleThermalPrint(); }} className="w-full bg-slate-800 hover:bg-slate-900 text-white shadow">

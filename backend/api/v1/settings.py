@@ -8,8 +8,8 @@ import shutil
 import uuid
 
 from api.deps import get_db, get_current_admin_user, get_current_user
-from models import PharmacyProfile, BillingSettings, InventorySettings, PrinterSettings, SystemPreferences, GeneralSettings, AuditLog
-from schemas.settings import PharmacyProfileResponse, PharmacyProfileUpdate, BillingSettingsResponse, BillingSettingsUpdate, InventorySettingsResponse, InventorySettingsUpdate, PrinterSettingsResponse, PrinterSettingsUpdate, SystemPreferencesResponse, SystemPreferencesUpdate, GeneralSettingsResponse, GeneralSettingsUpdate
+from models import BillingSettings, InventorySettings, PrinterSettings, SystemPreferences, GeneralSettings, AuditLog
+from schemas.settings import BillingSettingsResponse, BillingSettingsUpdate, InventorySettingsResponse, InventorySettingsUpdate, PrinterSettingsResponse, PrinterSettingsUpdate, SystemPreferencesResponse, SystemPreferencesUpdate, GeneralSettingsResponse, GeneralSettingsUpdate
 from core.logger import logger
 
 router = APIRouter()
@@ -22,161 +22,53 @@ UPLOAD_DIR_BG.mkdir(parents=True, exist_ok=True)
 ALLOWED_MIME_TYPES = ["image/png", "image/jpeg", "image/webp"]
 MAX_FILE_SIZE = 5 * 1024 * 1024 # 5MB
 
-@router.get("/profile", response_model=PharmacyProfileResponse)
-def get_pharmacy_profile(db: Session = Depends(get_db)) -> Any:
-    """
-    Get the current pharmacy profile. If none exists, return a default empty profile.
-    """
-    profile = db.query(PharmacyProfile).first()
-    if not profile:
-        profile = PharmacyProfile(PharmacyName="My Pharmacy")
-        db.add(profile)
-        db.commit()
-        db.refresh(profile)
-    return profile
-
-@router.put("/profile", response_model=PharmacyProfileResponse)
-def update_pharmacy_profile(
-    profile_in: PharmacyProfileUpdate,
-    db: Session = Depends(get_db),
-    current_admin = Depends(get_current_admin_user)
-) -> Any:
-    """
-    Update the pharmacy profile.
-    """
-    profile = db.query(PharmacyProfile).first()
-    if not profile:
-        profile = PharmacyProfile(**profile_in.model_dump())
-        db.add(profile)
-    else:
-        update_data = profile_in.model_dump(exclude_unset=True)
-        for field, value in update_data.items():
-            setattr(profile, field, value)
-            
-    db.commit()
-    db.refresh(profile)
-    logger.info(f"AUDIT: User {current_admin.Username} updated Pharmacy Branding (Name/Profile).")
-    return profile
-
-@router.post("/profile/logo")
-def upload_pharmacy_logo(
-    file: UploadFile = File(...),
-    db: Session = Depends(get_db),
-    current_admin = Depends(get_current_admin_user)
-) -> Any:
-    """
-    Upload a logo for the pharmacy profile.
-    """
-    profile = db.query(PharmacyProfile).first()
-    if not profile:
-        profile = PharmacyProfile(PharmacyName="My Pharmacy")
-        db.add(profile)
-        db.commit()
-        db.refresh(profile)
-        
-    if file.content_type not in ALLOWED_MIME_TYPES:
-        raise HTTPException(status_code=400, detail="Invalid file type. Only PNG, JPEG, and WebP are allowed.")
-        
-    # Read file content to check size and save
-    content = file.file.read()
-    if len(content) > MAX_FILE_SIZE:
-        raise HTTPException(status_code=400, detail="File size exceeds 5MB limit.")
-        
-    # Generate unique filename or just overwrite logo.png
-    file_extension = file.filename.split(".")[-1]
-    filename = f"logo_{profile.ProfileId}.{file_extension}"
-    file_path = UPLOAD_DIR / filename
-    
-    # Disk cleanup of previous logo if it exists and is different
-    if profile.LogoPath:
-        old_file_path = Path(profile.LogoPath.lstrip("/"))
-        if old_file_path.exists() and old_file_path != file_path:
-            try:
-                os.unlink(old_file_path)
-            except Exception as e:
-                logger.error(f"Failed to delete old logo file {old_file_path}: {e}")
-    
-    with file_path.open("wb") as buffer:
-        buffer.write(content)
-        
-    profile.LogoPath = f"/uploads/logo/{filename}"
-    db.commit()
-    db.refresh(profile)
-    logger.info(f"AUDIT: User {current_admin.Username} uploaded a new Pharmacy Logo.")
-    
-    return {"message": "Logo uploaded successfully", "logo_path": profile.LogoPath}
-
-@router.delete("/profile/logo")
-def delete_pharmacy_logo(
-    db: Session = Depends(get_db),
-    current_admin = Depends(get_current_admin_user)
-) -> Any:
-    """
-    Remove the pharmacy logo.
-    """
-    profile = db.query(PharmacyProfile).first()
-    if not profile or not profile.LogoPath:
-        raise HTTPException(status_code=404, detail="No logo found.")
-        
-    old_file_path = Path(profile.LogoPath.lstrip("/"))
-    if old_file_path.exists():
-        try:
-            os.unlink(old_file_path)
-        except Exception as e:
-            logger.error(f"Failed to delete logo file {old_file_path}: {e}")
-            
-    profile.LogoPath = None
-    db.commit()
-    db.refresh(profile)
-    logger.info(f"AUDIT: User {current_admin.Username} removed the Pharmacy Logo.")
-    
-    return {"message": "Logo removed successfully"}
-
-@router.post("/profile/receipt-logo")
+@router.post("/printer/receipt-logo")
 def upload_receipt_logo(
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
     current_admin = Depends(get_current_admin_user)
 ) -> Any:
     """
-    Upload a receipt logo for the pharmacy profile.
+    Upload a receipt logo for the printer settings.
     """
-    if not file.content_type.startswith("image/"):
-        raise HTTPException(status_code=400, detail="File must be an image")
+    settings = db.query(PrinterSettings).first()
+    if not settings:
+        settings = PrinterSettings()
+        db.add(settings)
+        db.commit()
+        db.refresh(settings)
 
-    # Ensure upload directory exists
-    upload_dir = Path("uploads/logo")
-    upload_dir.mkdir(parents=True, exist_ok=True)
+    if file.content_type not in ALLOWED_MIME_TYPES:
+        raise HTTPException(status_code=400, detail="Invalid file type. Only PNG, JPEG, and WebP are allowed.")
 
-    file_ext = Path(file.filename).suffix
-    filename = f"receipt_logo_{uuid.uuid4().hex}{file_ext}"
-    file_path = upload_dir / filename
+    content = file.file.read()
+    if len(content) > MAX_FILE_SIZE:
+        raise HTTPException(status_code=400, detail="File size exceeds 5MB limit.")
 
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    MIME_TO_EXT = {"image/png": "png", "image/jpeg": "jpg", "image/webp": "webp"}
+    file_extension = MIME_TO_EXT.get(file.content_type, "png")
+    filename = f"receipt_logo_{settings.SettingsId}.{file_extension}"
+    file_path = UPLOAD_DIR / filename
 
-    profile = db.query(PharmacyProfile).first()
-    if not profile:
-        profile = PharmacyProfile()
-        db.add(profile)
-        
-    # Delete old receipt logo if it exists
-    if profile.ReceiptLogoPath:
-        old_file_path = Path(profile.ReceiptLogoPath.lstrip("/"))
-        if old_file_path.exists():
+    if settings.ReceiptLogoPath:
+        old_file_path = Path(settings.ReceiptLogoPath.lstrip("/"))
+        if old_file_path.exists() and old_file_path != file_path:
             try:
                 os.unlink(old_file_path)
             except Exception as e:
                 logger.error(f"Failed to delete old receipt logo file {old_file_path}: {e}")
 
-    profile.ReceiptLogoPath = f"/uploads/logo/{filename}"
+    with file_path.open("wb") as buffer:
+        buffer.write(content)
+
+    settings.ReceiptLogoPath = f"/uploads/logo/{filename}"
     db.commit()
-    db.refresh(profile)
+    db.refresh(settings)
     logger.info(f"AUDIT: User {current_admin.Username} uploaded a new Receipt Logo.")
     
-    return {"message": "Receipt Logo uploaded successfully", "logo_path": profile.ReceiptLogoPath}
+    return {"message": "Receipt Logo uploaded successfully", "logo_path": settings.ReceiptLogoPath}
 
-@router.delete("/profile/receipt-logo")
+@router.delete("/printer/receipt-logo")
 def delete_receipt_logo(
     db: Session = Depends(get_db),
     current_admin = Depends(get_current_admin_user)
@@ -184,20 +76,20 @@ def delete_receipt_logo(
     """
     Remove the receipt logo.
     """
-    profile = db.query(PharmacyProfile).first()
-    if not profile or not profile.ReceiptLogoPath:
+    settings = db.query(PrinterSettings).first()
+    if not settings or not settings.ReceiptLogoPath:
         raise HTTPException(status_code=404, detail="No receipt logo found.")
         
-    old_file_path = Path(profile.ReceiptLogoPath.lstrip("/"))
+    old_file_path = Path(settings.ReceiptLogoPath.lstrip("/"))
     if old_file_path.exists():
         try:
             os.unlink(old_file_path)
         except Exception as e:
             logger.error(f"Failed to delete receipt logo file {old_file_path}: {e}")
             
-    profile.ReceiptLogoPath = None
+    settings.ReceiptLogoPath = None
     db.commit()
-    db.refresh(profile)
+    db.refresh(settings)
     logger.info(f"AUDIT: User {current_admin.Username} removed the Receipt Logo.")
     
     return {"message": "Receipt Logo removed successfully"}
@@ -523,7 +415,8 @@ def upload_login_background(
         db.commit()
         db.refresh(settings)
         
-    file_extension = file.filename.split(".")[-1]
+    MIME_TO_EXT = {"image/png": "png", "image/jpeg": "jpg", "image/webp": "webp"}
+    file_extension = MIME_TO_EXT.get(file.content_type, "png")
     filename = f"bg_{settings.SettingsId}.{file_extension}"
     file_path = UPLOAD_DIR_BG / filename
     

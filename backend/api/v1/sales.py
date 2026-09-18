@@ -14,7 +14,7 @@ def utc_to_local_str(dt_obj):
         return ""
     return dt_obj.replace(tzinfo=timezone.utc).astimezone().strftime('%d/%m/%Y, %I:%M %p')
 
-from models import Sale, Medicine, StockBatch, Customer, StockAdjustment, SaleReturn, BillingSettings, InventorySettings, PharmacyProfile, PrinterSettings, SaleItem
+from models import Sale, Medicine, StockBatch, Customer, StockAdjustment, SaleReturn, BillingSettings, InventorySettings, PrinterSettings, SaleItem
 from schemas.base import BaseResponse
 from schemas.sales import SaleInitResponse, ProductSearchResponse, ProductSearchBatch, SaleReturnHistoryItem, SaleReturnHistoryPagedResponse
 from api.deps import get_current_user, get_db
@@ -357,7 +357,7 @@ def complete_sale(
 
 import os
 
-def _build_receipt_bytes(sale, profile, ps, is_reprint: bool, billing_settings=None) -> bytes:
+def _build_receipt_bytes(sale, ps, is_reprint: bool, billing_settings=None) -> bytes:
     """
     Build a complete ESC/POS byte sequence for a sale receipt.
     ps = PrinterSettings ORM object (may be None; falls back to safe defaults).
@@ -394,7 +394,6 @@ def _build_receipt_bytes(sale, profile, ps, is_reprint: bool, billing_settings=N
     show_time          = _get('ShowTime',          True)
     show_cashier       = _get('ShowCashier',       True)
     show_customer      = _get('ShowCustomerName',  True)
-    show_batch_expiry  = _get('PrintBatchAndExpiry', True)
     show_subtotal      = _get('ShowSubtotal',      True)
     show_discount      = _get('ShowDiscount',      True)
     show_tax           = _get('ShowTax',           True)
@@ -436,13 +435,13 @@ def _build_receipt_bytes(sale, profile, ps, is_reprint: bool, billing_settings=N
         return name.ljust(width)
 
     # ── Pharmacy profile data ─────────────────────────────────────────────────
-    pharmacy_name    = (profile.PharmacyName   if profile and profile.PharmacyName   else 'PHARMACY')
-    pharmacy_address = (profile.Address        if profile and profile.Address         else '')
-    pharmacy_phone   = (profile.PhoneNumber    if profile and profile.PhoneNumber     else '')
-    drug_license     = (profile.DrugLicenseNumber if profile and profile.DrugLicenseNumber else '')
-    ntn_strn         = (profile.NtnStrn        if profile and profile.NtnStrn         else '')
-    footer1          = footer_msg or (profile.ReceiptFooter1 if profile and profile.ReceiptFooter1 else 'Thank you for your visit!')
-    footer2          = profile.ReceiptFooter2 if profile and profile.ReceiptFooter2 else ''
+    pharmacy_name    = (ps.PharmacyName if ps and ps.PharmacyName else 'PHARMACY')
+    pharmacy_address = (ps.PharmacyAddress if ps and ps.PharmacyAddress else '')
+    pharmacy_phone   = (ps.PharmacyPhone if ps and ps.PharmacyPhone else '')
+    drug_license     = (ps.DrugLicenseNumber if ps and ps.DrugLicenseNumber else '')
+    ntn_strn         = (ps.NtnStrn if ps and ps.NtnStrn else '')
+    footer1          = footer_msg or 'Thank you for your visit!'
+    footer2          = ''
 
     buf = bytearray()
     buf += INIT
@@ -519,14 +518,7 @@ def _build_receipt_bytes(sale, profile, ps, is_reprint: bool, billing_settings=N
             qty_str + ' ' + price_str + ' ' + total_str + '\n'
         ).encode()
 
-        # Optional batch/expiry sub-line
-        if show_batch_expiry and item.batch:
-            batch_code  = item.batch.BatchCode or ''
-            expiry_date = item.batch.ExpiryDate.strftime('%m/%y') if item.batch.ExpiryDate else ''
-            sub = f"  Batch:{batch_code}  Exp:{expiry_date}"
-            if len(sub) > cpl:
-                sub = sub[:cpl]
-            buf += f"{sub}\n".encode()
+
 
         # Discount per item (if any)
         if item.Discount and float(item.Discount) > 0:
@@ -594,13 +586,12 @@ def print_thermal_receipt(
         if not sale:
             raise HTTPException(status_code=404, detail="Sale not found")
 
-        profile         = db.query(PharmacyProfile).first()
         printer_settings = db.query(PrinterSettings).first()
         billing_settings = db.query(BillingSettings).first()
 
         # Build the full ESC/POS byte payload
         receipt_bytes = _build_receipt_bytes(
-            sale, profile, printer_settings, is_reprint, billing_settings
+            sale, printer_settings, is_reprint, billing_settings
         )
 
         copies = int(getattr(printer_settings, 'Copies', 1) or 1)

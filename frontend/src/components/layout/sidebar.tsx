@@ -170,7 +170,7 @@ export function Sidebar() {
             <>
               {profile.LogoPath ? (
                 <div className="h-8 w-8 flex items-center justify-center shrink-0">
-                  <img src={`${getApiBaseUrl().replace("/api/v1","")}${profile.LogoPath}`} alt="Logo" className="max-h-full max-w-full object-contain drop-shadow-sm" />
+                  <img src={profile.LogoPath} alt="Logo" className="max-h-full max-w-full object-contain drop-shadow-sm" />
                 </div>
               ) : (
                 <div className="bg-primary text-primary-foreground p-1.5 rounded-lg flex items-center justify-center shrink-0">

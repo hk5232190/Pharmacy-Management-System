@@ -177,7 +177,7 @@ def get_license_info(db: Session = Depends(get_db)):
     # ── Pharmacy name from DB (Client / Licensee binding) ────────────────────
     pharmacy_name: str | None = None
     try:
-        profile = db.query(models.PharmacyProfile).first()
+        profile = db.query(models.PrinterSettings).first()
         if profile and profile.PharmacyName:
             pharmacy_name = profile.PharmacyName
     except Exception:

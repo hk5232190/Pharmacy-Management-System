@@ -57,10 +57,10 @@ export default function GeneralSettingsPage() {
 
   const fetchSettings = async () => {
     try {
-      const profileRes = await fetch(`${getApiBaseUrl()}/settings/profile`, { headers: getAuthHeaders() });
+      const profileRes = await fetch(`${getApiBaseUrl()}/settings/printer`, { headers: getAuthHeaders() });
       if (profileRes.ok) {
         const pData = await profileRes.json();
-        setProfile({ PharmacyName: pData.PharmacyName, LogoPath: pData.LogoPath });
+        setProfile({ PharmacyName: pData.PharmacyName, LogoPath: pData.ReceiptLogoPath });
       }
     } catch (error) {
       toast.error("Failed to load settings from server.");
@@ -72,10 +72,18 @@ export default function GeneralSettingsPage() {
   const handleSaveProfileText = async () => {
     setIsSavingProfile(true);
     try {
-      const res = await fetch(`${getApiBaseUrl()}/settings/profile`, {
+      // First fetch all current settings
+      const getRes = await fetch(`${getApiBaseUrl()}/settings/printer`, { headers: getAuthHeaders() });
+      if (!getRes.ok) throw new Error("Failed to fetch printer settings");
+      const currentSettings = await getRes.json();
+      
+      // Update the PharmacyName
+      const payload = { ...currentSettings, PharmacyName: profile.PharmacyName };
+      
+      const res = await fetch(`${getApiBaseUrl()}/settings/printer`, {
         method: "PUT",
         headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-        body: JSON.stringify({ PharmacyName: profile.PharmacyName })
+        body: JSON.stringify(payload)
       });
       if (res.ok) {
         toast.success("Pharmacy name updated successfully.");
@@ -130,7 +138,7 @@ export default function GeneralSettingsPage() {
     formData.append("file", logoFile);
 
     try {
-      const res = await fetch(`${getApiBaseUrl()}/settings/profile/logo`, {
+      const res = await fetch(`${getApiBaseUrl()}/settings/printer/receipt-logo`, {
         method: "POST",
         headers: getAuthHeaders(),
         body: formData,
@@ -155,7 +163,7 @@ export default function GeneralSettingsPage() {
 
   const removeFile = async () => {
     try {
-      const res = await fetch(`${getApiBaseUrl()}/settings/profile/logo`, {
+      const res = await fetch(`${getApiBaseUrl()}/settings/printer/receipt-logo`, {
         method: "DELETE",
         headers: getAuthHeaders(),
       });

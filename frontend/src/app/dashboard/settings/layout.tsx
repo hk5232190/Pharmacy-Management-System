@@ -22,7 +22,6 @@ interface NavItem {
 const ALL_NAV: NavItem[] = [
   { name: "General Settings",             href: "/dashboard/settings/general",       icon: SettingsIcon,  adminOnly: true },
   { name: "My Profile",                   href: "/dashboard/settings/my-profile",    icon: UserIcon,       cashierAllowed: true },
-  { name: "Pharmacy Information",         href: "/dashboard/settings/profile",       icon: Building2,      adminOnly: true },
   { name: "Billing & POS Settings",       href: "/dashboard/settings/billing",       icon: ReceiptText,    adminOnly: true },
   { name: "Printer & Receipt",            href: "/dashboard/settings/printer",       icon: Printer,        adminOnly: true },
   { name: "Inventory & Medicine Settings",href: "/dashboard/settings/inventory",     icon: Package,        adminOnly: true },

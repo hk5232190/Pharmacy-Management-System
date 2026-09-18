@@ -1521,7 +1521,7 @@ def embed_chart_in_pdf(elements, chart_image_b64):
 def export_sales_report_pdf(req: dict = Body(...), db: Session = Depends(get_db)):
     req = PDFExportRequest(**req)
     sd, ed = get_reports_date_range(req.timeframe, req.start_date, req.end_date)
-    profile = db.query(models.PharmacyProfile).first()
+    profile = db.query(models.PrinterSettings).first()
     pharmacy_name = profile.PharmacyName if profile else "Pharmacy Management System"
     report_data = fetch_sales_report_data(db, sd, ed, req.customer_id, req.payment_method)
     
@@ -1573,7 +1573,7 @@ def export_sales_report_pdf(req: dict = Body(...), db: Session = Depends(get_db)
 def export_purchase_report_pdf(req: dict = Body(...), db: Session = Depends(get_db)):
     req = PDFExportRequest(**req)
     sd, ed = get_reports_date_range(req.timeframe, req.start_date, req.end_date)
-    profile = db.query(models.PharmacyProfile).first()
+    profile = db.query(models.PrinterSettings).first()
     pharmacy_name = profile.PharmacyName if profile else "Pharmacy Management System"
     report_data = fetch_purchase_report_data(db, sd, ed, req.supplier_id)
     
@@ -1622,7 +1622,7 @@ def export_purchase_report_pdf(req: dict = Body(...), db: Session = Depends(get_
 def export_inventory_report_pdf(req: dict = Body(...), db: Session = Depends(get_db)):
     req = PDFExportRequest(**req)
     sd, ed = get_reports_date_range(req.timeframe, req.start_date, req.end_date)
-    profile = db.query(models.PharmacyProfile).first()
+    profile = db.query(models.PrinterSettings).first()
     pharmacy_name = profile.PharmacyName if profile else "Pharmacy Management System"
     report_data = fetch_inventory_report_data(db, sd, ed)
     
@@ -1675,7 +1675,7 @@ def export_medicine_report_pdf(req: dict = Body(...), db: Session = Depends(get_
     sd, ed = get_reports_date_range(req.timeframe, req.start_date, req.end_date)
     # Using page_size=0 to ensure we have all data without limit
     report_data = fetch_medicine_report_data(db, sd, ed, req.report_type, None, None, 1, 0)
-    profile = db.query(models.PharmacyProfile).first()
+    profile = db.query(models.PrinterSettings).first()
     pharmacy_name = profile.PharmacyName if profile else "Pharmacy Management System"
     
     output = io.BytesIO()
@@ -1765,7 +1765,7 @@ def export_medicine_report_pdf(req: dict = Body(...), db: Session = Depends(get_
 def export_financial_report_pdf(req: dict = Body(...), db: Session = Depends(get_db)):
     req = PDFExportRequest(**req)
     sd, ed = get_reports_date_range(req.timeframe, req.start_date, req.end_date)
-    profile = db.query(models.PharmacyProfile).first()
+    profile = db.query(models.PrinterSettings).first()
     pharmacy_name = profile.PharmacyName if profile else "Pharmacy Management System"
     report_data = fetch_financial_report_data(db, sd, ed)
     

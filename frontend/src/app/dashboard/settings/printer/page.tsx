@@ -1,21 +1,24 @@
 "use client";
 import { getApiBaseUrl } from "@/lib/api-client";
+import { PrinterSettings } from "@/types/printer";
+import { ReceiptPreview } from "@/components/receipt-preview";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import {
   Save, RefreshCw, Printer, Usb, Receipt, AlertTriangle,
-  CheckCircle2, Server, Settings2, Eye, Copy, Zap
+  CheckCircle2, Server, Settings2, Eye, Copy, Zap, UploadCloud, Image as ImageIcon, Trash2, Building
 } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { SaveButton } from "@/components/ui/save-button";
@@ -23,51 +26,15 @@ import { SaveButton } from "@/components/ui/save-button";
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
 // ─────────────────────────────────────────────────────────────────────────────
-interface PrinterSettings {
-  SettingsId?: number;
-  // Hardware
-  PrinterType: string;
-  PaperSize: string;
-  CustomPaperWidthMm: number | null;
-  SelectedPrinterName: string;
-  ConnectionPort: string;
-  CustomRawByteSequence: string;
-  // Behaviour
-  Copies: number;
-  OpenPrintDialog: boolean;
-  AutoCutPaper: boolean;
-  OpenCashDrawer: boolean;
-  // Layout
-  ReceiptTitle: string;
-  FontScale: number;
-  CharactersPerLine: number;
-  ItemNameWidth: number;
-  ReceiptFooterMessage: string;
-  // Header toggles
-  ShowLogo: boolean;
-  ShowPharmacyName: boolean;
-  ShowAddress: boolean;
-  ShowPhoneNumber: boolean;
-  // Invoice info toggles
-  ShowInvoiceNumber: boolean;
-  ShowDate: boolean;
-  ShowTime: boolean;
-  ShowCashier: boolean;
-  ShowCustomerName: boolean;
-  // Totals toggles
-  ShowSubtotal: boolean;
-  ShowDiscount: boolean;
-  ShowTax: boolean;
-  ShowAmountPaid: boolean;
-  ShowChangeDue: boolean;
-  ShowPaymentMethod: boolean;
-  // Item detail toggles
-  PrintBatchAndExpiry: boolean;
-  PrintLicenseAndNtn: boolean;
-  PrintDoctorAndPatient: boolean;
-}
 
 const DEFAULT_SETTINGS: PrinterSettings = {
+  PharmacyName: "My Pharmacy",
+  PharmacyAddress: null,
+  PharmacyPhone: null,
+  DrugLicenseNumber: null,
+  NtnStrn: null,
+  Website: null,
+  ReceiptLogoPath: null,
   PrinterType: "ESC/POS Thermal",
   PaperSize: "80mm",
   CustomPaperWidthMm: null,
@@ -98,9 +65,7 @@ const DEFAULT_SETTINGS: PrinterSettings = {
   ShowAmountPaid: true,
   ShowChangeDue: true,
   ShowPaymentMethod: true,
-  PrintBatchAndExpiry: true,
   PrintLicenseAndNtn: false,
-  PrintDoctorAndPatient: false,
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -123,143 +88,12 @@ function ToggleRow({
 // ─────────────────────────────────────────────────────────────────────────────
 // Live receipt preview
 // ─────────────────────────────────────────────────────────────────────────────
-function ReceiptPreview({ settings, pharmacyName, pharmacyAddress, pharmacyPhone, currency, licenseInfo }: {
-  settings: PrinterSettings;
-  pharmacyName: string;
-  pharmacyAddress: string;
-  pharmacyPhone: string;
-  currency: string;
-  licenseInfo: string;
-}) {
-  const paperWidthClass = settings.PaperSize === "58mm" ? "w-44" : "w-64";
-  const fontSize = `${Math.round(10 * settings.FontScale / 100)}px`;
-  const nameTruncate = settings.ItemNameWidth;
-
-  const truncate = (text: string, max: number) =>
-    text.length > max ? text.slice(0, max - 1) + "~" : text;
-
-  const sep = "-".repeat(settings.CharactersPerLine);
-
-  const items = [
-    { name: "Panadol Extra 500mg", qty: 2, price: 50, total: 100, batch: "B123", exp: "12/26" },
-    { name: "Amoxil Syrup 250ml", qty: 1, price: 250, total: 250, batch: "A456", exp: "05/27" },
-    { name: "Disprin 100mg (10 Tabs)", qty: 3, price: 30, total: 90, batch: "D789", exp: "03/26" },
-  ];
-
-  return (
-    <div
-      className={`mx-auto bg-white border border-slate-300 shadow-lg font-mono text-black ${paperWidthClass} transition-all duration-300 relative overflow-hidden rounded-sm`}
-      style={{ fontSize }}
-    >
-      {/* Cut marks */}
-      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
-
-      <div className="p-2.5 space-y-1">
-        {/* Header */}
-        <div className="text-center space-y-0.5">
-          {settings.ShowLogo && (
-            <div className="flex justify-center mb-1">
-              <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center border border-slate-200 text-[8px] text-slate-400 font-bold">
-                LOGO
-              </div>
-            </div>
-          )}
-          {settings.ShowPharmacyName && (
-            <div className="font-extrabold uppercase tracking-tight" style={{ fontSize: `${Math.round(12 * settings.FontScale / 100)}px` }}>
-              {pharmacyName}
-            </div>
-          )}
-          <div className="font-bold uppercase tracking-wider">{settings.ReceiptTitle || "SALE RECEIPT"}</div>
-          {settings.ShowAddress && pharmacyAddress && (
-            <div className="text-slate-600 leading-tight">{pharmacyAddress}</div>
-          )}
-          {settings.ShowPhoneNumber && pharmacyPhone && (
-            <div className="text-slate-600">Tel: {pharmacyPhone}</div>
-          )}
-          {settings.PrintLicenseAndNtn && licenseInfo && (
-            <div className="text-slate-500 text-[9px] uppercase">{licenseInfo}</div>
-          )}
-        </div>
-
-        <div className="border-t border-dashed border-slate-400 my-1" />
-
-        {/* Invoice info */}
-        <div className="space-y-0.5 text-slate-700">
-          {settings.ShowInvoiceNumber && <div>Invoice : INV-2609-0042</div>}
-          {settings.ShowDate && <div>Date    : 16-Sep-2026</div>}
-          {settings.ShowTime && <div>Time    : 02:05 PM</div>}
-          {settings.ShowCustomerName && <div>Customer: John Smith</div>}
-          {settings.ShowCashier && <div>Cashier : Admin</div>}
-          {settings.ShowPaymentMethod && <div>Payment : Cash</div>}
-        </div>
-
-        <div className="border-t border-dashed border-slate-400 my-1" />
-
-        {/* Items table */}
-        <div className="font-semibold flex justify-between">
-          <span>{"Item".padEnd(nameTruncate)}</span>
-          <span>Qty  Price  Total</span>
-        </div>
-        <div className="border-t border-dashed border-slate-400" />
-
-        {items.map((item, i) => (
-          <div key={i}>
-            <div className="flex justify-between">
-              <span className="truncate" style={{ maxWidth: `${nameTruncate}ch` }}>
-                {truncate(item.name, nameTruncate)}
-              </span>
-              <span className="whitespace-nowrap ml-1">
-                {String(item.qty).padStart(2)} {String(item.price).padStart(5)} {String(item.total).padStart(6)}
-              </span>
-            </div>
-            {settings.PrintBatchAndExpiry && (
-              <div className="text-slate-500" style={{ fontSize: "0.75em" }}>
-                Batch:{item.batch} Exp:{item.exp}
-              </div>
-            )}
-          </div>
-        ))}
-
-        <div className="border-t border-dashed border-slate-400 my-1" />
-
-        {/* Totals */}
-        <div className="space-y-0.5 text-slate-700">
-          {settings.ShowSubtotal && <div className="flex justify-between"><span>Subtotal:</span><span>{currency} 440</span></div>}
-          {settings.ShowDiscount && <div className="flex justify-between"><span>Discount:</span><span>-{currency} 0</span></div>}
-          {settings.ShowTax && <div className="flex justify-between"><span>Tax:</span><span>{currency} 0</span></div>}
-        </div>
-        <div className="border-t border-dashed border-slate-400" />
-        <div className="flex justify-between font-extrabold" style={{ fontSize: `${Math.round(12 * settings.FontScale / 100)}px` }}>
-          <span>TOTAL:</span><span>{currency} 440</span>
-        </div>
-        <div className="border-t border-dashed border-slate-400" />
-        {settings.ShowAmountPaid && <div className="flex justify-between text-slate-700"><span>Paid:</span><span>{currency} 500</span></div>}
-        {settings.ShowChangeDue && <div className="flex justify-between text-slate-700"><span>Change:</span><span>{currency} 60</span></div>}
-
-        {/* Footer */}
-        {settings.ReceiptFooterMessage && (
-          <>
-            <div className="border-t border-dashed border-slate-400 my-1" />
-            <div className="text-center text-slate-600 italic whitespace-pre-wrap">
-              {settings.ReceiptFooterMessage}
-            </div>
-          </>
-        )}
-
-        {/* Feed space */}
-        <div className="h-3" />
-      </div>
-
-      {/* Perforated bottom */}
-      <div className="w-full h-[3px] border-t-2 border-dashed border-slate-300" />
-    </div>
-  );
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Main Page
 // ─────────────────────────────────────────────────────────────────────────────
 export default function PrinterSettingsPage() {
+  const [activeTab, setActiveTab] = useState("hardware");
   const [settings, setSettings] = useState<PrinterSettings>(DEFAULT_SETTINGS);
   const [osPrinters, setOsPrinters] = useState<string[]>([]);
   const [printerWarning, setPrinterWarning] = useState<string | null>(null);
@@ -271,9 +105,12 @@ export default function PrinterSettingsPage() {
   const [currency, setCurrency] = useState("Rs");
   const [licenseInfo, setLicenseInfo] = useState("Lic: DL-12345 / NTN: 9876543-2");
 
+  const [logoFileToUpload, setLogoFileToUpload] = useState<File | null>(null);
+  const [logoPreviewUrl, setLogoPreviewUrl] = useState<string | null>(null);
+  const [logoRemoved, setLogoRemoved] = useState<boolean>(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [isSaving, setIsSaving] = useState(false);
-  const [isTesting, setIsTesting] = useState(false);
-  const [isTestingDrawer, setIsTestingDrawer] = useState(false);
   const [isLoadingPrinters, setIsLoadingPrinters] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -297,23 +134,29 @@ export default function PrinterSettingsPage() {
   const fetchSettings = async () => {
     setIsLoading(true);
     try {
-      const [printerRes, profileRes, billingRes] = await Promise.all([
-        fetch(`${getApiBaseUrl()}/settings/printer`),
-        fetch(`${getApiBaseUrl()}/settings/pharmacy-profile`),
-        fetch(`${getApiBaseUrl()}/settings/billing`),
+      const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token") || "";
+      const headers: Record<string, string> = token ? { "Authorization": `Bearer ${token}` } : {};
+      const [printerRes, billingRes] = await Promise.all([
+        fetch(`${getApiBaseUrl()}/settings/printer`, { headers }),
+        fetch(`${getApiBaseUrl()}/settings/billing`, { headers }),
       ]);
 
       if (printerRes.ok) {
         const data = await printerRes.json();
         setSettings({ ...DEFAULT_SETTINGS, ...data });
-      }
-      if (profileRes.ok) {
-        const p = await profileRes.json();
-        if (p.PharmacyName) setPharmacyName(p.PharmacyName);
-        if (p.Address) setPharmacyAddress(p.Address);
-        if (p.PhoneNumber) setPharmacyPhone(p.PhoneNumber);
-        if (p.DrugLicenseNumber || p.NtnStrn) {
-          setLicenseInfo(`Lic: ${p.DrugLicenseNumber || "N/A"} / NTN: ${p.NtnStrn || "N/A"}`);
+        
+        if (data.PharmacyName) setPharmacyName(data.PharmacyName);
+        if (data.PharmacyAddress) setPharmacyAddress(data.PharmacyAddress);
+        if (data.PharmacyPhone) setPharmacyPhone(data.PharmacyPhone);
+        if (data.DrugLicenseNumber || data.NtnStrn) {
+          setLicenseInfo(`Lic: ${data.DrugLicenseNumber || "N/A"} / NTN: ${data.NtnStrn || "N/A"}`);
+        }
+        
+        if (data.ReceiptLogoPath) {
+          const path = data.ReceiptLogoPath.startsWith('/') ? data.ReceiptLogoPath : `/${data.ReceiptLogoPath}`;
+          setLogoPreviewUrl(`${getApiBaseUrl().replace("/api/v1","")}${path}`);
+        } else {
+          setLogoPreviewUrl(null);
         }
       }
       if (billingRes.ok) {
@@ -367,16 +210,41 @@ export default function PrinterSettingsPage() {
     setIsSaving(true);
     try {
       const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token") || "";
+      const headers: Record<string, string> = token ? { "Authorization": `Bearer ${token}` } : {};
+      
       const res = await fetch(`${getApiBaseUrl()}/settings/printer`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        headers: { "Content-Type": "application/json", ...headers },
         body: JSON.stringify(settings),
       });
-      if (res.ok) {
-        toast.success("Printer & Receipt settings saved!");
-      } else {
+      if (!res.ok) {
         toast.error("Failed to save settings.");
+        return;
       }
+      
+      if (logoFileToUpload) {
+        const formData = new FormData();
+        formData.append("file", logoFileToUpload);
+        const uploadRes = await fetch(`${getApiBaseUrl()}/settings/printer/receipt-logo`, {
+          method: "POST",
+          headers,
+          body: formData
+        });
+        if (!uploadRes.ok) toast.error("Failed to upload logo.");
+        else { setLogoFileToUpload(null); setLogoRemoved(false); }
+      } else if (logoRemoved) {
+        await fetch(`${getApiBaseUrl()}/settings/printer/receipt-logo`, {
+          method: "DELETE",
+          headers
+        });
+        setLogoRemoved(false);
+      }
+
+      toast.success("Printer & Receipt settings saved!");
+      fetchSettings(); // Refresh to get updated logo path
+      
+      // Update global profile context so that topbar updates immediately
+      window.dispatchEvent(new Event("profile-updated"));
     } catch {
       toast.error("Network error.");
     } finally {
@@ -384,41 +252,7 @@ export default function PrinterSettingsPage() {
     }
   };
 
-  const handleTestPrint = async () => {
-    setIsTesting(true);
-    try {
-      const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token") || "";
-      const res = await fetch(`${getApiBaseUrl()}/settings/printer/test`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-      if (res.ok) toast.success(data.message || "Test print sent!");
-      else toast.error(data.detail || "Test print failed.");
-    } catch {
-      toast.error("Network error during test print.");
-    } finally {
-      setIsTesting(false);
-    }
-  };
 
-  const handleTestDrawer = async () => {
-    setIsTestingDrawer(true);
-    try {
-      const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token") || "";
-      const res = await fetch(`${getApiBaseUrl()}/settings/printer/test-drawer`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-      if (res.ok) toast.success(data.message || "Drawer kick sent!");
-      else toast.error(data.detail || "Drawer test failed.");
-    } catch {
-      toast.error("Network error during drawer test.");
-    } finally {
-      setIsTestingDrawer(false);
-    }
-  };
 
   if (isLoading) {
     return (
@@ -435,18 +269,38 @@ export default function PrinterSettingsPage() {
 
       {/* ── LEFT COLUMN ──────────────────────────────────────────────────── */}
       <div className="space-y-6">
-        <Tabs defaultValue="hardware" className="w-full">
-          <TabsList className="w-full grid grid-cols-2 mb-4 rounded-2xl h-11 bg-slate-100 dark:bg-slate-800/60">
-            <TabsTrigger value="hardware" className="rounded-xl font-semibold flex gap-2 items-center">
-              <Server className="w-4 h-4" /> Printers &amp; Copies
-            </TabsTrigger>
-            <TabsTrigger value="design" className="rounded-xl font-semibold flex gap-2 items-center">
-              <Receipt className="w-4 h-4" /> Receipt Design
-            </TabsTrigger>
-          </TabsList>
+        <div className="flex flex-col xl:flex-row justify-between items-start xl:items-end gap-4 border-b border-border mb-6 mt-10">
+          <div className="flex gap-2 w-full xl:w-auto overflow-x-auto custom-scrollbar">
+            <button
+              onClick={() => setActiveTab("hardware")}
+              className={cn(
+                "flex items-center px-6 py-2.5 font-medium text-sm rounded-t-lg transition-colors whitespace-nowrap",
+                activeTab === "hardware" 
+                  ? "bg-primary text-primary-foreground" 
+                  : "text-muted-foreground hover:bg-secondary/50"
+              )}
+            >
+              <Server className="mr-2 h-4 w-4" />
+              Printers & Copies
+            </button>
+            <button
+              onClick={() => setActiveTab("design")}
+              className={cn(
+                "flex items-center px-6 py-2.5 font-medium text-sm rounded-t-lg transition-colors whitespace-nowrap",
+                activeTab === "design" 
+                  ? "bg-primary text-primary-foreground" 
+                  : "text-muted-foreground hover:bg-secondary/50"
+              )}
+            >
+              <Receipt className="mr-2 h-4 w-4" />
+              Receipt Design
+            </button>
+          </div>
+        </div>
 
-          {/* ──────── TAB 1: PRINTERS & COPIES ──────── */}
-          <TabsContent value="hardware" className="space-y-6">
+        {/* ──────── TAB 1: PRINTERS & COPIES ──────── */}
+        {activeTab === "hardware" && (
+          <div className="space-y-6">
 
             {/* Printer warning banner */}
             {printerWarning && (
@@ -562,18 +416,7 @@ export default function PrinterSettingsPage() {
 
                 {/* Copies + behaviours */}
                 <div className="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label className="text-sm font-semibold">Number of Copies</Label>
-                      <div className="flex items-center gap-3">
-                        <Button variant="outline" size="icon" className="rounded-xl h-9 w-9"
-                          onClick={() => setSetting("Copies", Math.max(1, settings.Copies - 1))}>-</Button>
-                        <span className="font-bold text-lg w-8 text-center">{settings.Copies}</span>
-                        <Button variant="outline" size="icon" className="rounded-xl h-9 w-9"
-                          onClick={() => setSetting("Copies", Math.min(10, settings.Copies + 1))}>+</Button>
-                      </div>
-                    </div>
-                  </div>
+
 
                   <ToggleRow
                     label="Auto-Print After Successful Sale"
@@ -601,35 +444,15 @@ export default function PrinterSettingsPage() {
                   />
                 </div>
 
-                {/* Advanced hex */}
-                <Accordion className="w-full">
-                  <AccordionItem value="advanced">
-                    <AccordionTrigger className="text-sm font-semibold text-slate-600 dark:text-slate-400">
-                      Advanced: Custom Hex Sequences
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      <div className="space-y-2 pt-2">
-                        <Label>Cash Drawer Kick Sequence</Label>
-                        <Textarea
-                          value={settings.CustomRawByteSequence}
-                          onChange={e => setSetting("CustomRawByteSequence", e.target.value)}
-                          placeholder="\x1B\x70\x00\x19\xFA"
-                          className="font-mono text-sm"
-                          rows={2}
-                        />
-                        <p className="text-xs text-slate-500">
-                          Standard ESC p: <code>\x1B\x70\x00\x19\xFA</code>. Parsed to raw bytes before dispatch.
-                        </p>
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
+
               </CardContent>
             </Card>
-          </TabsContent>
+          </div>
+        )}
 
-          {/* ──────── TAB 2: RECEIPT DESIGN ──────── */}
-          <TabsContent value="design" className="space-y-6">
+        {/* ──────── TAB 2: RECEIPT DESIGN ──────── */}
+        {activeTab === "design" && (
+          <div className="space-y-6">
 
             {/* Layout controls */}
             <Card className={cardClass}>
@@ -640,6 +463,114 @@ export default function PrinterSettingsPage() {
                 <CardDescription>Control paper width math, font scale, and column sizing.</CardDescription>
               </CardHeader>
               <CardContent className="p-6 space-y-6">
+
+                
+                {/* Pharmacy Branding */}
+                <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+                  <h3 className="text-sm font-bold uppercase tracking-widest text-slate-400">Pharmacy Branding</h3>
+                  
+                  <div className="flex flex-col lg:flex-row gap-6 items-start">
+                    <div className="space-y-3 shrink-0">
+                      <Label className="text-sm font-semibold text-slate-800 dark:text-slate-200">Receipt Logo</Label>
+                      <div 
+                        className="w-32 h-32 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900/50 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors cursor-pointer overflow-hidden relative group"
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        {logoPreviewUrl ? (
+                          <>
+                            <img src={logoPreviewUrl} alt="Logo Preview" className="w-full h-full object-contain p-2" />
+                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                              <UploadCloud className="w-6 h-6 text-white" />
+                            </div>
+                          </>
+                        ) : (
+                          <div className="flex flex-col items-center text-slate-400">
+                            <ImageIcon className="w-8 h-8 mb-2 opacity-50" />
+                            <span className="text-[10px] font-medium text-center px-4">Click to upload<br/>(PNG/JPG)</span>
+                          </div>
+                        )}
+                        <input
+                          type="file"
+                          ref={fileInputRef}
+                          className="hidden"
+                          accept="image/png, image/jpeg, image/webp"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              setLogoFileToUpload(file);
+                              setLogoPreviewUrl(URL.createObjectURL(file));
+                              setLogoRemoved(false);
+                            }
+                          }}
+                        />
+                      </div>
+                      
+                      {logoPreviewUrl && (
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="w-full text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
+                          onClick={() => {
+                            setLogoPreviewUrl(null);
+                            setLogoFileToUpload(null);
+                            setLogoRemoved(true);
+                            if (fileInputRef.current) fileInputRef.current.value = "";
+                          }}
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" /> Remove Logo
+                        </Button>
+                      )}
+                    </div>
+                    
+                    <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+                      <div className="space-y-2">
+                        <Label>Pharmacy Name</Label>
+                        <Input
+                          value={settings.PharmacyName || ""}
+                          onChange={e => { setSetting("PharmacyName", e.target.value); setPharmacyName(e.target.value); }}
+                          placeholder="e.g. City Pharmacy"
+                          className="bg-white dark:bg-slate-900 rounded-xl"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Phone Number</Label>
+                        <Input
+                          value={settings.PharmacyPhone || ""}
+                          onChange={e => { setSetting("PharmacyPhone", e.target.value); setPharmacyPhone(e.target.value); }}
+                          placeholder="e.g. +92 300 1234567"
+                          className="bg-white dark:bg-slate-900 rounded-xl"
+                        />
+                      </div>
+                      <div className="space-y-2 md:col-span-2">
+                        <Label>Address</Label>
+                        <Input
+                          value={settings.PharmacyAddress || ""}
+                          onChange={e => { setSetting("PharmacyAddress", e.target.value); setPharmacyAddress(e.target.value); }}
+                          placeholder="e.g. 123 Health Street, City"
+                          className="bg-white dark:bg-slate-900 rounded-xl"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Drug License Number</Label>
+                        <Input
+                          value={settings.DrugLicenseNumber || ""}
+                          onChange={e => { setSetting("DrugLicenseNumber", e.target.value); setLicenseInfo(`Lic: ${e.target.value || "N/A"} / NTN: ${settings.NtnStrn || "N/A"}`); }}
+                          placeholder="e.g. DL-123456"
+                          className="bg-white dark:bg-slate-900 rounded-xl"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>NTN / STRN</Label>
+                        <Input
+                          value={settings.NtnStrn || ""}
+                          onChange={e => { setSetting("NtnStrn", e.target.value); setLicenseInfo(`Lic: ${settings.DrugLicenseNumber || "N/A"} / NTN: ${e.target.value || "N/A"}`); }}
+                          placeholder="e.g. 1234567-8"
+                          className="bg-white dark:bg-slate-900 rounded-xl"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
                 {/* Receipt Title */}
                 <div className="space-y-2">
@@ -746,17 +677,10 @@ export default function PrinterSettingsPage() {
                     <ToggleRow label="Customer Name" checked={settings.ShowCustomerName} onChange={v => setSetting("ShowCustomerName", v)} />
                     <ToggleRow label="Cashier Name" checked={settings.ShowCashier} onChange={v => setSetting("ShowCashier", v)} />
                     <ToggleRow label="Payment Method" checked={settings.ShowPaymentMethod} onChange={v => setSetting("ShowPaymentMethod", v)} />
-                    <ToggleRow label="Doctor &amp; Patient Info" checked={settings.PrintDoctorAndPatient} onChange={v => setSetting("PrintDoctorAndPatient", v)} />
                   </div>
                 </div>
 
-                {/* Items section */}
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Medicine Items</p>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    <ToggleRow label="Batch No. &amp; Expiry Date" checked={settings.PrintBatchAndExpiry} onChange={v => setSetting("PrintBatchAndExpiry", v)} />
-                  </div>
-                </div>
+
 
                 {/* Totals section */}
                 <div>
@@ -771,8 +695,8 @@ export default function PrinterSettingsPage() {
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
-        </Tabs>
+          </div>
+        )}
       </div>
 
       {/* ── RIGHT COLUMN: Preview + Actions ──────────────────────────────── */}
@@ -790,68 +714,16 @@ export default function PrinterSettingsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="p-4">
-            <ReceiptPreview
-              settings={settings}
-              pharmacyName={pharmacyName}
-              pharmacyAddress={pharmacyAddress}
-              pharmacyPhone={pharmacyPhone}
-              currency={currency}
-              licenseInfo={licenseInfo}
-            />
+            <ReceiptPreview settings={settings} currency={currency} />
           </CardContent>
         </Card>
 
         {/* Action buttons */}
         <Card className={cardClass}>
-          <CardContent className="p-4 space-y-3">
+          <CardContent className="p-4">
             <SaveButton isSaving={isSaving} onClick={handleSave} className="w-full" label="Save Settings" />
-            <div className="grid grid-cols-2 gap-2">
-              <Button
-                onClick={handleTestPrint}
-                disabled={isTesting}
-                variant="outline"
-                className="h-10 rounded-xl font-semibold text-sm"
-              >
-                {isTesting
-                  ? <RefreshCw className="w-4 h-4 mr-1.5 animate-spin" />
-                  : <Printer className="w-4 h-4 mr-1.5 text-indigo-500" />}
-                Test Print
-              </Button>
-              <Button
-                onClick={handleTestDrawer}
-                disabled={isTestingDrawer}
-                variant="outline"
-                className="h-10 rounded-xl font-semibold text-sm"
-              >
-                {isTestingDrawer
-                  ? <RefreshCw className="w-4 h-4 mr-1.5 animate-spin" />
-                  : <Usb className="w-4 h-4 mr-1.5 text-emerald-500" />}
-                Test Drawer
-              </Button>
-            </div>
-            <Button
-              onClick={fetchSettings}
-              variant="ghost"
-              className="w-full h-9 rounded-xl text-xs text-slate-500"
-            >
-              <RefreshCw className="w-3.5 h-3.5 mr-1.5" /> Reload from Server
-            </Button>
           </CardContent>
         </Card>
-
-        {/* Quick stats */}
-        <div className="grid grid-cols-3 gap-2">
-          {[
-            { label: "Paper", value: settings.PaperSize, icon: <Copy className="w-3 h-3" /> },
-            { label: "Scale", value: `${settings.FontScale}%`, icon: <Zap className="w-3 h-3" /> },
-            { label: "Copies", value: settings.Copies, icon: <Copy className="w-3 h-3" /> },
-          ].map(s => (
-            <div key={s.label} className="bg-slate-50 dark:bg-slate-900/30 rounded-xl p-3 text-center border border-slate-100 dark:border-slate-800">
-              <div className="text-lg font-black text-slate-800 dark:text-white">{s.value}</div>
-              <div className="text-[10px] font-semibold uppercase text-slate-400">{s.label}</div>
-            </div>
-          ))}
-        </div>
       </div>
     </div>
   );

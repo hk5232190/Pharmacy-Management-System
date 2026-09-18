@@ -53,16 +53,32 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
   const fetchProfile = async () => {
     try {
       const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token") || "";
-      const res = await fetch(`${getApiBaseUrl()}/settings/profile`, {
+      const res = await fetch(`${getApiBaseUrl()}/settings/printer`, {
         headers: token ? { "Authorization": `Bearer ${token}` } : {},
         cache: "no-store",
       });
       if (res.ok) {
         const data = await res.json();
-        if (data.LogoPath) {
-          data.LogoPath = `${data.LogoPath}?t=${new Date().getTime()}`;
-        }
-        setProfile({ ...DEFAULT_PROFILE, ...data });
+        // Since we are reading from printer settings, map it to our generic profile state format
+        const mappedData = {
+            PharmacyName: data.PharmacyName || "Pharmacy",
+            OwnerName: "",
+            RegistrationNumber: "",
+            DrugLicenseNumber: data.DrugLicenseNumber || "",
+            PhoneNumber: data.PharmacyPhone || "",
+            EmailAddress: "",
+            Address: data.PharmacyAddress || "",
+            City: "",
+            State: "",
+            Country: "",
+            PostalCode: "",
+            Website: data.Website || "",
+            LogoPath: data.ReceiptLogoPath ? `${getApiBaseUrl().replace("/api/v1", "")}${data.ReceiptLogoPath.startsWith('/') ? data.ReceiptLogoPath : '/' + data.ReceiptLogoPath}?t=${new Date().getTime()}` : null,
+            ReceiptLogoPath: data.ReceiptLogoPath ? `${getApiBaseUrl().replace("/api/v1", "")}${data.ReceiptLogoPath.startsWith('/') ? data.ReceiptLogoPath : '/' + data.ReceiptLogoPath}?t=${new Date().getTime()}` : null,
+            ReceiptFooter1: data.ReceiptFooterMessage || "Thank you for your visit!",
+            ReceiptFooter2: ""
+        };
+        setProfile({ ...DEFAULT_PROFILE, ...mappedData });
       }
     } catch (error) {
       console.error("Failed to fetch pharmacy profile:", error);
@@ -73,6 +89,15 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     fetchProfile();
+    
+    const handleProfileUpdate = () => {
+      fetchProfile();
+    };
+    window.addEventListener("profile-updated", handleProfileUpdate);
+    
+    return () => {
+      window.removeEventListener("profile-updated", handleProfileUpdate);
+    };
   }, []);
 
   return (

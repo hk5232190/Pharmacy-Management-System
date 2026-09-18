@@ -338,30 +338,6 @@ class BackupSettings(Base):
     CompressBackup = Column(Boolean, default=True)
     AutoVerify = Column(Boolean, default=False)
 
-class PharmacyProfile(Base):
-    __tablename__ = "pharmacy_profile"
-
-    ProfileId = Column(Integer, primary_key=True, autoincrement=True)
-    PharmacyName = Column(String(255), nullable=False, default="My Pharmacy")
-    OwnerName = Column(String(255), nullable=True)
-    PharmacySlogan = Column(String(255), nullable=True)
-    RegistrationNumber = Column(String(100), nullable=True)
-    DrugLicenseNumber = Column(String(100), nullable=True)
-    NtnStrn = Column(String(100), nullable=True)
-    PhoneNumber = Column(String(50), nullable=True)
-    EmailAddress = Column(String(255), nullable=True)
-    Address = Column(String(500), nullable=True)
-    City = Column(String(100), nullable=True)
-    State = Column(String(100), nullable=True)
-    Country = Column(String(100), nullable=True)
-    PostalCode = Column(String(20), nullable=True)
-    Website = Column(String(255), nullable=True)
-    LogoPath = Column(String(500), nullable=True)
-    ReceiptLogoPath = Column(String(500), nullable=True)
-    ReceiptFooter1 = Column(String(255), nullable=True, default="Thank you for your visit!")
-    ReceiptFooter2 = Column(String(255), nullable=True, default="Software provided by Eagle Nest Creations")
-    UpdatedAt = Column(DateTime, server_default=func.now(), onupdate=func.now())
-
 class BillingSettings(Base):
     __tablename__ = "billing_settings"
 
@@ -397,6 +373,16 @@ class PrinterSettings(Base):
     __tablename__ = "printer_settings"
 
     SettingsId = Column(Integer, primary_key=True, autoincrement=True)
+    # Pharmacy Branding
+    PharmacyName = Column(String(255), nullable=False, default="My Pharmacy")
+    PharmacyAddress = Column(String(500), nullable=True)
+    PharmacyPhone = Column(String(50), nullable=True)
+    DrugLicenseNumber = Column(String(100), nullable=True)
+    NtnStrn = Column(String(100), nullable=True)
+    Website = Column(String(255), nullable=True)
+    ReceiptLogoPath = Column(String(500), nullable=True)
+
+    # Hardware
     PrinterType = Column(String(50), nullable=False, default="ESC/POS Thermal")
     PaperSize = Column(String(50), nullable=False, default="80mm")
     CustomPaperWidthMm = Column(Integer, nullable=True, default=None) # For custom paper width
