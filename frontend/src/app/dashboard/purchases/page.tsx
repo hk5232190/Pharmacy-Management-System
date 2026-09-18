@@ -728,7 +728,7 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
           const totalInvoices = summaryData?.total_invoices_count ?? purchaseHistory.length;
 
           const cards = [
-            { title: "Today's Purchases",    value: formatCurrency(Math.max(0, todayTotal)), icon: ShoppingCart, accent: "blue" },
+            { title: "Today Purchases",    value: formatCurrency(Math.max(0, todayTotal)), icon: ShoppingCart, accent: "blue" },
             { title: "Total Purchase Amount", value: formatCurrency(Math.max(0, allTimeTotal)), icon: DollarSign,  accent: "emerald" },
             { title: "Processed Returns",     value: String(processedReturns),             icon: Undo2,        accent: "orange" },
             { title: "Total Balance Due",     value: formatCurrency(balanceDue),              icon: CreditCard,   accent: "rose" },

@@ -104,11 +104,7 @@ function MastersKPICard({
         >
           <Icon size={20} className={a.icon} />
         </div>
-        {href && (
-          <span className="text-muted-foreground/30 group-hover:text-muted-foreground/75 transition-colors p-1 rounded-md">
-            <ArrowUpRight className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-          </span>
-        )}
+        {/* Arrow removed per user request */}
       </div>
 
       {/* Metric */}

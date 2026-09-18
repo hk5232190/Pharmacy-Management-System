@@ -181,12 +181,12 @@ function DashboardPageInner({ onRefresh, refreshState }: { onRefresh: () => void
 
   const getTimeframeLabel = () => {
     switch (timeframe) {
-      case 'today': return "Today's";
-      case 'week': return "This Week's";
-      case 'month': return "This Month's";
-      case 'year': return "This Year's";
+      case 'today': return "Today";
+      case 'week': return "This Week";
+      case 'month': return "This Month";
+      case 'year': return "This Year";
       case 'custom': return "Custom Range";
-      default: return "Today's";
+      default: return "Today";
     }
   };
 
