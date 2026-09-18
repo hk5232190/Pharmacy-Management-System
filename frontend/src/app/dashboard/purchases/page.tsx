@@ -1010,7 +1010,7 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
                       <th className="px-3 py-2.5 font-semibold w-16 text-center">Act</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-border">
+                  <tbody className="divide-y divide-border border-b border-border">
                     {items.length === 0 ? (
                       <tr>
                         <td colSpan={13} className="px-4 py-16 text-center text-muted-foreground">
@@ -1194,7 +1194,7 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
                     <th className="px-6 py-3 font-semibold text-center">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border">
+                <tbody className="divide-y divide-border border-b border-border">
                   {paginatedHistory.length === 0 ? (
                     <tr>
                       <td colSpan={9} className="px-6 py-16 text-center text-muted-foreground">
@@ -1393,7 +1393,7 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
                           <th className="px-4 py-2 font-semibold text-center text-rose-500">Refund Amt</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-border">
+                      <tbody className="divide-y divide-border border-b border-border">
                         {returnItems.map(item => (
                           <tr key={item.PurchaseItemId} className="hover:bg-secondary/10 transition-colors">
                             <td className="px-4 py-2 font-medium text-left">{item.MedicineName}</td>
@@ -1455,7 +1455,7 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
                         <th className="px-4 py-2 font-semibold text-center">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-border">
+                    <tbody className="divide-y divide-border border-b border-border">
                       {returnsHistory.length === 0 ? (
                         <tr><td colSpan={8} className="text-center py-12 text-muted-foreground"><div className="flex flex-col items-center gap-2"><Undo2 className="h-10 w-10 opacity-20" /><span>No debit notes processed yet.</span></div></td></tr>
                       ) : (
@@ -1662,7 +1662,7 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
                       <th className="px-5 py-3.5 font-bold text-center">Total</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50 border-b border-border">
                     {printData.items.map((item: any, idx: number) => (
                       <tr key={item.PurchaseItemId || idx} className="hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors">
                         <td className="px-5 py-4 font-semibold text-slate-800 dark:text-slate-200 text-left">{item.MedicineName}</td>
@@ -1781,7 +1781,7 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
                    <th className="py-3 px-4 font-semibold text-xs uppercase tracking-wider text-center">Total</th>
                  </tr>
                </thead>
-               <tbody className="divide-y divide-slate-200">
+               <tbody className="divide-y divide-slate-200 border-b border-border">
                  {printData.items.map((item: any, idx: number) => (
                    <tr key={idx} className={idx % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
                      <td className="py-3 px-4 text-slate-900 font-bold text-left">{item.MedicineName}</td>

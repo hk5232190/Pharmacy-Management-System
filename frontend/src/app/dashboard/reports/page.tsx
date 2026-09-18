@@ -861,7 +861,7 @@ function ReportsPageInner({
                         <th className="px-4 py-3 font-medium text-center">Status</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-border">
+                    <tbody className="divide-y divide-border border-b border-border">
                       {(() => {
                         const filteredSalesTransactions = data?.transactions?.filter((t: any) =>
                           ((t.InvoiceNo && t.InvoiceNo.toLowerCase().includes(salesSearchTerm.toLowerCase())) ||
@@ -1176,7 +1176,7 @@ function ReportsPageInner({
                         <th className="px-4 py-3 font-medium text-left">Status</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-border">
+                    <tbody className="divide-y divide-border border-b border-border">
                       {(() => {
                         const filteredStock = data?.stock_items?.filter((t: any) => {
                           const matchesSearch = !inventorySearchTerm ||
@@ -1318,7 +1318,7 @@ function ReportsPageInner({
                           <th className="px-4 py-3 font-medium text-center">Close Stock</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-border">
+                      <tbody className="divide-y divide-border border-b border-border">
                         {(() => {
                           let sumStart = 0;
                           let sumPurchased = 0;
@@ -1705,7 +1705,7 @@ function ReportsPageInner({
                         <th className="px-4 py-3 font-medium text-center">Status</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-border">
+                    <tbody className="divide-y divide-border border-b border-border">
                       {(() => {
                         const filteredPurchases = data?.transactions?.filter((t: any) => {
                           const matchesSearch = !purchaseSearchTerm || t.InvoiceNo.toLowerCase().includes(purchaseSearchTerm.toLowerCase()) ||
@@ -2056,7 +2056,7 @@ function ReportsPageInner({
                             <th className="px-4 py-3 font-medium text-left">Status</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-border">
+                        <tbody className="divide-y divide-border border-b border-border">
                           {data.expiry_items && data.expiry_items.length > 0 ? (
                             data.expiry_items.map((t: any, idx: number) => (
                               <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-secondary/30">
@@ -2096,7 +2096,7 @@ function ReportsPageInner({
                             <th className="px-4 py-3 font-medium text-center text-emerald-600">Suggested Order</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-border">
+                        <tbody className="divide-y divide-border border-b border-border">
                           {data.low_stock_items && data.low_stock_items.length > 0 ? (
                             data.low_stock_items.map((t: any, idx: number) => (
                               <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-secondary/30">
@@ -2131,7 +2131,7 @@ function ReportsPageInner({
                             <th className="px-4 py-3 font-medium text-left">Classification</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-border">
+                        <tbody className="divide-y divide-border border-b border-border">
                           {data.movement_items && data.movement_items.length > 0 ? (
                             data.movement_items.map((t: any, idx: number) => (
                               <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-secondary/30">
@@ -2242,7 +2242,7 @@ function ReportsPageInner({
                     </tr>
                   )}
                 </thead>
-                <tbody className="divide-y divide-gray-200">
+                <tbody className="divide-y divide-gray-200 border-b border-border">
                   {activeMedicineTab === 'expiry' && data.expiry_items?.map((t: any, idx: number) => (
                     <tr key={idx} className="even:bg-gray-50 border-b border-gray-200">
                       <td className="px-3 py-2 text-gray-900 font-semibold text-left">{t.MedicineName}</td>
@@ -2427,7 +2427,7 @@ function ReportsPageInner({
 
                 <div className="p-0">
                   <table className="w-full text-sm text-left">
-                    <tbody className="divide-y divide-border">
+                    <tbody className="divide-y divide-border border-b border-border">
                       {/* 1. Revenue (Income) Section */}
                       <tr className="bg-slate-50/50 dark:bg-secondary/30">
                         <td colSpan={2} className="px-6 py-2.5 font-bold text-foreground text-left">1. Revenue (Income)</td>
@@ -2500,7 +2500,7 @@ function ReportsPageInner({
                 ]}
               >
                 <table className="w-full text-sm text-left border-collapse border border-gray-300">
-                  <tbody className="divide-y divide-gray-200">
+                  <tbody className="divide-y divide-gray-200 border-b border-border">
                     <tr className="bg-gray-100">
                       <td colSpan={2} className="px-6 py-2 font-bold text-gray-900 border-b border-gray-300 text-left">1. Revenue (Income)</td>
                     </tr>

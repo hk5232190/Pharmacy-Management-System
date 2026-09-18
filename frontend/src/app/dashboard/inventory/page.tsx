@@ -1075,7 +1075,7 @@ function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTa
                     <th className="px-4 py-3 font-semibold text-center">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border">
+                <tbody className="divide-y divide-border border-b border-border">
                   {loading ? (
                     <tr><td colSpan={14} className="px-4 py-8 text-center text-muted-foreground">Loading stock data...</td></tr>
                   ) : filteredStockList.length === 0 ? (
@@ -1289,7 +1289,7 @@ function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTa
                     <th className="px-4 py-3 font-semibold text-left">Reason / Justification</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border">
+                <tbody className="divide-y divide-border border-b border-border">
                   {loading ? (
                     <tr><td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">Loading history...</td></tr>
                   ) : pagedAdjHistory.length === 0 ? (
@@ -1441,7 +1441,7 @@ function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTa
                       <th className="px-4 py-3 font-semibold text-center">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-border">
+                  <tbody className="divide-y divide-border border-b border-border">
                     {loading ? (
                       <tr><td colSpan={10} className="px-4 py-8 text-center text-muted-foreground">Loading expiry data...</td></tr>
                     ) : expiryItems.length === 0 ? (
@@ -1663,7 +1663,7 @@ function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTa
                       <th className="px-4 py-3 font-semibold text-left">Reference No.</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-border">
+                  <tbody className="divide-y divide-border border-b border-border">
                     {loading ? (
                       <tr><td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">Loading movements...</td></tr>
                     ) : pagedMovements.length === 0 ? (
@@ -1784,7 +1784,7 @@ function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTa
                     <th className="px-4 py-3 font-semibold text-left">User</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border font-mono text-xs">
+                <tbody className="divide-y divide-border font-mono text-xs border-b border-border">
                   {loading ? (
                     <tr><td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">Loading audit logs...</td></tr>
                   ) : auditLogs.length === 0 ? (
@@ -2352,7 +2352,7 @@ function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTa
                             <th className="px-4 py-2.5 font-semibold text-center">Total</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-border">
+                        <tbody className="divide-y divide-border border-b border-border">
                           {previewData.items?.map((item: any, idx: number) => (
                             <tr key={idx} className="hover:bg-secondary/20">
                               <td className="px-4 py-2.5 font-medium text-left">{item.MedicineName || "—"}</td>

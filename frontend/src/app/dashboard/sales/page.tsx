@@ -1494,7 +1494,7 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
                         <th className="px-3 py-3 font-semibold text-center"></th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-border">
+                    <tbody className="divide-y divide-border border-b border-border">
                       {cart.length === 0 ? (
                         <tr>
                           <td colSpan={10} className="py-16 text-center">
@@ -1741,7 +1741,7 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
                         <th className="px-3 py-3 font-semibold text-center">Refund Total</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-border">
+                    <tbody className="divide-y divide-border border-b border-border">
                       {returnItems.map(item => {
                         const maxReturnable = item.Quantity - item.ReturnedQuantity;
                         const isFullyReturned = maxReturnable === 0;
@@ -1851,7 +1851,7 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
                     <th className="px-3 py-3 font-semibold text-center">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border">
+                <tbody className="divide-y divide-border border-b border-border">
                   {loadingReturnHistory ? (
                     <tr><td colSpan={8} className="py-12 text-center text-muted-foreground">Loading...</td></tr>
                   ) : returnHistoryItems.length === 0 ? (
@@ -1960,7 +1960,7 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
                     <th className="px-3 py-3 font-semibold text-center">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border">
+                <tbody className="divide-y divide-border border-b border-border">
                   {loadingHistory ? (
                     <tr><td colSpan={9} className="py-8 text-center text-muted-foreground">Loading history...</td></tr>
                   ) : historyItems.length === 0 ? (
