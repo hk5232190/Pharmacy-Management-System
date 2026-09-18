@@ -172,6 +172,7 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<ProductSearchResponse[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [selectedSearchIdx, setSelectedSearchIdx] = useState(-1);
   // ref map: cart item id -> qty input element
@@ -303,11 +304,7 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
   // --- Search & Add ---
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
-      if (searchQuery.trim().length >= 2) {
-        handleSearch(searchQuery);
-      } else {
-        setSearchResults([]);
-      }
+      handleSearch(searchQuery);
     }, 300);
     return () => clearTimeout(delayDebounceFn);
   }, [searchQuery]);
@@ -1406,6 +1403,8 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
                     placeholder="Search medicine by name, barcode, or code..."
                     className="pl-9 pr-10 text-base py-6"
                     value={searchQuery}
+                    onFocus={() => { setIsSearchFocused(true); handleSearch(searchQuery); }}
+                    onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
                     onChange={e => { setSearchQuery(e.target.value); setSelectedSearchIdx(-1); }}
                     onKeyDown={e => {
                       if (searchResults.length === 0) return;
@@ -1427,7 +1426,7 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
                   <Barcode className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground cursor-pointer hover:text-foreground transition-colors" />
 
                   {/* Search Dropdown */}
-                  {searchQuery.trim().length >= 2 && (
+                  {isSearchFocused && (
                     <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-card border border-border rounded-lg shadow-xl overflow-hidden max-h-80 overflow-y-auto z-30">
                       {isSearching ? (
                         <div className="p-4 text-center text-sm text-muted-foreground">Searching...</div>
@@ -1435,31 +1434,39 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
                         <div className="p-4 text-center text-sm text-muted-foreground">No medicines found with available stock.</div>
                       ) : (
                         <ul className="divide-y divide-border">
-                          {searchResults.map((res, idx) => (
-                            <li
-                              key={res.MedicineId}
-                              className={cn(
-                                "p-3 cursor-pointer transition-colors flex justify-between items-center",
-                                idx === selectedSearchIdx
-                                  ? "bg-blue-50 dark:bg-blue-900/30 border-l-2 border-blue-500"
-                                  : "hover:bg-secondary/20"
-                              )}
-                              onMouseEnter={() => setSelectedSearchIdx(idx)}
-                              onClick={() => handleSelectProduct(res)}
-                            >
-                              <div>
-                                <p className="font-medium text-foreground flex items-center gap-2">
-                                  {res.MedicineName}
-                                  {idx === selectedSearchIdx && <span className="text-[10px] bg-blue-100 dark:bg-blue-800 text-blue-600 dark:text-blue-300 px-1.5 py-0.5 rounded font-mono">↵ select</span>}
-                                </p>
-                                <p className="text-xs text-muted-foreground">{res.GenericName}</p>
-                              </div>
-                              <div className="text-right">
-                                <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">{formatCurrency(res.Batches[0].UnitPrice)}</p>
-                                <p className="text-xs text-muted-foreground">Stock: {res.Batches[0].AvailableStock}</p>
-                              </div>
-                            </li>
-                          ))}
+                          {searchResults.map((res, idx) => {
+                            const totalStock = res.Batches.reduce((sum, b) => sum + b.AvailableStock, 0);
+                            const displayBatch = (inventorySettings?.EnableFefo ?? true) ? res.Batches[0] : res.Batches[res.Batches.length - 1];
+                            const expiryStr = displayBatch.ExpiryDate ? new Date(displayBatch.ExpiryDate).toLocaleDateString() : "N/A";
+                            return (
+                              <li
+                                key={res.MedicineId}
+                                className={cn(
+                                  "p-3 cursor-pointer transition-colors flex justify-between items-center",
+                                  idx === selectedSearchIdx
+                                    ? "bg-blue-50 dark:bg-blue-900/30 border-l-2 border-blue-500"
+                                    : "hover:bg-secondary/20"
+                                )}
+                                onMouseEnter={() => setSelectedSearchIdx(idx)}
+                                onClick={() => handleSelectProduct(res)}
+                              >
+                                <div>
+                                  <p className="font-medium text-foreground flex items-center gap-2">
+                                    {res.MedicineName}
+                                    {idx === selectedSearchIdx && <span className="text-[10px] bg-blue-100 dark:bg-blue-800 text-blue-600 dark:text-blue-300 px-1.5 py-0.5 rounded font-mono">↵ select</span>}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">{res.GenericName}</p>
+                                </div>
+                                <div className="text-right flex flex-col items-end">
+                                  <div className="flex gap-4 mb-1">
+                                    <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">Rs {displayBatch.UnitPrice.toFixed(2)}</p>
+                                    <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">Stock: {totalStock}</p>
+                                  </div>
+                                  <p className="text-xs text-orange-600 dark:text-orange-400 font-medium">Nearest Expiry: {expiryStr}</p>
+                                </div>
+                              </li>
+                            );
+                          })}
                         </ul>
                       )}
                     </div>

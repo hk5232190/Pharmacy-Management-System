@@ -3776,3 +3776,23 @@ NoneType: None
 2026-09-18 16:04:51,854 - pms - INFO - Completed startup system notifications synchronization.
 2026-09-18 16:04:54,373 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
 2026-09-18 16:18:18,598 - pms - INFO - PRODUCTION_TRACE auth accepted username=admin user_id=1
+2026-09-18 16:19:35,156 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-18 16:22:26,158 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-18 16:22:37,384 - pms - INFO - AUDIT: User admin removed the Receipt Logo.
+2026-09-18 16:22:45,205 - pms - INFO - AUDIT: User admin uploaded a new Receipt Logo.
+2026-09-18 16:22:48,048 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-18 16:46:42,109 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-18 16:46:42,663 - pms - INFO - PRODUCTION_TRACE license storage path=E:\Projects\PMS-Software\backend\licenses\active.lic exists=True
+2026-09-18 16:46:45,782 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-18 16:46:46,819 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.schemas
+2026-09-18 16:46:46,820 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.tables
+2026-09-18 16:46:46,820 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.types
+2026-09-18 16:46:46,820 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.constraints
+2026-09-18 16:46:46,820 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.defaults
+2026-09-18 16:46:46,820 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.comments
+2026-09-18 16:46:46,821 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.checkconstraint_byname
+2026-09-18 16:46:47,011 - pms - INFO - Database schema already at migration head (8cdd21e09901).
+2026-09-18 16:46:47,358 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-18 16:46:54,111 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-18 16:47:01,533 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-18 16:47:06,061 - pms - INFO - PRODUCTION_TRACE auth accepted username=admin user_id=1

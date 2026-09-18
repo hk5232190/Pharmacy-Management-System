@@ -99,24 +99,55 @@ def init_sale(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+from sqlalchemy import case, desc
+
 @router.get("/search-product", response_model=BaseResponse[List[ProductSearchResponse]], summary="Search medicines for POS with FEFO batches")
 def search_product(
-    q: str = Query(..., min_length=1),
+    q: Optional[str] = Query(None, min_length=0),
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
     try:
-        search_term = f"%{q}%"
-        
-        # Find medicines matching the query (Name, GenericName, or Barcode)
-        medicines = db.query(Medicine).filter(
-            Medicine.IsActive == True,
-            or_(
-                Medicine.BrandName.ilike(search_term),
-                Medicine.GenericName.ilike(search_term),
-                Medicine.Barcode.ilike(search_term)
-            )
-        ).all()
+        if not q or q.strip() == "":
+            # Top Selling Suggestions
+            top_selling = db.query(
+                Medicine,
+                func.sum(SaleItem.Quantity).label('total_sold')
+            ).join(
+                StockBatch, StockBatch.MedicineId == Medicine.MedicineId
+            ).join(
+                SaleItem, SaleItem.BatchId == StockBatch.BatchId
+            ).filter(
+                Medicine.IsActive == True
+            ).group_by(
+                Medicine.MedicineId
+            ).order_by(
+                desc('total_sold')
+            ).limit(10).all()
+            
+            medicines = [med for med, total in top_selling]
+        else:
+            q = q.strip()
+            search_term = f"%{q}%"
+            starts_with = f"{q}%"
+            
+            # Find medicines matching the query (Name, GenericName, or Barcode)
+            # Prioritize those starting with the query
+            medicines = db.query(Medicine).filter(
+                Medicine.IsActive == True,
+                or_(
+                    Medicine.BrandName.ilike(search_term),
+                    Medicine.GenericName.ilike(search_term),
+                    Medicine.Barcode.ilike(search_term)
+                )
+            ).order_by(
+                case(
+                    (Medicine.BrandName.ilike(starts_with), 0),
+                    (Medicine.GenericName.ilike(starts_with), 1),
+                    else_=2
+                ),
+                Medicine.BrandName.asc()
+            ).limit(30).all()
 
         
         inv_settings = db.query(InventorySettings).first()

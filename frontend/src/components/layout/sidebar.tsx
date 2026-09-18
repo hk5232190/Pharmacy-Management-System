@@ -169,12 +169,12 @@ export function Sidebar() {
           ) : (
             <>
               {profile.LogoPath ? (
-                <div className="h-8 w-8 flex items-center justify-center shrink-0">
-                  <img src={profile.LogoPath} alt="Logo" className="max-h-full max-w-full object-contain drop-shadow-sm" />
+                <div className="h-9 w-9 rounded-full overflow-hidden flex items-center justify-center shrink-0 bg-white">
+                  <img src={profile.LogoPath} alt="Logo" className="h-full w-full object-cover" />
                 </div>
               ) : (
-                <div className="bg-primary text-primary-foreground p-1.5 rounded-lg flex items-center justify-center shrink-0">
-                  <PlusSquare className="h-6 w-6" />
+                <div className="h-9 w-9 bg-primary text-primary-foreground rounded-full flex items-center justify-center shrink-0">
+                  <PlusSquare className="h-5 w-5" />
                 </div>
               )}
               <div className="flex-1">
