@@ -100,7 +100,7 @@ export default function CustomersPage() {
             <Plus className="mr-2 h-4 w-4" /> Add New
           </Button>
 
-          <input type="file" accept=".csv" className="hidden" ref={fileInputRef} onChange={handleFileChange} />
+          <input type="file" accept=".csv, .xlsx, .xls" className="hidden" ref={fileInputRef} onChange={handleFileChange} />
 
           <Button variant="outline" className="h-10 bg-background text-foreground hidden sm:flex" onClick={handleImportClick} disabled={isImporting}>
             <Download className="mr-2 h-4 w-4" /> {isImporting ? "Importing..." : "Import"}
@@ -122,9 +122,10 @@ export default function CustomersPage() {
               <TableRow className="hover:bg-transparent">
                 <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-10 text-center">#</TableHead>
                 <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-28">Code</TableHead>
-                <TableHead className="font-semibold text-slate-700 dark:text-slate-300">Customer Name</TableHead>
-                <TableHead className="font-semibold text-slate-700 dark:text-slate-300">Phone</TableHead>
-                <TableHead className="font-semibold text-slate-700 dark:text-slate-300 text-center">Loyalty Points</TableHead>
+                <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-1/4">Customer Name</TableHead>
+                <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-36">Phone</TableHead>
+                <TableHead className="font-semibold text-slate-700 dark:text-slate-300">Address</TableHead>
+                <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-32 text-center">Loyalty Points</TableHead>
                 <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-32 text-center">Status</TableHead>
                 <TableHead className="font-semibold text-slate-700 dark:text-slate-300 text-right pr-6 w-32">Actions</TableHead>
               </TableRow>
@@ -132,11 +133,11 @@ export default function CustomersPage() {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">Loading customers...</TableCell>
+                  <TableCell colSpan={8} className="h-32 text-center text-muted-foreground">Loading customers...</TableCell>
                 </TableRow>
               ) : customers.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">No customers found.</TableCell>
+                  <TableCell colSpan={8} className="h-32 text-center text-muted-foreground">No customers found.</TableCell>
                 </TableRow>
               ) : (
                 customers.map((customer, idx) => (
@@ -151,6 +152,9 @@ export default function CustomersPage() {
                     </TableCell>
                     <TableCell className="py-3 text-[#111827] dark:text-gray-200 text-[14px]">
                       {customer.Phone || "—"}
+                    </TableCell>
+                    <TableCell className="py-3 text-[#111827] dark:text-gray-200 text-[14px] max-w-[200px] truncate" title={customer.Address || ""}>
+                      {customer.Address || "—"}
                     </TableCell>
                     <TableCell className="text-center py-3">
                       <span className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">

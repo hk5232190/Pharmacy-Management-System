@@ -110,7 +110,7 @@ export default function SuppliersPage() {
             <Plus className="mr-2 h-4 w-4" /> Add New
           </Button>
 
-          <input type="file" accept=".csv" className="hidden" ref={fileInputRef} onChange={handleFileChange} />
+          <input type="file" accept=".csv, .xlsx, .xls" className="hidden" ref={fileInputRef} onChange={handleFileChange} />
 
           <Button variant="outline" className="h-10 bg-background text-foreground hidden sm:flex" onClick={handleImportClick} disabled={isImporting}>
             <Download className="mr-2 h-4 w-4" /> {isImporting ? "Importing..." : "Import"}
@@ -133,21 +133,22 @@ export default function SuppliersPage() {
                 <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-10 text-center">#</TableHead>
                 <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-28">Code</TableHead>
                 <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-1/4">Supplier Name</TableHead>
-                <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-1/4">Contact Person</TableHead>
-                <TableHead className="font-semibold text-slate-700 dark:text-slate-300">Phone</TableHead>
-                <TableHead className="font-semibold text-slate-700 dark:text-slate-300">Current Balance</TableHead>
-                <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-32 text-center">Status</TableHead>
+                <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-40">Contact Person</TableHead>
+                <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-36">Phone</TableHead>
+                <TableHead className="font-semibold text-slate-700 dark:text-slate-300">Address</TableHead>
+                <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-32">Current Balance</TableHead>
+                <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-28 text-center">Status</TableHead>
                 <TableHead className="font-semibold text-slate-700 dark:text-slate-300 text-right pr-6 w-32">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="h-32 text-center text-muted-foreground">Loading suppliers...</TableCell>
+                  <TableCell colSpan={9} className="h-32 text-center text-muted-foreground">Loading suppliers...</TableCell>
                 </TableRow>
               ) : suppliers.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="h-32 text-center text-muted-foreground">No suppliers found.</TableCell>
+                  <TableCell colSpan={9} className="h-32 text-center text-muted-foreground">No suppliers found.</TableCell>
                 </TableRow>
               ) : (
                 suppliers.map((supplier, idx) => (
@@ -164,6 +165,9 @@ export default function SuppliersPage() {
                     </TableCell>
                     <TableCell className="py-3 text-[#111827] dark:text-gray-200 text-[14px]">
                       {supplier.Phone || "—"}
+                    </TableCell>
+                    <TableCell className="py-3 text-[#111827] dark:text-gray-200 text-[14px] max-w-[200px] truncate" title={supplier.Address || ""}>
+                      {supplier.Address || "—"}
                     </TableCell>
                     <TableCell className="py-3 font-bold text-emerald-600 dark:text-emerald-400 text-[14px]">
                       {formatCurrency(Number(supplier.CurrentBalance || 0))}

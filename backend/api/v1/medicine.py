@@ -166,20 +166,36 @@ def export_medicines(db: Session = Depends(get_db), current_user = Depends(get_c
         headers={"Content-Disposition": "attachment; filename=medicines_export.csv"}
     )
 
-@router.post("/import", summary="Import medicines from CSV")
+@router.post("/import", summary="Import medicines from CSV or Excel")
 def import_medicines(
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
-    if not file.filename.endswith('.csv'):
-        raise HTTPException(status_code=400, detail="Only CSV files are allowed")
+    if not file.filename.endswith(('.csv', '.xlsx', '.xls')):
+        raise HTTPException(status_code=400, detail="Only CSV and Excel files are allowed")
         
-    content = file.file.read().decode("utf-8")
-    csv_reader = csv.DictReader(io.StringIO(content))
+    contents = file.file.read()
+    
+    rows = []
+    if file.filename.endswith('.csv'):
+        decoded = contents.decode('utf-8')
+        csv_reader = csv.DictReader(io.StringIO(decoded))
+        rows = list(csv_reader)
+    else:
+        import openpyxl
+        wb = openpyxl.load_workbook(io.BytesIO(contents), data_only=True)
+        sheet = wb.active
+        sheet_rows = list(sheet.iter_rows(values_only=True))
+        if sheet_rows:
+            headers = [str(cell).strip() if cell is not None else "" for cell in sheet_rows[0]]
+            for row in sheet_rows[1:]:
+                if any(cell is not None and str(cell).strip() for cell in row):
+                    row_dict = {headers[i]: str(cell).strip() if cell is not None else "" for i, cell in enumerate(row) if i < len(headers)}
+                    rows.append(row_dict)
     
     imported_count = 0
-    for row in csv_reader:
+    for row in rows:
         try:
             # Basic validation
             if not row.get("BrandName") or not row.get("GenericName"):

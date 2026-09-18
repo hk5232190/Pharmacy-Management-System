@@ -151,24 +151,40 @@ def export_suppliers(db: Session = Depends(get_db), current_user = Depends(get_c
         logger.error(f"Error exporting suppliers: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to export suppliers")
 
-@router.post("/import", summary="Import suppliers from CSV")
+@router.post("/import", summary="Import suppliers from CSV or Excel")
 def import_suppliers(
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
-    if not file.filename.endswith('.csv'):
-        raise HTTPException(status_code=400, detail="Only CSV files are allowed")
+    if not file.filename.endswith(('.csv', '.xlsx', '.xls')):
+        raise HTTPException(status_code=400, detail="Only CSV and Excel files are allowed")
         
     try:
-        contents = file.file.read().decode('utf-8')
-        csv_reader = csv.DictReader(io.StringIO(contents))
+        contents = file.file.read()
+        
+        rows = []
+        if file.filename.endswith('.csv'):
+            decoded = contents.decode('utf-8')
+            csv_reader = csv.DictReader(io.StringIO(decoded))
+            rows = list(csv_reader)
+        else:
+            import openpyxl
+            wb = openpyxl.load_workbook(io.BytesIO(contents), data_only=True)
+            sheet = wb.active
+            sheet_rows = list(sheet.iter_rows(values_only=True))
+            if sheet_rows:
+                headers = [str(cell).strip() if cell is not None else "" for cell in sheet_rows[0]]
+                for row in sheet_rows[1:]:
+                    if any(cell is not None and str(cell).strip() for cell in row):
+                        row_dict = {headers[i]: str(cell).strip() if cell is not None else "" for i, cell in enumerate(row) if i < len(headers)}
+                        rows.append(row_dict)
         
         imported_count = 0
         skipped_count = 0
         errors = []
         
-        for row_idx, row in enumerate(csv_reader, start=2): # Row 1 is header
+        for row_idx, row in enumerate(rows, start=2): # Row 1 is header
             try:
                 name = row.get("Name", "").strip()
                 phone = row.get("Phone", "").strip()

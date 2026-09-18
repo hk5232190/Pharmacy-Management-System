@@ -282,7 +282,7 @@ export function useMasterCRUD<T extends object>(
         }
         fetchItems();
       } else {
-        toast.error(data.detail || data.message || "Failed to import");
+        toast.error(data.error || data.detail || data.message || "Failed to import");
       }
     } catch {
       toast.error("Network error during import");

@@ -344,7 +344,7 @@ export default function MedicinesPage() {
             <Plus className="mr-2 h-4 w-4" /> Add New
           </Button>
           
-          <input type="file" accept=".csv" className="hidden" ref={fileInputRef} onChange={handleFileChange} />
+          <input type="file" accept=".csv, .xlsx, .xls" className="hidden" ref={fileInputRef} onChange={handleFileChange} />
           
           <Button variant="outline" className="h-10 bg-background text-foreground hidden sm:flex" onClick={handleImportClick} disabled={isImporting}>
             <Download className="mr-2 h-4 w-4" /> {isImporting ? "Importing..." : "Import CSV"}
