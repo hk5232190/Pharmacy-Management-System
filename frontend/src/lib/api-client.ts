@@ -6,52 +6,97 @@ import { resetAuthState } from "@/lib/auth-session";
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://127.0.0.1:8000/api/v1";
 
-// Cache the resolved port so we only call Tauri once
+// ─── Port resolution — singleton Promise ─────────────────────────────────────
+// Uses THREE parallel detection mechanisms (all race; first wins):
+//   1. Tauri "backend-ready" event (instant if fired after listener registered)
+//   2. window.__PmsPortResolvers callback injected by Rust via window.eval()
+//      (works even when the event fires before the listener is set up)
+//   3. get_api_port Tauri command polled every 100ms (catches state updates)
+// Once any mechanism resolves the port, _resolvedPort is cached and all
+// subsequent calls return synchronously — no more per-page 60-second loops.
+
 let _resolvedPort: number | null = null;
+let _portPromise: Promise<number> | null = null;
+
+function createPortPromise(): Promise<number> {
+  return new Promise<number>((resolve) => {
+    if (typeof window === "undefined" || !(window as any).__TAURI_INTERNALS__) {
+      resolve(8000); // dev / browser mode
+      return;
+    }
+
+    let settled = false;
+    const doResolve = (port: number) => {
+      if (settled) return;
+      settled = true;
+      _resolvedPort = port;
+      (window as any).__PMS_API_PORT__ = port;
+      console.info("[PMS] Backend port resolved:", port);
+      resolve(port);
+    };
+
+    // Mechanism 1: Rust calls window.__PmsPortResolvers[] via window.eval()
+    // This works even if the event listener below registers after the event fires.
+    if (!(window as any).__PmsPortResolvers) {
+      (window as any).__PmsPortResolvers = [];
+    }
+    (window as any).__PmsPortResolvers.push(doResolve);
+
+    // Also check if Rust already injected the port before this code ran.
+    if ((window as any).__PMS_API_PORT__) {
+      doResolve((window as any).__PMS_API_PORT__);
+      return;
+    }
+
+    // Mechanism 2: Tauri backend-ready event
+    import("@tauri-apps/api/event")
+      .then(({ listen }) => {
+        listen<number>("backend-ready", (event) => doResolve(event.payload));
+      })
+      .catch((e: unknown) => console.warn("[PMS] Event listener failed:", e));
+
+    // Mechanism 3: Poll get_api_port every 100ms (reads Rust state or port.info)
+    (async () => {
+      try {
+        const { invoke } = await import("@tauri-apps/api/core");
+        while (!settled) {
+          const port: number = await invoke("get_api_port");
+          if (port > 0) {
+            doResolve(port);
+            return;
+          }
+          await new Promise((r) => setTimeout(r, 100));
+        }
+      } catch (e: unknown) {
+        console.warn("[PMS] get_api_port poll error:", e);
+      }
+    })();
+  });
+}
 
 /**
  * Resolve the backend API base URL.
- * - In Tauri (production): polls the Rust `get_api_port` command until the
- *   Python sidecar has started and announced its port. Retries for up to 60s
- *   to cover first-run antivirus scanning of the packaged Python executable.
- * - In browser/dev mode: falls back to the static NEXT_PUBLIC_API_BASE_URL.
+ * - Tauri production: resolves via the first of three parallel mechanisms above.
+ * - Dev/browser: returns the static NEXT_PUBLIC_API_BASE_URL instantly.
  */
 export async function resolveApiBaseUrl(): Promise<string> {
-  // If already resolved, return cached value immediately
   if (_resolvedPort !== null) {
     return `http://127.0.0.1:${_resolvedPort}/api/v1`;
   }
-
-  // Check if we are inside Tauri
-  if (typeof window !== 'undefined' && (window as any).__TAURI_INTERNALS__) {
-    try {
-      const { invoke } = await import('@tauri-apps/api/core');
-      // Poll until the backend has started (port becomes non-zero)
-      for (let i = 0; i < 120; i++) {
-        const port: number = await invoke('get_api_port');
-        if (port && port > 0) {
-          _resolvedPort = port;
-          // Also set the global for any legacy callers
-          (window as any).__PMS_API_PORT__ = port;
-          return `http://127.0.0.1:${port}/api/v1`;
-        }
-        // Backend not ready yet – wait 500ms and retry
-        await new Promise(r => setTimeout(r, 500));
-      }
-    } catch (e) {
-      console.warn('Tauri invoke failed, falling back to default port:', e);
-    }
+  if (typeof window !== "undefined" && (window as any).__TAURI_INTERNALS__) {
+    if (!_portPromise) _portPromise = createPortPromise();
+    const port = await _portPromise;
+    return `http://127.0.0.1:${port}/api/v1`;
   }
-
   return API_BASE_URL;
 }
 
-/** Synchronous fallback for contexts that can't be async (rare). */
+/** Synchronous fallback for rare contexts that cannot be async. */
 export function getApiBaseUrl(): string {
   if (_resolvedPort !== null) {
     return `http://127.0.0.1:${_resolvedPort}/api/v1`;
   }
-  if (typeof window !== 'undefined' && (window as any).__PMS_API_PORT__) {
+  if (typeof window !== "undefined" && (window as any).__PMS_API_PORT__) {
     return `http://127.0.0.1:${(window as any).__PMS_API_PORT__}/api/v1`;
   }
   return API_BASE_URL;
@@ -62,8 +107,6 @@ interface FetchOptions extends RequestInit {
 }
 
 type RequestBody = BodyInit | object | null | undefined;
-// Existing screens consume heterogeneous, untyped response shapes. Keep the
-// loose default at this compatibility boundary while new callers supply T.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type LegacyApiResponse = any;
 
@@ -79,15 +122,23 @@ export const apiClient = {
 };
 
 function withBody(options: FetchOptions | undefined, method: string, data: RequestBody): FetchOptions {
-  const body = data == null || typeof data === "string" || data instanceof FormData || data instanceof URLSearchParams || data instanceof Blob
-    ? data as BodyInit | null | undefined
-    : JSON.stringify(data);
+  const body =
+    data == null ||
+    typeof data === "string" ||
+    data instanceof FormData ||
+    data instanceof URLSearchParams ||
+    data instanceof Blob
+      ? (data as BodyInit | null | undefined)
+      : JSON.stringify(data);
   return { ...options, method, body };
 }
 
 export function getAccessToken(): string | null {
   if (typeof window === "undefined") return null;
-  return localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
+  return (
+    localStorage.getItem("access_token") ||
+    sessionStorage.getItem("access_token")
+  );
 }
 
 function getErrorMessage(data: unknown): string {
@@ -104,7 +155,11 @@ async function fetchAPI<T>(endpoint: string, options: FetchOptions = {}): Promis
   const token = getAccessToken();
 
   const headers = new Headers(options.headers || {});
-  if (options.body != null && !(options.body instanceof FormData) && !headers.has("Content-Type")) {
+  if (
+    options.body != null &&
+    !(options.body instanceof FormData) &&
+    !headers.has("Content-Type")
+  ) {
     headers.set("Content-Type", "application/json");
   }
   if (token) {
@@ -119,16 +174,12 @@ async function fetchAPI<T>(endpoint: string, options: FetchOptions = {}): Promis
     });
   }
 
-  const response = await fetch(url.toString(), {
-    ...options,
-    headers
-  });
+  const response = await fetch(url.toString(), { ...options, headers });
 
-  // Handle global 401 Unauthorized securely before attempting to parse JSON
-if (response.status === 401) {
-    if (typeof window !== 'undefined') {
+  if (response.status === 401) {
+    if (typeof window !== "undefined") {
       resetAuthState();
-      window.location.href = '/';
+      window.location.href = "/";
     }
     return { success: false, error: "Session expired" } as T;
   }

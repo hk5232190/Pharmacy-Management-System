@@ -37,9 +37,9 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "externalBin": [
-      "binaries/pms-backend"
-    ],
+    "resources": {
+      "resources/pms-backend/**/*": "pms-backend/"
+    },
     "windows": {
       "nsis": {
         "installMode": "both",

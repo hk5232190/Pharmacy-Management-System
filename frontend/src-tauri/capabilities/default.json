@@ -1,21 +1,12 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "PMS default capabilities: window management, sidecar, process control",
+  "description": "PMS default capabilities: window management, process control",
   "windows": [
     "main"
   ],
   "permissions": [
     "core:default",
-    {
-      "identifier": "shell:allow-spawn",
-      "allow": [
-        {
-          "name": "pms-backend",
-          "sidecar": true
-        }
-      ]
-    },
     "shell:allow-execute",
     "shell:allow-stdin-write",
     "process:allow-exit"

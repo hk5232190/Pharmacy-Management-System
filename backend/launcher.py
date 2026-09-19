@@ -106,6 +106,16 @@ def main():
 
     # ── CRITICAL: Print the port for Tauri to capture ──────────────────────
     print(f"PMS_PORT:{port}", flush=True)
+    
+    # ── BULLETPROOF PORT DETECTION ──
+    # PyInstaller with no-console often drops stdout pipes on Windows.
+    # Write the port directly to a file that Tauri can read reliably.
+    if getattr(sys, 'frozen', False):
+        try:
+            with open("port.info", "w") as f:
+                f.write(str(port))
+        except Exception as e:
+            print(f"[PMS] Failed to write port.info: {e}", flush=True)
 
     # Graceful shutdown handler
     def shutdown_handler(signum, frame):

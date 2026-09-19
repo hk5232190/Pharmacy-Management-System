@@ -39,3 +39,10 @@ backend/dist/
 
 # Stale backups / scratch
 *.bak
+dist/
+frontend/src-tauri/resources/pms-backend/
+
+dist/
+build/pms-backend/
+frontend/src-tauri/resources/pms-backend/
+frontend/src-tauri/binaries/
