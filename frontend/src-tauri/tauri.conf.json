@@ -38,7 +38,7 @@
       "icons/icon.ico"
     ],
     "resources": {
-      "resources/pms-backend/**/*": "pms-backend/"
+      "pms-backend/**/*": "pms-backend/"
     },
     "windows": {
       "nsis": {

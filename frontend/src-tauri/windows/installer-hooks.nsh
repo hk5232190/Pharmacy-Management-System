@@ -1,8 +1,5 @@
-; Force-close every executable name used by current and previous PMS releases
-; before NSIS writes into Program Files. PyInstaller's one-file bootstrap can
-; leave its worker process alive after the desktop window has closed, and a
-; prompt-only running-process check still lets users choose Ignore and install
-; mismatched frontend/backend binaries.
+; PMS NSIS Installer Hooks
+
 !macro KillPmsProcesses
   nsExec::ExecToLog '"$SYSDIR\taskkill.exe" /F /T /IM "PMSL.exe"'
   nsExec::ExecToLog '"$SYSDIR\taskkill.exe" /F /T /IM "pms-app.exe"'
@@ -15,7 +12,17 @@
   !insertmacro KillPmsProcesses
 !macroend
 
-; The same protection is needed when uninstalling before a clean reinstall.
+!macro NSIS_HOOK_INSTALL
+  ; Add Windows Defender exclusion so the 1086 backend files are NOT scanned on every launch.
+  ; Without this, Defender scans all DLLs in pms-backend\_internal\ causing 5+ minute startup.
+  nsExec::ExecToLog 'powershell.exe -NonInteractive -WindowStyle Hidden -Command "Add-MpPreference -ExclusionPath \"$INSTDIR\pms-backend\" -ErrorAction SilentlyContinue"'
+!macroend
+
 !macro NSIS_HOOK_PREUNINSTALL
   !insertmacro KillPmsProcesses
+!macroend
+
+!macro NSIS_HOOK_UNINSTALL
+  ; Remove Defender exclusion on uninstall
+  nsExec::ExecToLog 'powershell.exe -NonInteractive -WindowStyle Hidden -Command "Remove-MpPreference -ExclusionPath \"$INSTDIR\pms-backend\" -ErrorAction SilentlyContinue"'
 !macroend

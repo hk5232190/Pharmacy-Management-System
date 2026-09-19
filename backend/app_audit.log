@@ -4037,3 +4037,70 @@ NoneType: None
 2026-09-18 23:55:12,795 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
 2026-09-18 23:55:49,901 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
 2026-09-18 23:56:23,032 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-19 00:02:19,483 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-19 00:04:19,777 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-19 00:33:29,991 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-19 00:33:35,926 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-19 00:36:17,196 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-19 00:36:35,759 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-19 00:39:39,955 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-19 01:01:21,790 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-19 01:04:36,497 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-19 01:05:40,494 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-19 01:20:50,853 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-19 01:20:54,977 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-19 01:30:51,464 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-19 01:38:39,405 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-19 01:38:42,620 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-19 01:54:14,619 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-19 01:55:06,674 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-19 01:58:38,217 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-19 01:58:53,793 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-19 02:07:23,738 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-19 02:08:18,355 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-19 02:09:08,474 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-19 02:09:28,043 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-19 02:14:30,121 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-19 02:15:20,397 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-19 02:21:01,763 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-19 02:23:08,401 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-19 02:24:23,375 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-19 12:27:13,963 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-19 12:27:15,308 - pms - INFO - PRODUCTION_TRACE license storage path=E:\Projects\PMS-Software\backend\licenses\active.lic exists=True
+2026-09-19 12:27:19,166 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-19 12:27:20,127 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.schemas
+2026-09-19 12:27:20,128 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.tables
+2026-09-19 12:27:20,128 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.types
+2026-09-19 12:27:20,128 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.constraints
+2026-09-19 12:27:20,128 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.defaults
+2026-09-19 12:27:20,128 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.comments
+2026-09-19 12:27:20,128 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.checkconstraint_byname
+2026-09-19 12:27:20,365 - pms - INFO - Database schema already at migration head (8cdd21e09901).
+2026-09-19 12:27:20,782 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-19 12:27:44,491 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-19 12:28:07,160 - pms - INFO - PRODUCTION_TRACE auth accepted username=admin user_id=1
+2026-09-19 12:28:49,559 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-19 12:36:16,302 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-19 12:36:50,129 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-19 12:38:09,744 - pms - INFO - PRODUCTION_TRACE auth accepted username=admin user_id=1
+2026-09-19 12:40:55,959 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-19 12:41:26,803 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-19 12:41:36,451 - pms - INFO - PRODUCTION_TRACE auth accepted username=admin user_id=1
+2026-09-19 12:43:09,937 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-19 12:44:27,431 - pms - INFO - PRODUCTION_TRACE auth accepted username=admin user_id=1
+2026-09-19 12:45:18,290 - pms - INFO - PRODUCTION_TRACE auth accepted username=admin user_id=1
+2026-09-19 13:10:39,113 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-19 13:10:44,151 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-19 13:11:06,275 - pms - INFO - Database Backup Executed | Type: Manual | File: Backup_19_09_2026_131052.zip | Size: 28679 bytes | Status: Success
+2026-09-19 14:20:53,629 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-19 14:20:54,621 - pms - INFO - PRODUCTION_TRACE license storage path=E:\Projects\PMS-Software\backend\licenses\active.lic exists=True
+2026-09-19 14:20:57,343 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-19 14:20:58,157 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.schemas
+2026-09-19 14:20:58,158 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.tables
+2026-09-19 14:20:58,158 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.types
+2026-09-19 14:20:58,158 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.constraints
+2026-09-19 14:20:58,158 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.defaults
+2026-09-19 14:20:58,158 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.comments
+2026-09-19 14:20:58,159 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.checkconstraint_byname
+2026-09-19 14:20:58,409 - pms - INFO - Database schema already at migration head (8cdd21e09901).
+2026-09-19 14:20:58,692 - pms - INFO - Completed startup system notifications synchronization.
