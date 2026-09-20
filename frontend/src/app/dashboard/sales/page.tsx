@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback, Suspense } from "react";
+import useSWR from "swr";
 import { apiClient, getApiBaseUrl } from "@/lib/api-client";
 import { toast } from "sonner";
 import { ReceiptPreview } from "@/components/receipt-preview";
@@ -196,19 +197,68 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
   const [refundMode, setRefundMode] = useState<"Cash Refund" | "Balance">("Cash Refund");
 
   // --- History States ---
-  const [historyItems, setHistoryItems] = useState<any[]>([]);
+  const swrFetcher = async (url: string) => {
+    const res = await apiClient.get<any>(url);
+    if (res.success === false) throw new Error(res.error);
+    return res.data;
+  };
+
   const [historyFilters, setHistoryFilters] = useState({ datePreset: "Today", startDate: "", endDate: "", paymentMethod: "", userId: "", q: "" });
   const [historyPage, setHistoryPage] = useState(1);
-  const [historyTotal, setHistoryTotal] = useState(0);
   const historyPageSize = 15;
-  const [loadingHistory, setLoadingHistory] = useState(false);
+
+  const buildHistoryParams = () => {
+    const params = new URLSearchParams();
+    if (historyFilters.datePreset && historyFilters.datePreset !== "All") {
+      const today = new Date();
+      const formatDateLocal = (d: Date) => {
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      };
+
+      if (historyFilters.datePreset === "Today") {
+        params.append("start_date", formatDateLocal(today));
+        params.append("end_date", formatDateLocal(today));
+      } else if (historyFilters.datePreset === "Yesterday") {
+        const yest = new Date(today);
+        yest.setDate(yest.getDate() - 1);
+        params.append("start_date", formatDateLocal(yest));
+        params.append("end_date", formatDateLocal(yest));
+      } else if (historyFilters.datePreset === "This Week") {
+        const week = new Date(today);
+        week.setDate(week.getDate() - today.getDay());
+        params.append("start_date", formatDateLocal(week));
+        params.append("end_date", formatDateLocal(today));
+      } else if (historyFilters.datePreset === "This Month") {
+        const month = new Date(today.getFullYear(), today.getMonth(), 1);
+        params.append("start_date", formatDateLocal(month));
+        params.append("end_date", formatDateLocal(today));
+      }
+    }
+    
+    params.append("page", String(historyPage));
+    params.append("page_size", String(historyPageSize));
+    if (historyFilters.q) params.append("q", historyFilters.q);
+    return params.toString();
+  };
+
+  const { data: historyData, mutate: mutateHistory, isLoading: loadingHistory } = useSWR(
+    activeTab === 'history' ? `/sales/history?${buildHistoryParams()}` : null,
+    swrFetcher,
+    { keepPreviousData: true }
+  );
+  const historyItems: any[] = historyData?.items || [];
+  const historyTotal: number = historyData?.total || 0;
 
   // --- Return History States ---
-  const [returnHistoryItems, setReturnHistoryItems] = useState<any[]>([]);
   const [returnHistoryPage, setReturnHistoryPage] = useState(1);
-  const [returnHistoryTotal, setReturnHistoryTotal] = useState(0);
-  const [loadingReturnHistory, setLoadingReturnHistory] = useState(false);
   const returnHistoryPageSize = 10;
+  
+  const { data: returnHistoryData, mutate: mutateReturnHistory, isLoading: loadingReturnHistory } = useSWR(
+    activeTab === 'return' ? `/sales/return-history?page=${returnHistoryPage}&page_size=${returnHistoryPageSize}` : null,
+    swrFetcher
+  );
+  const returnHistoryItems: any[] = returnHistoryData?.items || [];
+  const returnHistoryTotal: number = returnHistoryData?.total || 0;
 
   const [isReprintMode, setIsReprintMode] = useState(false);
 
@@ -219,24 +269,11 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
   const [isSubmittingReturn, setIsSubmittingReturn] = useState(false);
 
   // --- KPIs ---
-  const [kpis, setKpis] = useState({
-    todaysSales: 0,
-    totalRevenue: 0,
-    totalInvoices: 0,
-    itemsSoldToday: 0,
-    pendingPayments: 0
-  });
-
-  const fetchKpis = async () => {
-    try {
-      const res = await apiClient.get('/sales/kpi');
-      if (res.success && res.data) {
-        setKpis(res.data);
-      }
-    } catch (err) {
-      console.error("Failed to fetch KPIs", err);
-    }
-  };
+  const { data: kpiData, mutate: fetchKpis } = useSWR('/sales/kpi', swrFetcher);
+  const kpis = kpiData || { todaysSales: 0, totalRevenue: 0, totalInvoices: 0, itemsSoldToday: 0, pendingPayments: 0 };
+  
+  const fetchHistory = mutateHistory;
+  const fetchReturnHistory = mutateReturnHistory;
 
   // --- Initialization ---
   useEffect(() => {
@@ -873,20 +910,7 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
     }
   };
 
-  const fetchReturnHistory = async () => {
-    setLoadingReturnHistory(true);
-    try {
-      const res = await apiClient.get(`/sales/return-history?page=${returnHistoryPage}&page_size=${returnHistoryPageSize}`);
-      if (res.success && res.data) {
-        setReturnHistoryItems(res.data.items);
-        setReturnHistoryTotal(res.data.total);
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoadingReturnHistory(false);
-    }
-  };
+
 
   const handlePrintReturn = async (returnId: number) => {
     try {
@@ -955,53 +979,7 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
   };
 
   // --- Sales History Logic ---
-  const fetchHistory = async () => {
-    setLoadingHistory(true);
-    try {
-      const params = new URLSearchParams();
-      
-      // Handle Date Presets
-      if (historyFilters.datePreset && historyFilters.datePreset !== "All") {
-        const today = new Date();
-        const formatDateLocal = (d: Date) => {
-          return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-        };
 
-        if (historyFilters.datePreset === "Today") {
-          params.append("start_date", formatDateLocal(today));
-          params.append("end_date", formatDateLocal(today));
-        } else if (historyFilters.datePreset === "Yesterday") {
-          const yest = new Date(today);
-          yest.setDate(yest.getDate() - 1);
-          params.append("start_date", formatDateLocal(yest));
-          params.append("end_date", formatDateLocal(yest));
-        } else if (historyFilters.datePreset === "This Week") {
-          const week = new Date(today);
-          week.setDate(week.getDate() - today.getDay());
-          params.append("start_date", formatDateLocal(week));
-          params.append("end_date", formatDateLocal(today));
-        } else if (historyFilters.datePreset === "This Month") {
-          const month = new Date(today.getFullYear(), today.getMonth(), 1);
-          params.append("start_date", formatDateLocal(month));
-          params.append("end_date", formatDateLocal(today));
-        }
-      }
-      
-      params.append("page", String(historyPage));
-      params.append("page_size", String(historyPageSize));
-      if (historyFilters.q) params.append("q", historyFilters.q);
-
-      const res = await apiClient.get(`/sales/history?${params.toString()}`);
-      if (res.success) {
-        setHistoryItems(res.data.items);
-        setHistoryTotal(res.data.total);
-      }
-    } catch (err: any) {
-      toast.error("Failed to load history");
-    } finally {
-      setLoadingHistory(false);
-    }
-  };
 
   const exportCSV = () => {
     if (historyItems.length === 0) return toast.error("No data to export");
@@ -1072,17 +1050,7 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
     toast.success("PDF downloaded successfully");
   };
 
-  useEffect(() => {
-    if (activeTab === 'history') {
-      fetchHistory();
-    }
-  }, [activeTab, historyPage, historyFilters.datePreset]);
 
-  useEffect(() => {
-    if (activeTab === 'return') {
-      fetchReturnHistory();
-    }
-  }, [activeTab, returnHistoryPage]);
 
   const handleReprint = async (invoiceNo: string, cashierName: string, paymentMethod: string) => {
     try {
@@ -1150,8 +1118,8 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
 
   const buildSaleChallanData = async (invoiceNo: string): Promise<ChallanData | null> => {
     try {
-      const res = await apiClient.get(`/sales/invoice/${invoiceNo}`);
-      if (!res.success || !res.data) return null;
+      const res = await apiClient.get<any>(`/sales/invoice/${invoiceNo}`);
+      if (res.success === false || !res.data) return null;
 
       const d = res.data;
       return {
@@ -1428,12 +1396,14 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
                   {/* Search Dropdown */}
                   {isSearchFocused && (
                     <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-card border border-border rounded-lg shadow-xl overflow-hidden max-h-80 overflow-y-auto z-30">
-                      {isSearching ? (
-                        <div className="p-4 text-center text-sm text-muted-foreground">Searching...</div>
+                      {isSearching && searchResults.length === 0 ? (
+                        <div className="p-4 text-center text-sm text-muted-foreground animate-pulse">Searching...</div>
                       ) : searchResults.length === 0 ? (
-                        <div className="p-4 text-center text-sm text-muted-foreground">No medicines found with available stock.</div>
+                        <div className="p-4 text-center text-sm text-muted-foreground">
+                          {searchQuery ? "No medicines found" : "Type to search medicines..."}
+                        </div>
                       ) : (
-                        <ul className="divide-y divide-border">
+                        <ul className={cn("divide-y divide-border", isSearching && "opacity-60")}>
                           {searchResults.map((res, idx) => {
                             const totalStock = res.Batches.reduce((sum, b) => sum + b.AvailableStock, 0);
                             const displayBatch = (inventorySettings?.EnableFefo ?? true) ? res.Batches[0] : res.Batches[res.Batches.length - 1];

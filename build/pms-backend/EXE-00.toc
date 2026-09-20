@@ -71,7 +71,7 @@
  [],
  False,
  False,
- 1789805658,
+ 1789847991,
  [('run.exe',
    'E:\\Projects\\PMS-Software\\backend\\venv\\Lib\\site-packages\\PyInstaller\\bootloader\\Windows-64bit-intel\\run.exe',
    'EXECUTABLE')],

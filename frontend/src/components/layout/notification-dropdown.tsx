@@ -223,16 +223,26 @@ export function NotificationDropdown() {
     }
   };
 
+  // Timer to auto-update relative timestamps every minute
+  const [now, setNow] = useState(new Date());
+  useEffect(() => {
+    if (!isOpen) return; // Only tick when open to save resources
+    const timer = setInterval(() => setNow(new Date()), 60000);
+    return () => clearInterval(timer);
+  }, [isOpen]);
+
   // Helper for relative time formatting
   const formatRelativeTime = (dateStr: string) => {
     try {
       const date = new Date(dateStr);
-      const now = new Date();
       const diffSec = Math.floor((now.getTime() - date.getTime()) / 1000);
 
       if (diffSec < 60) return "Just now";
-      if (diffSec < 3600) return `${Math.floor(diffSec / 60)}m ago`;
-      if (diffSec < 86400) return `${Math.floor(diffSec / 3600)}h ago`;
+      if (diffSec < 3600) return `${Math.floor(diffSec / 60)} min ago`;
+      if (diffSec < 86400) {
+        const hours = Math.floor(diffSec / 3600);
+        return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+      }
       if (diffSec < 172800) return "Yesterday";
       return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
     } catch {

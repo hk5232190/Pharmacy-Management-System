@@ -1,0 +1,1 @@
+from sqlalchemy import create_engine; from sqlalchemy.orm import sessionmaker; import sys, os; sys.path.append(os.getcwd()); from models import Purchase, Base; engine = create_engine('sqlite:///pms.db'); session = sessionmaker(bind=engine)(); p = session.query(Purchase).first(); print(p.PurchaseDate if p else 'No purchases')

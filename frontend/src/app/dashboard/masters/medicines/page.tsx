@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
+import useSWR from "swr";
 import { Search, Plus, Download, Upload, RefreshCcw, Eye, Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SmartCombobox } from "@/components/ui/smart-combobox";
@@ -42,16 +43,50 @@ interface Medicine {
 
 export default function MedicinesPage() {
   const { inventorySettings } = useInventorySettings();
-  const [medicines, setMedicines] = useState<Medicine[]>([]);
-  const [categories, setCategories] = useState<{CategoryId: number, CategoryName: string}[]>([]);
-  const [companies, setCompanies] = useState<{CompanyId: number, CompanyName: string}[]>([]);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search), 300);
+    return () => clearTimeout(timer);
+  }, [search]);
+
   const [filterCategory, setFilterCategory] = useState<number | "">("");
   const [filterCompany, setFilterCompany] = useState<number | "">("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
-  const [totalRecords, setTotalRecords] = useState(0);
+
+  const swrKey = useMemo(() => {
+    const params = new URLSearchParams({ page: page.toString(), page_size: pageSize.toString() });
+    if (debouncedSearch) params.append("search", debouncedSearch);
+    if (filterCategory) params.append("category_id", filterCategory.toString());
+    if (filterCompany) params.append("company_id", filterCompany.toString());
+    return `/medicines?${params.toString()}`;
+  }, [page, pageSize, debouncedSearch, filterCategory, filterCompany]);
+
+  const { data: medData, mutate: mutateMedicines, isLoading } = useSWR(swrKey, async (url: string) => {
+    const res = await apiClient.get<any>(url);
+    if (res.success === false) throw new Error(res.error);
+    return res;
+  });
+
+  const { data: catData, mutate: mutateCategories } = useSWR("/categories", async (url: string) => {
+    const res = await apiClient.get<any>(url);
+    if (res.success === false) throw new Error(res.error);
+    return res.data.filter((c: any) => c.IsActive);
+  });
+
+  const { data: compData, mutate: mutateCompanies } = useSWR("/companies", async (url: string) => {
+    const res = await apiClient.get<any>(url);
+    if (res.success === false) throw new Error(res.error);
+    return res.data.filter((c: any) => c.IsActive);
+  });
+
+  const medicines: Medicine[] = medData?.data || [];
+  const totalRecords = medData?.total || 0;
+  const categories: {CategoryId: number, CategoryName: string}[] = catData || [];
+  const companies: {CompanyId: number, CompanyName: string}[] = compData || [];
+  const loading = isLoading;
   
   // Delete State
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -93,7 +128,7 @@ export default function MedicinesPage() {
     try {
       const res = await apiClient.post("/categories", { CategoryName: name, IsActive: true });
       if (res.success && res.data) {
-        setCategories([...categories, res.data]);
+        mutateCategories();
         setCurrentMedicine(prev => ({ ...prev, CategoryId: res.data.CategoryId }));
         toast.success(`Category "${name}" added`);
       } else {
@@ -108,7 +143,7 @@ export default function MedicinesPage() {
     try {
       const res = await apiClient.post("/companies", { CompanyName: name, IsActive: true });
       if (res.success && res.data) {
-        setCompanies([...companies, res.data]);
+        mutateCompanies();
         setCurrentMedicine(prev => ({ ...prev, CompanyId: res.data.CompanyId }));
         toast.success(`Company "${name}" added`);
       } else {
@@ -120,53 +155,16 @@ export default function MedicinesPage() {
   };
 
 
-  const fetchMedicines = async () => {
-    setLoading(true);
-    try {
-      const params: any = { page, page_size: pageSize };
-      if (search) params.search = search;
-      if (filterCategory) params.category_id = filterCategory.toString();
-      if (filterCompany) params.company_id = filterCompany.toString();
-      
-      const data = await apiClient.get("/medicines", { params });
-      if (data.success) {
-        setMedicines(data.data);
-        setTotalRecords(data.total || 0);
-        setSelectedIds(new Set());
-      }
-      
-      if (categories.length === 0) {
-        const catData = await apiClient.get("/categories");
-        if (catData.success) setCategories(catData.data.filter((c: any) => c.IsActive));
-        
-        const compData = await apiClient.get("/companies");
-        if (compData.success) setCompanies(compData.data.filter((c: any) => c.IsActive));
-      }
-    } catch (error) {
-      toast.error("Network error while loading data");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchMedicines();
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [search, filterCategory, filterCompany, page, pageSize]);
-
-  useEffect(() => {
-    const handleMastersRefresh = () => fetchMedicines();
+    const handleMastersRefresh = () => mutateMedicines();
     window.addEventListener("refresh-masters-tab", handleMastersRefresh);
     return () => window.removeEventListener("refresh-masters-tab", handleMastersRefresh);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, filterCategory, filterCompany, page, pageSize]);
+  }, [mutateMedicines]);
 
   // Reset page to 1 when filters change
   useEffect(() => {
     setPage(1);
-  }, [search, filterCategory, filterCompany]);
+  }, [debouncedSearch, filterCategory, filterCompany]);
 
   // Removed Keyboard shortcut for Add New per user request
 
@@ -175,7 +173,10 @@ export default function MedicinesPage() {
       const data = await apiClient.put(`/medicines/${id}/status`);
       if (data.success) {
         toast.success(data.message);
-        setMedicines(medicines.map(m => m.MedicineId === id ? { ...m, IsActive: !m.IsActive } : m));
+        mutateMedicines(
+          medData ? { ...medData, data: medData.data.map((m: Medicine) => m.MedicineId === id ? { ...m, IsActive: !m.IsActive } : m) } : undefined,
+          { revalidate: false }
+        );
       } else {
         toast.error(data.error);
       }
@@ -227,7 +228,7 @@ export default function MedicinesPage() {
         } else {
           setIsDialogOpen(false);
         }
-        fetchMedicines();
+        mutateMedicines();
       } else {
         toast.error(data.error || "Failed to save medicine");
       }
@@ -246,7 +247,7 @@ export default function MedicinesPage() {
       if (data.success) {
         toast.success(data.message || "Medicine deleted successfully");
         setIsDeleteDialogOpen(false);
-        fetchMedicines();
+        mutateMedicines();
       } else {
         toast.error(data.error || "Failed to delete medicine");
       }
@@ -314,7 +315,7 @@ export default function MedicinesPage() {
       if (res.ok && data.success) {
         toast.success(data.message || "Import successful");
         setIsPreviewModalOpen(false);
-        fetchMedicines();
+        mutateMedicines();
       } else {
         toast.error(data.detail || data.message || "Failed to import");
       }
@@ -457,7 +458,7 @@ export default function MedicinesPage() {
           <Button variant="outline" className="h-10 bg-background text-foreground hidden sm:flex" onClick={handleExport} disabled={isExporting}>
             <Upload className="mr-2 h-4 w-4" /> {isExporting ? "Exporting..." : "Export CSV"}
           </Button>
-          <Button variant="outline" size="icon" className="h-10 w-10 bg-background text-foreground" onClick={fetchMedicines} disabled={loading}>
+          <Button variant="outline" size="icon" className="h-10 w-10 bg-background text-foreground" onClick={mutateMedicines} disabled={loading}>
             <RefreshCcw className={cn("h-4 w-4", loading && "animate-spin")} />
           </Button>
         </div>
@@ -825,8 +826,8 @@ export default function MedicinesPage() {
         companies={companies}
         onConfirm={handleConfirmImport}
         isSaving={isImporting}
-        setCategories={setCategories}
-        setCompanies={setCompanies}
+        setCategories={mutateCategories}
+        setCompanies={mutateCompanies}
       />
 
       
@@ -859,8 +860,8 @@ export default function MedicinesPage() {
         companies={companies}
         onConfirm={handleConfirmImport}
         isSaving={isImporting}
-        setCategories={setCategories}
-        setCompanies={setCompanies}
+        setCategories={mutateCategories}
+        setCompanies={mutateCompanies}
       />
 
       
@@ -949,8 +950,8 @@ export default function MedicinesPage() {
         companies={companies}
         onConfirm={handleConfirmImport}
         isSaving={isImporting}
-        setCategories={setCategories}
-        setCompanies={setCompanies}
+        setCategories={mutateCategories}
+        setCompanies={mutateCompanies}
       />
 
 

@@ -1,7 +1,7 @@
 "use client";
 import { resolveApiBaseUrl } from "@/lib/api-client";
-
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import useSWR from "swr";
 
 interface SystemPreferences {
   SettingsId?: number;
@@ -62,38 +62,37 @@ import { toast } from "sonner";
 import { useAudio } from "@/hooks/use-audio";
 
 export function SystemPreferencesProvider({ children }: { children: ReactNode }) {
-  const [preferences, setPreferences] = useState<SystemPreferences>(DEFAULT_SETTINGS);
   const [currencySymbol, setCurrencySymbol] = useState<string>("Rs");
   const { playTone } = useAudio();
 
-  const fetchPreferences = async () => {
-    try {
-      const baseUrl = await resolveApiBaseUrl();
-      const [appRes, billRes] = await Promise.all([
-        fetch(`${baseUrl}/settings/appearance`),
-        fetch(`${baseUrl}/settings/billing`)
-      ]);
+  const fetcher = async () => {
+    const baseUrl = await resolveApiBaseUrl();
+    const [appRes, billRes] = await Promise.all([
+      fetch(`${baseUrl}/settings/appearance`),
+      fetch(`${baseUrl}/settings/billing`)
+    ]);
+    
+    let appData: any = {};
+    let billData: any = {};
+    
+    if (appRes.ok) appData = await appRes.json();
+    if (billRes.ok) billData = await billRes.json();
+    
+    return { appData, billData };
+  };
 
-      if (appRes.ok) {
-        const data = await appRes.json();
-        setPreferences({ ...DEFAULT_SETTINGS, ...data });
-      }
+  const { data, error, mutate } = useSWR("system-preferences", fetcher);
 
-      if (billRes.ok) {
-        const billData = await billRes.json();
-        if (billData.CurrencySymbol) {
-          setCurrencySymbol(billData.CurrencySymbol);
-        }
-      }
-    } catch (e) {
-      console.error("Failed to load system preferences", e);
-    }
+  const preferences = data?.appData ? { ...DEFAULT_SETTINGS, ...data.appData } : DEFAULT_SETTINGS;
+  const currSymbol = data?.billData?.CurrencySymbol || "Rs";
+
+  const refreshPreferences = async () => {
+    await mutate();
   };
 
   useEffect(() => {
-    const timer = window.setTimeout(() => void fetchPreferences(), 0);
-    return () => window.clearTimeout(timer);
-  }, []);
+    setCurrencySymbol(currSymbol);
+  }, [currSymbol]);
 
   const formatDate = (date: Date | string) => {
     const d = new Date(date);
@@ -162,7 +161,7 @@ export function SystemPreferencesProvider({ children }: { children: ReactNode })
   return (
     <SystemPreferencesContext.Provider value={{
       preferences,
-      refreshPreferences: fetchPreferences,
+      refreshPreferences: refreshPreferences,
       formatDate,
       formatTime,
       formatNumber,

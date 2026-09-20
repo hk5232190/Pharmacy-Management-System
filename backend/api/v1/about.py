@@ -29,7 +29,7 @@ DEVELOPER_INFO = {
     "company_name":    "EagleNest Creations",
     "developer":       "Muhammad Saqib",
     "website":         "https://eaglenestcreations.com",
-    "email":           "msaqib1656@gmail.com",
+    "email":           "team.eaglenestcreations@gmail.com",
     "country":         "Pakistan",
     "copyright_year":  "2026",
     "copyright":       "© 2026 EagleNest Creations. All rights reserved.",
@@ -37,7 +37,7 @@ DEVELOPER_INFO = {
 }
 
 SUPPORT_INFO = {
-    "support_email":   "msaqib1656@gmail.com",
+    "support_email":   "team.eaglenestcreations@gmail.com",
     "phone":           "+92 330 5525748",
     "whatsapp":        "+92 330 5525748",
 }
@@ -99,6 +99,50 @@ def _uptime_str() -> str:
     return f"{h}h {m}m {s}s"
 
 
+# ── System-info cache (TTL = 60 seconds) ──────────────────────────────────────
+# The slow part is _wmic() calls (RAM, CPU name) which shell out to wmic.exe.
+# We cache the static portions and recompute only the live values per request.
+
+_sysinfo_cache: dict | None = None
+_sysinfo_cache_time: datetime.datetime | None = None
+_SYSINFO_TTL_SECONDS = 86400
+
+
+def _get_static_system_info() -> dict:
+    """Return cached static system info, rebuilding if older than TTL."""
+    global _sysinfo_cache, _sysinfo_cache_time
+    now = datetime.datetime.now()
+    if (
+        _sysinfo_cache is not None
+        and _sysinfo_cache_time is not None
+        and (now - _sysinfo_cache_time).total_seconds() < _SYSINFO_TTL_SECONDS
+    ):
+        return _sysinfo_cache
+
+    # Rebuild — this is the expensive part (wmic calls)
+    os_name = platform.system()
+    os_release = platform.release()
+    os_version = platform.version()
+    os_full = f"{os_name} {os_release}"
+    architecture = platform.machine()
+    python_version = f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
+    cpu_name = platform.processor() or _wmic("wmic cpu get Name")
+
+    _sysinfo_cache = {
+        "os_name":        os_full,
+        "os_version":     os_version[:60] if os_version else "N/A",
+        "architecture":   architecture,
+        "cpu":            cpu_name[:80] if cpu_name else "N/A",
+        "ram_total":      _get_ram_gb(),
+        "python_version": python_version,
+        "disk":           _get_disk_info(),
+        "backend_port":   8000,
+        "frontend_port":  3000,
+    }
+    _sysinfo_cache_time = now
+    return _sysinfo_cache
+
+
 # ── Endpoint ───────────────────────────────────────────────────────────────────
 
 @router.get("/info", summary="Get complete About Software information")
@@ -107,27 +151,14 @@ def get_about_info():
     Returns all information for the About Software page:
     app info, developer info, system info, support info.
     """
-    # System info using only stdlib
-    os_name = platform.system()
-    os_release = platform.release()
-    os_version = platform.version()
-    os_full = f"{os_name} {os_release}"
-    architecture = platform.machine()
-    python_version = f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
-    cpu_name = platform.processor() or _wmic("wmic cpu get Name")
-    
+    # Static/slow info is served from cache (TTL=60s)
+    static = _get_static_system_info()
+
+    # Dynamic values always computed live
     system_info = {
-        "os_name":        os_full,
-        "os_version":     os_version[:60] if os_version else "N/A",
-        "architecture":   architecture,
-        "cpu":            cpu_name[:80] if cpu_name else "N/A",
-        "ram_total":      _get_ram_gb(),
-        "python_version": python_version,
-        "disk":           _get_disk_info(),
-        "database":       _get_db_size(),
-        "server_uptime":  _uptime_str(),
-        "backend_port":   8000,
-        "frontend_port":  3000,
+        **static,
+        "database":      _get_db_size(),    # file size changes after backups
+        "server_uptime": _uptime_str(),     # always live
     }
 
     # Fetch license status briefly

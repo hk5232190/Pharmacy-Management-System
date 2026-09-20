@@ -1124,6 +1124,7 @@ def get_return_history(
         total = db.query(func.count(SaleReturn.ReturnId)).scalar() or 0
         returns = (
             db.query(SaleReturn)
+            .options(joinedload(SaleReturn.sale).joinedload(Sale.customer))
             .order_by(SaleReturn.ReturnDate.desc())
             .offset((page - 1) * page_size)
             .limit(page_size)

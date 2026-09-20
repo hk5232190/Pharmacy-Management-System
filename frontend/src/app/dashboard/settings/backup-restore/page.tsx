@@ -1,7 +1,8 @@
 "use client";
-import { getApiBaseUrl } from "@/lib/api-client";
+import { getApiBaseUrl, apiClient } from "@/lib/api-client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import useSWR from "swr";
 import { 
   RefreshCw, Settings, Database, HardDrive, HeartPulse, 
   ShieldCheck, DownloadCloud, RotateCcw, History, Edit2, 
@@ -99,7 +100,7 @@ function BackupRestorePageInner({
   const [isBackingUp, setIsBackingUp] = useState(false);
   const [backupProgress, setBackupProgress] = useState(0); // 0–100 for animation
   const [backupHistory, setBackupHistory] = useState<any[]>([]);
-  const [isLoadingHistory, setIsLoadingHistory] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [historySearchQuery, setHistorySearchQuery] = useState("");
   const [historyTypeFilter, setHistoryTypeFilter] = useState("All");
@@ -140,20 +141,9 @@ function BackupRestorePageInner({
   const [diskSpace, setDiskSpace] = useState<string | null>(null);
   const [isLoadingModule, setIsLoadingModule] = useState(true);
 
-  // Initialize
+  // Generate backup name on mount
   useEffect(() => {
     generateBackupName();
-    const loadAll = async () => {
-      setIsLoadingModule(true);
-      await Promise.all([
-        fetchHistory(),
-        fetchSettings(),
-        fetchDbInfo(),
-        autoCheckHealth()
-      ]);
-      setIsLoadingModule(false);
-    };
-    loadAll();
   }, []);
 
   // Re-fetch disk space whenever backup location changes
@@ -167,69 +157,37 @@ function BackupRestorePageInner({
     setBackupName(`Backup_${format(now, "dd_MM_yyyy_HHmmss")}`);
   };
 
-  const fetchHistory = async () => {
-    setIsLoadingHistory(true);
-    try {
-      const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
-      const res = await fetch(`${getApiBaseUrl()}/backup/history`, {
-        headers: { "Authorization": `Bearer ${token}` }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setBackupHistory(data);
-      }
-    } catch (error) {
-      console.error("Failed to fetch backup history", error);
-    } finally {
-      setIsLoadingHistory(false);
-    }
+  // ── SWR Data Fetching ──────────────────────────────────────────────────
+  const fetcher = async (url: string) => {
+    const res = await apiClient.get<any>(url);
+    if ((res as any).success === false) throw new Error((res as any).error);
+    return res;
   };
 
-  const fetchSettings = async () => {
-    try {
-      const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
-      const res = await fetch(`${getApiBaseUrl()}/backup-settings`, {
-        headers: { "Authorization": `Bearer ${token}` }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setSettings(data);
-      }
-    } catch (error) {
-      console.error("Failed to fetch settings", error);
-    }
-  };
+  const { data: historyData, isLoading: isLoadingHistory, mutate: fetchHistory } = useSWR('/backup/history', fetcher, { keepPreviousData: true });
+  const { data: settingsData, mutate: mutateSettings } = useSWR('/backup-settings', fetcher, { keepPreviousData: true });
+  const { data: dbInfoData, mutate: fetchDbInfo } = useSWR('/backup/db-info', fetcher, { keepPreviousData: true });
+  const { data: autoHealthData, mutate: checkHealthSilently } = useSWR('/backup/db-health', fetcher, { keepPreviousData: true, revalidateOnFocus: false });
 
-  const fetchDbInfo = async () => {
-    try {
-      const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
-      const res = await fetch(`${getApiBaseUrl()}/backup/db-info`, {
-        headers: { "Authorization": `Bearer ${token}` }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setDbInfo(data);
-      }
-    } catch (error) {
-      console.error("Failed to fetch DB info", error);
-    }
-  };
+  useEffect(() => {
+    if (historyData) setBackupHistory(historyData);
+  }, [historyData]);
 
-  /** Silent auto-health-check on mount — no toast, just sets state */
-  const autoCheckHealth = async () => {
-    try {
-      const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
-      const res = await fetch(`${getApiBaseUrl()}/backup/db-health`, {
-        headers: { "Authorization": `Bearer ${token}` }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setDbHealth(data);
-      }
-    } catch {
-      // Silently fail — user can click "Check Now" manually
-    }
-  };
+  useEffect(() => {
+    if (settingsData) setSettings(settingsData);
+  }, [settingsData]);
+
+  useEffect(() => {
+    if (dbInfoData) setDbInfo(dbInfoData);
+  }, [dbInfoData]);
+
+  useEffect(() => {
+    if (autoHealthData) setDbHealth(autoHealthData);
+  }, [autoHealthData]);
+
+  useEffect(() => {
+    setIsLoadingModule(isLoadingHistory && !historyData);
+  }, [isLoadingHistory, historyData]);
 
   const fetchDiskSpace = async (path: string) => {
     try {
@@ -396,14 +354,21 @@ function BackupRestorePageInner({
 
   const handleBrowseFolder = async () => {
     try {
-      const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
-      const res = await fetch(`${getApiBaseUrl()}/backup/browse-folder`, {
-        headers: { "Authorization": `Bearer ${token}` }
-      });
-      if (!res.ok) throw new Error("Request failed");
-      const data = await res.json();
-      if (data.path) {
-        setBackupLocation(data.path);
+      let isTauri = false;
+      try { isTauri = typeof window !== 'undefined' && (window as any).__TAURI_INTERNALS__ !== undefined; } catch (e) {}
+
+      if (isTauri) {
+        const { open } = await import('@tauri-apps/plugin-dialog');
+        const selected = await open({ directory: true, multiple: false });
+        if (selected) setBackupLocation(Array.isArray(selected) ? selected[0] : selected);
+      } else {
+        const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
+        const res = await fetch(`${getApiBaseUrl()}/backup/browse-folder`, {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error("Request failed");
+        const data = await res.json();
+        if (data.path) setBackupLocation(data.path);
       }
     } catch (e) {
       toast.error("Could not open folder browser.");
@@ -412,14 +377,21 @@ function BackupRestorePageInner({
 
   const handleBrowseSettingsFolder = async () => {
     try {
-      const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
-      const res = await fetch(`${getApiBaseUrl()}/backup/browse-folder`, {
-        headers: { "Authorization": `Bearer ${token}` }
-      });
-      if (!res.ok) throw new Error("Request failed");
-      const data = await res.json();
-      if (data.path) {
-        setSettings({ ...settings, BackupLocation: data.path });
+      let isTauri = false;
+      try { isTauri = typeof window !== 'undefined' && (window as any).__TAURI_INTERNALS__ !== undefined; } catch (e) {}
+
+      if (isTauri) {
+        const { open } = await import('@tauri-apps/plugin-dialog');
+        const selected = await open({ directory: true, multiple: false });
+        if (selected) setSettings({ ...settings, BackupLocation: Array.isArray(selected) ? selected[0] : selected });
+      } else {
+        const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
+        const res = await fetch(`${getApiBaseUrl()}/backup/browse-folder`, {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error("Request failed");
+        const data = await res.json();
+        if (data.path) setSettings({ ...settings, BackupLocation: data.path });
       }
     } catch (e) {
       toast.error("Could not open folder browser.");
@@ -428,14 +400,25 @@ function BackupRestorePageInner({
 
   const handleBrowseFile = async () => {
     try {
-      const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
-      const res = await fetch(`${getApiBaseUrl()}/backup/browse-file`, {
-        headers: { "Authorization": `Bearer ${token}` }
-      });
-      if (!res.ok) throw new Error("Request failed");
-      const data = await res.json();
-      if (data.path) {
-        setRestoreFilePath(data.path);
+      let isTauri = false;
+      try { isTauri = typeof window !== 'undefined' && (window as any).__TAURI_INTERNALS__ !== undefined; } catch (e) {}
+
+      if (isTauri) {
+        const { open } = await import('@tauri-apps/plugin-dialog');
+        const selected = await open({
+          directory: false,
+          multiple: false,
+          filters: [{ name: 'Backup Files', extensions: ['sqlite', 'zip', 'db'] }]
+        });
+        if (selected) setRestoreFilePath(Array.isArray(selected) ? selected[0] : selected);
+      } else {
+        const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
+        const res = await fetch(`${getApiBaseUrl()}/backup/browse-file`, {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error("Request failed");
+        const data = await res.json();
+        if (data.path) setRestoreFilePath(data.path);
       }
     } catch (e) {
       toast.error("Could not open file browser.");

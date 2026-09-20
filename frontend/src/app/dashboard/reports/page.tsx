@@ -3,6 +3,7 @@
 import { getApiBaseUrl } from "@/lib/api-client";
 import html2canvas from "html2canvas-pro";
 import { useEffect, useState } from "react";
+import useSWR from "swr";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -157,10 +158,7 @@ function ReportsPageInner({
 }) {
   const { formatCurrency, currencySymbol } = useSystemPreferences();
   const { profile } = useProfile();
-  const [loading, setLoading] = useState(true);
-  // Per-tab data cache: avoid blanking screen on tab switch
-  const [dataCache, setDataCache] = useState<Record<string, any>>({});
-  const [data, setData] = useState<any>(null);
+
 
   // Filters
   const [timeframe, setTimeframe] = useState("last_30_days");
@@ -191,167 +189,66 @@ function ReportsPageInner({
   const [medicineCurrentPage, setMedicineCurrentPage] = useState(1);
   const [medicinePageSize, setMedicinePageSize] = useState(10);
 
-  const [categories, setCategories] = useState<any[]>([]);
+  const { data: categoriesData } = useSWR('/categories?page_size=0', async (url: string) => {
+    const res = await apiClient.get<any>(url);
+    if (res.success === false) throw new Error(res.error);
+    return res.data;
+  });
+  const categories = categoriesData || [];
 
-  useEffect(() => {
-    apiClient.get('/categories?page_size=0').then((res: any) => {
-      if (res && res.data) setCategories(res.data);
-    }).catch(console.error);
-  }, []);
+  const buildUrl = (tab: string) => {
+    if (timeframe === 'custom' && !dateRange) return null; // Don't fetch
 
-  useEffect(() => {
-    // Don't fetch if custom is selected but no date range has been applied yet
-    if (timeframe === 'custom' && !dateRange) return;
-
-    if (activeTab === "sales") {
-      fetchSalesReports();
-    } else if (activeTab === "purchases") {
-      fetchPurchaseReports();
-    } else if (activeTab === "inventory") {
-      fetchInventoryReports();
-    } else if (activeTab === "medicine") {
-      fetchMedicineReports();
-    } else if (activeTab === "financial") {
-      fetchFinancialReports();
+    let url = `/reports/${tab === 'medicine' ? 'medicine' : tab}?timeframe=${timeframe}`;
+    
+    if (timeframe === 'custom' && dateRange) {
+      url += `&start_date=${dateRange.start}&end_date=${dateRange.end}`;
     }
-  }, [timeframe, dateRange, activeTab, activeMedicineTab, medicineSearchTerm, medicineCategoryFilter, medicineCurrentPage, medicinePageSize]);
 
-  // Helper: build a cache key from current filter state
-  const getCacheKey = (tab: string) => {
-    const base = `${tab}__${timeframe}__${dateRange?.start ?? ''}__${dateRange?.end ?? ''}`;
-    if (tab === 'medicine') return `${base}__${activeMedicineTab}__${medicineSearchTerm}__${medicineCategoryFilter}__${medicineCurrentPage}__${medicinePageSize}`;
-    return base;
-  };
-
-  // Helper: set data and update cache simultaneously
-  const setDataAndCache = (tab: string, result: any) => {
-    const key = getCacheKey(tab);
-    setDataCache(prev => ({ ...prev, [key]: result }));
-    setData(result);
-  };
-
-  const fetchSalesReports = async () => {
-    const cacheKey = getCacheKey('sales');
-    const cached = dataCache[cacheKey];
-    // Show cached data immediately, skip spinner on re-visit
-    if (cached) { setData(cached); setLoading(false); return; }
-    setLoading(true);
-    try {
-      let url = `/reports/sales?timeframe=${timeframe}`;
-      if (timeframe === 'custom' && dateRange) {
-        url += `&start_date=${dateRange.start}&end_date=${dateRange.end}`;
-      }
-      const res = await apiClient.get(url);
-      if (res.success === false) {
-        toast.error(res.error || "Failed to load sales report");
-      } else {
-        setDataAndCache('sales', res);
-      }
-    } catch (err: any) {
-      toast.error(err.message || "Error fetching reports");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchFinancialReports = async () => {
-    const cacheKey = getCacheKey('financial');
-    const cached = dataCache[cacheKey];
-    if (cached) { setData(cached); setLoading(false); return; }
-    setLoading(true);
-    try {
-      let url = `/reports/financial?timeframe=${timeframe}`;
-      if (timeframe === 'custom' && dateRange) {
-        url += `&start_date=${dateRange.start}&end_date=${dateRange.end}`;
-      }
-      const res = await apiClient.get(url);
-      if (res.success === false) {
-        toast.error(res.error || "Failed to load financial report");
-      } else {
-        setDataAndCache('financial', res);
-      }
-    } catch (err: any) {
-      toast.error(err.message || "Error fetching reports");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchMedicineReports = async () => {
-    const cacheKey = getCacheKey('medicine');
-    const cached = dataCache[cacheKey];
-    if (cached) { setData(cached); setLoading(false); return; }
-    setLoading(true);
-    try {
-      let url = `/reports/medicine?timeframe=${timeframe}&report_type=${activeMedicineTab}&page=${medicineCurrentPage}&page_size=${medicinePageSize}`;
+    if (tab === 'medicine') {
+      url += `&report_type=${activeMedicineTab}&page=${medicineCurrentPage}&page_size=${medicinePageSize}`;
       if (medicineSearchTerm) url += `&search=${encodeURIComponent(medicineSearchTerm)}`;
       if (medicineCategoryFilter && medicineCategoryFilter !== 'All') url += `&category_id=${medicineCategoryFilter}`;
-
-      if (timeframe === 'custom' && dateRange) {
-        url += `&start_date=${dateRange.start}&end_date=${dateRange.end}`;
-      }
-      const res = await apiClient.get(url);
-      if (res.success === false) {
-        toast.error(res.error || "Failed to load medicine report");
-      } else {
-        setDataAndCache('medicine', res);
-      }
-    } catch (err: any) {
-      toast.error(err.message || "Error fetching reports");
-    } finally {
-      setLoading(false);
     }
+
+    return url;
   };
 
-  const fetchInventoryReports = async () => {
-    const cacheKey = getCacheKey('inventory');
-    const cached = dataCache[cacheKey];
-    if (cached) { setData(cached); setLoading(false); return; }
-    setLoading(true);
-    try {
-      let url = `/reports/inventory?timeframe=${timeframe}`;
-      if (timeframe === 'custom' && dateRange) {
-        url += `&start_date=${dateRange.start}&end_date=${dateRange.end}`;
-      }
-      const res = await apiClient.get(url);
-      if (res.success === false) {
-        toast.error(res.error || "Failed to load inventory report");
-      } else {
-        setDataAndCache('inventory', res);
-      }
-    } catch (err: any) {
-      toast.error(err.message || "Error fetching reports");
-    } finally {
-      setLoading(false);
+  const swrFetcher = async (url: string) => {
+    const res = await apiClient.get<any>(url);
+    if (res.success === false) {
+      toast.error(res.error || `Failed to load report`);
+      throw new Error(res.error);
     }
+    return res;
   };
 
-  const fetchPurchaseReports = async () => {
-    const cacheKey = getCacheKey('purchases');
-    const cached = dataCache[cacheKey];
-    if (cached) { setData(cached); setLoading(false); return; }
-    setLoading(true);
-    try {
-      let url = `/reports/purchases?timeframe=${timeframe}`;
-      if (timeframe === 'custom' && dateRange) {
-        url += `&start_date=${dateRange.start}&end_date=${dateRange.end}`;
-      }
-      const res = await apiClient.get(url);
-      if (res.success === false) {
-        toast.error(res.error || "Failed to load purchase report");
-      } else {
-        setDataAndCache('purchases', res);
-      }
-    } catch (err: any) {
-      toast.error(err.message || "Error fetching reports");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data: salesData, isLoading: salesLoading } = useSWR(buildUrl('sales'), swrFetcher, { keepPreviousData: true });
+  const { data: purchasesData, isLoading: purchasesLoading } = useSWR(buildUrl('purchases'), swrFetcher, { keepPreviousData: true });
+  const { data: inventoryData, isLoading: inventoryLoading } = useSWR(buildUrl('inventory'), swrFetcher, { keepPreviousData: true });
+  const { data: medicineData, isLoading: medicineLoading } = useSWR(buildUrl('medicine'), swrFetcher, { keepPreviousData: true });
+  const { data: financialData, isLoading: financialLoading } = useSWR(buildUrl('financial'), swrFetcher, { keepPreviousData: true });
+
+  const swrData = activeTab === 'sales' ? salesData :
+                  activeTab === 'purchases' ? purchasesData :
+                  activeTab === 'inventory' ? inventoryData :
+                  activeTab === 'medicine' ? medicineData :
+                  activeTab === 'financial' ? financialData : null;
+
+  const isDataLoading = activeTab === 'sales' ? salesLoading :
+                        activeTab === 'purchases' ? purchasesLoading :
+                        activeTab === 'inventory' ? inventoryLoading :
+                        activeTab === 'medicine' ? medicineLoading :
+                        activeTab === 'financial' ? financialLoading : false;
+
+  const data = swrData || null;
+  const [loading, setLoading] = useState(false);
+  const loadingIndicator = isDataLoading || loading;
+
+
 
   const handleTimeframeChange = (tf: string) => {
     // Clear cache so new timeframe always fetches fresh data
-    setDataCache({});
     if (tf === 'custom') {
       setShowCustom(true);
       setTimeframe(tf);
@@ -367,7 +264,6 @@ function ReportsPageInner({
   const handleApplyCustom = () => {
     if (startDate && endDate) {
       // Clear cache so custom range always fetches fresh
-      setDataCache({});
       setDateRange({ start: startDate, end: endDate });
     }
   };
@@ -510,7 +406,7 @@ function ReportsPageInner({
       {/* ── Tabs ───────────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-start p-1.5 mb-6 bg-slate-100/80 dark:bg-secondary/40 rounded-xl w-max max-w-full border border-border overflow-x-auto custom-scrollbar print:hidden">
         <button
-          onClick={() => { if (activeTab !== 'sales') { setData(dataCache[getCacheKey('sales')] || null); onTabChange('sales'); } }}
+          onClick={() => { if (activeTab !== 'sales') { onTabChange('sales'); } }}
           className={cn(
             "flex items-center px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 whitespace-nowrap",
             activeTab === "sales"
@@ -522,7 +418,7 @@ function ReportsPageInner({
           Sales Reports
         </button>
         <button
-          onClick={() => { if (activeTab !== 'purchases') { setData(dataCache[getCacheKey('purchases')] || null); onTabChange('purchases'); } }}
+          onClick={() => { if (activeTab !== 'purchases') { onTabChange('purchases'); } }}
           className={cn(
             "flex items-center px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 whitespace-nowrap",
             activeTab === "purchases"
@@ -534,7 +430,7 @@ function ReportsPageInner({
           Purchase Reports
         </button>
         <button
-          onClick={() => { if (activeTab !== 'inventory') { setData(dataCache[getCacheKey('inventory')] || null); onTabChange('inventory'); } }}
+          onClick={() => { if (activeTab !== 'inventory') { onTabChange('inventory'); } }}
           className={cn(
             "flex items-center px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 whitespace-nowrap",
             activeTab === "inventory"
@@ -546,7 +442,7 @@ function ReportsPageInner({
           Inventory Reports
         </button>
         <button
-          onClick={() => { if (activeTab !== 'medicine') { setData(dataCache[getCacheKey('medicine')] || null); onTabChange('medicine'); } }}
+          onClick={() => { if (activeTab !== 'medicine') { onTabChange('medicine'); } }}
           className={cn(
             "flex items-center px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 whitespace-nowrap",
             activeTab === "medicine"
@@ -558,7 +454,7 @@ function ReportsPageInner({
           Medicine Reports
         </button>
         <button
-          onClick={() => { if (activeTab !== 'financial') { setData(dataCache[getCacheKey('financial')] || null); onTabChange('financial'); } }}
+          onClick={() => { if (activeTab !== 'financial') { onTabChange('financial'); } }}
           className={cn(
             "flex items-center px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 whitespace-nowrap ml-1",
             activeTab === "financial"
@@ -636,13 +532,13 @@ function ReportsPageInner({
         </div>
       </div>
 
-      {loading && !data && (
+      {loadingIndicator && !data && (
         <div className="flex justify-center items-center py-20">
           <RefreshCw className="w-8 h-8 animate-spin text-primary" />
         </div>
       )}
 
-      {data && activeTab === 'sales' && (() => {
+      {data && activeTab === 'sales' && data?.summary?.NetSales !== undefined && (() => {
         const accentMap: Record<string, { border: string; iconCls: string; text: string; bg: string }> = {
           blue: { border: "border-l-blue-500", iconCls: "text-blue-500", text: "text-blue-600 dark:text-blue-400", bg: "bg-blue-50 dark:bg-blue-900/20" },
           rose: { border: "border-l-rose-500", iconCls: "text-rose-500", text: "text-rose-600 dark:text-rose-400", bg: "bg-rose-50 dark:bg-rose-900/20" },
@@ -1024,7 +920,7 @@ function ReportsPageInner({
       })()}
 
 
-      {data && activeTab === 'inventory' && (() => {
+      {data && activeTab === 'inventory' && data?.summary?.TotalItemsInStock !== undefined && (() => {
         const KPICard = ({ title, value, icon: Icon, accent }: { title: string; value: string; icon: any; accent: string }) => {
           const accentMap: Record<string, { border: string; iconCls: string; text: string; bg: string }> = {
             blue: { border: "border-l-blue-500", iconCls: "text-blue-500", text: "text-blue-600 dark:text-blue-400", bg: "bg-blue-50 dark:bg-blue-900/20" },
@@ -1499,7 +1395,7 @@ function ReportsPageInner({
       })()}
 
 
-      {data && activeTab === 'purchases' && (() => {
+      {data && activeTab === 'purchases' && data?.summary?.NetPurchases !== undefined && (() => {
         const KPICard = ({ title, value, icon: Icon, accent, subtext }: { title: string; value: string | number | React.ReactNode; icon: any; accent: string; subtext?: React.ReactNode }) => {
           const accentMap: Record<string, { border: string; iconCls: string; text: string; bg: string }> = {
             blue: { border: "border-l-blue-500", iconCls: "text-blue-500", text: "text-blue-600 dark:text-blue-400", bg: "bg-blue-50 dark:bg-blue-900/20" },
@@ -1958,7 +1854,7 @@ function ReportsPageInner({
         );
       })()}
 
-      {data && activeTab === 'medicine' && (() => {
+      {data && activeTab === 'medicine' && data?.summary?.NetSales === undefined && data?.summary?.TotalItemsInStock === undefined && data?.summary?.NetPurchases === undefined && data?.summary?.TotalRevenue === undefined && (() => {
         const KPICard = ({ title, value, icon: Icon, accent }: { title: string; value: string | number; icon: any; accent: string }) => {
           const accentMap: Record<string, { border: string; iconCls: string; text: string; bg: string }> = {
             blue: { border: "border-l-blue-500", iconCls: "text-blue-500", text: "text-blue-600 dark:text-blue-400", bg: "bg-blue-50 dark:bg-blue-900/20" },
@@ -2280,7 +2176,7 @@ function ReportsPageInner({
         );
       })()}
 
-      {data && activeTab === 'financial' && (() => {
+      {data && activeTab === 'financial' && data?.summary?.TotalRevenue !== undefined && (() => {
         const KPICard = ({ title, value, icon: Icon, accent }: { title: string; value: string | React.ReactNode; icon: any; accent: string }) => {
           const accentMap: Record<string, { border: string; iconCls: string; text: string; bg: string }> = {
             blue: { border: "border-l-blue-500", iconCls: "text-blue-500", text: "text-blue-600 dark:text-blue-400", bg: "bg-blue-50 dark:bg-blue-900/20" },

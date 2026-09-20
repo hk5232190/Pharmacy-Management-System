@@ -1,9 +1,10 @@
 "use client";
-import { getApiBaseUrl } from "@/lib/api-client";
+import { getApiBaseUrl, apiClient } from "@/lib/api-client";
 import { PrinterSettings } from "@/types/printer";
 import { ReceiptPreview } from "@/components/receipt-preview";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import useSWR from "swr";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
@@ -111,8 +112,6 @@ export default function PrinterSettingsPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [isSaving, setIsSaving] = useState(false);
-  const [isLoadingPrinters, setIsLoadingPrinters] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
 
   // ── Auto chars-per-line when paper size changes ──────────────────────────
   useEffect(() => {
@@ -125,73 +124,59 @@ export default function PrinterSettingsPage() {
     }
   }, [settings.PaperSize]);
 
-  // ── Load settings and OS printers ────────────────────────────────────────
+  // ── Load settings and OS printers via SWR ────────────────────────────────
+  const { data: printerData, isLoading: isLoadingPrinter, mutate: mutatePrinter } = useSWR('/settings/printer', async (url) => {
+    const res = await apiClient.get<PrinterSettings>(url);
+    if ((res as any).success === false) throw new Error("Failed to load printer settings");
+    return res;
+  }, { keepPreviousData: true, revalidateOnFocus: false });
+
+  const { data: billingData } = useSWR('/settings/billing', async (url) => {
+    const res = await apiClient.get<any>(url);
+    if (res.success === false) throw new Error("Failed to load billing settings");
+    return res;
+  }, { keepPreviousData: true, revalidateOnFocus: false });
+
+  const { data: osPrintersData, isLoading: isLoadingPrinters, mutate: fetchOsPrinters } = useSWR('/settings/printer/list', async (url) => {
+    const res = await apiClient.get<any>(url);
+    if (res.success === false) throw new Error("Failed to load printers");
+    return res.data || [];
+  }, { keepPreviousData: true, revalidateOnFocus: false });
+
+  const isLoading = isLoadingPrinter;
+
   useEffect(() => {
-    fetchSettings();
-    fetchOsPrinters();
-  }, []);
-
-  const fetchSettings = async () => {
-    setIsLoading(true);
-    try {
-      const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token") || "";
-      const headers: Record<string, string> = token ? { "Authorization": `Bearer ${token}` } : {};
-      const [printerRes, billingRes] = await Promise.all([
-        fetch(`${getApiBaseUrl()}/settings/printer`, { headers }),
-        fetch(`${getApiBaseUrl()}/settings/billing`, { headers }),
-      ]);
-
-      if (printerRes.ok) {
-        const data = await printerRes.json();
-        setSettings({ ...DEFAULT_SETTINGS, ...data });
-        
-        if (data.PharmacyName) setPharmacyName(data.PharmacyName);
-        if (data.PharmacyAddress) setPharmacyAddress(data.PharmacyAddress);
-        if (data.PharmacyPhone) setPharmacyPhone(data.PharmacyPhone);
-        if (data.DrugLicenseNumber || data.NtnStrn) {
-          setLicenseInfo(`Lic: ${data.DrugLicenseNumber || "N/A"} / NTN: ${data.NtnStrn || "N/A"}`);
-        }
-        
-        if (data.ReceiptLogoPath) {
-          const path = data.ReceiptLogoPath.startsWith('/') ? data.ReceiptLogoPath : `/${data.ReceiptLogoPath}`;
-          setLogoPreviewUrl(`${getApiBaseUrl().replace("/api/v1","")}${path}`);
-        } else {
-          setLogoPreviewUrl(null);
-        }
+    if (printerData && Object.keys(printerData).length > 0) {
+      setSettings({ ...DEFAULT_SETTINGS, ...printerData });
+      if (printerData.PharmacyName) setPharmacyName(printerData.PharmacyName);
+      if (printerData.PharmacyAddress) setPharmacyAddress(printerData.PharmacyAddress);
+      if (printerData.PharmacyPhone) setPharmacyPhone(printerData.PharmacyPhone);
+      if (printerData.DrugLicenseNumber || printerData.NtnStrn) {
+        setLicenseInfo(`Lic: ${printerData.DrugLicenseNumber || "N/A"} / NTN: ${printerData.NtnStrn || "N/A"}`);
       }
-      if (billingRes.ok) {
-        const b = await billingRes.json();
-        if (b.CurrencySymbol) setCurrency(b.CurrencySymbol);
+      if (printerData.ReceiptLogoPath) {
+        const path = printerData.ReceiptLogoPath.startsWith('/') ? printerData.ReceiptLogoPath : `/${printerData.ReceiptLogoPath}`;
+        setLogoPreviewUrl(`${getApiBaseUrl().replace("/api/v1","")}${path}`);
+      } else {
+        setLogoPreviewUrl(null);
       }
-    } catch {
-      toast.error("Failed to load settings.");
-    } finally {
-      setIsLoading(false);
     }
-  };
+  }, [printerData]);
 
-  const fetchOsPrinters = async () => {
-    setIsLoadingPrinters(true);
-    try {
-      const res = await fetch(`${getApiBaseUrl()}/settings/printer/list`);
-      if (res.ok) {
-        const data = await res.json();
-        const list: string[] = data.data || [];
-        setOsPrinters(list);
+  useEffect(() => {
+    if (billingData?.CurrencySymbol) setCurrency(billingData.CurrencySymbol);
+  }, [billingData]);
 
-        // Warn if selected printer is no longer available
-        if (settings.SelectedPrinterName && list.length > 0 && !list.includes(settings.SelectedPrinterName)) {
-          setPrinterWarning(`"${settings.SelectedPrinterName}" is not available. Please select another printer.`);
-        } else {
-          setPrinterWarning(null);
-        }
+  useEffect(() => {
+    if (osPrintersData) {
+      setOsPrinters(osPrintersData);
+      if (settings.SelectedPrinterName && osPrintersData.length > 0 && !osPrintersData.includes(settings.SelectedPrinterName)) {
+        setPrinterWarning(`"${settings.SelectedPrinterName}" is not available. Please select another printer.`);
+      } else {
+        setPrinterWarning(null);
       }
-    } catch {
-      console.error("Failed to enumerate OS printers");
-    } finally {
-      setIsLoadingPrinters(false);
     }
-  };
+  }, [osPrintersData, settings.SelectedPrinterName]);
 
   const setSetting = <K extends keyof PrinterSettings>(key: K, value: PrinterSettings[K]) => {
     setSettings(prev => ({ ...prev, [key]: value }));
@@ -241,7 +226,7 @@ export default function PrinterSettingsPage() {
       }
 
       toast.success("Printer & Receipt settings saved!");
-      fetchSettings(); // Refresh to get updated logo path
+      mutatePrinter(); // Refresh to get updated logo path
       
       // Update global profile context so that topbar updates immediately
       window.dispatchEvent(new Event("profile-updated"));
@@ -344,7 +329,7 @@ export default function PrinterSettingsPage() {
                       </Select>
                       <Button
                         variant="outline" size="icon"
-                        onClick={fetchOsPrinters}
+                        onClick={() => fetchOsPrinters()}
                         disabled={isLoadingPrinters}
                         title="Refresh printer list"
                         className="rounded-xl"

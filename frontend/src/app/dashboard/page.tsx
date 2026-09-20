@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import useSWR from "swr";
 import { Button } from "@/components/ui/button";
 import { apiClient } from "@/lib/api-client";
 import WidgetsSection from "./widgets-section";
@@ -153,31 +154,41 @@ function DashKPICard({
 // ───────────────────────────────────────────────────────────────────────────
 
 export default function DashboardPageWrapper() {
-  const [refreshKey, setRefreshKey] = useState(0);
-  const [refreshState, setRefreshState] = useState<"idle" | "loading" | "done">("idle");
-  
-  const handleRefresh = () => {
-    if (refreshState === "loading") return;
-    setRefreshState("loading");
-    setRefreshKey(k => k + 1);
-    setTimeout(() => {
-      setRefreshState("done");
-      setTimeout(() => setRefreshState("idle"), 1500);
-    }, 400);
-  };
-
-  return <DashboardPageInner key={refreshKey} refreshState={refreshState} onRefresh={handleRefresh} />;
-}
-
-function DashboardPageInner({ onRefresh, refreshState }: { onRefresh: () => void, refreshState: "idle" | "loading" | "done" }) {
   const router = useRouter();
   const { formatNumber, formatCurrency } = useSystemPreferences();
-  const [loading, setLoading] = useState(true);
-  const [data, setData] = useState<any>(null);
 
   const [timeframe, setTimeframe] = useState("today");
   const [dateRange, setDateRange] = useState<{ start: string, end: string } | null>(null);
+
+  const [refreshState, setRefreshState] = useState<"idle" | "loading" | "done">("idle");
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  const swrKey = useMemo(() => {
+    if (timeframe === 'custom' && !dateRange) return null;
+    let url = `/dashboard/summary?timeframe=${timeframe}`;
+    if (timeframe === 'custom' && dateRange) {
+      url += `&start_date=${dateRange.start}&end_date=${dateRange.end}`;
+    }
+    return url;
+  }, [timeframe, dateRange]);
+
+  const { data, error, mutate, isLoading: loading } = useSWR(swrKey, async (url: string) => {
+    const res = await apiClient.get(url);
+    if (res.success === false) {
+      toast.error(res.error || "Failed to load dashboard data");
+      throw new Error(res.error);
+    }
+    return res;
+  }, { keepPreviousData: true });
+
+  const onRefresh = async () => {
+    if (refreshState === "loading") return;
+    setRefreshState("loading");
+    setRefreshTrigger(v => v + 1);
+    await mutate();
+    setRefreshState("done");
+    setTimeout(() => setRefreshState("idle"), 1500);
+  };
 
   const getTimeframeLabel = () => {
     switch (timeframe) {
@@ -190,34 +201,8 @@ function DashboardPageInner({ onRefresh, refreshState }: { onRefresh: () => void
     }
   };
 
-  useEffect(() => {
-    // Don't fetch if custom is selected but no date range has been applied yet
-    if (timeframe === 'custom' && !dateRange) return;
-    fetchSummary();
-  }, [timeframe, dateRange]);
-
-  const fetchSummary = async (showRefreshSpinner = false) => {
-    setLoading(true);
-
-    try {
-      let url = `/dashboard/summary?timeframe=${timeframe}`;
-      if (timeframe === 'custom' && dateRange) {
-        url += `&start_date=${dateRange.start}&end_date=${dateRange.end}`;
-      }
-      const res = await apiClient.get(url);
-      if (res.success === false) {
-        toast.error(res.error || "Failed to load dashboard data");
-      } else {
-        setData(res);
-      }
-    } catch (err: any) {
-      toast.error(err.message || "Error fetching dashboard summary");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (loading) {
+  // Only show full-page loader if we have no data and no error yet (initial load)
+  if (!data && !error) {
     return (
       <div className="flex-1 p-8 flex justify-center items-center h-screen bg-background text-muted-foreground">
         <div className="animate-pulse flex flex-col items-center">

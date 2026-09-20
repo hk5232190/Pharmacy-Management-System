@@ -134,6 +134,11 @@ class Purchase(Base):
     items = relationship("PurchaseItem", back_populates="purchase")
     returns = relationship("PurchaseReturn", back_populates="purchase")
 
+    __table_args__ = (
+        Index('IX_Purchases_PurchaseDate', 'PurchaseDate'),
+        Index('IX_Purchases_SupplierId', 'SupplierId'),
+    )
+
 class PurchaseItem(Base):
     __tablename__ = "purchase_items"
 
@@ -193,6 +198,12 @@ class Sale(Base):
 
     __table_args__ = (
         Index('IX_Sales_InvoiceNumber', 'InvoiceNumber'),
+        Index('IX_Sales_TransactionDate', 'TransactionDate'),
+        Index('IX_Sales_Status', 'Status'),
+        Index('IX_Sales_CustomerId', 'CustomerId'),
+        Index('IX_Sales_UserId', 'UserId'),
+        # Composite for dashboard COGS/profit queries: WHERE Status='Completed' AND date(TransactionDate)
+        Index('IX_Sales_Status_TransactionDate', 'Status', 'TransactionDate'),
     )
 
 class SaleItem(Base):
@@ -213,6 +224,8 @@ class SaleItem(Base):
 
     __table_args__ = (
         CheckConstraint('Quantity > 0', name='check_sale_quantity_positive'),
+        Index('IX_SaleItems_SalesId', 'SalesId'),
+        Index('IX_SaleItems_BatchId', 'BatchId'),
     )
 
 class AuditLog(Base):

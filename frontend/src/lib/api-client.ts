@@ -1,6 +1,7 @@
 // A centralized API client that automatically handles attaching the JWT token
 // to all requests. This ensures authentication is never missing.
 
+import { mutate } from "swr";
 import { resetAuthState } from "@/lib/auth-session";
 
 export const API_BASE_URL =
@@ -188,6 +189,18 @@ async function fetchAPI<T>(endpoint: string, options: FetchOptions = {}): Promis
 
   if (!response.ok) {
     return { success: false, error: getErrorMessage(data) } as T;
+  }
+
+  // Globally invalidate SWR cache for all endpoints when a mutation succeeds
+  if (options.method && ["POST", "PUT", "DELETE"].includes(options.method.toUpperCase())) {
+    if (typeof window !== "undefined") {
+      // Revalidate any keys starting with '/'
+      mutate(
+        (key) => typeof key === "string" && key.startsWith("/"),
+        undefined,
+        { revalidate: true }
+      ).catch(() => {});
+    }
   }
 
   return data as T;

@@ -1,7 +1,7 @@
 "use client";
 import { getApiBaseUrl } from "@/lib/api-client";
-
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, ReactNode } from "react";
+import useSWR from "swr";
 
 interface InventorySettings {
   SettingsId?: number;
@@ -39,26 +39,20 @@ const InventorySettingsContext = createContext<InventorySettingsContextType>({
 });
 
 export function InventorySettingsProvider({ children }: { children: ReactNode }) {
-  const [inventorySettings, setInventorySettings] = useState<InventorySettings>(DEFAULT_SETTINGS);
-  const [isLoaded, setIsLoaded] = useState(false);
-
-  const fetchSettings = async () => {
-    try {
-      const res = await fetch(`${getApiBaseUrl()}/settings/inventory`);
-      if (res.ok) {
-        const data = await res.json();
-        setInventorySettings({ ...DEFAULT_SETTINGS, ...data });
-      }
-    } catch (e) {
-      console.error("Failed to load inventory settings", e);
-    } finally {
-      setIsLoaded(true);
-    }
+  const fetcher = async (url: string) => {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("Failed to fetch");
+    return res.json();
   };
 
-  useEffect(() => {
-    fetchSettings();
-  }, []);
+  const { data, error, mutate } = useSWR(`${getApiBaseUrl()}/settings/inventory`, fetcher);
+
+  const isLoaded = data !== undefined || error !== undefined;
+  const inventorySettings = data ? { ...DEFAULT_SETTINGS, ...data } : DEFAULT_SETTINGS;
+
+  const fetchSettings = async () => {
+    await mutate();
+  };
 
   return (
     <InventorySettingsContext.Provider value={{

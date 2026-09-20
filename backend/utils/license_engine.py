@@ -14,13 +14,25 @@ def get_public_key():
     with open(PUBLIC_KEY_PATH, "rb") as f:
         return serialization.load_pem_public_key(f.read())
 
-def validate_license(token: str) -> dict:
+def validate_license(token) -> dict:
     """
     Validates a license token (JWT).
     Throws TamperedLicenseError, LicenseExpiredError, or HardwareMismatchError.
     Returns license data if valid.
     """
     try:
+        if isinstance(token, bytes):
+            if token.startswith(b'\xff\xfe') or token.startswith(b'\xfe\xff'):
+                token = token.decode("utf-16", errors="ignore")
+            else:
+                token = token.decode("utf-8", errors="ignore")
+            
+        # Extract token if it contains markers
+        if "--- BEGIN LICENSE KEY ---" in token and "--- END LICENSE KEY ---" in token:
+            token = token.split("--- BEGIN LICENSE KEY ---")[1].split("--- END LICENSE KEY ---")[0]
+            
+        token = "".join(token.split()) # Remove all whitespace (newlines, spaces, etc.)
+
         public_key = get_public_key()
 
         # Decode the token and verify the signature using the public RSA key.

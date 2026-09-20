@@ -1,6 +1,8 @@
 "use client";
 
-import { ReactNode, useState } from "react";
+import { ReactNode, useState, useEffect } from "react";
+import { preload } from "swr";
+import { apiClient, getApiBaseUrl } from "@/lib/api-client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Building2, ReceiptText, Package, Settings as SettingsIcon, ShieldCheck, Info, Shield, Database, User as UserIcon, Users, Printer, Check, RefreshCcw } from "lucide-react";
@@ -35,18 +37,74 @@ const ALL_NAV: NavItem[] = [
 export default function SettingsLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const { user } = useAuth();
-  const [refreshState, setRefreshState] = useState<"idle" | "loading" | "done">("idle");
-  const [refreshKey, setRefreshKey] = useState(0);
 
-  const handleRefresh = async () => {
-    if (refreshState === "loading") return;
-    setRefreshState("loading");
-    setRefreshKey(k => k + 1);
-    setTimeout(() => {
-      setRefreshState("done");
-      setTimeout(() => setRefreshState("idle"), 1500);
-    }, 600);
-  };
+  useEffect(() => {
+    // ── Preload Settings Endpoints ──────────────────────────────────────────
+    // By preloading these endpoints in the background as soon as the user enters 
+    // the settings layout, clicking on any settings tab becomes 100% instant 
+    // because SWR will immediately serve the cached data without a spinner flash.
+    
+    const genericFetcher = async (url: string) => {
+      const res = await apiClient.get<any>(url);
+      if ((res as any).success === false) throw new Error((res as any).error);
+      return res;
+    };
+    
+    const dataFetcher = async (url: string) => {
+      const res = await apiClient.get<any>(url);
+      if (res.success === false) throw new Error("Failed");
+      return res.data;
+    };
+    
+    const osPrintersFetcher = async (url: string) => {
+      const res = await apiClient.get<any>(url);
+      if (res.success === false) throw new Error("Failed");
+      return res.data || [];
+    };
+
+    const customAboutFetcher = async () => {
+      const headers = { Authorization: `Bearer ${localStorage.getItem("access_token") || sessionStorage.getItem("access_token") || ""}` };
+      const [resAbout, resDiag, resLic] = await Promise.all([
+        fetch(`${getApiBaseUrl()}/about/info`, { headers }),
+        fetch(`${getApiBaseUrl()}/system/diagnostics`, { headers }).catch(() => null),
+        fetch(`${getApiBaseUrl()}/license/info`, { headers }).catch(() => null)
+      ]);
+      
+      if (!resAbout.ok) throw new Error("Failed");
+      const aboutData = await resAbout.json();
+      
+      if (resLic && resLic.ok) {
+        const licData = await resLic.json();
+        aboutData.license = {
+          status: licData.status,
+          type: licData.license_type,
+          expiry_date: licData.expiry_date,
+          remaining_days: licData.remaining_days,
+          is_lifetime: licData.total_days === null,
+        };
+      }
+      
+      const diagData = resDiag && resDiag.ok ? await resDiag.json() : null;
+      return { aboutData, diagData };
+    };
+
+    // Backup & Restore
+    preload('/backup/history', genericFetcher);
+    preload('/backup-settings', genericFetcher);
+    preload('/backup/db-info', genericFetcher);
+    preload('/backup/db-health', genericFetcher);
+    
+    // Printer & Receipt
+    preload('/settings/printer', genericFetcher);
+    preload('/settings/billing', genericFetcher);
+    preload('/settings/printer/list', osPrintersFetcher);
+
+    // License
+    preload('/license/info', dataFetcher);
+    
+    // About
+    preload('/about/info', customAboutFetcher);
+  }, []);
 
   // Build visible navigation based on role.
   // - Admins see everything.
@@ -65,23 +123,6 @@ export default function SettingsLayout({ children }: { children: ReactNode }) {
             <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Settings</h1>
             <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Configure your pharmacy, personalize the application, and manage system preferences.</p>
           </div>
-          <Button
-            variant="outline"
-            className={cn(
-              "h-9 gap-2 transition-all duration-300 rounded-full",
-              refreshState === "loading" && "border-primary/40 text-primary",
-              refreshState === "done" && "border-emerald-400 text-emerald-600 dark:text-emerald-400 bg-emerald-50/60 dark:bg-emerald-900/20"
-            )}
-            onClick={handleRefresh}
-            disabled={refreshState === "loading"}
-          >
-            {refreshState === "done" ? (
-              <Check className="h-4 w-4 animate-in zoom-in-50 duration-200" />
-            ) : (
-              <RefreshCcw className={cn("h-4 w-4 transition-transform", refreshState === "loading" && "animate-spin")} />
-            )}
-            {refreshState === "loading" ? "Refreshing..." : refreshState === "done" ? "Updated!" : "Refresh"}
-          </Button>
         </div>
         <div className="flex items-center space-x-2 text-sm text-slate-500 mt-4">
           <Link href="/dashboard" className="hover:text-blue-600 transition-colors">Dashboard</Link>
@@ -121,7 +162,7 @@ export default function SettingsLayout({ children }: { children: ReactNode }) {
         </aside>
 
         {/* Main Content Area */}
-        <main key={refreshKey} className="flex-1 overflow-y-auto custom-scrollbar pb-10">
+        <main className="flex-1 overflow-y-auto custom-scrollbar pb-10">
           {children}
         </main>
       </div>

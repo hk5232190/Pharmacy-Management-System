@@ -55,3 +55,33 @@
 2026-09-19 13:14:12,360 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.defaults
 2026-09-19 13:14:12,360 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.comments
 2026-09-19 13:14:12,360 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.checkconstraint_byname
+2026-09-20 00:18:09,492 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-20 00:26:03,047 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-20 00:26:04,197 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.schemas
+2026-09-20 00:26:04,197 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.tables
+2026-09-20 00:26:04,197 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.types
+2026-09-20 00:26:04,198 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.constraints
+2026-09-20 00:26:04,198 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.defaults
+2026-09-20 00:26:04,198 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.comments
+2026-09-20 00:26:04,198 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.checkconstraint_byname
+2026-09-20 00:54:51,255 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-20 00:59:40,875 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-20 00:59:42,839 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.schemas
+2026-09-20 00:59:42,840 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.tables
+2026-09-20 00:59:42,840 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.types
+2026-09-20 00:59:42,840 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.constraints
+2026-09-20 00:59:42,840 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.defaults
+2026-09-20 00:59:42,840 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.comments
+2026-09-20 00:59:42,840 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.checkconstraint_byname
+2026-09-20 02:09:59,037 - pms - INFO - Generating new 2048-bit RSA key pair for Licensing...
+2026-09-20 02:09:59,199 - pms - INFO - RSA Keypair successfully generated and saved to /keys
+2026-09-20 02:13:45,227 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-20 02:19:36,122 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-20 02:19:37,611 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.schemas
+2026-09-20 02:19:37,612 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.tables
+2026-09-20 02:19:37,612 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.types
+2026-09-20 02:19:37,612 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.constraints
+2026-09-20 02:19:37,612 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.defaults
+2026-09-20 02:19:37,612 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.comments
+2026-09-20 02:19:37,613 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.checkconstraint_byname
+2026-09-20 03:06:28,131 - pms - ERROR - Invalid or tampered license token: Invalid header string: 'utf-8' codec can't decode byte 0xe7 in position 1: invalid continuation byte

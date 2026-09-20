@@ -4,6 +4,7 @@ import { getApiBaseUrl, resolveApiBaseUrl } from "@/lib/api-client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { useProfile } from "@/contexts/ProfileContext";
 import { Input } from "@/components/ui/input";
 import {
   User, Lock, Eye, EyeOff, Key, Shield, Plus,
@@ -13,6 +14,7 @@ import {
 export default function LoginPage() {
   const router = useRouter();
   const { login } = useAuth();
+  const { refreshProfile } = useProfile();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -26,8 +28,8 @@ export default function LoginPage() {
   });
 
   useEffect(() => {
-    resolveApiBaseUrl().then((baseUrl) => fetch(`${baseUrl}/settings/general`))
-      .then(res => res.json())
+    resolveApiBaseUrl().then((baseUrl) => fetch(`${baseUrl}/settings/general`).catch(() => null))
+      .then(res => res ? res.json() : null)
       .then(data => {
         if (data && !data.detail) {
           setBranding({
@@ -74,6 +76,10 @@ export default function LoginPage() {
       // Hydrate the authenticated profile before navigating so the app shell
       // renders the correct role from the very first frame (no admin flash).
       const profile = await login(data.access_token);
+      
+      // Also hydrate the branding profile (pharmacy name, logo) for the sidebar
+      await refreshProfile();
+
       if (profile && profile.role === "cashier") {
         router.push("/dashboard/sales");
       } else {

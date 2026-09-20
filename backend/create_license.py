@@ -1,7 +1,38 @@
 import argparse
 import datetime
-from utils.license_engine import generate_test_license
+import jwt
+import os
+import uuid
+from cryptography.hazmat.primitives import serialization
 
+KEYS_DIR = os.path.join(os.path.dirname(__file__), "utils", "keys")
+PRIVATE_KEY_PATH = os.path.join(KEYS_DIR, "private.pem")
+
+def get_private_key():
+    if not os.path.exists(PRIVATE_KEY_PATH):
+        raise FileNotFoundError("Private key not found. Run generate_keys.py first.")
+    with open(PRIVATE_KEY_PATH, "rb") as f:
+        return serialization.load_pem_private_key(f.read(), password=None)
+
+def generate_test_license(hwid: str, license_type: str = "Professional", start_date=None, end_date=None):
+    private_key = get_private_key()
+    now = datetime.datetime.now(datetime.timezone.utc)
+    start_date = start_date or now
+    end_date = end_date or (start_date + datetime.timedelta(days=3))
+    
+    payload = {
+        "jti": str(uuid.uuid4()),
+        "sub": "Saqib Pharmacy",
+        "client_name": "Saqib Pharmacy",
+        "mac": hwid,
+        "type": license_type,
+        "iat": start_date.timestamp(),
+        "exp": end_date.timestamp() if end_date else None,
+        "features": ["inventory", "sales", "reports", "settings"]
+    }
+    
+    token = jwt.encode(payload, private_key, algorithm="RS256")
+    return token
 def create_license_file(hwid: str, start_date_str: str = None, end_date_str: str = None):
     """
     Generates a valid signed license key for the given HWID and prints it to the console.

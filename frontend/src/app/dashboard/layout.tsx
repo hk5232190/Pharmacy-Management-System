@@ -7,6 +7,7 @@ import { LicenseExpiryBar } from "@/components/layout/license-expiry-bar";
 import { ExitBackupMounter } from "@/components/layout/exit-backup-mounter";
 import { AccessGuard } from "@/components/layout/access-guard";
 import { AuthGate } from "@/components/layout/auth-gate";
+import { SWRProvider } from "@/providers/SWRProvider";
 
 export default function DashboardLayout({
   children,
@@ -29,9 +30,11 @@ export default function DashboardLayout({
               <LicenseExpiryBar />
               <main className="flex-1 overflow-y-auto print:overflow-visible">
                 <InventorySettingsProvider>
-                  <AccessGuard>
-                    {children}
-                  </AccessGuard>
+                  <SWRProvider>
+                    <AccessGuard>
+                      {children}
+                    </AccessGuard>
+                  </SWRProvider>
                 </InventorySettingsProvider>
               </main>
             </div>

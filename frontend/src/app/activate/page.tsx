@@ -265,7 +265,7 @@ export default function ActivatePage() {
               onClick={() => router.push("/")}
               className="w-full h-[54px] text-[15px] font-bold shadow-xl shadow-emerald-500/20 hover:shadow-emerald-500/40 hover:-translate-y-0.5 transition-all duration-200 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white border-0"
             >
-              Continue to Dashboard <ArrowRight className="ml-2" size={18} />
+              Continue to Login <ArrowRight className="ml-2" size={18} />
             </Button>
           </div>
         )}

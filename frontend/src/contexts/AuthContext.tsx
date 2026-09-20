@@ -63,7 +63,8 @@ async function fetchProfileByToken(token: string): Promise<UserProfile | null> {
     const baseUrl = await resolveApiBaseUrl();
     const res = await fetch(`${baseUrl}/auth/me`, {
       headers: { "Authorization": `Bearer ${token}` }
-    });
+    }).catch(() => null);
+    if (!res) return null;
     if (res.ok) {
       const data = await res.json();
       if (data.profile_photo_path) {

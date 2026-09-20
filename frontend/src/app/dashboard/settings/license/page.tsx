@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import useSWR from "swr";
 import {
   ShieldCheck, ShieldAlert, ShieldX, Cpu, Key, FileText,
   Upload, Copy, Check, RefreshCw, AlertTriangle, CheckCircle2, XCircle, X,
@@ -187,9 +188,7 @@ function SubscriptionProgressBar({
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function LicensePage() {
-  const [info, setInfo] = useState<LicenseInfo | null>(null);
   const [validation, setValidation] = useState<ValidationChecks | null>(null);
-  const [loading, setLoading] = useState(false);
   const [validating, setValidating] = useState(false);
   const [importing, setImporting] = useState(false);
   const [copiedMac, setCopiedMac] = useState(false);
@@ -202,25 +201,25 @@ export default function LicensePage() {
   const [revealLoading, setRevealLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const { data: info, isLoading: loading, mutate: mutateInfo } = useSWR<LicenseInfo>('/license/info', async (url: string) => {
+    const res = await apiClient.get<LicenseInfo>(url);
+    if ((res as any).success === false) throw new Error("Failed to load license info");
+    return res;
+  }, { keepPreviousData: true, revalidateOnFocus: false });
+
+  // Reset reveal state whenever license info is refreshed (detected via info change)
   useEffect(() => {
-    fetchInfo();
+    setRevealedKey(null);
+    setShowKey(false);
+  }, [info]);
+
+  useEffect(() => {
     handleValidate();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchInfo = async () => {
-    setLoading(true);
-    try {
-      const res = await apiClient.get("/license/info");
-      setInfo(res);
-      // Reset reveal state whenever license info is refreshed
-      setRevealedKey(null);
-      setShowKey(false);
-    } catch {
-      toast.error("Failed to load license information.");
-    } finally {
-      setLoading(false);
-    }
+    await mutateInfo();
   };
 
   /** Toggle key visibility — fetches full key from authenticated endpoint on first reveal */
@@ -312,7 +311,7 @@ export default function LicensePage() {
     return "text-emerald-600 dark:text-emerald-400";
   };
 
-  if (loading) {
+  if (loading && !info) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="flex flex-col items-center gap-3 text-muted-foreground">

@@ -137,15 +137,36 @@ export default function BackupDataManagementSettingsPage() {
     }
   };
 
-  // ── Handle browse folder via Electron IPC ──────────────────────────────────
+  // ── Handle browse folder via Electron IPC / Tauri / API ──────────────────────────────────
   const handleBrowse = async () => {
     try {
-      const win = window as any;
-      if (win?.electronAPI?.openFolderDialog) {
-        const path = await win.electronAPI.openFolderDialog();
-        if (path) setSettings(s => ({ ...s, BackupLocation: path }));
+      let isTauri = false;
+      try {
+        isTauri = typeof window !== 'undefined' && (window as any).__TAURI_INTERNALS__ !== undefined;
+      } catch (e) {}
+
+      if (isTauri) {
+        const { open } = await import('@tauri-apps/plugin-dialog');
+        const selected = await open({
+          directory: true,
+          multiple: false,
+        });
+        if (selected) {
+          setSettings(s => ({ ...s, BackupLocation: Array.isArray(selected) ? selected[0] : selected }));
+          return;
+        }
       } else {
-        toast.info("Folder picker is only available in the desktop app.");
+        // Fallback for DEV localhost testing
+        const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
+        const res = await fetch(`${getApiBaseUrl()}/backup/browse-folder`, {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.path) {
+            setSettings(s => ({ ...s, BackupLocation: data.path }));
+          }
+        }
       }
     } catch {
       toast.error("Failed to open folder dialog.");

@@ -1,6 +1,6 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from typing import Optional, List
-from datetime import datetime
+from datetime import datetime, timezone
 
 class NotificationResponse(BaseModel):
     NotificationId: int
@@ -14,6 +14,13 @@ class NotificationResponse(BaseModel):
     ActionUrl: Optional[str] = None
     IsRead: bool
     CreatedAt: datetime
+
+    @field_validator("CreatedAt", mode="before")
+    @classmethod
+    def ensure_utc(cls, v):
+        if isinstance(v, datetime) and v.tzinfo is None:
+            return v.replace(tzinfo=timezone.utc)
+        return v
 
     class Config:
         from_attributes = True

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import useSWR from "swr";
 import { apiClient } from "@/lib/api-client";
 import { toast } from "sonner";
 import jsPDF from 'jspdf';
@@ -145,48 +146,102 @@ function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTa
   const { formatCurrency, currencySymbol, triggerNotification } = useSystemPreferences();
   const { profile } = useProfile();
   const router = useRouter();
-  const [summary, setSummary] = useState<InventorySummary>({
-    total_medicines: 0,
-    total_stock_quantity: 0,
-    inventory_value: 0,
-    low_stock_items: 0,
-    expiring_medicines: 0,
-    out_of_stock_medicines: 0,
-    overstock_items: 0
-  });
+  const swrFetcher = async (url: string) => {
+    const res = await apiClient.get<any>(url);
+    if (res.success === false) throw new Error(res.error);
+    return res.data;
+  };
 
-  const [stockList, setStockList] = useState<StockBatch[]>([]);
-  const [adjustmentHistory, setAdjustmentHistory] = useState<StockAdjustment[]>([]);
-  const [expiryItems, setExpiryItems] = useState<ExpiryItem[]>([]);
-  const [expiryKpi, setExpiryKpi] = useState<ExpiryKpiSummary | null>(null);
-  const [expiryTotal, setExpiryTotal] = useState(0);
-  const [expiryTimeframe, setExpiryTimeframe] = useState(30);
-  const [expirySearch, setExpirySearch] = useState("");
-  const [expirySupplierFilter, setExpirySupplierFilter] = useState("All");
-  const [expiryPage, setExpiryPage] = useState(1);
-  const expiryPageSize = 15;
-  const [movementList, setMovementList] = useState<StockMovement[]>([]);
-  const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
-  const [loading, setLoading] = useState(true);
-  // (activeTab is now managed by the wrapper so it survives a refresh reset)
-  
+  const { data: summaryData, mutate: mutateSummary, isLoading: summaryLoading } = useSWR("/inventory/summary", swrFetcher);
+  const summary: InventorySummary = summaryData || {
+    total_medicines: 0, total_stock_quantity: 0, inventory_value: 0,
+    low_stock_items: 0, expiring_medicines: 0, out_of_stock_medicines: 0, overstock_items: 0
+  };
+
   // Filters
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [categoryFilter, setCategoryFilter] = useState("All");
   const [companyFilter, setCompanyFilter] = useState("All");
-
-  // Master Lists for Filters
-  const [masterCategories, setMasterCategories] = useState<{CategoryId: number, CategoryName: string}[]>([]);
-  const [masterCompanies, setMasterCompanies] = useState<{CompanyId: number, CompanyName: string}[]>([]);
-  const [masterSuppliers, setMasterSuppliers] = useState<{SupplierId: number, Name: string}[]>([]);
   
+  // Debounced filters
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery);
+  const [debouncedStatusFilter, setDebouncedStatusFilter] = useState(statusFilter);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+      setDebouncedStatusFilter(statusFilter);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery, statusFilter]);
+
+  const { data: stockData, mutate: mutateStock, isLoading: stockLoading } = useSWR(`/inventory/stock?status=${debouncedStatusFilter}&search=${debouncedSearchQuery}`, swrFetcher, { keepPreviousData: true });
+  const stockList: StockBatch[] = stockData || [];
+
+  const { data: adjData, mutate: mutateAdjustments, isLoading: adjLoading } = useSWR("/inventory/adjustments", swrFetcher, { keepPreviousData: true });
+  const adjustmentHistory: StockAdjustment[] = adjData || [];
+
   // Movement Filters
   const [movSearchQuery, setMovSearchQuery] = useState("");
   const [movBatchFilter, setMovBatchFilter] = useState("");
   const [movTypeFilter, setMovTypeFilter] = useState("");
   const [movStartDate, setMovStartDate] = useState("");
   const [movEndDate, setMovEndDate] = useState("");
+
+  const movQuery = [];
+  if (movBatchFilter) movQuery.push(`batch_code=${encodeURIComponent(movBatchFilter)}`);
+  if (movTypeFilter) movQuery.push(`movement_type=${encodeURIComponent(movTypeFilter)}`);
+  if (movStartDate) movQuery.push(`start_date=${movStartDate}`);
+  if (movEndDate) movQuery.push(`end_date=${movEndDate}`);
+  
+  const { data: movData, mutate: mutateMovements, isLoading: movLoading } = useSWR(`/inventory/movements?${movQuery.join("&")}`, swrFetcher, { keepPreviousData: true });
+  const movementList: StockMovement[] = movData || [];
+
+  const { data: auditData, mutate: mutateAudit, isLoading: auditLoading } = useSWR("/inventory/audit-logs", swrFetcher, { keepPreviousData: true });
+  const auditLogs: AuditLogEntry[] = auditData || [];
+
+  const { data: catData, mutate: mutateCategories } = useSWR("/categories?page_size=0", swrFetcher);
+  const masterCategories: {CategoryId: number, CategoryName: string}[] = catData || [];
+
+  const { data: compData, mutate: mutateCompanies } = useSWR("/companies?page_size=0", swrFetcher);
+  const masterCompanies: {CompanyId: number, CompanyName: string}[] = compData || [];
+
+  const { data: suppData, mutate: mutateSuppliers } = useSWR("/suppliers?page_size=0", swrFetcher);
+  const masterSuppliers: {SupplierId: number, Name: string}[] = suppData || [];
+
+  const [expiryTimeframe, setExpiryTimeframe] = useState(30);
+  const [expirySearch, setExpirySearch] = useState("");
+  const [expirySupplierFilter, setExpirySupplierFilter] = useState("All");
+  const [expiryPage, setExpiryPage] = useState(1);
+  const expiryPageSize = 15;
+
+  const expiryParams = new URLSearchParams({
+    days: String(expiryTimeframe),
+    page: String(expiryPage),
+    page_size: String(expiryPageSize)
+  });
+  if (expirySearch) expiryParams.append("medicine_name", expirySearch);
+  if (expirySupplierFilter !== "All") expiryParams.append("supplier_name", expirySupplierFilter);
+
+  const fetchStock = async (url: string) => {
+    const res = await apiClient.get<any>(url);
+    if (res.success === false) throw new Error(res.error);
+    return res.data;
+  };
+
+  const { data: expData, mutate: mutateExpiry, isLoading: expLoading } = useSWR(
+    activeTab === "expiry" ? `/inventory/expiry?${expiryParams.toString()}` : null,
+    fetchStock,
+    { keepPreviousData: true }
+  );
+  const expiryItems: ExpiryItem[] = expData?.items || [];
+  const expiryTotal: number = expData?.total || 0;
+  const expiryKpi: ExpiryKpiSummary | null = expData?.kpi_summary || null;
+
+  const loading = summaryLoading || stockLoading || adjLoading || movLoading || auditLoading || (activeTab === "expiry" && expLoading);
+  
+
 
   // Side Panel & Modals
   const [selectedBatch, setSelectedBatch] = useState<StockBatch | null>(null);
@@ -308,94 +363,16 @@ function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTa
   }, []);
 
   const fetchData = async () => {
-    setLoading(true);
-    try {
-      const sumRes = await apiClient.get("/inventory/summary");
-      if (sumRes.success && sumRes.data) {
-        setSummary(sumRes.data);
-      }
-      
-      const stockRes = await apiClient.get(`/inventory/stock?status=${statusFilter}&search=${searchQuery}`);
-      if (stockRes.success && stockRes.data) {
-        setStockList(stockRes.data);
-      }
-      
-      const adjRes = await apiClient.get(`/inventory/adjustments`);
-      if (adjRes.success && adjRes.data) {
-        setAdjustmentHistory(adjRes.data);
-      }
-      
-      // Expiry data is now fetched via a separate effect/function (fetchExpiryData)
-      // to avoid corrupting KPIs and allow standalone pagination.
-
-      // Build movement query string
-      let movQuery = [];
-      if (movBatchFilter) movQuery.push(`batch_code=${encodeURIComponent(movBatchFilter)}`);
-      if (movTypeFilter) movQuery.push(`movement_type=${encodeURIComponent(movTypeFilter)}`);
-      if (movStartDate) movQuery.push(`start_date=${movStartDate}`);
-      if (movEndDate) movQuery.push(`end_date=${movEndDate}`);
-      
-      const movRes = await apiClient.get(`/inventory/movements?${movQuery.join("&")}`);
-      if (movRes.success && movRes.data) {
-        setMovementList(movRes.data);
-      }
-
-      const auditRes = await apiClient.get(`/inventory/audit-logs`);
-      if (auditRes.success && auditRes.data) {
-        setAuditLogs(auditRes.data);
-      }
-
-      // Fetch master lists for filters (page_size=0 gets all)
-      const catRes = await apiClient.get("/categories?page_size=0");
-      if (catRes.success && catRes.data) {
-        setMasterCategories(catRes.data);
-      }
-      const compRes = await apiClient.get("/companies?page_size=0");
-      if (compRes.success && compRes.data) {
-        setMasterCompanies(compRes.data);
-      }
-      const suppRes = await apiClient.get("/suppliers?page_size=0");
-      if (suppRes.success && suppRes.data) {
-        setMasterSuppliers(suppRes.data);
-      }
-
-    } catch (error) {
-      toast.error("Failed to load inventory data");
-    } finally {
-      setLoading(false);
-    }
+    mutateSummary();
+    mutateStock();
+    mutateAdjustments();
+    mutateMovements();
+    mutateAudit();
+    mutateCategories();
+    mutateCompanies();
+    mutateSuppliers();
+    mutateExpiry();
   };
-
-  const fetchExpiryData = async () => {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams({
-        days: String(expiryTimeframe),
-        page: String(expiryPage),
-        page_size: String(expiryPageSize)
-      });
-      if (expirySearch) params.append("medicine_name", expirySearch);
-      if (expirySupplierFilter !== "All") params.append("supplier_name", expirySupplierFilter);
-      
-      const res = await apiClient.get(`/inventory/expiry?${params.toString()}`);
-      if (res.success && res.data) {
-        setExpiryItems(res.data.items);
-        setExpiryTotal(res.data.total);
-        setExpiryKpi(res.data.kpi_summary);
-      }
-    } catch (error) {
-      toast.error("Failed to load expiry data");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (activeTab === "expiry") {
-      fetchExpiryData();
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [expiryTimeframe, expiryPage, expirySearch, expirySupplierFilter, activeTab]);
 
   // (handleRefresh is now managed by the wrapper and passed as onRefresh prop)
 
@@ -584,14 +561,7 @@ function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTa
     toast.success("Print preview opened in new window");
   };
 
-  // Debounced auto-search and filter change listener
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchData();
-    }, 300);
-    return () => clearTimeout(timer);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchQuery, statusFilter]);
+
 
   const handleStockAdjustment = async () => {
     if (!adjustData.BatchId || adjustData.BatchId <= 0) return triggerNotification('warning', 'AlertTriggerErrors', "Please select a valid batch from the list");

@@ -31,10 +31,9 @@ if (-not (Test-Path $internalDir)) {
 $fileCount = (Get-ChildItem $backendDir -Recurse -File).Count
 Write-Host "Backend built: $backendDir ($fileCount files, _internal/ present)" -ForegroundColor Green
 
-# 4. Copy one-dir backend to bundle/ for NSIS File /r (preserves _internal/ structure)
-#    Do NOT use resources/ — Tauri's glob flattens nested directories.
-Write-Host "Copying backend to bundle/pms-backend/ for NSIS..." -ForegroundColor Cyan
-$bundleTarget = "frontend\src-tauri\bundle\pms-backend"
+# 4. Copy one-dir backend to pms-backend/ for Tauri resources (preserves _internal/ structure natively via array syntax)
+Write-Host "Copying backend to pms-backend/ for Tauri..." -ForegroundColor Cyan
+$bundleTarget = "frontend\src-tauri\pms-backend"
 if (Test-Path $bundleTarget) { Remove-Item $bundleTarget -Recurse -Force }
 New-Item -ItemType Directory -Path $bundleTarget -Force | Out-Null
 Copy-Item "$backendDir\*" -Destination $bundleTarget -Recurse -Force

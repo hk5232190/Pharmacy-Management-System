@@ -13,6 +13,7 @@
 !macroend
 
 !macro NSIS_HOOK_INSTALL
+  
   ; Add Windows Defender exclusion so the 1086 backend files are NOT scanned on every launch.
   ; Without this, Defender scans all DLLs in pms-backend\_internal\ causing 5+ minute startup.
   nsExec::ExecToLog 'powershell.exe -NonInteractive -WindowStyle Hidden -Command "Add-MpPreference -ExclusionPath \"$INSTDIR\pms-backend\" -ErrorAction SilentlyContinue"'

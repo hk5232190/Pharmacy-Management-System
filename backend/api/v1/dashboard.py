@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func, or_
 from datetime import date, timedelta
 from api.deps import get_db, get_current_user
@@ -390,7 +390,7 @@ def get_dashboard_widgets(
     expiry_alert_days = inv_settings.ExpiryAlertDays if inv_settings else 90
 
     # 1. Recent Sales
-    sales = db.query(models.Sale).filter(
+    sales = db.query(models.Sale).options(joinedload(models.Sale.customer)).filter(
         func.date(models.Sale.TransactionDate, 'localtime') >= filter_start,
         func.date(models.Sale.TransactionDate, 'localtime') <= filter_end
     ).order_by(models.Sale.TransactionDate.desc()).limit(10).all()
@@ -443,7 +443,7 @@ def get_dashboard_widgets(
     # Actually, we also want to show things that have already expired if they still have quantity? 
     # Usually expiry alert is for upcoming. Let's do ExpiryDate <= today + EXPIRY_ALERT_DAYS
     expiry_threshold = today + timedelta(days=expiry_alert_days)
-    expiring_batches = db.query(models.StockBatch).filter(
+    expiring_batches = db.query(models.StockBatch).options(joinedload(models.StockBatch.medicine)).filter(
         models.StockBatch.Quantity > 0,
         models.StockBatch.ExpiryDate <= expiry_threshold
     ).order_by(models.StockBatch.ExpiryDate.asc()).all()

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import useSWR from "swr";
 import { toast } from "sonner";
 import { apiClient, API_BASE_URL, getAccessToken } from "@/lib/api-client";
 
@@ -73,13 +74,28 @@ export function useMasterCRUD<T extends object>(
   const { endpoint, entityName, idField, defaultItem, exportFilename } = config;
   const nameField = config.nameField ?? "Name";
 
-  const [items, setItems] = useState<T[]>([]);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
-  const [totalRecords, setTotalRecords] = useState(0);
+
+  const swrKey = `/${endpoint}?page=${page}&page_size=${pageSize}${search ? `&search=${encodeURIComponent(search)}` : ""}${filterStatus !== "all" ? `&status=${filterStatus}` : ""}`;
+
+  const { data: swrData, error, mutate, isLoading, isValidating } = useSWR(
+    swrKey,
+    async (url: string) => {
+      const parts = url.split("?");
+      const params = new URLSearchParams(parts[1] || "");
+      const paramsObj: Record<string, string> = {};
+      params.forEach((val, key) => { paramsObj[key] = val; });
+      return await apiClient.get(parts[0], { params: paramsObj });
+    },
+    { keepPreviousData: true }
+  );
+
+  const items: T[] = swrData?.success ? (swrData.data || []) : [];
+  const totalRecords: number = swrData?.success ? (swrData.total || 0) : 0;
+  const loading = isLoading;
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isImporting, setIsImporting] = useState(false);
@@ -118,56 +134,42 @@ export function useMasterCRUD<T extends object>(
     });
   }, []);
 
-  const fetchItems = useCallback(async () => {
-    setLoading(true);
-    try {
-      const params: Record<string, string | number | boolean | null | undefined> = { page, page_size: pageSize };
-      if (search) params.search = search;
-      if (filterStatus !== "all") params.status = filterStatus;
-
-      const data = await apiClient.get(`/${endpoint}`, { params });
-      if (data.success) {
-        setItems(data.data);
-        setTotalRecords(data.total || 0);
-        setSelectedIds(new Set());
-      } else {
-        toast.error(`Failed to load ${entityName}s`);
-      }
-    } catch {
-      toast.error(`Network error while loading ${entityName}s`);
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    if (error || (swrData && !swrData.success)) {
+      toast.error(`Failed to load ${entityName}s`);
     }
-  }, [endpoint, entityName, page, pageSize, search, filterStatus]);
+  }, [error, swrData, entityName]);
+
+  const fetchItems = useCallback(async () => {
+    await mutate();
+  }, [mutate]);
 
   useEffect(() => {
     setPage(1);
+    setSelectedIds(new Set());
   }, [search, filterStatus]);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchItems();
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [search, filterStatus, page, pageSize, fetchItems]);
-
-  useEffect(() => {
-    const handleRefresh = () => fetchItems();
+    const handleRefresh = () => mutate();
     window.addEventListener("refresh-masters-tab", handleRefresh);
     return () => window.removeEventListener("refresh-masters-tab", handleRefresh);
-  }, [fetchItems]);
+  }, [mutate]);
 
   const handleToggleStatus = useCallback(async (id: number) => {
     try {
       const data = await apiClient.put(`/${endpoint}/${id}/status`);
       if (data.success) {
         toast.success(data.message);
-        setItems((prev) =>
-          prev.map((item) => {
-            const record = asRecord(item);
-            return record[idField] === id ? { ...item, IsActive: !record.IsActive } : item;
-          })
-        );
+        mutate((currentData: any) => {
+          if (!currentData || !currentData.data) return currentData;
+          return {
+            ...currentData,
+            data: currentData.data.map((item: any) => {
+              const record = asRecord(item);
+              return record[idField] === id ? { ...item, IsActive: !record.IsActive } : item;
+            })
+          };
+        }, false);
       } else {
         toast.error(data.error);
       }

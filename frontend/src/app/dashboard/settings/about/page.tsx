@@ -2,6 +2,7 @@
 import { getApiBaseUrl } from "@/lib/api-client";
 
 import { useState, useEffect } from "react";
+import useSWR from "swr";
 import {
   Code2, Monitor, HardDrive, Cpu, MemoryStick, Database,
   Globe, Mail, Phone, Shield, ShieldCheck, ShieldAlert, ShieldX,
@@ -228,48 +229,37 @@ function LicenseStatusBadge({ status, type, expiryDate, remainingDays, isLifetim
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function AboutPage() {
-  const [data, setData] = useState<AboutData | null>(null);
-  const [diagnostics, setDiagnostics] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => { fetchAbout(); }, []);
-
-  const fetchAbout = async () => {
-    setLoading(true);
-    try {
-      const headers = { Authorization: `Bearer ${localStorage.getItem("access_token") || sessionStorage.getItem("access_token") || ""}` };
-      const [resAbout, resDiag, resLic] = await Promise.all([
-        fetch(`${getApiBaseUrl()}/about/info`, { headers }),
-        fetch(`${getApiBaseUrl()}/system/diagnostics`, { headers }).catch(() => null),
-        fetch(`${getApiBaseUrl()}/license/info`, { headers }).catch(() => null)
-      ]);
-      
-      if (!resAbout.ok) throw new Error("Failed");
-      const aboutData = await resAbout.json();
-      
-      if (resLic && resLic.ok) {
-        const licData = await resLic.json();
-        aboutData.license = {
-          status: licData.status,
-          type: licData.license_type,
-          expiry_date: licData.expiry_date,
-          remaining_days: licData.remaining_days,
-          is_lifetime: licData.total_days === null,
-        };
-      }
-      setData(aboutData);
-      
-      if (resDiag && resDiag.ok) {
-        setDiagnostics(await resDiag.json());
-      }
-    } catch {
-      toast.error("Failed to load about information.");
-    } finally {
-      setLoading(false);
+  const fetcher = async () => {
+    const headers = { Authorization: `Bearer ${localStorage.getItem("access_token") || sessionStorage.getItem("access_token") || ""}` };
+    const [resAbout, resDiag, resLic] = await Promise.all([
+      fetch(`${getApiBaseUrl()}/about/info`, { headers }),
+      fetch(`${getApiBaseUrl()}/system/diagnostics`, { headers }).catch(() => null),
+      fetch(`${getApiBaseUrl()}/license/info`, { headers }).catch(() => null)
+    ]);
+    
+    if (!resAbout.ok) throw new Error("Failed to load about information.");
+    const aboutData = await resAbout.json();
+    
+    if (resLic && resLic.ok) {
+      const licData = await resLic.json();
+      aboutData.license = {
+        status: licData.status,
+        type: licData.license_type,
+        expiry_date: licData.expiry_date,
+        remaining_days: licData.remaining_days,
+        is_lifetime: licData.total_days === null,
+      };
     }
+    
+    const diagData = resDiag && resDiag.ok ? await resDiag.json() : null;
+    return { aboutData, diagData };
   };
 
-  if (loading) {
+  const { data: swrData, isLoading: loading, mutate: fetchAbout } = useSWR('/about/info', fetcher, { keepPreviousData: true, revalidateOnFocus: false, dedupingInterval: 60000 });
+  const data = swrData?.aboutData || null;
+  const diagnostics = swrData?.diagData || null;
+
+  if (loading && !swrData) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="flex flex-col items-center gap-3 text-muted-foreground">
@@ -295,9 +285,6 @@ export default function AboutPage() {
             Application details, system information, and support resources.
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={fetchAbout} className="gap-2 shrink-0">
-          <RefreshCw size={15} /> Refresh
-        </Button>
       </div>
 
       {/* ── Hero Banner ── */}

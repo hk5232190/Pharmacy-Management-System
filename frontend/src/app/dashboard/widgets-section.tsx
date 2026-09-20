@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
+import useSWR from "swr";
 import { Card } from "@/components/ui/card";
 import { apiClient } from "@/lib/api-client";
 import { toast } from "sonner";
@@ -18,35 +19,25 @@ interface WidgetsSectionProps {
 
 export default function WidgetsSection({ timeframe = 'today', dateRange = null, refreshTrigger = 0 }: WidgetsSectionProps) {
   const { formatNumber, formatCurrency } = useSystemPreferences();
-  const [loading, setLoading] = useState(true);
-  const [data, setData] = useState<any>(null);
-
-  useEffect(() => {
-    if (timeframe === 'custom' && !dateRange) return;
-    fetchWidgets();
+  const swrKey = useMemo(() => {
+    if (timeframe === 'custom' && !dateRange) return null;
+    let url = `/dashboard/widgets?timeframe=${timeframe}`;
+    if (timeframe === 'custom' && dateRange) {
+      url += `&start_date=${dateRange.start}&end_date=${dateRange.end}`;
+    }
+    return url;
   }, [timeframe, dateRange, refreshTrigger]);
 
-  const fetchWidgets = async () => {
-    setLoading(true);
-    try {
-      let url = `/dashboard/widgets?timeframe=${timeframe}`;
-      if (timeframe === 'custom' && dateRange) {
-        url += `&start_date=${dateRange.start}&end_date=${dateRange.end}`;
-      }
-      const res = await apiClient.get(url);
-      if (res.success === false) {
-        toast.error(res.error || "Failed to load activity widgets");
-      } else {
-        setData(res);
-      }
-    } catch (err: any) {
-      toast.error(err.message || "Error fetching activity widgets");
-    } finally {
-      setLoading(false);
+  const { data, error, isLoading } = useSWR(swrKey, async (url: string) => {
+    const res = await apiClient.get(url);
+    if (res.success === false) {
+      toast.error(res.error || "Failed to load activity widgets");
+      throw new Error(res.error);
     }
-  };
+    return res;
+  }, { keepPreviousData: true });
 
-  if (loading && !data) {
+  if (isLoading && !data && !error) {
     return (
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-pulse">
         <Card className="h-64 bg-slate-100 dark:bg-slate-800 rounded-2xl border-none" />

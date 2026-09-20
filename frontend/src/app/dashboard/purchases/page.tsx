@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
+import useSWR from 'swr';
 import { 
   ShoppingCart, DollarSign, Undo2, Users, FileText, 
   Search, Plus, Save, Printer, Eye, X, Trash2, Calendar,
@@ -105,7 +106,29 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
   // (activeTab is now managed by the wrapper so it survives a refresh reset)
 
   // --- States for Invoice Tab ---
-  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const swrFetcher = async (url: string) => {
+    const res = await apiClient.get<any>(url);
+    if (res.success === false) throw new Error(res.error);
+    return res.data;
+  };
+
+  const { data: summaryData, mutate: mutateSummary } = useSWR("/purchases/summary", swrFetcher);
+  const { data: suppliersData, mutate: mutateSuppliers } = useSWR("/suppliers", swrFetcher);
+  const suppliers: Supplier[] = suppliersData?.filter((s: any) => s.IsActive) || [];
+
+  const { data: historyData, mutate: mutateHistory } = useSWR("/purchases", swrFetcher);
+  const purchaseHistory: PurchaseHistory[] = historyData || [];
+
+  const { data: returnsData, mutate: mutateReturns } = useSWR("/purchase-returns", swrFetcher);
+  const returnsHistory: any[] = returnsData || [];
+
+  const mutateAll = () => {
+    mutateSummary();
+    mutateSuppliers();
+    mutateHistory();
+    mutateReturns();
+  };
+
   const [medicines, setMedicines] = useState<Medicine[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [barcodeQuery, setBarcodeQuery] = useState("");
@@ -136,8 +159,6 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
   const [paidAmount, setPaidAmount] = useState(0);
 
 
-  // --- States for History Tab ---
-  const [purchaseHistory, setPurchaseHistory] = useState<PurchaseHistory[]>([]);
   const [viewingInvoice, setViewingInvoice] = useState<PurchaseHistory | null>(null);
   const [showDraftPreview, setShowDraftPreview] = useState(false);
   const [historySearchQuery, setHistorySearchQuery] = useState("");
@@ -147,26 +168,17 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
   const [historyPageSize, setHistoryPageSize] = useState(10);
   const [historyCurrentPage, setHistoryCurrentPage] = useState(1);
 
-  // --- States for Returns Tab ---
-  const [returnsHistory, setReturnsHistory] = useState<any[]>([]);
   const [selectedReturnInvoice, setSelectedReturnInvoice] = useState<PurchaseHistory | null>(null);
   const [returnItems, setReturnItems] = useState<{ PurchaseItemId: number; MedicineId: number; MedicineName: string; BatchCode: string; OriginalQty: number; ReturnQty: number; CostPrice: number; RefundAmount: number; ReturnReason: string }[]>([]);
   const [returnReason, setReturnReason] = useState("");
   const [settlementType, setSettlementType] = useState("Adjust in Supplier Balance");
   const [returnInvNo, setReturnInvNo] = useState(`DN-${new Date().getFullYear().toString().slice(-2)}${Math.floor(1000 + Math.random() * 9000)}`);
-  const [summaryData, setSummaryData] = useState<any>(null);
   const [returnsCurrentPage, setReturnsCurrentPage] = useState(1);
   const [returnsPageSize, setReturnsPageSize] = useState(10);
 
   const fmt = (n: number) => formatNumber ? formatNumber(n) : n.toLocaleString('en-PK', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   // --- Effects ---
-  useEffect(() => {
-    fetchSummary();
-    fetchSuppliers();
-    fetchHistory();
-    fetchReturns();
-  }, []);
 
   useEffect(() => {
     if (searchQuery.length > 1) {
@@ -195,48 +207,7 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
   }, [paidAmount, grandTotal]);
 
   // --- API Calls ---
-  const fetchSummary = async () => {
-    try {
-      const data = await apiClient.get("/purchases/summary");
-      if (data.success) {
-        setSummaryData(data.data);
-      }
-    } catch (e) {
-      console.error("Failed to fetch purchase summary");
-    }
-  };
-  const fetchSuppliers = async () => {
-    try {
-      const data = await apiClient.get("/suppliers");
-      if (data.success) {
-        setSuppliers(data.data.filter((s: any) => s.IsActive));
-      }
-    } catch (e) {
-      console.error("Failed to fetch suppliers");
-    }
-  };
 
-  const fetchHistory = async () => {
-    try {
-      const data = await apiClient.get("/purchases");
-      if (data.success) {
-        setPurchaseHistory(data.data);
-      }
-    } catch (e) {
-      console.error("Failed to fetch history");
-    }
-  };
-
-  const fetchReturns = async () => {
-    try {
-      const data = await apiClient.get("/purchase-returns");
-      if (data.success) {
-        setReturnsHistory(data.data);
-      }
-    } catch (e) {
-      console.error("Failed to fetch returns history");
-    }
-  };
 
   const searchMedicines = async (query: string) => {
     try {
@@ -451,7 +422,7 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
         setItems([]);
         setSupplierInvNo("");
         setInvoiceNo(`PI-${new Date().getFullYear().toString().slice(-2)}${String(new Date().getMonth()+1).padStart(2, '0')}-${Math.floor(1000 + Math.random() * 9000)}`);
-        fetchHistory();
+        mutateAll();
       } else {
         toast.error(data.error || "Failed to save purchase");
       }
@@ -530,7 +501,7 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
         setReturnItems([]);
         setReturnReason("");
         setReturnInvNo(`DN-${new Date().getFullYear().toString().slice(-2)}${Math.floor(1000 + Math.random() * 9000)}`);
-        fetchReturns();
+        mutateAll();
       } else {
         toast.error(data.error || "Failed to process return");
       }
@@ -617,8 +588,8 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
 
   const buildPurchaseChallanData = async (purchaseId: number): Promise<ChallanData | null> => {
     try {
-      const res = await apiClient.get(`/purchases/${purchaseId}`);
-      if (!res.success || !res.data) return null;
+      const res = await apiClient.get<any>(`/purchases/${purchaseId}`);
+      if (res.success === false || !res.data) return null;
 
       const d = res.data;
       return {

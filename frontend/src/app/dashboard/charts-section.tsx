@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
+import useSWR from "swr";
 import { Card } from "@/components/ui/card";
 import { apiClient } from "@/lib/api-client";
 import { toast } from "sonner";
@@ -35,33 +36,32 @@ interface ChartsSectionProps {
 
 export default function ChartsSection({ timeframe: initialTimeframe = 'last_30_days', dateRange = null, refreshTrigger = 0 }: ChartsSectionProps) {
   const { formatCurrency, currencySymbol } = useSystemPreferences();
-  const [loading, setLoading] = useState(true);
-  const [data, setData] = useState<any>(null);
   const [timeframe, setTimeframe] = useState(initialTimeframe);
-
-  useEffect(() => {
-    if (timeframe === 'custom' && !dateRange) return;
-    fetchCharts();
+  const swrKey = useMemo(() => {
+    if (timeframe === 'custom' && !dateRange) return null;
+    let url = `/dashboard/charts?timeframe=${timeframe}`;
+    if (timeframe === 'custom' && dateRange) {
+      url += `&start_date=${dateRange.start}&end_date=${dateRange.end}`;
+    }
+    return url;
   }, [timeframe, dateRange, refreshTrigger]);
 
-  const fetchCharts = async () => {
-    setLoading(true);
-    try {
-      let url = `/dashboard/charts?timeframe=${timeframe}`;
-      if (timeframe === 'custom' && dateRange) {
-        url += `&start_date=${dateRange.start}&end_date=${dateRange.end}`;
-      }
-      const res = await apiClient.get(url);
-      if (res.success === false) {
-        toast.error(res.error || "Failed to load charts data");
-      } else {
-        setData(res);
-      }
-    } catch (err: any) {
-      toast.error(err.message || "Error fetching charts");
-    } finally {
-      setLoading(false);
+  const { data, error, isLoading: loading } = useSWR(swrKey, async (url: string) => {
+    const res = await apiClient.get(url);
+    if (res.success === false) {
+      toast.error(res.error || "Failed to load charts data");
+      throw new Error(res.error);
     }
+    return res;
+  }, { keepPreviousData: true });
+
+  const fetchCharts = () => {
+    // SWR handles fetching automatically, but for the refresh button we could trigger mutate.
+    // However, refreshTrigger in the props (changed via parent Dashboard onRefresh)
+    // already changes the swrKey and triggers a re-fetch.
+    // If they click the internal refresh button:
+    // we can just force a revalidation.
+    import("swr").then(({ mutate }) => mutate(swrKey));
   };
 
   const handleExport = () => {
@@ -111,7 +111,7 @@ export default function ChartsSection({ timeframe: initialTimeframe = 'last_30_d
   return (
     <div className="space-y-8 pt-4">
 
-      {loading && !data && (
+      {loading && !data && !error && (
         <div className="flex justify-center p-12">
           <RefreshCw className="w-8 h-8 animate-spin text-primary" />
         </div>

@@ -24,6 +24,9 @@ if SQLALCHEMY_DATABASE_URL.startswith("sqlite"):
         cursor.execute("PRAGMA busy_timeout=5000")
         cursor.execute("PRAGMA synchronous=NORMAL")
         cursor.execute("PRAGMA foreign_keys=ON")
+        cursor.execute("PRAGMA cache_size=-64000")   # 64 MB page cache
+        cursor.execute("PRAGMA mmap_size=268435456")  # 256 MB memory-mapped I/O
+        cursor.execute("PRAGMA temp_store=MEMORY")   # temp tables in RAM
         cursor.close()
 
 
