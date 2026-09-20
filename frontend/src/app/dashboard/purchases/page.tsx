@@ -690,16 +690,24 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
 
         {/* Stats Cards — below the tabs, visible on History tab */}
         {activeTab === "history" && (() => {
-          const todayTotal = purchaseHistory
-            .filter(p => new Date(p.PurchaseDate).toDateString() === new Date().toDateString())
-            .reduce((acc, curr) => acc + (curr.NetAmount !== undefined ? curr.NetAmount : curr.GrandTotal), 0);
-          const allTimeTotal = purchaseHistory.reduce((acc, curr) => acc + (curr.NetAmount !== undefined ? curr.NetAmount : curr.GrandTotal), 0);
+          const isDateFiltered = filterFromDate !== "" || filterToDate !== "";
+          const todayTotal = isDateFiltered
+            ? filteredPurchaseHistory.reduce((acc, curr) => acc + (curr.NetAmount !== undefined ? curr.NetAmount : curr.GrandTotal), 0)
+            : purchaseHistory
+                .filter(p => {
+                  const pDate = new Date(p.PurchaseDate);
+                  const now = new Date();
+                  return pDate.toDateString() === now.toDateString() || 
+                         (now.getTime() - pDate.getTime() >= 0 && now.getTime() - pDate.getTime() < 12 * 60 * 60 * 1000);
+                })
+                .reduce((acc, curr) => acc + (curr.NetAmount !== undefined ? curr.NetAmount : curr.GrandTotal), 0);
+          const allTimeTotal = summaryData?.total_purchase_amount ?? purchaseHistory.reduce((acc, curr) => acc + (curr.NetAmount !== undefined ? curr.NetAmount : curr.GrandTotal), 0);
           const processedReturns = summaryData?.total_returns_count ?? returnsHistory.length;
           const balanceDue = summaryData?.total_balance_due ?? purchaseHistory.reduce((acc, curr) => acc + Math.max(0, curr.GrandTotal - curr.PaidAmount), 0);
           const totalInvoices = summaryData?.total_invoices_count ?? purchaseHistory.length;
 
           const cards = [
-            { title: "Today Purchases",    value: formatCurrency(Math.max(0, todayTotal)), icon: ShoppingCart, accent: "blue" },
+            { title: isDateFiltered ? "Period Purchases" : "Today Purchases",    value: formatCurrency(Math.max(0, todayTotal)), icon: ShoppingCart, accent: "blue" },
             { title: "Total Purchase Amount", value: formatCurrency(Math.max(0, allTimeTotal)), icon: DollarSign,  accent: "emerald" },
             { title: "Processed Returns",     value: String(processedReturns),             icon: Undo2,        accent: "orange" },
             { title: "Total Balance Due",     value: formatCurrency(balanceDue),              icon: CreditCard,   accent: "rose" },

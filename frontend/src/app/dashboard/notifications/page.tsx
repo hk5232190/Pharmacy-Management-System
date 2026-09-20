@@ -1004,18 +1004,7 @@ export default function NotificationCenterPage() {
               </div>
             </div>
 
-            <div className="pt-2 border-t border-border">
-              <Link
-                href="/dashboard/settings/appearance"
-                className="flex items-center justify-between text-xs font-semibold text-primary hover:text-primary/80 transition-colors pt-1"
-              >
-                <span className="flex items-center gap-1.5">
-                  <Settings className="w-3.5 h-3.5" />
-                  Alert & Audio Settings
-                </span>
-                <ChevronRightIcon className="w-3.5 h-3.5" />
-              </Link>
-            </div>
+
           </div>
 
           {/* Widget 3: Helpful Alert Guidelines */}

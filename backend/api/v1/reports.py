@@ -1402,19 +1402,21 @@ def add_pdf_footer(canvas, doc, pharmacy_name="Pharmacy"):
     
     canvas.restoreState()
 
-def build_pdf_header(title_text, subtitle_text, pharmacy_name="Pharmacy"):
+def build_pdf_header(title_text, subtitle_text, pharmacy_name="Pharmacy", logo_path=None):
     styles = getSampleStyleSheet()
     title_style = ParagraphStyle(name='ReportTitle', parent=styles['Heading1'], fontName='Helvetica-Bold', fontSize=20, textColor=colors.HexColor('#0F172A'), alignment=TA_CENTER, spaceAfter=4)
     subtitle_style = ParagraphStyle(name='ReportPeriod', parent=styles['Normal'], fontName='Helvetica', fontSize=10, textColor=colors.HexColor('#475569'), alignment=TA_CENTER, spaceAfter=20)
     pharmacy_style = ParagraphStyle(name='PharmacyName', parent=styles['Heading2'], fontName='Helvetica-Bold', fontSize=14, textColor=colors.HexColor('#334155'), alignment=TA_CENTER, spaceAfter=8)
     
-    return [
-        Spacer(1, 10),
+    elements = [Spacer(1, 10)]
+    
+    elements.extend([
         Paragraph(pharmacy_name, pharmacy_style),
         Paragraph(title_text, title_style),
         Paragraph(subtitle_text, subtitle_style),
         Spacer(1, 15),
-    ]
+    ])
+    return elements
 
 def get_premium_table_style():
     return TableStyle([
@@ -1523,6 +1525,7 @@ def export_sales_report_pdf(req: dict = Body(...), db: Session = Depends(get_db)
     sd, ed = get_reports_date_range(req.timeframe, req.start_date, req.end_date)
     profile = db.query(models.PrinterSettings).first()
     pharmacy_name = profile.PharmacyName if profile else "Pharmacy Management System"
+    logo_path = profile.ReceiptLogoPath if profile else None
     report_data = fetch_sales_report_data(db, sd, ed, req.customer_id, req.payment_method)
     
     output = io.BytesIO()
@@ -1530,7 +1533,9 @@ def export_sales_report_pdf(req: dict = Body(...), db: Session = Depends(get_db)
     elements = []
     styles = getSampleStyleSheet()
     
-    elements.extend(build_pdf_header("Sales Report", f"Period: {sd.strftime('%d-%m-%Y')} to {ed.strftime('%d-%m-%Y')}", pharmacy_name=pharmacy_name))
+    cell_style_left = ParagraphStyle(name='TableCellLeft', fontName='Helvetica', fontSize=9, alignment=TA_LEFT)
+    
+    elements.extend(build_pdf_header("Sales Report", f"Period: {sd.strftime('%d-%m-%Y')} to {ed.strftime('%d-%m-%Y')}", pharmacy_name=pharmacy_name, logo_path=logo_path))
     
     kpi_data = [
         ("Gross Sales:", f"Rs. {int(round(report_data.summary.TotalGrossSales))}"),
@@ -1553,14 +1558,14 @@ def export_sales_report_pdf(req: dict = Body(...), db: Session = Depends(get_db)
             str(i),
             t.InvoiceNo, 
             t.TransactionDate.strftime("%d-%m-%Y %I:%M %p"),
-            t.CustomerName[:15], # Truncate long names for PDF fit
+            Paragraph(t.CustomerName, cell_style_left),
             str(t.MedicinesSold),
             str(t.TotalQty),
             f"{int(round(t.GrandTotal)):,}",
             t.Status
         ])
         
-    t = Table(data, repeatRows=1)
+    t = Table(data, repeatRows=1, colWidths=[25, 65, 95, 115, 55, 50, 65, 57])
     t.setStyle(get_premium_table_style())
     elements.append(t)
     
@@ -1575,6 +1580,7 @@ def export_purchase_report_pdf(req: dict = Body(...), db: Session = Depends(get_
     sd, ed = get_reports_date_range(req.timeframe, req.start_date, req.end_date)
     profile = db.query(models.PrinterSettings).first()
     pharmacy_name = profile.PharmacyName if profile else "Pharmacy Management System"
+    logo_path = profile.ReceiptLogoPath if profile else None
     report_data = fetch_purchase_report_data(db, sd, ed, req.supplier_id)
     
     output = io.BytesIO()
@@ -1582,7 +1588,9 @@ def export_purchase_report_pdf(req: dict = Body(...), db: Session = Depends(get_
     elements = []
     styles = getSampleStyleSheet()
     
-    elements.extend(build_pdf_header("Purchase Report", f"Period: {sd.strftime('%d-%m-%Y')} to {ed.strftime('%d-%m-%Y')}", pharmacy_name=pharmacy_name))
+    cell_style_left = ParagraphStyle(name='TableCellLeft', fontName='Helvetica', fontSize=9, alignment=TA_LEFT)
+    
+    elements.extend(build_pdf_header("Purchase Report", f"Period: {sd.strftime('%d-%m-%Y')} to {ed.strftime('%d-%m-%Y')}", pharmacy_name=pharmacy_name, logo_path=logo_path))
     
     kpi_data = [
         ("Gross Purchases:", f"Rs. {int(round(report_data.summary.TotalGrossPurchases))}"),
@@ -1602,14 +1610,14 @@ def export_purchase_report_pdf(req: dict = Body(...), db: Session = Depends(get_
             str(i),
             t.InvoiceNo,
             t.PurchaseDate.strftime("%d-%m-%Y %I:%M %p"),
-            t.SupplierName,
+            Paragraph(t.SupplierName, cell_style_left),
             str(t.MedicinesPurchased),
             str(t.TotalQty),
             f"{int(round(t.GrandTotal)):,}",
             t.Status
         ])
 
-    t = Table(data, repeatRows=1, colWidths=[25, 90, 100, 115, 55, 50, 65, 47])
+    t = Table(data, repeatRows=1, colWidths=[25, 80, 95, 115, 55, 50, 60, 47])
     t.setStyle(get_premium_table_style())
     elements.append(t)
     
@@ -1624,6 +1632,7 @@ def export_inventory_report_pdf(req: dict = Body(...), db: Session = Depends(get
     sd, ed = get_reports_date_range(req.timeframe, req.start_date, req.end_date)
     profile = db.query(models.PrinterSettings).first()
     pharmacy_name = profile.PharmacyName if profile else "Pharmacy Management System"
+    logo_path = profile.ReceiptLogoPath if profile else None
     report_data = fetch_inventory_report_data(db, sd, ed)
     
     output = io.BytesIO()
@@ -1631,7 +1640,9 @@ def export_inventory_report_pdf(req: dict = Body(...), db: Session = Depends(get
     elements = []
     styles = getSampleStyleSheet()
     
-    elements.extend(build_pdf_header("Inventory Report", f"As of: {ed.strftime('%d-%m-%Y')}", pharmacy_name=pharmacy_name))
+    cell_style_left = ParagraphStyle(name='TableCellLeft', fontName='Helvetica', fontSize=9, alignment=TA_LEFT)
+    
+    elements.extend(build_pdf_header("Inventory Report", f"As of: {ed.strftime('%d-%m-%Y')}", pharmacy_name=pharmacy_name, logo_path=logo_path))
     
     kpi_data = [
         ("Total Stock Value:", f"Rs. {int(round(report_data.summary.TotalCostValue))}"),
@@ -1649,8 +1660,8 @@ def export_inventory_report_pdf(req: dict = Body(...), db: Session = Depends(get
     for i, t in enumerate(report_data.stock_items[:200], 1): # limit to 200 items to avoid giant PDF
         data.append([
             str(i),
-            t.MedicineName[:15],
-            t.Category[:10],
+            Paragraph(t.MedicineName, cell_style_left),
+            Paragraph(t.Category, cell_style_left),
             t.BatchCode,
             str(t.Quantity),
             f"{int(round(t.CostPrice)):,}",
@@ -1658,7 +1669,7 @@ def export_inventory_report_pdf(req: dict = Body(...), db: Session = Depends(get
             t.Status
         ])
         
-    t = Table(data, repeatRows=1)
+    t = Table(data, repeatRows=1, colWidths=[25, 130, 90, 60, 50, 55, 60, 57])
     t.setStyle(get_premium_table_style())
     elements.append(t)
     if len(report_data.stock_items) > 200:
@@ -1677,11 +1688,19 @@ def export_medicine_report_pdf(req: dict = Body(...), db: Session = Depends(get_
     report_data = fetch_medicine_report_data(db, sd, ed, req.report_type, None, None, 1, 0)
     profile = db.query(models.PrinterSettings).first()
     pharmacy_name = profile.PharmacyName if profile else "Pharmacy Management System"
+    logo_path = profile.ReceiptLogoPath if profile else None
     
     output = io.BytesIO()
     doc = SimpleDocTemplate(output, pagesize=A4, invariant=1)
     elements = []
     styles = getSampleStyleSheet()
+    
+    cell_style = ParagraphStyle(
+        name='TableCell',
+        fontName='Helvetica',
+        fontSize=9,
+        alignment=TA_LEFT
+    )
     
     title_map = {
         'expiry': 'Medicine Expiry Alerts',
@@ -1689,7 +1708,7 @@ def export_medicine_report_pdf(req: dict = Body(...), db: Session = Depends(get_
         'moving': 'Medicine Performance Report'
     }
     
-    elements.extend(build_pdf_header(title_map.get(req.report_type, "Medicine Report"), f"Period: {sd.strftime('%d-%m-%Y')} to {ed.strftime('%d-%m-%Y')}" if req.report_type == 'moving' else f"Snapshot As Of: {ed.strftime('%d-%m-%Y')}", pharmacy_name=pharmacy_name))
+    elements.extend(build_pdf_header(title_map.get(req.report_type, "Medicine Report"), f"Period: {sd.strftime('%d-%m-%Y')} to {ed.strftime('%d-%m-%Y')}" if req.report_type == 'moving' else f"Snapshot As Of: {ed.strftime('%d-%m-%Y')}", pharmacy_name=pharmacy_name, logo_path=logo_path))
     
     kpi_data = [
         ("Total Expired Batches:", str(report_data.summary.TotalExpiredBatches)),
@@ -1703,48 +1722,51 @@ def export_medicine_report_pdf(req: dict = Body(...), db: Session = Depends(get_
     
     if req.report_type == 'expiry':
         # Cols: 25+120+65+120+35+70+35+57 = 527
+        # Adjusted: Give more to Medicine and Supplier
         data = [['S.No', 'Medicine', 'Batch', 'Supplier', 'Qty', 'Expiry Date', 'Days', 'Status']]
-        col_widths = [25, 120, 65, 120, 35, 70, 35, 57]
+        col_widths = [25, 130, 60, 115, 35, 70, 35, 57]
         for i, t in enumerate(report_data.expiry_items[:200], 1):
             data.append([
                 str(i),
-                t.MedicineName,
-                t.BatchCode,
-                t.SupplierName if getattr(t, 'SupplierName', None) else '-',
+                Paragraph(t.MedicineName, cell_style),
+                Paragraph(t.BatchCode, cell_style),
+                Paragraph(t.SupplierName if getattr(t, 'SupplierName', None) else '-', cell_style),
                 str(t.Quantity),
-                t.ExpiryDate.strftime("%d-%m-%Y") if getattr(t, 'ExpiryDate', None) else 'N/A',
+                t.ExpiryDate.strftime("%Y-%m-%d") if t.ExpiryDate else '',
                 str(t.DaysToExpiry),
-                t.Status
+                Paragraph(t.Status, cell_style)
             ])
     elif req.report_type == 'low_stock':
-        # Cols: 25+115+70+115+40+60+46+56 = 527
+        # Old Cols: 25+115+70+115+40+60+46+56 = 527
+        # Adjusted: More width for Medicine and Category, less for Supplier and others
         data = [['S.No', 'Medicine', 'Category', 'Supplier', 'Stock', 'Reorder Level', 'Deficit', 'Suggested']]
-        col_widths = [25, 115, 70, 115, 40, 60, 46, 56]
+        col_widths = [25, 130, 95, 80, 40, 60, 45, 52]
         for i, t in enumerate(report_data.low_stock_items[:200], 1):
             data.append([
                 str(i),
-                t.MedicineName,
-                t.Category,
-                t.SupplierName if getattr(t, 'SupplierName', None) else '-',
+                Paragraph(t.MedicineName, cell_style),
+                Paragraph(t.Category, cell_style),
+                Paragraph(t.SupplierName if getattr(t, 'SupplierName', None) else '-', cell_style),
                 str(getattr(t, 'CurrentStock', 0)),
                 str(getattr(t, 'ReorderLevel', 0)),
                 str(getattr(t, 'Deficit', 0)),
                 str(getattr(t, 'SuggestedReorderQty', 0))
             ])
     else:
-        # Cols: 25+115+65+115+45+60+55+47 = 527
-        data = [['S.No', 'Medicine', 'Category', 'Supplier', 'Qty Sold', 'Velocity/Day', 'Revenue', 'Classification']]
-        col_widths = [25, 115, 65, 115, 45, 60, 55, 47]
+        # Old Cols: 25+125+70+45+45+45+50+65+57 = 527
+        data = [['S.No', 'Medicine', 'Category', 'Starting', 'Sold', 'Current', 'Velocity', 'Revenue', 'Class']]
+        col_widths = [25, 125, 70, 45, 45, 45, 50, 65, 57]
         for i, t in enumerate(report_data.movement_items[:200], 1):
             data.append([
                 str(i),
-                t.MedicineName,
-                t.Category,
-                t.SupplierName if getattr(t, 'SupplierName', None) else '-',
-                str(getattr(t, 'SoldQuantity', 0)),
+                Paragraph(t.MedicineName, cell_style),
+                Paragraph(t.Category, cell_style),
+                str(getattr(t, 'StartingStock', 0)),
+                str(getattr(t, 'SoldQty', 0)),
+                str(getattr(t, 'ClosingStock', 0)),
                 str(round(getattr(t, 'SalesVelocity', 0.0), 2)),
                 f"{int(round(getattr(t, 'Revenue', 0.0))):,}",
-                getattr(t, 'Classification', 'Unknown')
+                Paragraph(getattr(t, 'Classification', 'Unknown'), cell_style)
             ])
 
     t = Table(data, repeatRows=1, colWidths=col_widths)
@@ -1767,6 +1789,7 @@ def export_financial_report_pdf(req: dict = Body(...), db: Session = Depends(get
     sd, ed = get_reports_date_range(req.timeframe, req.start_date, req.end_date)
     profile = db.query(models.PrinterSettings).first()
     pharmacy_name = profile.PharmacyName if profile else "Pharmacy Management System"
+    logo_path = profile.ReceiptLogoPath if profile else None
     report_data = fetch_financial_report_data(db, sd, ed)
     
     output = io.BytesIO()
@@ -1774,7 +1797,7 @@ def export_financial_report_pdf(req: dict = Body(...), db: Session = Depends(get
     elements = []
     styles = getSampleStyleSheet()
     
-    elements.extend(build_pdf_header("Profit & Loss Statement", f"Period: {sd.strftime('%d-%m-%Y')} to {ed.strftime('%d-%m-%Y')}", pharmacy_name=pharmacy_name))
+    elements.extend(build_pdf_header("Profit & Loss Statement", f"Period: {sd.strftime('%d-%m-%Y')} to {ed.strftime('%d-%m-%Y')}", pharmacy_name=pharmacy_name, logo_path=logo_path))
     
     kpi_data = [
         ("Total Revenue:", f"Rs. {int(round(report_data.summary.TotalRevenue))}"),

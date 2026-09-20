@@ -868,7 +868,7 @@ function ReportsPageInner({
                 { label: "Sales Returns", value: `Rs. ${data?.summary?.TotalReturns || '0.00'}`, isLoss: true },
                 { label: "Net Sales", value: `Rs. ${data?.summary?.NetSales || '0.00'}`, isNet: true },
                 { label: "Net Profit", value: `Rs. ${data?.summary?.NetProfit || '0.00'}` },
-                { label: "Profit Margin", value: `${data?.summary?.ProfitMargin || '0'}%` },
+                { label: "Profit Margin", value: `${Number(data?.summary?.ProfitMargin || 0).toFixed(2)}%` },
                 { label: "Total Invoices", value: `${data?.summary?.TotalInvoices || '0'}` },
                 { label: "Average Sale", value: `Rs. ${data?.summary?.AverageSaleValue || '0.00'}` }
               ]}
@@ -2214,7 +2214,7 @@ function ReportsPageInner({
               />
               <KPICard
                 title="Profit Margin"
-                value={<span className={data?.summary?.ProfitMargin >= 0 ? "text-emerald-600 dark:text-emerald-500" : "text-rose-600 dark:text-rose-500"}>{`${data?.summary?.ProfitMargin || '0'}%`}</span>}
+                value={<span className={data?.summary?.ProfitMargin >= 0 ? "text-emerald-600 dark:text-emerald-500" : "text-rose-600 dark:text-rose-500"}>{`${Number(data?.summary?.ProfitMargin || 0).toFixed(2)}%`}</span>}
                 icon={TrendingUp}
                 accent="purple"
               />
@@ -2392,7 +2392,7 @@ function ReportsPageInner({
                   { label: "Total Net Revenue", value: `Rs. ${data?.summary?.TotalRevenue || '0.00'}` },
                   { label: "Cost of Goods Sold", value: `Rs. ${data?.summary?.TotalCOGS || '0.00'}`, isLoss: true },
                   { label: "Net Profit", value: `Rs. ${data?.summary?.NetProfit || '0.00'}`, isNet: true },
-                  { label: "Profit Margin", value: `${data?.summary?.ProfitMargin || '0'}%`, isNet: true }
+                  { label: "Profit Margin", value: `${Number(data?.summary?.ProfitMargin || 0).toFixed(2)}%`, isNet: true }
                 ]}
               >
                 <table className="w-full text-sm text-left border-collapse border border-gray-300">
