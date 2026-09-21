@@ -85,3 +85,21 @@
 2026-09-20 02:19:37,612 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.comments
 2026-09-20 02:19:37,613 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.checkconstraint_byname
 2026-09-20 03:06:28,131 - pms - ERROR - Invalid or tampered license token: Invalid header string: 'utf-8' codec can't decode byte 0xe7 in position 1: invalid continuation byte
+2026-09-21 14:10:05,092 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-21 14:11:15,645 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-21 14:12:19,270 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-21 14:12:20,192 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.schemas
+2026-09-21 14:12:20,193 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.tables
+2026-09-21 14:12:20,193 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.types
+2026-09-21 14:12:20,193 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.constraints
+2026-09-21 14:12:20,193 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.defaults
+2026-09-21 14:12:20,193 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.comments
+2026-09-21 14:12:20,193 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.checkconstraint_byname
+2026-09-21 14:13:33,778 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-21 14:13:36,764 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.schemas
+2026-09-21 14:13:36,765 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.tables
+2026-09-21 14:13:36,765 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.types
+2026-09-21 14:13:36,765 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.constraints
+2026-09-21 14:13:36,766 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.defaults
+2026-09-21 14:13:36,766 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.comments
+2026-09-21 14:13:36,766 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.checkconstraint_byname

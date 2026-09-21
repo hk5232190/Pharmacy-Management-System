@@ -23,7 +23,7 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [branding, setBranding] = useState({
     LoginBrandingName: "PMS Software",
-    LoginSubheading: "Pharmacy Management System",
+    LoginSubheading: "Please sign in to continue",
     LoginBackgroundPath: null as string | null
   });
 
@@ -32,9 +32,14 @@ export default function LoginPage() {
       .then(res => res ? res.json() : null)
       .then(data => {
         if (data && !data.detail) {
+          // If the backend still sends the old default, override it.
+          const subheading = (data.LoginSubheading && data.LoginSubheading !== "Pharmacy Management System") 
+            ? data.LoginSubheading 
+            : "Please sign in to continue";
+            
           setBranding({
             LoginBrandingName: data.LoginBrandingName || "PMS Software",
-            LoginSubheading: data.LoginSubheading || "Pharmacy Management System",
+            LoginSubheading: subheading,
             LoginBackgroundPath: data.LoginBackgroundPath || null
           });
         }

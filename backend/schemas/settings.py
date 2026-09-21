@@ -130,7 +130,7 @@ class SystemPreferencesResponse(SystemPreferencesBase):
 
 class GeneralSettingsBase(BaseModel):
     LoginBrandingName: str = "PMS Software"
-    LoginSubheading: str = "Pharmacy Management System"
+    LoginSubheading: str = "Please sign in to continue"
     LoginBackgroundPath: Optional[str] = None
 
 class GeneralSettingsUpdate(GeneralSettingsBase):

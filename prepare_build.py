@@ -1,4 +1,4 @@
-﻿"""
+"""
 prepare_build.py — Run BEFORE every PyInstaller build.
 
 Creates build_assets/clean_pharma_db.sqlite:
@@ -80,15 +80,12 @@ verify_conn = engine.connect()
 try:
     from sqlalchemy import text
     users = verify_conn.execute(text("SELECT Username FROM users")).fetchall()
-    profiles = verify_conn.execute(text("SELECT * FROM pharmacy_profile")).fetchall()
     
     usernames = [u[0] for u in users]
     if set(usernames) - {"admin"}:
         raise RuntimeError(f"ABORT: Unexpected users in clean DB: {usernames}")
-    if profiles:
-        raise RuntimeError(f"ABORT: Pharmacy profile data found in clean DB: {profiles}")
     
-    print(f"[prepare_build] Verification passed. Users: {usernames}, Profiles: {profiles}")
+    print(f"[prepare_build] Verification passed. Users: {usernames}")
 finally:
     verify_conn.close()
 

@@ -2,10 +2,15 @@ import jwt
 import os
 from cryptography.hazmat.primitives import serialization
 from core.exceptions import LicenseExpiredError, HardwareMismatchError, TamperedLicenseError
+from core.config import IS_FROZEN, DATA_DIR
 from utils.hwid import get_primary_mac
 from core.logger import logger
 
-KEYS_DIR = os.path.join(os.path.dirname(__file__), "keys")
+if IS_FROZEN:
+    KEYS_DIR = os.path.join(DATA_DIR, "utils", "keys")
+else:
+    KEYS_DIR = os.path.join(os.path.dirname(__file__), "keys")
+
 PUBLIC_KEY_PATH = os.path.join(KEYS_DIR, "public.pem")
 
 def get_public_key():
@@ -74,7 +79,10 @@ def validate_license(token) -> dict:
         raise TamperedLicenseError()
     except HardwareMismatchError:
         raise
+    except FileNotFoundError as e:
+        logger.critical(f"Server configuration error: {e}")
+        raise RuntimeError(f"Server configuration error: {e}")
     except Exception as e:
-        logger.error(f"License validation failed unexpectedly: {e}")
-        raise TamperedLicenseError()
+        logger.exception(f"License validation failed unexpectedly with an internal error: {e}")
+        raise RuntimeError(f"Internal license validation error: {e}")
 
