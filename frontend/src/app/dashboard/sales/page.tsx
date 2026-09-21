@@ -125,6 +125,10 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
   const [loadingInit, setLoadingInit] = useState(true);
   const [invoiceNo, setInvoiceNo] = useState("");
   const [taxRate, setTaxRate] = useState(0);
+
+  const [invoiceDiscountType, setInvoiceDiscountType] = useState<"percent" | "fixed">("percent");
+  const [invoiceDiscountValue, setInvoiceDiscountValue] = useState<number>(0);
+
   const [maxDiscount, setMaxDiscount] = useState(0);
   const [discountEnabled, setDiscountEnabled] = useState(false);
   const [customers, setCustomers] = useState<any[]>([]);
@@ -287,7 +291,7 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
       if (e.key === "F4") { e.preventDefault(); document.getElementById("customer-select")?.focus(); }
       if (e.key === "F5") { e.preventDefault(); toast("Sale Held temporarily."); }
       if (e.key === "F8") { e.preventDefault(); toast("Opening Recent Sales..."); }
-      if (e.key === "F9") { e.preventDefault(); setCart([]); toast.success("Cart cleared"); }
+      if (e.key === "F9") { e.preventDefault(); setCart([]); setPaidAmount(0); setInvoiceDiscountValue(0); toast.success("Cart cleared"); }
       if (e.key === "F10") { e.preventDefault(); document.getElementById("complete-sale-btn")?.click(); }
     };
     window.addEventListener("keydown", handleKeyDown);
@@ -400,7 +404,7 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
         }
         return prev.map(i =>
           i.id === uniqueId
-            ? { ...i, Quantity: i.Quantity + 1, LineTotal: calculateLineTotal(i.Quantity + 1, i.UnitPrice, i.Discount, i.TaxPercent) }
+            ? { ...i, Quantity: i.Quantity + 1, LineTotal: calculateLineTotal(i.Quantity + 1, i.UnitPrice) }
             : i
         );
       }
@@ -417,7 +421,7 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
         Quantity: 1,
         Discount: discountEnabled ? maxDiscount : 0,
         TaxPercent: taxRate,
-        LineTotal: calculateLineTotal(1, bestBatch.UnitPrice, discountEnabled ? maxDiscount : 0, taxRate),
+        LineTotal: calculateLineTotal(1, bestBatch.UnitPrice),
         RequiresPrescription: product.RequiresPrescription
       }];
     });
@@ -437,12 +441,8 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
     }, 50);
   };
 
-  const calculateLineTotal = (qty: number, price: number, discountPercent: number, taxRate: number) => {
-    const base = qty * price;
-    const discountAmount = base * (discountPercent / 100);
-    const discounted = base - discountAmount;
-    const taxAmount = discounted * (taxRate / 100);
-    return discounted + taxAmount;
+  const calculateLineTotal = (qty: number, price: number) => {
+    return qty * price;
   };
 
   const updateCartItem = (id: string, field: keyof CartItem, value: any) => {
@@ -451,24 +451,14 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
         const updated = { ...item, [field]: value };
         // Recalculate if qty, discount, or tax changed
         if (['Quantity', 'Discount', 'TaxPercent'].includes(field)) {
-          if (field === 'Discount') {
-            if (!discountEnabled) {
-              toast.error("Discounts are disabled globally.");
-              updated.Discount = 0;
-            } else if (value > maxDiscount) {
-              toast.error(`Maximum allowed discount is ${maxDiscount}%.`);
-              updated.Discount = maxDiscount;
+          if (field === 'Quantity') {
+            if (value > item.AvailableStock && !inventorySettings.AllowNegativeStock) {
+              toast.error(`Only ${item.AvailableStock} units available in this batch.`);
+              updated.Quantity = item.AvailableStock;
             }
+            if (updated.Quantity < 1) updated.Quantity = 1;
           }
-
-          // enforce stock limit
-          if (field === 'Quantity' && value > item.AvailableStock && !inventorySettings.AllowNegativeStock) {
-            toast.error(`Only ${item.AvailableStock} units available in this batch.`);
-            updated.Quantity = item.AvailableStock;
-          }
-          if (field === 'Quantity' && value < 1) updated.Quantity = 1;
-
-          updated.LineTotal = calculateLineTotal(updated.Quantity, updated.UnitPrice, updated.Discount, updated.TaxPercent);
+          updated.LineTotal = calculateLineTotal(updated.Quantity, updated.UnitPrice);
         }
         return updated;
       }
@@ -482,18 +472,18 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
 
   // --- Calculations ---
   const subtotal = cart.reduce((sum, item) => sum + (item.Quantity * item.UnitPrice), 0);
-  const totalDiscount = cart.reduce((sum, item) => sum + ((item.Quantity * item.UnitPrice) * (item.Discount / 100)), 0);
+  
+  let totalDiscount = 0;
+  if (invoiceDiscountType === "percent") {
+      totalDiscount = subtotal * ((invoiceDiscountValue || 0) / 100);
+  } else {
+      totalDiscount = invoiceDiscountValue || 0;
+  }
+  if (totalDiscount > subtotal) totalDiscount = subtotal;
+  
   const discountedSubtotal = subtotal - totalDiscount;
-
-  // Actually line total already includes tax, but for summary we want total tax
-  const totalTax = cart.reduce((sum, item) => {
-    const base = item.Quantity * item.UnitPrice;
-    const discountAmount = base * (item.Discount / 100);
-    const discounted = base - discountAmount;
-    return sum + (discounted * (item.TaxPercent / 100));
-  }, 0);
-
-  const grandTotal = cart.reduce((sum, item) => sum + item.LineTotal, 0);
+  const totalTax = discountedSubtotal * ((taxRate || 0) / 100);
+  const grandTotal = discountedSubtotal + totalTax;
   const totalItemsCount = cart.length;
   const totalQtyCount = cart.reduce((sum, item) => sum + item.Quantity, 0);
   const changeDue = Math.max(0, paidAmount - grandTotal);
@@ -567,7 +557,8 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
     }
 
     if (!isSkip && requireAdminPin) {
-      const needsPin = cart.some(item => item.Discount > adminDiscountThreshold);
+      const discountPct = subtotal > 0 ? (totalDiscount / subtotal) * 100 : 0;
+      const needsPin = discountPct > adminDiscountThreshold;
       if (needsPin) {
         setIsAdminPinModalOpen(true);
         return;
@@ -590,8 +581,8 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
           BatchId: item.BatchId,
           Quantity: item.Quantity,
           UnitPrice: item.UnitPrice,
-          Discount: (item.Quantity * item.UnitPrice) * (item.Discount / 100),
-          TaxPercent: item.TaxPercent,
+          Discount: 0,
+          TaxPercent: 0,
           LineTotal: item.LineTotal,
           RequiresPrescription: item.RequiresPrescription,
         }))
@@ -619,6 +610,7 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
 
         setCart([]);
         setPaidAmount(0);
+        setInvoiceDiscountValue(0);
         setSelectedCustomerId("walkin");
         setCustomerSearchQuery("");
         fetchInitData(); // get next invoice number
@@ -864,7 +856,8 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
 
   const totalRefundPreview = returnItems.reduce((sum, item) => {
     if (item.ReturnQuantity <= 0) return sum;
-    return sum + (item.UnitPrice * item.ReturnQuantity);
+    const unitRefund = item.Quantity > 0 ? (item.TotalPrice / item.Quantity) : item.UnitPrice;
+    return sum + (unitRefund * item.ReturnQuantity);
   }, 0);
 
   const handleSubmitReturn = async () => {
@@ -1418,6 +1411,7 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
                                     : "hover:bg-secondary/20"
                                 )}
                                 onMouseEnter={() => setSelectedSearchIdx(idx)}
+                                onMouseDown={e => e.preventDefault()}
                                 onClick={() => handleSelectProduct(res)}
                               >
                                 <div>
@@ -1458,8 +1452,6 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
                         <th className="px-3 py-3 font-semibold text-center">Avail. Stock</th>
                         <th className="px-3 py-3 font-semibold text-center">Unit Price</th>
                         <th className="px-3 py-3 font-semibold text-center w-28">Qty</th>
-                        <th className="px-3 py-3 font-semibold text-center">Disc (%)</th>
-                        <th className="px-3 py-3 font-semibold text-center">Tax (%)</th>
                         <th className="px-3 py-3 font-semibold text-center">Line Total</th>
                         <th className="px-3 py-3 font-semibold text-center"></th>
                       </tr>
@@ -1467,7 +1459,7 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
                     <tbody className="divide-y divide-border border-b border-border">
                       {cart.length === 0 ? (
                         <tr>
-                          <td colSpan={10} className="py-16 text-center">
+                          <td colSpan={8} className="py-16 text-center">
                             <ShoppingCart className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
                             <p className="text-muted-foreground">Your cart is empty.</p>
                             <p className="text-xs text-muted-foreground mt-1">Search and select a medicine to begin.</p>
@@ -1504,23 +1496,6 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
                                 />
                                 <button onClick={() => updateCartItem(item.id, 'Quantity', item.Quantity + 1)} className="px-2 bg-secondary/50 hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors">+</button>
                               </div>
-                            </td>
-                            <td className="px-3 py-3 text-center">
-                              <Input
-                                type="number"
-                                max="100"
-                                className="h-8 w-16 text-center mx-auto"
-                                value={item.Discount}
-                                onChange={(e) => updateCartItem(item.id, 'Discount', parseFloat(e.target.value) || 0)}
-                              />
-                            </td>
-                            <td className="px-3 py-3 text-center">
-                              <Input
-                                type="number"
-                                className="h-8 w-16 text-center mx-auto"
-                                value={item.TaxPercent}
-                                onChange={(e) => updateCartItem(item.id, 'TaxPercent', parseFloat(e.target.value) || 0)}
-                              />
                             </td>
                             <td className="px-3 py-3 text-center font-bold">{formatCurrency(item.LineTotal)}</td>
                             <td className="px-3 py-3 text-center">
@@ -1571,13 +1546,106 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
                     <span>Subtotal</span>
                     <span className="font-medium text-foreground">{formatCurrency(subtotal)}</span>
                   </div>
-                  <div className="flex justify-between text-muted-foreground">
-                    <span>Discount</span>
-                    <span className="font-medium text-rose-500">- {formatCurrency(totalDiscount)}</span>
-                  </div>
-                  <div className="flex justify-between text-muted-foreground">
-                    <span>Tax ({taxRate}%)</span>
-                    <span className="font-medium text-foreground">{formatCurrency(totalTax)}</span>
+                  {/* Discount & Tax in One Row */}
+                  <div className="grid grid-cols-2 gap-2 pt-2 pb-1 border-t border-border/50">
+                    {/* Discount Box */}
+                    <div className="bg-secondary/30 dark:bg-secondary/20 p-2 rounded-lg border border-border/60 flex flex-col justify-between gap-1.5">
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="font-semibold text-muted-foreground">Discount</span>
+                        <span className="font-bold text-rose-600 dark:text-rose-400 text-xs truncate">
+                          -{formatCurrency(totalDiscount)}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <div className="flex rounded border border-border bg-background p-0.5 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => setInvoiceDiscountType("percent")}
+                            className={cn(
+                              "px-1.5 py-0.5 text-[11px] font-bold rounded transition-all",
+                              invoiceDiscountType === "percent"
+                                ? "bg-blue-600 text-white shadow-xs"
+                                : "text-muted-foreground hover:text-foreground"
+                            )}
+                            title="Percent (%)"
+                          >
+                            %
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setInvoiceDiscountType("fixed")}
+                            className={cn(
+                              "px-1.5 py-0.5 text-[11px] font-bold rounded transition-all",
+                              invoiceDiscountType === "fixed"
+                                ? "bg-blue-600 text-white shadow-xs"
+                                : "text-muted-foreground hover:text-foreground"
+                            )}
+                            title={`Fixed (${currencySymbol})`}
+                          >
+                            {currencySymbol}
+                          </button>
+                        </div>
+                        <Input
+                          id="invoice-discount-input"
+                          type="number"
+                          min="0"
+                          max={invoiceDiscountType === "percent" ? 100 : subtotal}
+                          step="any"
+                          placeholder="0"
+                          value={invoiceDiscountValue === 0 ? "" : invoiceDiscountValue}
+                          onChange={(e) => {
+                            const val = Math.max(0, parseFloat(e.target.value) || 0);
+                            if (invoiceDiscountType === "percent" && val > 100) {
+                              setInvoiceDiscountValue(100);
+                            } else {
+                              setInvoiceDiscountValue(val);
+                            }
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              document.getElementById('invoice-tax-input')?.focus();
+                            }
+                          }}
+                          className="h-7 text-right font-semibold text-xs flex-1 min-w-0 bg-background px-1.5 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Tax Box */}
+                    <div className="bg-secondary/30 dark:bg-secondary/20 p-2 rounded-lg border border-border/60 flex flex-col justify-between gap-1.5">
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="font-semibold text-muted-foreground">Tax ({taxRate}%)</span>
+                        <span className="font-bold text-foreground text-xs truncate">
+                          +{formatCurrency(totalTax)}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <div className="flex items-center justify-center px-2 h-7 rounded border border-border bg-background text-[11px] font-bold text-muted-foreground shrink-0">
+                          %
+                        </div>
+                        <Input
+                          id="invoice-tax-input"
+                          type="number"
+                          min="0"
+                          max="100"
+                          step="any"
+                          placeholder="0"
+                          value={taxRate === 0 ? "" : taxRate}
+                          onChange={(e) => {
+                            const val = Math.max(0, parseFloat(e.target.value) || 0);
+                            setTaxRate(Math.min(100, val));
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              document.getElementById('paid-amount-input')?.focus();
+                            }
+                          }}
+                          className="h-7 text-right font-semibold text-xs flex-1 min-w-0 bg-background px-1.5 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        />
+                      </div>
+                    </div>
                   </div>
 
                   <div className="border-t border-dashed border-border my-4 pt-4">
@@ -1648,7 +1716,7 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
                   <Button variant="outline" onClick={() => { toast("Sale held temporarily. Cart preserved."); }} className="w-full h-11 border-blue-200 text-blue-600 hover:bg-blue-50 dark:border-blue-900/50 dark:text-blue-400 font-medium">
                     <Pause className="mr-2 w-4 h-4" /> Hold Sale
                   </Button>
-                  <Button variant="outline" onClick={() => { setCart([]); setPaidAmount(0); }} className="w-full h-11 border-rose-200 text-rose-600 hover:bg-rose-50 dark:border-rose-900/50 dark:text-rose-400 font-medium">
+                  <Button variant="outline" onClick={() => { setCart([]); setPaidAmount(0); setInvoiceDiscountValue(0); }} className="w-full h-11 border-rose-200 text-rose-600 hover:bg-rose-50 dark:border-rose-900/50 dark:text-rose-400 font-medium">
                     <Trash2 className="mr-2 w-4 h-4" /> Clear Cart
                   </Button>
                 </div>
@@ -1715,7 +1783,8 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
                       {returnItems.map(item => {
                         const maxReturnable = item.Quantity - item.ReturnedQuantity;
                         const isFullyReturned = maxReturnable === 0;
-                        const refund = item.UnitPrice * item.ReturnQuantity;
+                        const unitRefund = item.Quantity > 0 ? (item.TotalPrice / item.Quantity) : item.UnitPrice;
+                        const refund = unitRefund * item.ReturnQuantity;
 
                         return (
                           <tr key={item.SalesItemId} className={isFullyReturned ? "opacity-50 bg-secondary/20" : "hover:bg-secondary/10"}>

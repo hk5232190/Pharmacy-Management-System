@@ -250,9 +250,9 @@ def complete_sale(
                 count += 1
 
         new_sale = Sale(
+            InvoiceNumber=invoice_no,
             CustomerId=sale_data.CustomerId,
             UserId=current_user.UserId,
-            InvoiceNumber=invoice_no,
             SubTotal=sale_data.SubTotal,
             DiscountAmount=sale_data.DiscountAmount,
             TaxAmount=sale_data.TaxAmount,
@@ -356,16 +356,21 @@ def complete_sale(
                 remaining_qty_to_fulfill -= qty_from_this_batch
                 
                 # Pro-rata financials for this specific batch split
-                ratio = qty_from_this_batch / item.Quantity
+                item_batch_subtotal = float(qty_from_this_batch * item.UnitPrice)
+                ratio_of_subtotal = item_batch_subtotal / sale_data.SubTotal if sale_data.SubTotal > 0 else 0.0
+                
+                proportional_discount = ratio_of_subtotal * sale_data.DiscountAmount
+                proportional_tax = ratio_of_subtotal * sale_data.TaxAmount
+                proportional_total = item_batch_subtotal - proportional_discount + proportional_tax
                 
                 sale_item = SaleItem(
                     SalesId=new_sale.SalesId,
                     BatchId=batch.BatchId,
                     Quantity=qty_from_this_batch,
                     UnitPrice=item.UnitPrice,
-                    Discount=item.Discount * ratio,
-                    Tax=item.LineTotal * (item.TaxPercent / 100) * ratio,
-                    TotalPrice=item.LineTotal * ratio
+                    Discount=proportional_discount,
+                    Tax=proportional_tax,
+                    TotalPrice=proportional_total
                 )
                 db.add(sale_item)
 
@@ -972,8 +977,12 @@ def process_sales_return(
             if already_ret + ret_item.ReturnQuantity > orig_item.Quantity:
                 raise ValidationError(f"Cannot return more than originally sold for Batch {ret_item.BatchId}.")
                 
-            # Refund = UnitPrice × ReturnQty (matches frontend)
-            item_refund = float(orig_item.UnitPrice) * ret_item.ReturnQuantity
+            # Proportional refund based on final net TotalPrice (includes applied invoice discounts and taxes)
+            if orig_item.Quantity > 0:
+                refund_per_unit = float(orig_item.TotalPrice) / orig_item.Quantity
+            else:
+                refund_per_unit = float(orig_item.UnitPrice)
+            item_refund = refund_per_unit * ret_item.ReturnQuantity
             total_refund += item_refund
             
             # Stock Update vs Quarantine

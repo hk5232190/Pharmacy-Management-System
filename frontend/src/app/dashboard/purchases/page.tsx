@@ -942,6 +942,7 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
                                 ? "bg-primary/10 dark:bg-primary/20" 
                                 : "hover:bg-secondary"
                             )}
+                            onMouseDown={e => e.preventDefault()}
                             onClick={() => addMedicineToGrid(med)}
                           >
                             <span className="font-medium text-foreground">{med.BrandName}</span>

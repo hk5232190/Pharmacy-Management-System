@@ -32,8 +32,8 @@ class SaleItemCreate(BaseModel):
     BatchId: int
     Quantity: int
     UnitPrice: float
-    Discount: float
-    TaxPercent: float
+    Discount: float = 0.0
+    TaxPercent: float = 0.0
     LineTotal: float
     RequiresPrescription: bool
 
