@@ -76,8 +76,10 @@ def initialize_data_dir():
     # path depending on the current working directory.
     target_env = os.path.join(DATA_DIR, '.env')
     if not os.path.isfile(target_env):
+        import secrets
         db_url = target_db.replace(chr(92), "/")
-        env_content = f"DATABASE_URL=sqlite:///{db_url}\nEXPIRY_ALERT_DAYS=30\n"
+        secret_key = secrets.token_hex(32)
+        env_content = f"DATABASE_URL=sqlite:///{db_url}\nEXPIRY_ALERT_DAYS=30\nSECRET_KEY={secret_key}\n"
         with open(target_env, 'w') as f:
             f.write(env_content)
         print(f"[PMS] Initialized config at {target_env}", flush=True)

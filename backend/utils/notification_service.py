@@ -14,7 +14,13 @@ from models import (
 )
 from core.logger import logger
 
-LICENSE_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "licenses")
+from core.config import IS_FROZEN, DATA_DIR
+
+if IS_FROZEN:
+    LICENSE_DIR = os.path.join(DATA_DIR, "licenses")
+else:
+    LICENSE_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "licenses")
+
 ACTIVE_LICENSE_PATH = os.path.join(LICENSE_DIR, "active.lic")
 
 
