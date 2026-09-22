@@ -145,23 +145,34 @@ def create_medicine(
 
 @router.get("/export", summary="Export all medicines to CSV")
 def export_medicines(db: Session = Depends(get_db), current_user = Depends(get_current_user)):
-    medicines = db.query(Medicine).all()
+    from sqlalchemy.orm import joinedload
+    medicines = db.query(Medicine).options(joinedload(Medicine.category), joinedload(Medicine.company)).all()
     
     output = io.StringIO()
     writer = csv.writer(output)
     
     # Write header
     writer.writerow([
-        "BrandName", "GenericName", "CategoryId", "CompanyId", 
-        "RackNumber", "ReorderLevel", "RequiresPrescription", 
-        "Unit", "DosageForm", "Strength", "Barcode", "DefaultCostPrice", "DefaultSellingPrice"
+        "Brand Name", "Formula", "Category", "Company", 
+        "Unit", "Dosage Form", "Reorder Level (Min Stock)", 
+        "Rack Number", "Status"
     ])
     
     for med in medicines:
+        cat_name = med.category.CategoryName if med.category else ""
+        comp_name = med.company.CompanyName if med.company else ""
+        status = "Active" if getattr(med, "IsActive", True) else "Inactive"
+        
         writer.writerow([
-            med.BrandName, med.GenericName, med.CategoryId, med.CompanyId,
-            med.RackNumber or "", med.ReorderLevel, int(med.RequiresPrescription),
-            med.Unit, med.DosageForm or "", med.Strength or "", med.Barcode or "", med.DefaultCostPrice, med.DefaultSellingPrice
+            med.BrandName or "", 
+            med.GenericName or "", 
+            cat_name, 
+            comp_name,
+            med.Unit or "", 
+            med.DosageForm or "", 
+            med.ReorderLevel, 
+            med.RackNumber or "",
+            status
         ])
         
     return Response(
@@ -177,9 +188,8 @@ def download_import_template(db: Session = Depends(get_db)):
     ws.title = "Medicines"
 
     headers = [
-        "BrandName*", "GenericName*", "Category*", "Company*", 
-        "Unit", "DosageForm", "Strength", "ReorderLevel",
-        "RackNumber", "DefaultCostPrice", "DefaultSellingPrice", "Barcode", "RequiresPrescription(0/1)"
+        "Brand Name*", "Formula*", "Category*", "Company*", 
+        "Unit*", "Dosage Form*", "Reorder Level (Min Stock)", "Rack Number", "Status*"
     ]
     
     for col_num, header in enumerate(headers, 1):
@@ -207,14 +217,20 @@ def download_import_template(db: Session = Depends(get_db)):
         dv_comp.add('D2:D1000')
         
     # Unit dropdown
-    dv_unit = DataValidation(type="list", formula1='"Box,Strip,Bottle,Tube,Injection,Pieces"', allow_blank=True)
+    dv_unit = DataValidation(type="list", formula1='"Box,Strip,Bottle,Tube,Piece,Vial,Ampoule,Sachet,Pack,Jar,Can"', allow_blank=True)
     ws.add_data_validation(dv_unit)
     dv_unit.add('E2:E1000')
-
+    
     # Dosage dropdown
-    dv_dosage = DataValidation(type="list", formula1='"Tablet,Capsule,Syrup,Injection,Cream,Drops,Ointment,Other"', allow_blank=True)
+    dosage_formula = '"Tablet,Capsule,Syrup,Suspension,Injection,Cream,Ointment,Drops,Gel,Lotion,Spray,Inhaler,Powder,Suppository,Other"'
+    dv_dosage = DataValidation(type="list", formula1=dosage_formula, allow_blank=True)
     ws.add_data_validation(dv_dosage)
     dv_dosage.add('F2:F1000')
+
+    # Status dropdown
+    dv_status = DataValidation(type="list", formula1='"Active,Inactive"', allow_blank=True)
+    ws.add_data_validation(dv_status)
+    dv_status.add('I2:I1000')
 
     output = io.BytesIO()
     wb.save(output)
@@ -262,19 +278,20 @@ def preview_medicines_import(
     for i, row in enumerate(rows, start=1):
         row_preview = {
             "RowNumber": i,
-            "BrandName": row.get("BrandName", ""),
-            "GenericName": row.get("GenericName", ""),
+            "BrandName": row.get("Brand Name", row.get("BrandName", "")),
+            "GenericName": row.get("Formula", row.get("GenericName", "")),
             "CategoryName": row.get("Category", row.get("CategoryName", "")),
             "CompanyName": row.get("Company", row.get("CompanyName", "")),
             "Unit": row.get("Unit", "Box"),
-            "DosageForm": row.get("DosageForm", ""),
-            "Strength": row.get("Strength", ""),
-            "ReorderLevel": row.get("ReorderLevel", 10),
-            "RackNumber": row.get("RackNumber", ""),
-            "DefaultCostPrice": row.get("DefaultCostPrice", 0),
-            "DefaultSellingPrice": row.get("DefaultSellingPrice", 0),
-            "Barcode": row.get("Barcode", ""),
-            "RequiresPrescription": row.get("RequiresPrescription", False),
+            "DosageForm": row.get("Dosage Form", row.get("DosageForm", "")),
+            "Strength": "",
+            "ReorderLevel": row.get("Reorder Level (Min Stock)", row.get("ReorderLevel", 10)),
+            "RackNumber": row.get("Rack Number", row.get("RackNumber", "")),
+            "DefaultCostPrice": 0.0,
+            "DefaultSellingPrice": 0.0,
+            "Barcode": None,
+            "RequiresPrescription": False,
+            "IsActive": row.get("Status", row.get("IsActive", "Active")).strip().lower() == "active",
             
             "CategoryId": None,
             "CompanyId": None,
@@ -287,7 +304,7 @@ def preview_medicines_import(
             row_preview["Errors"].append("Brand Name is required")
         if not row_preview["GenericName"]:
             row_preview["IsValid"] = False
-            row_preview["Errors"].append("Generic Name is required")
+            row_preview["Errors"].append("Formula is required")
             
         cat_name = row_preview["CategoryName"].lower() if row_preview["CategoryName"] else ""
         comp_name = row_preview["CompanyName"].lower() if row_preview["CompanyName"] else ""
@@ -304,26 +321,10 @@ def preview_medicines_import(
             row_preview["IsValid"] = False
             row_preview["Errors"].append(f"Company '{row_preview['CompanyName']}' not found in DB")
             
-        # Optional defaults mapping
         try:
             row_preview["ReorderLevel"] = int(float(row_preview["ReorderLevel"]) if str(row_preview["ReorderLevel"]).strip() else 10)
         except ValueError:
             row_preview["ReorderLevel"] = 10
-            
-        try:
-            row_preview["DefaultCostPrice"] = float(row_preview["DefaultCostPrice"]) if str(row_preview["DefaultCostPrice"]).strip() else 0.0
-        except ValueError:
-            row_preview["DefaultCostPrice"] = 0.0
-            
-        try:
-            row_preview["DefaultSellingPrice"] = float(row_preview["DefaultSellingPrice"]) if str(row_preview["DefaultSellingPrice"]).strip() else 0.0
-        except ValueError:
-            row_preview["DefaultSellingPrice"] = 0.0
-
-        if str(row_preview["RequiresPrescription"]) in ['1', 'true', 'True', 'yes', 'Yes']:
-            row_preview["RequiresPrescription"] = True
-        else:
-            row_preview["RequiresPrescription"] = False
 
         preview_data.append(row_preview)
         

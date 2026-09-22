@@ -24,6 +24,8 @@ datas = [
     (os.path.abspath('build_assets/clean_pharma_db.sqlite'), 'data_template'),
     (os.path.abspath('backend/utils/keys'), 'data_template/keys'),
     (os.path.abspath('backend/.env'), 'data_template'),
+    (os.path.abspath('backend/alembic'), 'alembic'),
+    (os.path.abspath('backend/alembic.ini'), '.'),
 ]
 
 a = Analysis(

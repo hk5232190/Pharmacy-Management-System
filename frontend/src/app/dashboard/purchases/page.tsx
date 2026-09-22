@@ -12,6 +12,8 @@ import {
 } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { SmartCombobox } from "@/components/ui/smart-combobox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { apiClient } from "@/lib/api-client";
@@ -777,17 +779,15 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-muted-foreground">Supplier <span className="text-rose-500">*</span></label>
-                    <select
-                      className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    <SmartCombobox
+                      options={[{ value: 0, label: "Select Supplier" }, ...suppliers.map(s => ({ value: s.SupplierId, label: s.Name }))]}
                       value={supplierId}
-                      onChange={e=>{
-                        setSupplierId(Number(e.target.value));
+                      onChange={val => {
+                        setSupplierId(Number(val));
                         setTimeout(() => document.getElementById('search-medicine-input')?.focus(), 100);
                       }}
-                    >
-                      <option value={0} disabled>Select Supplier</option>
-                      {suppliers.map(s => <option key={s.SupplierId} value={s.SupplierId}>{s.Name}</option>)}
-                    </select>
+                      placeholder="Select Supplier"
+                    />
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-muted-foreground">Supplier Inv. No.</label>
@@ -1132,18 +1132,17 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
                 <h3 className="font-semibold text-foreground">Purchase Invoices History</h3>
               </div>
               <div className="flex flex-col sm:flex-row gap-4 items-end">
-                <div className="flex-1 w-full relative">
+                <div className="w-full sm:max-w-xs relative">
                   <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input placeholder="Search invoice or supplier..." className="h-9 pl-9" value={historySearchQuery} onChange={e => setHistorySearchQuery(e.target.value)} />
                 </div>
                 <div className="w-full sm:w-48">
-                  <select 
-                    className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                    value={filterSupplierId} onChange={e => setFilterSupplierId(Number(e.target.value))}
-                  >
-                    <option value={0}>All Suppliers</option>
-                    {suppliers.map(s => <option key={s.SupplierId} value={s.SupplierId}>{s.Name}</option>)}
-                  </select>
+                  <SmartCombobox 
+                    options={[{ value: 0, label: "All Suppliers" }, ...suppliers.map(s => ({ value: s.SupplierId, label: s.Name }))]}
+                    value={filterSupplierId}
+                    onChange={val => setFilterSupplierId(Number(val))}
+                    placeholder="All Suppliers"
+                  />
                 </div>
                 <div className="w-full sm:w-36">
                   <Input type="date" className="h-9 text-sm" value={filterFromDate} onChange={e => setFilterFromDate(e.target.value)} title="From Date" />
@@ -1335,18 +1334,22 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
                 <div className="flex flex-col sm:flex-row gap-4">
                   <div className="flex-1 space-y-1.5">
                     <label className="text-xs font-semibold text-muted-foreground">Select Original Purchase Invoice</label>
-                    <select 
-                      className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                      value={selectedReturnInvoice?.PurchaseId?.toString() || ""}
-                      onChange={e=>handleReturnInvoiceSelect(e.target.value)}
+                    <Select 
+                      value={selectedReturnInvoice?.PurchaseId?.toString() || "none"}
+                      onValueChange={(val) => handleReturnInvoiceSelect(val === "none" ? "" : val)}
                     >
-                      <option value="">-- Select an Invoice to Return --</option>
-                      {purchaseHistory.map(inv => (
-                        <option key={inv.PurchaseId} value={inv.PurchaseId.toString()}>
-                          {inv.InvoiceNumber} - {inv.SupplierName} ({format(new Date(inv.PurchaseDate), "dd/MM/yyyy, hh:mm a")})
-                        </option>
-                      ))}
-                    </select>
+                      <SelectTrigger className="h-9 w-full bg-background shadow-sm transition-colors">
+                        <SelectValue placeholder="-- Select an Invoice to Return --" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">-- Select an Invoice to Return --</SelectItem>
+                        {purchaseHistory.map(inv => (
+                          <SelectItem key={inv.PurchaseId} value={inv.PurchaseId.toString()}>
+                            {inv.InvoiceNumber} - {inv.SupplierName} ({format(new Date(inv.PurchaseDate), "dd/MM/yyyy, hh:mm a")})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="w-full sm:w-1/3 space-y-1.5">
                     <label className="text-xs font-semibold text-muted-foreground">Debit Note No.</label>
@@ -1392,17 +1395,21 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
                             </td>
                             <td className="px-4 py-2 text-left">
                               <div className="flex justify-center">
-                                <select
-                                  className="h-8 rounded-md border border-input bg-background px-2 py-1 text-xs shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring w-[120px]"
-                                  value={item.ReturnReason}
-                                  onChange={e => updateReturnItem(item.PurchaseItemId, 'ReturnReason', e.target.value)}
+                                <Select
+                                  value={item.ReturnReason || "Near Expiry"}
+                                  onValueChange={(val) => updateReturnItem(item.PurchaseItemId, 'ReturnReason', val)}
                                 >
-                                  <option value="Expired">Expired</option>
-                                  <option value="Damaged">Damaged</option>
-                                  <option value="Near Expiry">Near Expiry</option>
-                                  <option value="Slow Moving">Slow Moving</option>
-                                  <option value="Wrong Delivery">Wrong Delivery</option>
-                                </select>
+                                  <SelectTrigger className="h-8 w-[120px] bg-background text-xs shadow-sm transition-colors">
+                                    <SelectValue placeholder="Reason" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="Expired">Expired</SelectItem>
+                                    <SelectItem value="Damaged">Damaged</SelectItem>
+                                    <SelectItem value="Near Expiry">Near Expiry</SelectItem>
+                                    <SelectItem value="Slow Moving">Slow Moving</SelectItem>
+                                    <SelectItem value="Wrong Delivery">Wrong Delivery</SelectItem>
+                                  </SelectContent>
+                                </Select>
                               </div>
                             </td>
                             <td className="px-4 py-2 text-center font-semibold text-rose-500 font-mono text-xs">
@@ -1487,15 +1494,19 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
                     <div className="px-6 py-4 border-t border-border bg-slate-50/50 dark:bg-secondary/20 flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
                       <div className="flex items-center gap-2">
                         <span>Rows per page:</span>
-                        <select
-                          className="h-8 rounded-md border border-input bg-background px-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                          value={returnsPageSize}
-                          onChange={e => { setReturnsPageSize(Number(e.target.value)); setReturnsCurrentPage(1); }}
+                        <Select 
+                          value={returnsPageSize.toString()}
+                          onValueChange={(val) => { setReturnsPageSize(Number(val)); setReturnsCurrentPage(1); }}
                         >
-                          <option value={10}>10</option>
-                          <option value={25}>25</option>
-                          <option value={50}>50</option>
-                        </select>
+                          <SelectTrigger className="h-8 w-[70px] bg-background shadow-sm">
+                            <SelectValue placeholder="25" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="10">10</SelectItem>
+                            <SelectItem value="25">25</SelectItem>
+                            <SelectItem value="50">50</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                       <div className="flex items-center gap-4">
                         <div>
@@ -1535,14 +1546,18 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
                   <div className="space-y-4">
                     <div className="space-y-1.5">
                       <label className="text-xs font-semibold text-muted-foreground">Settlement Method</label>
-                      <select 
-                        className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                      <Select 
                         value={settlementType}
-                        onChange={e=>setSettlementType(e.target.value)}
+                        onValueChange={(val) => setSettlementType(val)}
                       >
-                        <option value="Adjust in Supplier Balance">Adjust in Supplier Balance</option>
-                        <option value="Cash Refund">Cash Refund</option>
-                      </select>
+                        <SelectTrigger className="h-9 w-full bg-background shadow-sm transition-colors">
+                          <SelectValue placeholder="Select Settlement Method" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Adjust in Supplier Balance">Adjust in Supplier Balance</SelectItem>
+                          <SelectItem value="Cash Refund">Cash Refund</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
 
                     <div className="space-y-1.5">

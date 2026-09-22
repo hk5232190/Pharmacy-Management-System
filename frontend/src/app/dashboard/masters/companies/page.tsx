@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, Plus, Download, Upload, RefreshCcw, Eye, Edit, Trash2 } from "lucide-react";
+import { Search, Plus, Download, Upload, Eye, Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -109,9 +109,6 @@ export default function CompaniesPage() {
           </Button>
           <Button variant="outline" className="h-10 bg-background text-foreground hidden sm:flex" onClick={handleExport} disabled={isExporting}>
             <Upload className="mr-2 h-4 w-4" /> {isExporting ? "Exporting..." : "Export"}
-          </Button>
-          <Button variant="outline" size="icon" className="h-10 w-10 bg-background text-foreground" onClick={fetchItems} disabled={loading}>
-            <RefreshCcw className={cn("h-4 w-4", loading && "animate-spin")} />
           </Button>
         </div>
       </div>

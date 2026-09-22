@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useRef, useMemo } from "react";
 import useSWR from "swr";
-import { Search, Plus, Download, Upload, RefreshCcw, Eye, Edit, Trash2 } from "lucide-react";
+import { Search, Plus, Download, Upload, Eye, Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SmartCombobox } from "@/components/ui/smart-combobox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ImportPreviewModal } from "@/components/medicines/import-preview-modal";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -121,7 +122,6 @@ export default function MedicinesPage() {
     DefaultCostPrice: 0, DefaultSellingPrice: 0, IsActive: true
   });
   const [isSaving, setIsSaving] = useState(false);
-  const [showAdvanced, setShowAdvanced] = useState(false);
   const brandNameInputRef = useRef<HTMLInputElement>(null);
 
   const handleCreateCategory = async (name: string) => {
@@ -204,9 +204,9 @@ export default function MedicinesPage() {
       
       const payload = {
         ...currentMedicine,
-        DefaultCostPrice: Number(currentMedicine.DefaultCostPrice),
-        DefaultSellingPrice: Number(currentMedicine.DefaultSellingPrice),
-        ReorderLevel: Number(currentMedicine.ReorderLevel)
+        DefaultCostPrice: Number(currentMedicine.DefaultCostPrice || 0),
+        DefaultSellingPrice: Number(currentMedicine.DefaultSellingPrice || 0),
+        ReorderLevel: Number(currentMedicine.ReorderLevel || 10)
       };
       
       const data = isEditing 
@@ -408,6 +408,44 @@ export default function MedicinesPage() {
     setIsDialogOpen(true);
   };
 
+  const unitOptions = [
+    { value: "Box", label: "Box" },
+    { value: "Strip", label: "Strip" },
+    { value: "Bottle", label: "Bottle" },
+    { value: "Tube", label: "Tube" },
+    { value: "Piece", label: "Piece" },
+    { value: "Vial", label: "Vial" },
+    { value: "Ampoule", label: "Ampoule" },
+    { value: "Sachet", label: "Sachet" },
+    { value: "Pack", label: "Pack" },
+    { value: "Jar", label: "Jar" },
+    { value: "Can", label: "Can" },
+  ];
+  if (currentMedicine?.Unit && !unitOptions.find(o => o.value === currentMedicine.Unit)) {
+    unitOptions.push({ value: currentMedicine.Unit, label: `${currentMedicine.Unit} (Legacy)` });
+  }
+
+  const dosageOptions = [
+    { value: "Tablet", label: "Tablet" },
+    { value: "Capsule", label: "Capsule" },
+    { value: "Syrup", label: "Syrup" },
+    { value: "Suspension", label: "Suspension" },
+    { value: "Injection", label: "Injection" },
+    { value: "Cream", label: "Cream" },
+    { value: "Ointment", label: "Ointment" },
+    { value: "Drops", label: "Drops" },
+    { value: "Gel", label: "Gel" },
+    { value: "Lotion", label: "Lotion" },
+    { value: "Spray", label: "Spray" },
+    { value: "Inhaler", label: "Inhaler" },
+    { value: "Powder", label: "Powder" },
+    { value: "Suppository", label: "Suppository" },
+    { value: "Other", label: "Other" },
+  ];
+  if (currentMedicine?.DosageForm && !dosageOptions.find(o => o.value === currentMedicine.DosageForm)) {
+    dosageOptions.push({ value: currentMedicine.DosageForm, label: `${currentMedicine.DosageForm} (Legacy)` });
+  }
+
   return (
     <div className="flex flex-col h-full bg-card">
       <div className="p-4 border-b border-border flex flex-col sm:flex-row gap-4 justify-between items-center bg-secondary/20">
@@ -421,26 +459,34 @@ export default function MedicinesPage() {
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <select 
-            className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-            value={filterCategory}
-            onChange={(e) => setFilterCategory(e.target.value ? Number(e.target.value) : "")}
+          <Select 
+            value={filterCategory === "" ? "none" : filterCategory.toString()}
+            onValueChange={(val) => setFilterCategory(val === "none" ? "" : Number(val))}
           >
-            <option value="">All Categories</option>
-            {categories.map(c => (
-              <option key={c.CategoryId} value={c.CategoryId}>{c.CategoryName}</option>
-            ))}
-          </select>
-          <select 
-            className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-            value={filterCompany}
-            onChange={(e) => setFilterCompany(e.target.value ? Number(e.target.value) : "")}
+            <SelectTrigger className="h-10 w-full sm:w-[180px] bg-background">
+              <SelectValue placeholder="All Categories" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">All Categories</SelectItem>
+              {categories.map(c => (
+                <SelectItem key={c.CategoryId} value={c.CategoryId.toString()}>{c.CategoryName}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select 
+            value={filterCompany === "" ? "none" : filterCompany.toString()}
+            onValueChange={(val) => setFilterCompany(val === "none" ? "" : Number(val))}
           >
-            <option value="">All Companies</option>
-            {companies.map(c => (
-              <option key={c.CompanyId} value={c.CompanyId}>{c.CompanyName}</option>
-            ))}
-          </select>
+            <SelectTrigger className="h-10 w-full sm:w-[180px] bg-background">
+              <SelectValue placeholder="All Companies" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">All Companies</SelectItem>
+              {companies.map(c => (
+                <SelectItem key={c.CompanyId} value={c.CompanyId.toString()}>{c.CompanyName}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         <div className="flex items-center gap-2 w-full sm:w-auto">
           <Button onClick={openNewDialog} className="h-10 bg-primary text-primary-foreground hover:bg-primary/90 px-4 font-semibold">
@@ -458,9 +504,6 @@ export default function MedicinesPage() {
           <Button variant="outline" className="h-10 bg-background text-foreground hidden sm:flex" onClick={handleExport} disabled={isExporting}>
             <Upload className="mr-2 h-4 w-4" /> {isExporting ? "Exporting..." : "Export CSV"}
           </Button>
-          <Button variant="outline" size="icon" className="h-10 w-10 bg-background text-foreground" onClick={mutateMedicines} disabled={loading}>
-            <RefreshCcw className={cn("h-4 w-4", loading && "animate-spin")} />
-          </Button>
         </div>
       </div>
 
@@ -473,10 +516,11 @@ export default function MedicinesPage() {
                 <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-10 text-center">#</TableHead>
                 <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-24 text-center">Code</TableHead>
                 <TableHead className="font-semibold text-slate-700 dark:text-slate-300 text-left">Medicine Name</TableHead>
-                <TableHead className="font-semibold text-slate-700 dark:text-slate-300 text-left">Formula</TableHead>
+                <TableHead className="font-semibold text-slate-700 dark:text-slate-300 text-left max-w-[200px]">Formula</TableHead>
                 <TableHead className="font-semibold text-slate-700 dark:text-slate-300 text-left">Category</TableHead>
                 <TableHead className="font-semibold text-slate-700 dark:text-slate-300 text-left">Company</TableHead>
                 <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-20 text-left">Unit</TableHead>
+                <TableHead className="font-semibold text-slate-700 dark:text-slate-300 text-left">Dosage Form</TableHead>
                 <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-28 text-center">Status</TableHead>
                 <TableHead className="font-semibold text-slate-700 dark:text-slate-300 text-center pr-6 w-32">Actions</TableHead>
               </TableRow>
@@ -484,11 +528,11 @@ export default function MedicinesPage() {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={9} className="h-32 text-center text-muted-foreground">Loading medicines...</TableCell>
+                  <TableCell colSpan={10} className="h-32 text-center text-muted-foreground">Loading medicines...</TableCell>
                 </TableRow>
               ) : medicines.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={9} className="h-32 text-center text-muted-foreground">No medicines found.</TableCell>
+                  <TableCell colSpan={10} className="h-32 text-center text-muted-foreground">No medicines found.</TableCell>
                 </TableRow>
               ) : (
                 medicines.map((med, idx) => (
@@ -501,7 +545,7 @@ export default function MedicinesPage() {
                     <TableCell className="py-3 font-bold text-[#111827] dark:text-white text-[15px] text-left">
                       {med.BrandName}
                     </TableCell>
-                    <TableCell className="py-3 text-[#111827] dark:text-gray-200 text-[14px] font-medium text-left">
+                    <TableCell className="py-3 text-[#111827] dark:text-gray-200 text-[14px] font-medium text-left max-w-[200px] truncate" title={med.GenericName}>
                       {med.GenericName}
                     </TableCell>
                     <TableCell className="py-3 text-[#111827] dark:text-gray-200 text-[14px] font-medium text-left">
@@ -512,6 +556,9 @@ export default function MedicinesPage() {
                     </TableCell>
                     <TableCell className="py-3 text-[#111827] dark:text-gray-200 text-[14px] font-medium text-left">
                       {med.Unit}
+                    </TableCell>
+                    <TableCell className="py-3 text-[#111827] dark:text-gray-200 text-[14px] font-medium text-left">
+                      {med.DosageForm || "—"}
                     </TableCell>
                     <TableCell className="text-center py-3">
                       <button 
@@ -545,18 +592,23 @@ export default function MedicinesPage() {
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-4 px-2 text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
               <span>Rows per page:</span>
-              <select
-                className="h-8 rounded-md border border-input bg-background px-2 py-1 focus:outline-none focus:ring-2 focus:ring-ring"
-                value={pageSize}
-                onChange={(e) => {
-                  setPageSize(Number(e.target.value));
+              <Select 
+                value={pageSize.toString()}
+                onValueChange={(val) => {
+                  setPageSize(Number(val));
                   setPage(1);
                 }}
               >
-                <option value={25}>25</option>
-                <option value={50}>50</option>
-                <option value={100}>100</option>
-              </select>
+                <SelectTrigger className="h-9 w-[70px] bg-background">
+                  <SelectValue placeholder="25" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="10">10</SelectItem>
+                  <SelectItem value="25">25</SelectItem>
+                  <SelectItem value="50">50</SelectItem>
+                  <SelectItem value="100">100</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div className="flex items-center gap-4">
               <span>
@@ -588,16 +640,12 @@ export default function MedicinesPage() {
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{currentMedicine.MedicineId ? "Edit Medicine" : "Add New Medicine"}</DialogTitle>
           </DialogHeader>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
             
-            <div className="space-y-2 md:col-span-2 text-primary font-semibold border-b pb-1">
-              Essential Information
-            </div>
-
             <div className="space-y-2">
               <label className="text-sm font-semibold text-foreground">Brand Name *</label>
               <Input 
@@ -652,161 +700,70 @@ export default function MedicinesPage() {
 
             <div className="space-y-2">
               <label className="text-sm font-semibold text-foreground">Unit</label>
-              <select 
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              <SmartCombobox
+                options={unitOptions}
                 value={currentMedicine.Unit || "Box"}
-                onChange={e => setCurrentMedicine({...currentMedicine, Unit: e.target.value})}
-                onKeyDown={e => {
-                  if(e.key === 'Enter') { e.preventDefault(); handleSave(); }
-                }}
-              >
-                <option value="Box">Box</option>
-                <option value="Strip">Strip</option>
-                <option value="Bottle">Bottle</option>
-                <option value="Tube">Tube</option>
-                <option value="Injection">Injection</option>
-                <option value="Pieces">Pieces</option>
-              </select>
+                onChange={val => setCurrentMedicine({...currentMedicine, Unit: String(val)})}
+                placeholder="Search unit..."
+              />
             </div>
 
             <div className="space-y-2">
               <label className="text-sm font-semibold text-foreground">Dosage Form</label>
-              <select 
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              <SmartCombobox
+                options={dosageOptions}
                 value={currentMedicine.DosageForm || ""}
-                onChange={e => setCurrentMedicine({...currentMedicine, DosageForm: e.target.value})}
-              >
-                <option value="">Select Type</option>
-                <option value="Tablet">Tablet</option>
-                <option value="Capsule">Capsule</option>
-                <option value="Syrup">Syrup</option>
-                <option value="Injection">Injection</option>
-                <option value="Cream">Cream</option>
-                <option value="Drops">Drops</option>
-                <option value="Ointment">Ointment</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
-            
-            <div className="md:col-span-2 pt-2">
-              <Button type="button" variant="ghost" className="w-full text-muted-foreground text-xs" onClick={() => setShowAdvanced(!showAdvanced)}>
-                {showAdvanced ? "Hide Advanced Details" : "Show Advanced Details (Prices, Dosage, etc)"}
-              </Button>
+                onChange={val => setCurrentMedicine({...currentMedicine, DosageForm: String(val)})}
+                placeholder="Search type..."
+              />
             </div>
 
-            {showAdvanced && (
-              <>
-                <div className="space-y-2">
-                  <label className="text-sm font-semibold text-foreground">Strength</label>
-                  <Input 
-                    value={currentMedicine.Strength || ""}
-                    onChange={e => setCurrentMedicine({...currentMedicine, Strength: e.target.value})}
-                    placeholder="e.g. 500mg, 10ml"
-                    className="h-10"
-                  />
-                </div>
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-foreground">Reorder Level (Min Stock)</label>
+              <Input 
+                type="number" min="0"
+                value={currentMedicine.ReorderLevel}
+                onChange={e => setCurrentMedicine({...currentMedicine, ReorderLevel: Number(e.target.value)})}
+                className="h-10"
+              />
+            </div>
 
-                <div className="space-y-2">
-                  <label className="text-sm font-semibold text-foreground">Barcode</label>
-                  <div className="flex gap-2">
-                    <Input 
-                      value={currentMedicine.Barcode || ""}
-                      onChange={e => setCurrentMedicine({...currentMedicine, Barcode: e.target.value})}
-                      placeholder="Scan or type barcode"
-                      className="h-10 font-mono"
-                    />
-                    <Button type="button" variant="outline" onClick={generateBarcode} className="h-10 px-3 whitespace-nowrap text-xs">
-                      Generate
-                    </Button>
-                  </div>
-                </div>
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-foreground">Rack Number</label>
+              <Input 
+                value={currentMedicine.RackNumber || ""}
+                onChange={e => setCurrentMedicine({...currentMedicine, RackNumber: e.target.value})}
+                placeholder="e.g. A-12"
+                className="h-10"
+              />
+            </div>
 
-                <div className="space-y-2">
-                  <label className="text-sm font-semibold text-foreground">Default Cost Price</label>
-                  <Input 
-                    type="number" min="0" step="0.01"
-                    value={currentMedicine.DefaultCostPrice}
-                    onChange={e => {
-                      const cost = Number(e.target.value);
-                      const margin = inventorySettings.DefaultProfitMargin || 0;
-                      const newSelling = Number((cost * (1 + margin / 100)).toFixed(2));
-                      setCurrentMedicine({ ...currentMedicine, DefaultCostPrice: cost, DefaultSellingPrice: newSelling });
-                    }}
-                    className="h-10"
-                  />
+            <div className="space-y-2 md:col-span-2 mt-1">
+              <label className="text-sm font-semibold text-foreground">Status</label>
+              <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-secondary/30">
+                <div className="flex items-center gap-3">
+                  <span className={cn("w-2.5 h-2.5 rounded-full", currentMedicine.IsActive ? "bg-emerald-500" : "bg-rose-500")} />
+                  <span className={cn("text-sm font-semibold", currentMedicine.IsActive ? "text-emerald-700 dark:text-emerald-400" : "text-rose-700 dark:text-rose-400")}>
+                    {currentMedicine.IsActive ? "Active" : "Inactive"}
+                  </span>
                 </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-semibold text-foreground">Default Selling Price</label>
-                  <Input 
-                    type="number" min="0" step="0.01"
-                    value={currentMedicine.DefaultSellingPrice}
-                    onChange={e => setCurrentMedicine({...currentMedicine, DefaultSellingPrice: Number(e.target.value)})}
-                    className="h-10"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-semibold text-foreground">Reorder Level (Min Stock)</label>
-                  <Input 
-                    type="number" min="0"
-                    value={currentMedicine.ReorderLevel}
-                    onChange={e => setCurrentMedicine({...currentMedicine, ReorderLevel: Number(e.target.value)})}
-                    className="h-10"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-semibold text-foreground">Rack Number</label>
-                  <Input 
-                    value={currentMedicine.RackNumber || ""}
-                    onChange={e => setCurrentMedicine({...currentMedicine, RackNumber: e.target.value})}
-                    placeholder="e.g. A-12"
-                    className="h-10"
-                  />
-                </div>
-
-                <div className="space-y-2 md:col-span-2 pt-2">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox 
-                      id="prescription" 
-                      checked={currentMedicine.RequiresPrescription} 
-                      onCheckedChange={(c) => setCurrentMedicine({...currentMedicine, RequiresPrescription: c as boolean})}
-                    />
-                    <label htmlFor="prescription" className="text-sm font-medium leading-none">
-                      Requires Prescription?
-                    </label>
-                  </div>
-                </div>
-
-                <div className="space-y-2 md:col-span-2 mt-2">
-                  <label className="text-sm font-semibold text-foreground">Status</label>
-                  <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-secondary/30">
-                    <div className="flex items-center gap-3">
-                      <span className={cn("w-2.5 h-2.5 rounded-full", currentMedicine.IsActive ? "bg-emerald-500" : "bg-rose-500")} />
-                      <span className={cn("text-sm font-semibold", currentMedicine.IsActive ? "text-emerald-700 dark:text-emerald-400" : "text-rose-700 dark:text-rose-400")}>
-                        {currentMedicine.IsActive ? "Active" : "Inactive"}
-                      </span>
-                    </div>
-                    <button
-                      type="button"
-                      role="switch"
-                      aria-checked={currentMedicine.IsActive}
-                      onClick={() => setCurrentMedicine({...currentMedicine, IsActive: !currentMedicine.IsActive})}
-                      className={cn(
-                        "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary/30",
-                        currentMedicine.IsActive ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"
-                      )}
-                    >
-                      <span className={cn(
-                        "pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-lg ring-0 transition-transform duration-200 ease-in-out",
-                        currentMedicine.IsActive ? "translate-x-5" : "translate-x-0"
-                      )} />
-                    </button>
-                  </div>
-                </div>
-              </>
-            )}
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={currentMedicine.IsActive}
+                  onClick={() => setCurrentMedicine({...currentMedicine, IsActive: !currentMedicine.IsActive})}
+                  className={cn(
+                    "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary/30",
+                    currentMedicine.IsActive ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"
+                  )}
+                >
+                  <span className={cn(
+                    "pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-lg ring-0 transition-transform duration-200 ease-in-out",
+                    currentMedicine.IsActive ? "translate-x-5" : "translate-x-0"
+                  )} />
+                </button>
+              </div>
+            </div>
             
           </div>
           <DialogFooter>
@@ -818,19 +775,6 @@ export default function MedicinesPage() {
         </DialogContent>
       </Dialog>
 
-      <ImportPreviewModal
-        isOpen={isPreviewModalOpen}
-        onClose={() => setIsPreviewModalOpen(false)}
-        initialData={previewData}
-        categories={categories}
-        companies={companies}
-        onConfirm={handleConfirmImport}
-        isSaving={isImporting}
-        setCategories={mutateCategories}
-        setCompanies={mutateCompanies}
-      />
-
-      
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent className="sm:max-w-[425px] border-rose-500/20">
           <DialogHeader>
@@ -852,19 +796,6 @@ export default function MedicinesPage() {
         </DialogContent>
       </Dialog>
 
-      <ImportPreviewModal
-        isOpen={isPreviewModalOpen}
-        onClose={() => setIsPreviewModalOpen(false)}
-        initialData={previewData}
-        categories={categories}
-        companies={companies}
-        onConfirm={handleConfirmImport}
-        isSaving={isImporting}
-        setCategories={mutateCategories}
-        setCompanies={mutateCompanies}
-      />
-
-      
       {/* View Dialog */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
@@ -920,19 +851,19 @@ export default function MedicinesPage() {
                 <p className="text-sm">{currentMedicine.DosageForm || "—"}</p>
               </div>
               <div className="space-y-1">
-                <p className="text-sm font-medium text-muted-foreground">Strength</p>
-                <p className="text-sm">{currentMedicine.Strength || "—"}</p>
+                <p className="text-sm font-medium text-muted-foreground">Unit</p>
+                <p className="text-sm">{currentMedicine.Unit || "Box"}</p>
               </div>
             </div>
             
             <div className="grid grid-cols-2 gap-4 border-t border-border pt-2">
               <div className="space-y-1">
-                <p className="text-sm font-medium text-muted-foreground">Cost Price</p>
-                <p className="text-sm">Rs. {currentMedicine.DefaultCostPrice}</p>
+                <p className="text-sm font-medium text-muted-foreground">Reorder Level</p>
+                <p className="text-sm">{currentMedicine.ReorderLevel}</p>
               </div>
               <div className="space-y-1">
-                <p className="text-sm font-medium text-muted-foreground">Selling Price</p>
-                <p className="text-sm font-semibold text-primary">Rs. {currentMedicine.DefaultSellingPrice}</p>
+                <p className="text-sm font-medium text-muted-foreground">Rack Number</p>
+                <p className="text-sm">{currentMedicine.RackNumber || "—"}</p>
               </div>
             </div>
           </div>

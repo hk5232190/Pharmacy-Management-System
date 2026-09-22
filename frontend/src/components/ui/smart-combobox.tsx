@@ -48,8 +48,11 @@ export function SmartCombobox({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  const selectedOption = options.find((o) => o.value === value);
+  const isInputSelectedLabel = selectedOption && inputValue === selectedOption.label;
+
   const filteredOptions = options.filter((o) =>
-    o.label.toLowerCase().includes(inputValue.toLowerCase())
+    isInputSelectedLabel ? true : o.label.toLowerCase().includes(inputValue.toLowerCase())
   );
 
   const exactMatch = options.find((o) => o.label.toLowerCase() === inputValue.toLowerCase());

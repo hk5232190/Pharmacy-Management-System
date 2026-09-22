@@ -50,9 +50,11 @@ export function ImportPreviewModal({
     row.IsValid = true;
     
     if (!row.BrandName) { row.IsValid = false; row.Errors.push("Brand Name is required"); }
-    if (!row.GenericName) { row.IsValid = false; row.Errors.push("Generic Name is required"); }
+    if (!row.GenericName) { row.IsValid = false; row.Errors.push("Formula is required"); }
     if (!row.CategoryId) { row.IsValid = false; row.Errors.push("Category is required"); }
     if (!row.CompanyId) { row.IsValid = false; row.Errors.push("Company is required"); }
+    if (!row.Unit) { row.IsValid = false; row.Errors.push("Unit is required"); }
+    if (!row.DosageForm) { row.IsValid = false; row.Errors.push("Dosage Form is required"); }
     
     newData[index] = row;
     setData(newData);
@@ -112,10 +114,12 @@ export function ImportPreviewModal({
                 <TableHead className="w-[50px] text-center">Row</TableHead>
                 <TableHead>Brand Name</TableHead>
                 <TableHead>Formula</TableHead>
-                <TableHead className="w-[200px]">Category</TableHead>
-                <TableHead className="w-[200px]">Company</TableHead>
-                <TableHead>Prices (C/S)</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead className="w-[180px]">Category</TableHead>
+                <TableHead className="w-[180px]">Company</TableHead>
+                <TableHead className="w-[120px]">Unit</TableHead>
+                <TableHead className="w-[140px]">Dosage Form</TableHead>
+                <TableHead className="w-[100px]">Status</TableHead>
+                <TableHead>Errors</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -185,9 +189,44 @@ export function ImportPreviewModal({
                     )}
                   </TableCell>
                   
-                  <TableCell className="text-xs">
-                    <div>C: ${row.DefaultCostPrice}</div>
-                    <div>S: ${row.DefaultSellingPrice}</div>
+                  <TableCell>
+                    <SmartCombobox
+                      options={[
+                        "Box", "Strip", "Bottle", "Tube", "Piece", 
+                        "Vial", "Ampoule", "Sachet", "Pack", "Jar", "Can"
+                      ].map(u => ({ value: u, label: u }))}
+                      value={row.Unit || ""}
+                      onChange={val => updateRow(idx, { Unit: val })}
+                      placeholder="Select Unit"
+                      className={!row.Unit ? "border-rose-500 h-8" : "h-8"}
+                    />
+                  </TableCell>
+                  
+                  <TableCell>
+                    <SmartCombobox
+                      options={[
+                        "Tablet", "Capsule", "Syrup", "Suspension", "Injection", 
+                        "Cream", "Ointment", "Drops", "Gel", "Lotion", "Spray", 
+                        "Inhaler", "Powder", "Suppository", "Other"
+                      ].map(d => ({ value: d, label: d }))}
+                      value={row.DosageForm || ""}
+                      onChange={val => updateRow(idx, { DosageForm: val })}
+                      placeholder="Select Dosage"
+                      className={!row.DosageForm ? "border-rose-500 h-8" : "h-8"}
+                    />
+                  </TableCell>
+
+                  <TableCell>
+                    <SmartCombobox
+                      options={[
+                        { value: "true", label: "Active" },
+                        { value: "false", label: "Inactive" }
+                      ]}
+                      value={row.IsActive ? "true" : "false"}
+                      onChange={val => updateRow(idx, { IsActive: val === "true" })}
+                      placeholder="Select Status"
+                      className="h-8"
+                    />
                   </TableCell>
                   
                   <TableCell>
@@ -207,7 +246,7 @@ export function ImportPreviewModal({
               
               {data.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                     No data to preview.
                   </TableCell>
                 </TableRow>

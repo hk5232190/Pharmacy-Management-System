@@ -236,6 +236,13 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
         const month = new Date(today.getFullYear(), today.getMonth(), 1);
         params.append("start_date", formatDateLocal(month));
         params.append("end_date", formatDateLocal(today));
+      } else if (historyFilters.datePreset === "This Year") {
+        const year = new Date(today.getFullYear(), 0, 1);
+        params.append("start_date", formatDateLocal(year));
+        params.append("end_date", formatDateLocal(today));
+      } else if (historyFilters.datePreset === "Custom Range") {
+        if (historyFilters.startDate) params.append("start_date", historyFilters.startDate);
+        if (historyFilters.endDate) params.append("end_date", historyFilters.endDate);
       }
     }
     
@@ -245,8 +252,9 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
     return params.toString();
   };
 
-  const { data: historyData, mutate: mutateHistory, isLoading: loadingHistory } = useSWR(
-    activeTab === 'history' ? `/sales/history?${buildHistoryParams()}` : null,
+    const isCustomRangeIncomplete = historyFilters.datePreset === 'Custom Range' && (!historyFilters.startDate || !historyFilters.endDate);
+    const { data: historyData, mutate: mutateHistory, isLoading: loadingHistory } = useSWR(
+      (activeTab === 'history' && !isCustomRangeIncomplete) ? `/sales/history?${buildHistoryParams()}` : null,
     swrFetcher,
     { keepPreviousData: true }
   );
@@ -1954,21 +1962,51 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
             <h2 className="text-xl font-bold mb-4 text-foreground flex items-center gap-2"><FileText className="w-5 h-5 text-blue-500" /> Sales History</h2>
 
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-              <div className="flex flex-wrap gap-2">
-                {["Today", "Yesterday", "This Week", "This Month", "All"].map(preset => (
-                  <Button
-                    key={preset}
-                    variant={historyFilters.datePreset === preset ? "default" : "outline"}
-                    size="sm"
-                    className={historyFilters.datePreset === preset ? "bg-blue-600 text-white" : "text-muted-foreground"}
-                    onClick={() => {
-                      setHistoryFilters({ ...historyFilters, datePreset: preset });
-                      setHistoryPage(1);
-                    }}
-                  >
-                    {preset}
-                  </Button>
-                ))}
+              <div className="flex flex-col sm:flex-row items-center gap-4 bg-card p-2 rounded-xl shadow-sm border border-border w-fit">
+                <div className="flex flex-wrap items-center gap-2">
+                  {["Today", "Yesterday", "This Week", "This Month", "This Year", "Custom Range"].map(preset => (
+                    <Button
+                      key={preset}
+                      variant={historyFilters.datePreset === preset ? "default" : "outline"}
+                      size="sm"
+                      className={cn("rounded-full", historyFilters.datePreset === preset ? "bg-blue-600 text-white" : "text-muted-foreground")}
+                      onClick={() => {
+                        setHistoryFilters({ ...historyFilters, datePreset: preset });
+                        setHistoryPage(1);
+                      }}
+                    >
+                      {preset}
+                      {preset === 'Custom Range' && historyFilters.startDate && historyFilters.endDate && historyFilters.datePreset === "Custom Range" && (
+                        <Check className="w-3 h-3 ml-1 text-emerald-400" />
+                      )}
+                    </Button>
+                  ))}
+                </div>
+                {historyFilters.datePreset === "Custom Range" && (
+                  <div className="flex items-center gap-2 ml-2 animate-in fade-in duration-200">
+                    <Input 
+                      type="date" 
+                      className="text-sm border border-border rounded-md p-1.5 bg-background text-foreground focus:ring-2 focus:ring-primary outline-none h-9 w-[140px]" 
+                      value={historyFilters.startDate} 
+                      onChange={e => {
+                        setHistoryFilters({ ...historyFilters, startDate: e.target.value });
+                        setHistoryPage(1);
+                      }} 
+                      title="From Date" 
+                    />
+                    <span className="text-muted-foreground text-sm">to</span>
+                    <Input 
+                      type="date" 
+                      className="text-sm border border-border rounded-md p-1.5 bg-background text-foreground focus:ring-2 focus:ring-primary outline-none h-9 w-[140px]" 
+                      value={historyFilters.endDate} 
+                      onChange={e => {
+                        setHistoryFilters({ ...historyFilters, endDate: e.target.value });
+                        setHistoryPage(1);
+                      }} 
+                      title="To Date" 
+                    />
+                  </div>
+                )}
               </div>
               <div className="flex items-center gap-2 w-full md:w-auto">
                 <div className="relative flex-1 md:w-64">
