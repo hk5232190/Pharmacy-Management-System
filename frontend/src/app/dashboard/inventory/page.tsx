@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { useProfile } from "@/contexts/ProfileContext";
@@ -247,7 +248,7 @@ function InventoryManagementPageInner({
   const [expirySearch, setExpirySearch] = useState("");
   const [expirySupplierFilter, setExpirySupplierFilter] = useState("All");
   const [expiryPage, setExpiryPage] = useState(1);
-  const expiryPageSize = 15;
+  const [expiryPageSize, setExpiryPageSize] = useState(25);
 
   const expiryParams = new URLSearchParams({
     days: String(expiryTimeframe),
@@ -301,7 +302,7 @@ function InventoryManagementPageInner({
   const [adjTypeFilter, setAdjTypeFilter] = useState("All");
   const [adjStartDate, setAdjStartDate] = useState("");
   const [adjEndDate, setAdjEndDate] = useState("");
-  const [adjPageSize, setAdjPageSize] = useState(10);
+  const [adjPageSize, setAdjPageSize] = useState(25);
   const [adjCurrentPage, setAdjCurrentPage] = useState(1);
 
   // Export dropdown (stock tab only)
@@ -312,7 +313,7 @@ function InventoryManagementPageInner({
   // (refreshState is now managed by the wrapper)
 
   // Movement pagination
-  const [movPageSize] = useState(20);
+  const [movPageSize, setMovPageSize] = useState(25);
   const [movCurrentPage, setMovCurrentPage] = useState(1);
 
   // Document preview modal
@@ -332,7 +333,7 @@ function InventoryManagementPageInner({
   const uniqueCompanies = masterCompanies.map(c => c.CompanyName).filter(Boolean).sort();
 
   // Current Stock pagination
-  const [stockPageSize, setStockPageSize] = useState(10);
+  const [stockPageSize, setStockPageSize] = useState(25);
   const [stockCurrentPage, setStockCurrentPage] = useState(1);
   const totalStockPages = Math.max(1, Math.ceil(filteredStockList.length / stockPageSize));
   const pagedStockList = filteredStockList.slice((stockCurrentPage - 1) * stockPageSize, stockCurrentPage * stockPageSize);
@@ -772,59 +773,241 @@ function InventoryManagementPageInner({
 
   const exportToPDF = (data: any[], filename: string) => {
     if (!data || data.length === 0) return toast.error("No data to export");
-    const doc = new jsPDF();
-    const headers = Object.keys(data[0]);
+
+    // Remove internal IDs and verbose columns for cleaner A4 portrait report
+    const cleanData = data.map(row => {
+      const newRow: any = {};
+      Object.keys(row).forEach(k => {
+        const key = k.toLowerCase();
+        if (key === 'batchid' || key === 'id' || key === 'sourceid') return; 
+        
+        // Filter out verbose columns to prevent vertical stretching in A4
+        if (filename === 'expiry_tracking') {
+           if (key === 'categoryname' || key === 'suppliername' || key === 'purchaseprice') return;
+        }
+        if (filename === 'stock_movements') {
+           if (key === 'barcode') return;
+        }
+
+        newRow[k] = row[k];
+      });
+      return newRow;
+    });
+
+    const orientation = 'portrait';
+    const doc = new jsPDF({ orientation, format: 'a4' });
+    const pageW = doc.internal.pageSize.getWidth();
+    const pageH = doc.internal.pageSize.getHeight();
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('en-GB').replaceAll('/', '-');
+    const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+    const pharmacyName = profile?.PharmacyName || 'Pharmacy Management System';
     
-    // Format headers slightly for display
+    let reportTitle = filename.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    if (filename === 'expiry_tracking') reportTitle = 'Expiry Tracking Report';
+    if (filename === 'stock_movements') reportTitle = 'Stock Movement History';
+
+    const marginX = 18;
+
+    // ── Brand header bar ──────────────────────────────────────────────────────
+    doc.setFillColor(15, 23, 42);           // slate-900
+    doc.rect(0, 0, pageW, 28, 'F');         
+
+    // Pharmacy name (left, white)
+    doc.setFontSize(13);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(255, 255, 255);
+    doc.text(pharmacyName, marginX, 18);
+
+    // Report label pill (right, accent blue)
+    const pillLabel = 'INVENTORY REPORT';
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'bold');
+    const pillW = doc.getTextWidth(pillLabel) + 14;
+    doc.setFillColor(59, 130, 246);        // blue-500
+    doc.roundedRect(pageW - pillW - marginX, 8, pillW, 12, 3, 3, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.text(pillLabel, pageW - pillW - marginX + 7, 16);
+
+    // ── Report title & meta ───────────────────────────────────────────────────
+    doc.setFontSize(18);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(15, 23, 42);
+    doc.text(reportTitle, marginX, 48);
+
+    doc.setFontSize(8.5);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(100, 116, 139);       // slate-500
+    doc.text(`Generated: ${dateStr}  ${timeStr}`, marginX, 58);
+    doc.text(`Total Records: ${cleanData.length}`, pageW - marginX, 58, { align: 'right' });
+
+    // Thin separator line
+    doc.setDrawColor(226, 232, 240);       // slate-200
+    doc.setLineWidth(0.5);
+    doc.line(marginX, 64, pageW - marginX, 64);
+
+    let startY = 70;
+
+    if (filename === 'expiry_tracking' || filename === 'stock_movements') {
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(15, 23, 42);
+      doc.text("KEY METRICS", marginX, 76);
+      
+      doc.setDrawColor(226, 232, 240);
+      doc.setLineWidth(0.3);
+      doc.line(marginX, 80, pageW - marginX, 80);
+
+      let kpiData: string[][] = [];
+      if (filename === 'expiry_tracking') {
+        const expired = data.filter(x => x.DaysToExpiry < 0).length;
+        const soon = data.filter(x => x.DaysToExpiry >= 0 && x.DaysToExpiry <= 90).length;
+        const total = data.length;
+        const safe = total - expired - soon;
+        kpiData = [
+          ['Expired Batches', expired.toString(), 'Expiring Soon (90d)', soon.toString()],
+          ['Safe Batches', safe.toString(), 'Total Tracked', total.toString()]
+        ];
+      } else {
+        const total = data.length;
+        const additions = data.filter(x => x.QuantityChange > 0).length;
+        const deductions = data.filter(x => x.QuantityChange < 0).length;
+        const unique = new Set(data.map(x => x.MedicineName)).size;
+        kpiData = [
+          ['Stock Additions (+)', additions.toString(), 'Stock Deductions (-)', deductions.toString()],
+          ['Total Movements', total.toString(), 'Unique Items', unique.toString()]
+        ];
+      }
+
+      autoTable(doc, {
+        body: kpiData,
+        startY: 84,
+        theme: 'grid',
+        margin: { left: marginX, right: marginX },
+        styles: {
+          fontSize: 8,
+          lineColor: [226, 232, 240],
+          lineWidth: 0.3,
+          cellPadding: { top: 5, bottom: 5, left: 4, right: 4 },
+        },
+        columnStyles: {
+          0: { fontStyle: 'bold', textColor: [100, 116, 139], fillColor: [248, 250, 252] },
+          1: { fontStyle: 'bold', textColor: [15, 23, 42], halign: 'right' },
+          2: { fontStyle: 'bold', textColor: [100, 116, 139], fillColor: [248, 250, 252] },
+          3: { fontStyle: 'bold', textColor: [15, 23, 42], halign: 'right' }
+        }
+      });
+
+      startY = (doc as any).lastAutoTable.finalY + 12;
+
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(15, 23, 42);
+      doc.text("DETAIL", marginX, startY);
+      
+      startY += 5;
+    }
+
+    // ── Build table data ──────────────────────────────────────────────────────
+    const headers = Object.keys(cleanData[0]);
     const formattedHeaders = headers.map(h => {
       let res = h.replace(/([A-Z])/g, ' $1').trim();
-      if (res === 'Source Id') res = 'Source ID';
-      if (res === 'Batch Code') res = 'Batch No.';
+      if (res.toLowerCase() === 'source id') res = 'Source ID';
+      if (res.toLowerCase() === 'batch code') res = 'Batch No.';
+      if (res.toLowerCase() === 'medicine name') res = 'Medicine Name';
+      if (res.toLowerCase() === 'category name') res = 'Category';
+      if (res.toLowerCase() === 'supplier name') res = 'Supplier';
       return res.toUpperCase();
     });
-    
-    const tableRows = data.map(row => {
+
+    const tableRows = cleanData.map((row) => {
       return headers.map(header => {
         let val = row[header];
-        if (val === null || val === undefined) return "-";
-
+        if (val === null || val === undefined) return '-';
         if (typeof val === 'number') {
-           if (header.toLowerCase().includes('value') || header.toLowerCase().includes('price') || header.toLowerCase().includes('cost')) {
-             return `${formatCurrency(val)}`;
-           }
-           return val.toLocaleString();
-        }
-
-        if (typeof val === 'string') {
-          // Check if it looks like an ISO date (e.g. 2026-08-26T20:05:50)
-          if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(val)) {
-            const date = new Date(val.endsWith('Z') ? val : val + 'Z');
-            const d = date.toLocaleDateString('en-GB').replaceAll('/', '-');
-            const t = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-            return `${d} ${t}`;
+          if (header.toLowerCase().includes('value') || header.toLowerCase().includes('price') || header.toLowerCase().includes('cost')) {
+            return formatCurrency(val);
           }
+          return val.toLocaleString();
         }
-        
-        return val;
+        if (typeof val === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(val)) {
+          const d = new Date(val.endsWith('Z') ? val : val + 'Z');
+          return `${d.toLocaleDateString('en-GB').replaceAll('/', '-')} ${d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}`;
+        }
+        return String(val);
       });
     });
 
-    const title = filename.replace(/_/g, ' ').toUpperCase();
-    doc.setFontSize(16);
-    doc.text(`Inventory Report - ${title}`, 14, 20);
-    doc.setFontSize(10);
-    doc.text(`Generated on: ${new Date().toLocaleDateString('en-GB').replaceAll('/', '-')} ${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}`, 14, 28);
+    // Add S.No
+    formattedHeaders.unshift('S.NO');
+    tableRows.forEach((row, i) => row.unshift((i + 1).toString()));
 
+    // ── Table ─────────────────────────────────────────────────────────────────
     autoTable(doc, {
       head: [formattedHeaders],
       body: tableRows,
-      startY: 36,
+      startY: startY,
       theme: 'grid',
-      headStyles: { fillColor: [59, 130, 246] }, // blue-500
-      styles: { fontSize: 8 },
+      margin: { left: marginX, right: marginX },
+      headStyles: {
+        fillColor: [15, 23, 42],           // slate-900
+        textColor: [255, 255, 255],
+        fontStyle: 'bold',
+        fontSize: 7.5,
+        halign: 'center',
+        valign: 'middle',
+        cellPadding: { top: 4, bottom: 4, left: 2, right: 2 },
+      },
+      bodyStyles: {
+        fontSize: 7.5,
+        textColor: [30, 41, 59],           // slate-800
+        halign: 'center',
+        valign: 'middle',
+        cellPadding: { top: 4, bottom: 4, left: 2, right: 2 },
+      },
+      columnStyles: {
+        0: { halign: 'center', cellWidth: 15 },
+        1: { halign: 'left' },
+        2: { halign: 'left' }
+      },
+      alternateRowStyles: {
+        fillColor: [248, 250, 252],        // slate-50
+      },
+      styles: {
+        lineColor: [226, 232, 240],        // slate-200
+        lineWidth: 0.3,
+        overflow: 'linebreak',
+      },
+      didParseCell: function (data) {
+        if (data.section === 'head' && data.row.index === 0) {
+          data.cell.styles.lineWidth = { bottom: 1.5, top: 0, left: 0, right: 0 } as any;
+          data.cell.styles.lineColor = [30, 58, 95] as any; 
+        }
+        if (data.section === 'body') {
+           const headerName = formattedHeaders[data.column.index] || '';
+           if (headerName.includes('PRICE') || headerName.includes('COST') || headerName.includes('VALUE') || headerName.includes('QTY') || headerName.includes('STOCK')) {
+             data.cell.styles.halign = 'right';
+           }
+        }
+      },
+      // Page footer with page numbers
+      didDrawPage: (hookData) => {
+        const pg = (doc as any).internal.getCurrentPageInfo().pageNumber;
+        const total = (doc as any).internal.getNumberOfPages?.() || pg;
+        doc.setFontSize(8.5);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(148, 163, 184);  // slate-400
+        doc.text(`${pharmacyName}  |  ${reportTitle}`, marginX, pageH - 18);
+        doc.text(`Page ${pg} of ${total}`, pageW - marginX, pageH - 18, { align: 'right' });
+        // Bottom rule
+        doc.setDrawColor(226, 232, 240);
+        doc.setLineWidth(0.5);
+        doc.line(marginX, pageH - 22, pageW - marginX, pageH - 22);
+      },
     });
 
     doc.save(`${filename}.pdf`);
+    toast.success('PDF report downloaded successfully');
   };
 
   // Navigate to Movement History tab and pre-fill batch filter
@@ -1181,19 +1364,13 @@ function InventoryManagementPageInner({
               </table>
             </div>
             
-            <div className="px-6 py-4 border-t border-border bg-slate-50/50 dark:bg-secondary/20 flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
+            <div className="px-4 py-3 border-t border-border bg-white dark:bg-card flex flex-col sm:flex-row items-center justify-between text-sm text-slate-500 dark:text-muted-foreground">
               <div className="flex items-center gap-2">
                 <span>Rows per page:</span>
-                <select
-                  className="h-8 rounded-md border border-input bg-background px-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                  value={stockPageSize}
-                  onChange={e => { setStockPageSize(Number(e.target.value)); setStockCurrentPage(1); }}
-                >
-                  <option value={10}>10</option>
-                  <option value={25}>25</option>
-                  <option value={50}>50</option>
-                  <option value={100}>100</option>
-                </select>
+                <Select value={stockPageSize.toString()} onValueChange={v => { setStockPageSize(Number(v)); setStockCurrentPage(1); }}>
+                  <SelectTrigger className="h-8 w-[70px] bg-background"><SelectValue placeholder="25" /></SelectTrigger>
+                  <SelectContent><SelectItem value="25">25</SelectItem><SelectItem value="50">50</SelectItem><SelectItem value="100">100</SelectItem></SelectContent>
+                </Select>
               </div>
               <div className="flex items-center gap-4">
                 <span>
@@ -1324,31 +1501,34 @@ function InventoryManagementPageInner({
             </div>
 
             {/* Pagination */}
-            <div className="p-4 border-t border-border bg-slate-50/50 dark:bg-secondary/20 flex items-center justify-between text-sm">
-              <div className="text-muted-foreground">
-                Showing {Math.min((adjCurrentPage - 1) * adjPageSize + 1, filteredAdjHistory.length)}–
-                {Math.min(adjCurrentPage * adjPageSize, filteredAdjHistory.length)} of {filteredAdjHistory.length} records
-              </div>
+            <div className="px-4 py-3 border-t border-border bg-white dark:bg-card flex flex-col sm:flex-row items-center justify-between text-sm text-slate-500 dark:text-muted-foreground">
               <div className="flex items-center gap-2">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => setAdjCurrentPage(p => Math.max(1, p - 1))}
-                  disabled={adjCurrentPage === 1}
-                >
-                  Previous
-                </Button>
-                <div className="px-2 text-sm font-medium">
-                  Page {adjCurrentPage} of {totalAdjPages}
+                <span>Rows per page:</span>
+                <Select value={adjPageSize.toString()} onValueChange={v => { setAdjPageSize(Number(v)); setAdjCurrentPage(1); }}>
+                  <SelectTrigger className="h-8 w-[70px] bg-background"><SelectValue placeholder="25" /></SelectTrigger>
+                  <SelectContent><SelectItem value="25">25</SelectItem><SelectItem value="50">50</SelectItem><SelectItem value="100">100</SelectItem></SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-center gap-4">
+                <span>
+                  Showing {Math.min((adjCurrentPage - 1) * adjPageSize + 1, filteredAdjHistory.length)}–{Math.min(adjCurrentPage * adjPageSize, filteredAdjHistory.length)} of {filteredAdjHistory.length}
+                </span>
+                <div className="flex items-center gap-1">
+                  <Button 
+                    variant="outline" size="sm" className="h-8 px-3"
+                    onClick={() => setAdjCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={adjCurrentPage === 1}
+                  >
+                    Prev
+                  </Button>
+                  <Button 
+                    variant="outline" size="sm" className="h-8 px-3"
+                    onClick={() => setAdjCurrentPage(p => Math.min(totalAdjPages, p + 1))}
+                    disabled={adjCurrentPage >= totalAdjPages}
+                  >
+                    Next
+                  </Button>
                 </div>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => setAdjCurrentPage(p => Math.min(totalAdjPages, p + 1))}
-                  disabled={adjCurrentPage >= totalAdjPages}
-                >
-                  Next
-                </Button>
               </div>
             </div>
 
@@ -1525,31 +1705,34 @@ function InventoryManagementPageInner({
 
               {/* Pagination */}
               {!loading && expiryItems.length > 0 && (
-                <div className="px-4 py-2.5 border-t border-border bg-slate-50/50 dark:bg-secondary/20 text-xs text-muted-foreground flex items-center justify-between">
-                  <div>
-                    Showing {Math.min((expiryPage - 1) * expiryPageSize + 1, expiryTotal)}–
-                    {Math.min(expiryPage * expiryPageSize, expiryTotal)} of {expiryTotal} expiring batches
+                <div className="px-4 py-3 border-t border-border bg-white dark:bg-card flex flex-col sm:flex-row items-center justify-between text-sm text-slate-500 dark:text-muted-foreground">
+                  <div className="flex items-center gap-2">
+                    <span>Rows per page:</span>
+                    <Select value={expiryPageSize.toString()} onValueChange={v => { setExpiryPageSize(Number(v)); setExpiryPage(1); }}>
+                      <SelectTrigger className="h-8 w-[70px] bg-background"><SelectValue placeholder="25" /></SelectTrigger>
+                      <SelectContent><SelectItem value="25">25</SelectItem><SelectItem value="50">50</SelectItem><SelectItem value="100">100</SelectItem></SelectContent>
+                    </Select>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="h-7 px-2 text-[11px]" 
-                      disabled={expiryPage === 1}
-                      onClick={() => setExpiryPage(p => Math.max(1, p - 1))}
-                    >
-                      Previous
-                    </Button>
-                    <span className="px-2 font-medium">Page {expiryPage} of {Math.max(1, Math.ceil(expiryTotal / expiryPageSize))}</span>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="h-7 px-2 text-[11px]" 
-                      disabled={expiryPage >= Math.ceil(expiryTotal / expiryPageSize)}
-                      onClick={() => setExpiryPage(p => p + 1)}
-                    >
-                      Next
-                    </Button>
+                  <div className="flex items-center gap-4">
+                    <span>
+                      Showing {Math.min((expiryPage - 1) * expiryPageSize + 1, expiryTotal)}–{Math.min(expiryPage * expiryPageSize, expiryTotal)} of {expiryTotal}
+                    </span>
+                    <div className="flex items-center gap-1">
+                      <Button 
+                        variant="outline" size="sm" className="h-8 px-3"
+                        disabled={expiryPage === 1}
+                        onClick={() => setExpiryPage(p => Math.max(1, p - 1))}
+                      >
+                        Prev
+                      </Button>
+                      <Button 
+                        variant="outline" size="sm" className="h-8 px-3"
+                        disabled={expiryPage >= Math.ceil(expiryTotal / expiryPageSize)}
+                        onClick={() => setExpiryPage(p => p + 1)}
+                      >
+                        Next
+                      </Button>
+                    </div>
                   </div>
                 </div>
               )}
@@ -1714,9 +1897,15 @@ function InventoryManagementPageInner({
 
               {/* Footer Pagination */}
               {!loading && filteredMovements.length > 0 && (
-                <div className="px-4 py-2.5 border-t border-border bg-slate-50/50 dark:bg-secondary/20 text-xs text-muted-foreground flex items-center justify-between">
+                <div className="px-4 py-3 border-t border-border bg-white dark:bg-card flex flex-col sm:flex-row items-center justify-between text-sm text-slate-500 dark:text-muted-foreground">
+                  <div className="flex items-center gap-2">
+                    <span>Rows per page:</span>
+                    <Select value={movPageSize.toString()} onValueChange={v => { setMovPageSize(Number(v)); setMovCurrentPage(1); }}>
+                      <SelectTrigger className="h-8 w-[70px] bg-background"><SelectValue placeholder="25" /></SelectTrigger>
+                      <SelectContent><SelectItem value="25">25</SelectItem><SelectItem value="50">50</SelectItem><SelectItem value="100">100</SelectItem></SelectContent>
+                    </Select>
+                  </div>
                   <div className="flex items-center gap-4">
-                    <span>Showing {Math.min((safePage - 1) * movPageSize + 1, filteredMovements.length)}–{Math.min(safePage * movPageSize, filteredMovements.length)} of {filteredMovements.length} movements</span>
                     <div className="flex gap-4">
                       <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
                         +{filteredMovements.filter(m => m.QuantityChange > 0).reduce((s, m) => s + m.QuantityChange, 0)} in
@@ -1725,27 +1914,25 @@ function InventoryManagementPageInner({
                         {filteredMovements.filter(m => m.QuantityChange < 0).reduce((s, m) => s + m.QuantityChange, 0)} out
                       </span>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="h-7 px-2 text-[11px]" 
-                      disabled={safePage === 1}
-                      onClick={() => setMovCurrentPage(p => Math.max(1, p - 1))}
-                    >
-                      Previous
-                    </Button>
-                    <span className="px-2 font-medium">Page {safePage} of {totalMovPages}</span>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="h-7 px-2 text-[11px]" 
-                      disabled={safePage === totalMovPages}
-                      onClick={() => setMovCurrentPage(p => Math.min(totalMovPages, p + 1))}
-                    >
-                      Next
-                    </Button>
+                    <span>
+                      Showing {Math.min((safePage - 1) * movPageSize + 1, filteredMovements.length)}–{Math.min(safePage * movPageSize, filteredMovements.length)} of {filteredMovements.length}
+                    </span>
+                    <div className="flex items-center gap-1">
+                      <Button 
+                        variant="outline" size="sm" className="h-8 px-3"
+                        disabled={safePage === 1}
+                        onClick={() => setMovCurrentPage(p => Math.max(1, p - 1))}
+                      >
+                        Prev
+                      </Button>
+                      <Button 
+                        variant="outline" size="sm" className="h-8 px-3"
+                        disabled={safePage >= totalMovPages}
+                        onClick={() => setMovCurrentPage(p => Math.min(totalMovPages, p + 1))}
+                      >
+                        Next
+                      </Button>
+                    </div>
                   </div>
                 </div>
               )}

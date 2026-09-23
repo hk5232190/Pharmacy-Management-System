@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { useSystemPreferences } from "@/contexts/SystemPreferencesContext";
 import { useInventorySettings } from "@/contexts/InventorySettingsContext";
@@ -209,7 +210,7 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
 
   const [historyFilters, setHistoryFilters] = useState({ datePreset: "Today", startDate: "", endDate: "", paymentMethod: "", userId: "", q: "" });
   const [historyPage, setHistoryPage] = useState(1);
-  const historyPageSize = 15;
+  const [historyPageSize, setHistoryPageSize] = useState(25);
 
   const buildHistoryParams = () => {
     const params = new URLSearchParams();
@@ -263,7 +264,7 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
 
   // --- Return History States ---
   const [returnHistoryPage, setReturnHistoryPage] = useState(1);
-  const returnHistoryPageSize = 10;
+  const [returnHistoryPageSize, setReturnHistoryPageSize] = useState(25);
   
   const { data: returnHistoryData, mutate: mutateReturnHistory, isLoading: loadingReturnHistory } = useSWR(
     activeTab === 'return' ? `/sales/return-history?page=${returnHistoryPage}&page_size=${returnHistoryPageSize}` : null,
@@ -1941,17 +1942,26 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
 
             {/* Pagination */}
             {!loadingReturnHistory && returnHistoryTotal > 0 && (
-              <div className="flex items-center justify-between mt-4 text-sm text-muted-foreground">
-                <div>
-                  Showing {Math.min((returnHistoryPage - 1) * returnHistoryPageSize + 1, returnHistoryTotal)} – {Math.min(returnHistoryPage * returnHistoryPageSize, returnHistoryTotal)} of {returnHistoryTotal} returns
-                </div>
+              <div className="px-4 py-3 border-t border-border bg-white dark:bg-card flex flex-col sm:flex-row items-center justify-between text-sm text-slate-500 dark:text-muted-foreground">
                 <div className="flex items-center gap-2">
-                  <Button variant="outline" size="sm" disabled={returnHistoryPage === 1} onClick={() => setReturnHistoryPage(p => Math.max(1, p - 1))}>
-                    Previous
-                  </Button>
-                  <Button variant="outline" size="sm" disabled={returnHistoryPage * returnHistoryPageSize >= returnHistoryTotal} onClick={() => setReturnHistoryPage(p => p + 1)}>
-                    Next
-                  </Button>
+                  <span>Rows per page:</span>
+                  <Select value={returnHistoryPageSize.toString()} onValueChange={v => { setReturnHistoryPageSize(Number(v)); setReturnHistoryPage(1); }}>
+                    <SelectTrigger className="h-8 w-[70px] bg-background"><SelectValue placeholder="25" /></SelectTrigger>
+                    <SelectContent><SelectItem value="25">25</SelectItem><SelectItem value="50">50</SelectItem><SelectItem value="100">100</SelectItem></SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-center gap-4">
+                  <span>
+                    Showing {Math.min((returnHistoryPage - 1) * returnHistoryPageSize + 1, returnHistoryTotal)} – {Math.min(returnHistoryPage * returnHistoryPageSize, returnHistoryTotal)} of {returnHistoryTotal}
+                  </span>
+                  <div className="flex items-center gap-1">
+                    <Button variant="outline" size="sm" className="h-8 px-3" disabled={returnHistoryPage === 1} onClick={() => setReturnHistoryPage(p => Math.max(1, p - 1))}>
+                      Prev
+                    </Button>
+                    <Button variant="outline" size="sm" className="h-8 px-3" disabled={returnHistoryPage * returnHistoryPageSize >= returnHistoryTotal} onClick={() => setReturnHistoryPage(p => p + 1)}>
+                      Next
+                    </Button>
+                  </div>
                 </div>
               </div>
             )}
@@ -2119,25 +2129,34 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
 
             {/* Pagination */}
             {!loadingHistory && historyTotal > 0 && (
-              <div className="flex items-center justify-between mt-4 text-sm text-muted-foreground">
-                <div>
-                  Showing {Math.min((historyPage - 1) * historyPageSize + 1, historyTotal)} - {Math.min(historyPage * historyPageSize, historyTotal)} of {historyTotal} invoices
-                </div>
+              <div className="px-4 py-3 border-t border-border bg-white dark:bg-card flex flex-col sm:flex-row items-center justify-between text-sm text-slate-500 dark:text-muted-foreground">
                 <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline" size="sm"
-                    disabled={historyPage === 1}
-                    onClick={() => setHistoryPage(p => Math.max(1, p - 1))}
-                  >
-                    Previous
-                  </Button>
-                  <Button
-                    variant="outline" size="sm"
-                    disabled={historyPage * historyPageSize >= historyTotal}
-                    onClick={() => setHistoryPage(p => p + 1)}
-                  >
-                    Next
-                  </Button>
+                  <span>Rows per page:</span>
+                  <Select value={historyPageSize.toString()} onValueChange={v => { setHistoryPageSize(Number(v)); setHistoryPage(1); }}>
+                    <SelectTrigger className="h-8 w-[70px] bg-background"><SelectValue placeholder="25" /></SelectTrigger>
+                    <SelectContent><SelectItem value="25">25</SelectItem><SelectItem value="50">50</SelectItem><SelectItem value="100">100</SelectItem></SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-center gap-4">
+                  <span>
+                    Showing {Math.min((historyPage - 1) * historyPageSize + 1, historyTotal)} – {Math.min(historyPage * historyPageSize, historyTotal)} of {historyTotal}
+                  </span>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="outline" size="sm" className="h-8 px-3"
+                      disabled={historyPage === 1}
+                      onClick={() => setHistoryPage(p => Math.max(1, p - 1))}
+                    >
+                      Prev
+                    </Button>
+                    <Button
+                      variant="outline" size="sm" className="h-8 px-3"
+                      disabled={historyPage * historyPageSize >= historyTotal}
+                      onClick={() => setHistoryPage(p => p + 1)}
+                    >
+                      Next
+                    </Button>
+                  </div>
                 </div>
               </div>
             )}

@@ -167,7 +167,7 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
   const [filterSupplierId, setFilterSupplierId] = useState<number>(0);
   const [filterFromDate, setFilterFromDate] = useState("");
   const [filterToDate, setFilterToDate] = useState("");
-  const [historyPageSize, setHistoryPageSize] = useState(10);
+  const [historyPageSize, setHistoryPageSize] = useState(25);
   const [historyCurrentPage, setHistoryCurrentPage] = useState(1);
 
   const [selectedReturnInvoice, setSelectedReturnInvoice] = useState<PurchaseHistory | null>(null);
@@ -176,7 +176,7 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
   const [settlementType, setSettlementType] = useState("Adjust in Supplier Balance");
   const [returnInvNo, setReturnInvNo] = useState(`DN-${new Date().getFullYear().toString().slice(-2)}${Math.floor(1000 + Math.random() * 9000)}`);
   const [returnsCurrentPage, setReturnsCurrentPage] = useState(1);
-  const [returnsPageSize, setReturnsPageSize] = useState(10);
+  const [returnsPageSize, setReturnsPageSize] = useState(25);
 
   const fmt = (n: number) => formatNumber ? formatNumber(n) : n.toLocaleString('en-PK', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
@@ -1289,15 +1289,19 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
             <div className="px-6 py-4 border-t border-border bg-slate-50/50 dark:bg-secondary/20 flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
               <div className="flex items-center gap-2">
                 <span>Rows per page:</span>
-                <select 
-                  className="h-8 rounded-md border border-input bg-background px-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                  value={historyPageSize}
-                  onChange={e => { setHistoryPageSize(Number(e.target.value)); setHistoryCurrentPage(1); }}
+                <Select 
+                  value={historyPageSize.toString()}
+                  onValueChange={(val) => { setHistoryPageSize(Number(val)); setHistoryCurrentPage(1); }}
                 >
-                  <option value={10}>10</option>
-                  <option value={25}>25</option>
-                  <option value={50}>50</option>
-                </select>
+                  <SelectTrigger className="h-8 w-[70px] bg-background shadow-sm">
+                    <SelectValue placeholder="25" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="25">25</SelectItem>
+                    <SelectItem value="50">50</SelectItem>
+                    <SelectItem value="100">100</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div className="flex items-center gap-4">
                 <div>
@@ -1502,9 +1506,9 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
                             <SelectValue placeholder="25" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="10">10</SelectItem>
                             <SelectItem value="25">25</SelectItem>
                             <SelectItem value="50">50</SelectItem>
+                            <SelectItem value="100">100</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>

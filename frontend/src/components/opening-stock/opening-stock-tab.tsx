@@ -30,6 +30,7 @@ import {
   Trash2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { apiClient, getApiBaseUrl, getAccessToken } from "@/lib/api-client";
 import { toast } from "sonner";
@@ -101,7 +102,7 @@ export function OpeningStockTab() {
 
   // --- List View State ---
   const [page, setPage] = useState(1);
-  const pageSize = 20;
+  const [pageSize, setPageSize] = useState(25);
 
   const fetcher = async (url: string) => {
     const res = await apiClient.get<any>(url);
@@ -433,18 +434,35 @@ export function OpeningStockTab() {
           </table>
         </div>
 
-        {totalPages > 1 && (
-          <div className="p-3 border-t border-border bg-muted/20 flex items-center justify-between">
-            <span className="text-xs text-muted-foreground ml-2">
-              Showing page {page} of {totalPages}
-            </span>
-            <div className="flex gap-1">
-              <Button variant="outline" size="sm" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="h-8">
-                <ArrowLeft className="h-4 w-4" />
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="h-8">
-                <ArrowRight className="h-4 w-4" />
-              </Button>
+        {totalPages > 0 && (
+          <div className="px-4 py-3 border-t border-border bg-white dark:bg-card flex flex-col sm:flex-row items-center justify-between text-sm text-slate-500 dark:text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <span>Rows per page:</span>
+              <Select value={pageSize.toString()} onValueChange={v => { setPageSize(Number(v)); setPage(1); }}>
+                <SelectTrigger className="h-8 w-[70px] bg-background"><SelectValue placeholder="25" /></SelectTrigger>
+                <SelectContent><SelectItem value="25">25</SelectItem><SelectItem value="50">50</SelectItem><SelectItem value="100">100</SelectItem></SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center gap-4">
+              <span>
+                Showing {totalEntries === 0 ? 0 : (page - 1) * pageSize + 1}–{Math.min(page * pageSize, totalEntries)} of {totalEntries}
+              </span>
+              <div className="flex items-center gap-1">
+                <Button 
+                  variant="outline" size="sm" className="h-8 px-3"
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                >
+                  Prev
+                </Button>
+                <Button 
+                  variant="outline" size="sm" className="h-8 px-3"
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  disabled={page >= totalPages}
+                >
+                  Next
+                </Button>
+              </div>
             </div>
           </div>
         )}

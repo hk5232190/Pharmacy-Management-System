@@ -22,7 +22,9 @@ import io
 from api.deps import get_db, get_current_user
 
 
-_DETERMINISTIC_NOW = "01-01-2024 12:00 pm"
+def _get_now_str():
+    from datetime import datetime
+    return datetime.now().strftime("%d-%m-%Y %I:%M %p")
 import models
 from schemas.reports import (
     FinancialBreakdownItem, FinancialReportSummary, FinancialTrendPoint, FinancialReportResponse,
@@ -1388,461 +1390,647 @@ def export_financial_report_excel(
 
 
 
-def add_pdf_footer(canvas, doc, pharmacy_name="Pharmacy"):
-    canvas.saveState()
-    canvas.setFont('Helvetica', 9)
-    canvas.setStrokeColor(colors.HexColor('#E2E8F0'))
-    canvas.line(30, 40, doc.pagesize[0] - 30, 40)
-    
-    _now_str = _DETERMINISTIC_NOW
-    canvas.drawString(30, 25, f"{pharmacy_name} - Generated on: {_now_str}")
-    
-    page_num = f"Page {doc.page}"
-    canvas.drawRightString(doc.pagesize[0] - 30, 25, page_num)
-    
-    canvas.restoreState()
+# ═══════════════════════════════════════════════════════════════════════════════
+#  Shared PDF Design System — used by all 5 report types
+# ═══════════════════════════════════════════════════════════════════════════════
 
-def build_pdf_header(title_text, subtitle_text, pharmacy_name="Pharmacy", logo_path=None):
-    styles = getSampleStyleSheet()
-    title_style = ParagraphStyle(name='ReportTitle', parent=styles['Heading1'], fontName='Helvetica-Bold', fontSize=20, textColor=colors.HexColor('#0F172A'), alignment=TA_CENTER, spaceAfter=4)
-    subtitle_style = ParagraphStyle(name='ReportPeriod', parent=styles['Normal'], fontName='Helvetica', fontSize=10, textColor=colors.HexColor('#475569'), alignment=TA_CENTER, spaceAfter=20)
-    pharmacy_style = ParagraphStyle(name='PharmacyName', parent=styles['Heading2'], fontName='Helvetica-Bold', fontSize=14, textColor=colors.HexColor('#334155'), alignment=TA_CENTER, spaceAfter=8)
-    
-    elements = [Spacer(1, 10)]
-    
-    elements.extend([
-        Paragraph(pharmacy_name, pharmacy_style),
-        Paragraph(title_text, title_style),
-        Paragraph(subtitle_text, subtitle_style),
-        Spacer(1, 15),
-    ])
-    return elements
+# ── Colour palette ────────────────────────────────────────────────────────────
+C_DARK      = colors.HexColor('#0F172A')   # slate-900  – header bar, table header
+C_MID       = colors.HexColor('#334155')   # slate-700  – section titles
+C_BODY      = colors.HexColor('#1E293B')   # slate-800  – body text
+C_MUTED     = colors.HexColor('#64748B')   # slate-500  – meta / captions
+C_RULE      = colors.HexColor('#E2E8F0')   # slate-200  – dividers / grid
+C_ROW_ALT   = colors.HexColor('#F8FAFC')   # slate-50   – alternating row
+C_ACCENT    = colors.HexColor('#3B82F6')   # blue-500   – badge / highlight
+C_WHITE     = colors.white
+C_SUCCESS   = colors.HexColor('#16A34A')   # green-700
+C_DANGER    = colors.HexColor('#DC2626')   # red-600
 
-def get_premium_table_style():
-    return TableStyle([
-        ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#F8FAFC')),
-        ('TEXTCOLOR', (0,0), (-1,0), colors.HexColor('#0F172A')),
-        ('ALIGN', (0,0), (-1,-1), 'CENTER'),
-        ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0,0), (-1,0), 10),
-        ('BOTTOMPADDING', (0,0), (-1,0), 12),
-        ('TOPPADDING', (0,0), (-1,0), 12),
-        
-        ('ROWBACKGROUNDS', (0,1), (-1,-1), [colors.HexColor('#FFFFFF'), colors.HexColor('#F8FAFC')]),
-        ('FONTNAME', (0,1), (-1,-1), 'Helvetica'),
-        ('FONTSIZE', (0,1), (-1,-1), 9),
-        ('BOTTOMPADDING', (0,1), (-1,-1), 8),
-        ('TOPPADDING', (0,1), (-1,-1), 8),
-        
-        ('LINEBELOW', (0,0), (-1,0), 1.5, colors.HexColor('#94A3B8')), 
-        ('INNERGRID', (0,0), (-1,-1), 0.5, colors.HexColor('#E2E8F0')),
-        ('BOX', (0,0), (-1,-1), 1, colors.HexColor('#CBD5E1')),
-    ])
+# ── Page geometry (A4 portrait) ───────────────────────────────────────────────
+PAGE_W, PAGE_H = A4          # 595.27 x 841.89 pt
+MARGIN_L = MARGIN_R = 36     # 36 pt = 0.5 inch side margins
+MARGIN_TOP   = 96            # sits just below the 80 pt header bar
+MARGIN_BOTTOM = 58           # room for footer text at ~34 pt from bottom
+CONTENT_W = PAGE_W - MARGIN_L - MARGIN_R   # ≈ 523 pt usable width
 
-def build_report_summary(summary_data):
-    styles = getSampleStyleSheet()
-    label_style = ParagraphStyle(name='SummaryLabel', parent=styles['Normal'], fontName='Helvetica-Bold', fontSize=10, textColor=colors.HexColor('#475569'))
-    value_style = ParagraphStyle(name='SummaryValue', parent=styles['Normal'], fontName='Helvetica', fontSize=10, textColor=colors.HexColor('#0F172A'), alignment=TA_RIGHT)
-    
-    table_data = []
-    row = []
-    for label, value in summary_data:
-        # Format numbers — no decimals for currency, 2dp for percentages only
-        try:
-            if isinstance(value, float):
-                value = f"{value:,.0f}"
-            elif isinstance(value, str) and "Rs. " in value:
-                num = float(value.replace("Rs. ", "").replace(",", ""))
-                value = f"Rs. {num:,.0f}"
-            elif isinstance(value, str) and "%" in value:
-                num = float(value.replace("%", ""))
-                value = f"{num:.2f}%"
-        except ValueError:
-            pass
-            
-        row.extend([Paragraph(label, label_style), Paragraph(str(value), value_style)])
-        if len(row) == 4:
-            table_data.append(row)
-            row = []
-    if row:
-        while len(row) < 4:
-            row.extend(["", ""])
-        table_data.append(row)
-        
-    summary_table = Table(table_data, colWidths=[120, 100, 120, 100])
-    summary_table.setStyle(TableStyle([
-        ('ALIGN', (0,0), (-1,-1), 'LEFT'),
-        ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
-        ('BOTTOMPADDING', (0,0), (-1,-1), 8),
-        ('TOPPADDING', (0,0), (-1,-1), 8),
-        ('LINEBELOW', (0,0), (-1,-1), 0.5, colors.HexColor('#F1F5F9')),
-    ]))
-    
-    title_style = ParagraphStyle(name='SummaryTitle', parent=styles['Heading3'], fontName='Helvetica-Bold', fontSize=12, textColor=colors.HexColor('#334155'), spaceAfter=10)
-    
+
+def _new_doc(output):
+    """Create a consistently configured SimpleDocTemplate for all reports."""
+    return SimpleDocTemplate(
+        output, pagesize=A4,
+        leftMargin=MARGIN_L, rightMargin=MARGIN_R,
+        topMargin=MARGIN_TOP, bottomMargin=MARGIN_BOTTOM,
+        invariant=1,
+    )
+
+
+# ── Paragraph styles ──────────────────────────────────────────────────────────
+def _styles():
+    """Return a dict of named ParagraphStyles."""
+    base = getSampleStyleSheet()
+    return {
+        'title': ParagraphStyle('RPT_Title', fontName='Helvetica-Bold', fontSize=20,
+                                textColor=C_DARK, spaceAfter=3, spaceBefore=0, leading=24),
+        'subtitle': ParagraphStyle('RPT_Sub', fontName='Helvetica', fontSize=8.5,
+                                   textColor=C_MUTED, spaceAfter=0, leading=13),
+        'section': ParagraphStyle('RPT_Section', fontName='Helvetica-Bold', fontSize=9,
+                                  textColor=C_MID, spaceAfter=5, spaceBefore=0,
+                                  textTransform='uppercase', letterSpacing=0.5),
+        'kpi_label': ParagraphStyle('RPT_KL', fontName='Helvetica-Bold', fontSize=8.5,
+                                    textColor=C_MUTED, leading=11),
+        'kpi_value': ParagraphStyle('RPT_KV', fontName='Helvetica-Bold', fontSize=10,
+                                    textColor=C_DARK, alignment=TA_RIGHT, leading=13),
+        'cell':      ParagraphStyle('RPT_Cell', fontName='Helvetica', fontSize=8,
+                                    textColor=C_BODY, leading=10),
+        'cell_bold': ParagraphStyle('RPT_CellB', fontName='Helvetica-Bold', fontSize=8,
+                                    textColor=C_DARK, leading=10),
+        'footnote':  ParagraphStyle('RPT_Foot', fontName='Helvetica', fontSize=7.5,
+                                    textColor=C_MUTED, spaceAfter=0),
+    }
+
+
+# ── Canvas callbacks ──────────────────────────────────────────────────────────
+def _make_page_callbacks(pharmacy_name: str, badge_label: str, report_title: str):
+    """Return (onFirstPage, onLaterPages) that draw the header bar and footer."""
+
+    def _on_page(canvas, doc):
+        canvas.saveState()
+        # ── Header bar ────────────────────────────────────────────────────────
+        bar_h = 80
+        canvas.setFillColor(C_DARK)
+        canvas.rect(0, PAGE_H - bar_h, PAGE_W, bar_h, fill=1, stroke=0)
+
+        # Pharmacy name — left
+        canvas.setFont('Helvetica-Bold', 12)
+        canvas.setFillColor(C_WHITE)
+        canvas.drawString(MARGIN_L, PAGE_H - bar_h + 36, pharmacy_name)
+
+        # Badge — right
+        canvas.setFont('Helvetica-Bold', 7)
+        badge_text = badge_label.upper()
+        bw = canvas.stringWidth(badge_text, 'Helvetica-Bold', 7) + 16
+        bx = PAGE_W - MARGIN_R - bw
+        by = PAGE_H - bar_h + 30
+        canvas.setFillColor(C_ACCENT)
+        canvas.roundRect(bx, by, bw, 16, 3, fill=1, stroke=0)
+        canvas.setFillColor(C_WHITE)
+        canvas.drawString(bx + 8, by + 4.5, badge_text)
+
+        # ── Footer ────────────────────────────────────────────────────────────
+        canvas.setStrokeColor(C_RULE)
+        canvas.setLineWidth(0.4)
+        canvas.line(MARGIN_L, 46, PAGE_W - MARGIN_R, 46)
+
+        canvas.setFont('Helvetica', 7.5)
+        canvas.setFillColor(C_MUTED)
+        canvas.drawString(MARGIN_L, 32, f"{pharmacy_name}  ·  {report_title}")
+        canvas.drawRightString(PAGE_W - MARGIN_R, 32, f"Page {doc.page}")
+
+        canvas.restoreState()
+
+    return _on_page, _on_page
+
+
+# ── Separator rule ────────────────────────────────────────────────────────────
+def _rule(width=None):
+    w = width or CONTENT_W
+    t = Table([['']], colWidths=[w], rowHeights=[0.4],
+              style=TableStyle([
+                  ('LINEABOVE', (0, 0), (-1, -1), 0.4, C_RULE),
+                  ('TOPPADDING',    (0, 0), (-1, -1), 0),
+                  ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
+              ]))
+    return t
+
+
+# ── In-flow header block ──────────────────────────────────────────────────────
+def build_pdf_header(title_text: str, date_range_str: str,
+                     pharmacy_name: str = 'Pharmacy', logo_path=None):
+    """Flowable elements: report title + date range + generated timestamp + rule."""
+    st = _styles()
+    now = _get_now_str()
     return [
-        Paragraph("Report Summary", title_style),
-        summary_table,
-        Spacer(1, 20)
+        Spacer(1, 8),
+        Paragraph(title_text, st['title']),
+        Paragraph(f"{date_range_str}   ·   Generated: {now}", st['subtitle']),
+        Spacer(1, 8),
+        _rule(),
+        Spacer(1, 10),
     ]
 
 
-def embed_chart_in_pdf(elements, chart_image_b64):
-    if chart_image_b64:
-        try:
-            if "," in chart_image_b64:
-                chart_image_b64 = chart_image_b64.split(",")[1]
-            img_data = base64.b64decode(chart_image_b64)
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as tmp:
-                tmp.write(img_data)
-                tmp_path = tmp.name
-            
-            img = RLImage(tmp_path)
-            
-            # Maintain aspect ratio beautifully, don't just stretch
-            aspect = img.imageHeight / float(img.imageWidth)
-            # Max width is 500, max height is 300
-            desired_width = min(500, img.imageWidth)
-            desired_height = desired_width * aspect
-            
-            if desired_height > 250:
-                desired_height = 250
-                desired_width = desired_height / aspect
-                
-            img.drawWidth = desired_width
-            img.drawHeight = desired_height
-            
-            elements.append(img)
-            elements.append(Spacer(1, 30))
-            
-        except Exception as e:
-            print("Failed to embed chart:", e)
+# ── KPI summary grid ──────────────────────────────────────────────────────────
+def build_report_summary(kpi_pairs: list):
+    """
+    Build a compact 2-column KPI grid.
+    kpi_pairs: list of (label_str, value_str) tuples.
+    """
+    st = _styles()
+    if not kpi_pairs:
+        return []
 
+    # Arrange into rows of 2 KPIs each (4 cells: label, value, label, value)
+    col_w = CONTENT_W / 2           # each KPI column half the page width
+    cell_w = col_w / 2              # label + value split 50/50
+
+    rows = []
+    for i in range(0, len(kpi_pairs), 2):
+        left  = kpi_pairs[i]
+        right = kpi_pairs[i + 1] if i + 1 < len(kpi_pairs) else ('', '')
+        rows.append([
+            Paragraph(left[0],  st['kpi_label']),
+            Paragraph(left[1],  st['kpi_value']),
+            Paragraph(right[0], st['kpi_label']),
+            Paragraph(right[1], st['kpi_value']),
+        ])
+
+    tbl = Table(rows, colWidths=[cell_w * 1.15, cell_w * 0.85,
+                                  cell_w * 1.15, cell_w * 0.85],
+                repeatRows=0)
+    tbl.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, -1), C_ROW_ALT),
+        ('BOX',        (0, 0), (-1, -1), 0.5, C_RULE),
+        ('INNERGRID',  (0, 0), (-1, -1), 0.3, C_RULE),
+        ('VALIGN',     (0, 0), (-1, -1), 'MIDDLE'),
+        ('TOPPADDING',    (0, 0), (-1, -1), 7),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 7),
+        ('LEFTPADDING',   (0, 0), (-1, -1), 8),
+        ('RIGHTPADDING',  (0, 0), (-1, -1), 8),
+        # Right-align value columns
+        ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
+        ('ALIGN', (3, 0), (3, -1), 'RIGHT'),
+    ]))
+
+    return [
+        Paragraph('KEY METRICS', st['section']),
+        tbl,
+        Spacer(1, 12),
+    ]
+
+
+# ── Main data table style ─────────────────────────────────────────────────────
+def get_premium_table_style():
+    """Shared table style: dark header, zebra rows, clean grid."""
+    return TableStyle([
+        # Header row
+        ('BACKGROUND',    (0, 0), (-1, 0), C_DARK),
+        ('TEXTCOLOR',     (0, 0), (-1, 0), C_WHITE),
+        ('FONTNAME',      (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE',      (0, 0), (-1, 0), 8),
+        ('TOPPADDING',    (0, 0), (-1, 0), 8),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+        ('ALIGN',         (0, 0), (-1, 0), 'CENTER'),
+        ('VALIGN',        (0, 0), (-1, 0), 'MIDDLE'),
+        # Body rows — zebra
+        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [C_WHITE, C_ROW_ALT]),
+        ('FONTNAME',      (0, 1), (-1, -1), 'Helvetica'),
+        ('FONTSIZE',      (0, 1), (-1, -1), 8),
+        ('TEXTCOLOR',     (0, 1), (-1, -1), C_BODY),
+        ('TOPPADDING',    (0, 1), (-1, -1), 5),
+        ('BOTTOMPADDING', (0, 1), (-1, -1), 5),
+        ('ALIGN',         (0, 1), (-1, -1), 'CENTER'),
+        ('VALIGN',        (0, 1), (-1, -1), 'MIDDLE'),
+        # Grid
+        ('INNERGRID', (0, 0), (-1, -1), 0.3, C_RULE),
+        ('BOX',       (0, 0), (-1, -1), 0.6, C_RULE),
+        ('LINEBELOW', (0, 0), (-1, 0),  1.2, C_ACCENT),
+    ])
+
+
+# ── Paragraph helpers for table cells ────────────────────────────────────────
+def _P(text, bold=False):
+    """Wrap text in a left-aligned cell Paragraph, XML-escaping the content."""
+    import xml.sax.saxutils as _sax
+    st = _styles()
+    style = st['cell_bold'] if bold else st['cell']
+    safe = _sax.escape(str(text)) if text is not None else '-'
+    return Paragraph(safe, style)
+
+
+# ── Chart embed ───────────────────────────────────────────────────────────────
+def embed_chart_in_pdf(elements, chart_image_b64):
+    if not chart_image_b64:
+        return
+    try:
+        if ',' in chart_image_b64:
+            chart_image_b64 = chart_image_b64.split(',')[1]
+        img_data = base64.b64decode(chart_image_b64)
+        img_buf = io.BytesIO(img_data)
+        img = RLImage(img_buf)
+        aspect = img.imageHeight / float(img.imageWidth)
+        target_w = min(CONTENT_W, img.imageWidth)
+        target_h = target_w * aspect
+        if target_h > 220:
+            target_h = 220
+            target_w = target_h / aspect
+        img.drawWidth = target_w
+        img.drawHeight = target_h
+
+        elements.append(Paragraph('CHART', _styles()['section']))
+        elements.append(img)
+        elements.append(Spacer(1, 14))
+    except Exception as e:
+        print('Chart embed failed:', e)
+
+
+# ── Section divider label ─────────────────────────────────────────────────────
+def _section_label(text):
+    return [Paragraph(text.upper(), _styles()['section'])]
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+#  PDF Export Endpoints
+# ═══════════════════════════════════════════════════════════════════════════════
 
 @router.post("/sales/export/pdf")
 def export_sales_report_pdf(req: dict = Body(...), db: Session = Depends(get_db)):
     req = PDFExportRequest(**req)
     sd, ed = get_reports_date_range(req.timeframe, req.start_date, req.end_date)
     profile = db.query(models.PrinterSettings).first()
-    pharmacy_name = profile.PharmacyName if profile else "Pharmacy Management System"
-    logo_path = profile.ReceiptLogoPath if profile else None
+    pharmacy_name = profile.PharmacyName if profile else "Pharmacy"
     report_data = fetch_sales_report_data(db, sd, ed, req.customer_id, req.payment_method)
-    
+    s = report_data.summary
+
     output = io.BytesIO()
-    doc = SimpleDocTemplate(output, pagesize=A4, invariant=1)
+    doc = _new_doc(output)
     elements = []
-    styles = getSampleStyleSheet()
-    
-    cell_style_left = ParagraphStyle(name='TableCellLeft', fontName='Helvetica', fontSize=9, alignment=TA_LEFT)
-    
-    elements.extend(build_pdf_header("Sales Report", f"Period: {sd.strftime('%d-%m-%Y')} to {ed.strftime('%d-%m-%Y')}", pharmacy_name=pharmacy_name, logo_path=logo_path))
-    
-    kpi_data = [
-        ("Gross Sales:", f"Rs. {int(round(report_data.summary.TotalGrossSales))}"),
-        ("Returns:", f"Rs. {int(round(report_data.summary.TotalReturns))}"),
-        ("Net Sales:", f"Rs. {int(round(report_data.summary.NetSales))}"),
-        ("Net Profit:", f"Rs. {int(round(report_data.summary.NetProfit))}"),
-        ("Profit Margin:", f"{round(report_data.summary.ProfitMarginPercent, 2)}%"),
-        ("Total Invoices:", str(report_data.summary.TotalInvoices)),
-        ("Average Sale:", f"Rs. {int(round(report_data.summary.AverageSale))}")
+
+    # Header
+    date_str = f"{sd.strftime('%d %b %Y')} – {ed.strftime('%d %b %Y')}"
+    elements.extend(build_pdf_header("Sales Report", date_str, pharmacy_name))
+
+    # KPIs
+    kpis = [
+        ("Gross Sales",    f"Rs. {int(round(s.TotalGrossSales)):,}"),
+        ("Returns",        f"Rs. {int(round(s.TotalReturns)):,}"),
+        ("Net Sales",      f"Rs. {int(round(s.NetSales)):,}"),
+        ("Net Profit",     f"Rs. {int(round(s.NetProfit)):,}"),
+        ("Profit Margin",  f"{round(s.ProfitMarginPercent, 2)}%"),
+        ("Total Invoices", str(s.TotalInvoices)),
+        ("Avg Sale Value", f"Rs. {int(round(s.AverageSale)):,}"),
     ]
-    elements.extend(build_report_summary(kpi_data))
-    
+    elements.extend(build_report_summary(kpis))
+
     # Chart
     embed_chart_in_pdf(elements, req.chart_image)
-    
-    # Table Data
-    data = [['S.No', 'Invoice No', 'Date', 'Customer', 'Medicines', 'Total Qty', 'Grand Total', 'Status']]
+
+    # Table
+    # Usable width ≈ 523pt → cols sum must equal that
+    # S.No=28, Invoice=68, Date=92, Customer=120, Qty=42, Items=42, Total=72, Status=59 → 523
+    elements.extend(_section_label("Transactions"))
+    hdrs = ['#', 'Invoice No', 'Date & Time', 'Customer', 'Qty', 'Items', 'Total (Rs)', 'Status']
+    rows = [hdrs]
     for i, t in enumerate(report_data.transactions, 1):
-        data.append([
+        rows.append([
             str(i),
-            t.InvoiceNo, 
+            t.InvoiceNo,
             t.TransactionDate.strftime("%d-%m-%Y %I:%M %p"),
-            Paragraph(t.CustomerName, cell_style_left),
-            str(t.MedicinesSold),
+            _P(t.CustomerName or 'Walk-in'),
             str(t.TotalQty),
+            str(t.MedicinesSold),
             f"{int(round(t.GrandTotal)):,}",
-            t.Status
+            t.Status,
         ])
-        
-    t = Table(data, repeatRows=1, colWidths=[25, 65, 95, 115, 55, 50, 65, 57])
-    t.setStyle(get_premium_table_style())
-    elements.append(t)
-    
-    doc.build(elements, onFirstPage=lambda c, d: add_pdf_footer(c, d, pharmacy_name), onLaterPages=lambda c, d: add_pdf_footer(c, d, pharmacy_name))
-    response = Response(content=output.getvalue(), media_type="application/pdf")
-    response.headers["Content-Disposition"] = f"attachment; filename=sales_report_{sd}_to_{ed}.pdf"
-    return response
+    if len(rows) == 1:
+        rows.append(['—', '—', '—', _P('No transactions in this period'), '—', '—', '—', '—'])
+
+    tbl = Table(rows, repeatRows=1, colWidths=[28, 68, 92, 120, 42, 42, 72, 59])
+    style = get_premium_table_style()
+    style.add('ALIGN', (4, 1), (6, -1), 'RIGHT')   # qty/total right-aligned
+    tbl.setStyle(style)
+    elements.append(tbl)
+
+    on_fp, on_lp = _make_page_callbacks(pharmacy_name, "SALES REPORT", "Sales Report")
+    doc.build(elements, onFirstPage=on_fp, onLaterPages=on_lp)
+    resp = Response(content=output.getvalue(), media_type="application/pdf")
+    resp.headers["Content-Disposition"] = f"attachment; filename=sales_report_{sd}_to_{ed}.pdf"
+    return resp
+
 
 @router.post("/purchases/export/pdf")
 def export_purchase_report_pdf(req: dict = Body(...), db: Session = Depends(get_db)):
     req = PDFExportRequest(**req)
     sd, ed = get_reports_date_range(req.timeframe, req.start_date, req.end_date)
     profile = db.query(models.PrinterSettings).first()
-    pharmacy_name = profile.PharmacyName if profile else "Pharmacy Management System"
-    logo_path = profile.ReceiptLogoPath if profile else None
+    pharmacy_name = profile.PharmacyName if profile else "Pharmacy"
     report_data = fetch_purchase_report_data(db, sd, ed, req.supplier_id)
-    
+    s = report_data.summary
+
     output = io.BytesIO()
-    doc = SimpleDocTemplate(output, pagesize=A4, invariant=1)
+    doc = _new_doc(output)
     elements = []
-    styles = getSampleStyleSheet()
-    
-    cell_style_left = ParagraphStyle(name='TableCellLeft', fontName='Helvetica', fontSize=9, alignment=TA_LEFT)
-    
-    elements.extend(build_pdf_header("Purchase Report", f"Period: {sd.strftime('%d-%m-%Y')} to {ed.strftime('%d-%m-%Y')}", pharmacy_name=pharmacy_name, logo_path=logo_path))
-    
-    kpi_data = [
-        ("Gross Purchases:", f"Rs. {int(round(report_data.summary.TotalGrossPurchases))}"),
-        ("Returns:", f"Rs. {int(round(report_data.summary.TotalReturns))}"),
-        ("Net Purchases:", f"Rs. {int(round(report_data.summary.NetPurchases))}"),
-        ("Total Invoices:", str(report_data.summary.TotalInvoices)),
+
+    date_str = f"{sd.strftime('%d %b %Y')} – {ed.strftime('%d %b %Y')}"
+    elements.extend(build_pdf_header("Purchase Report", date_str, pharmacy_name))
+
+    kpis = [
+        ("Gross Purchases", f"Rs. {int(round(s.TotalGrossPurchases)):,}"),
+        ("Returns",         f"Rs. {int(round(s.TotalReturns)):,}"),
+        ("Net Purchases",   f"Rs. {int(round(s.NetPurchases)):,}"),
+        ("Total Invoices",  str(s.TotalInvoices)),
     ]
-    elements.extend(build_report_summary(kpi_data))
-    
-    # Chart
+    elements.extend(build_report_summary(kpis))
+
     embed_chart_in_pdf(elements, req.chart_image)
-    
-    # Table Data — A4 usable width ≈ 527pt. Cols: 25+90+100+115+55+50+60+32 = 527
-    data = [['S.No', 'Invoice No', 'Date', 'Supplier', 'Medicines', 'Total Qty', 'Grand Total', 'Status']]
+
+    # #=28 Invoice=68 Date=92 Supplier=130 Items=40 Qty=40 Total=68 Status=57 → 523
+    elements.extend(_section_label("Transactions"))
+    hdrs = ['#', 'Invoice No', 'Date & Time', 'Supplier', 'Items', 'Qty', 'Total (Rs)', 'Status']
+    rows = [hdrs]
     for i, t in enumerate(report_data.transactions, 1):
-        data.append([
+        rows.append([
             str(i),
             t.InvoiceNo,
             t.PurchaseDate.strftime("%d-%m-%Y %I:%M %p"),
-            Paragraph(t.SupplierName, cell_style_left),
+            _P(t.SupplierName),
             str(t.MedicinesPurchased),
             str(t.TotalQty),
             f"{int(round(t.GrandTotal)):,}",
-            t.Status
+            t.Status,
         ])
+    if len(rows) == 1:
+        rows.append(['—', '—', '—', _P('No purchases in this period'), '—', '—', '—', '—'])
 
-    t = Table(data, repeatRows=1, colWidths=[25, 80, 95, 115, 55, 50, 60, 47])
-    t.setStyle(get_premium_table_style())
-    elements.append(t)
-    
-    doc.build(elements, onFirstPage=lambda c, d: add_pdf_footer(c, d, pharmacy_name), onLaterPages=lambda c, d: add_pdf_footer(c, d, pharmacy_name))
-    response = Response(content=output.getvalue(), media_type="application/pdf")
-    response.headers["Content-Disposition"] = f"attachment; filename=purchase_report_{sd}_to_{ed}.pdf"
-    return response
+    tbl = Table(rows, repeatRows=1, colWidths=[28, 68, 92, 130, 40, 40, 68, 57])
+    style = get_premium_table_style()
+    style.add('ALIGN', (4, 1), (6, -1), 'RIGHT')
+    tbl.setStyle(style)
+    elements.append(tbl)
+
+    on_fp, on_lp = _make_page_callbacks(pharmacy_name, "PURCHASE REPORT", "Purchase Report")
+    doc.build(elements, onFirstPage=on_fp, onLaterPages=on_lp)
+    resp = Response(content=output.getvalue(), media_type="application/pdf")
+    resp.headers["Content-Disposition"] = f"attachment; filename=purchase_report_{sd}_to_{ed}.pdf"
+    return resp
+
 
 @router.post("/inventory/export/pdf")
 def export_inventory_report_pdf(req: dict = Body(...), db: Session = Depends(get_db)):
     req = PDFExportRequest(**req)
     sd, ed = get_reports_date_range(req.timeframe, req.start_date, req.end_date)
     profile = db.query(models.PrinterSettings).first()
-    pharmacy_name = profile.PharmacyName if profile else "Pharmacy Management System"
-    logo_path = profile.ReceiptLogoPath if profile else None
+    pharmacy_name = profile.PharmacyName if profile else "Pharmacy"
     report_data = fetch_inventory_report_data(db, sd, ed)
-    
+    s = report_data.summary
+
     output = io.BytesIO()
-    doc = SimpleDocTemplate(output, pagesize=A4, invariant=1)
+    doc = _new_doc(output)
     elements = []
-    styles = getSampleStyleSheet()
-    
-    cell_style_left = ParagraphStyle(name='TableCellLeft', fontName='Helvetica', fontSize=9, alignment=TA_LEFT)
-    
-    elements.extend(build_pdf_header("Inventory Report", f"As of: {ed.strftime('%d-%m-%Y')}", pharmacy_name=pharmacy_name, logo_path=logo_path))
-    
-    kpi_data = [
-        ("Total Stock Value:", f"Rs. {int(round(report_data.summary.TotalCostValue))}"),
-        ("Total Retail Value:", f"Rs. {int(round(report_data.summary.TotalRetailValue))}"),
-        ("Expired/Write-off Valuation:", f"Rs. {int(round(report_data.summary.ExpiredWrittenOffValuation))}"),
-        ("Total Items:", str(report_data.summary.TotalItemsInStock)),
-        ("Low Stock Items:", str(report_data.summary.LowStockCount)),
-        ("Out of Stock:", str(report_data.summary.OutOfStockCount)),
+
+    date_str = f"{sd.strftime('%d %b %Y')} – {ed.strftime('%d %b %Y')}"
+    elements.extend(build_pdf_header("Inventory Report", date_str, pharmacy_name))
+
+    kpis = [
+        ("Total Stock Value",    f"Rs. {int(round(s.TotalCostValue)):,}"),
+        ("Total Retail Value",   f"Rs. {int(round(s.TotalRetailValue)):,}"),
+        ("Expired / Write-offs", f"Rs. {int(round(s.ExpiredWrittenOffValuation)):,}"),
+        ("Total Units in Stock", f"{int(round(s.TotalItemsInStock)):,}"),
+        ("Low Stock",            str(s.LowStockCount)),
+        ("Out of Stock",         str(s.OutOfStockCount)),
     ]
-    elements.extend(build_report_summary(kpi_data))
-    
+    elements.extend(build_report_summary(kpis))
+
     embed_chart_in_pdf(elements, req.chart_image)
-    
-    data = [['S.No', 'Medicine Name', 'Category', 'Batch', 'Stock Qty', 'Cost Price', 'Selling Price', 'Status']]
-    for i, t in enumerate(report_data.stock_items[:200], 1): # limit to 200 items to avoid giant PDF
-        data.append([
+
+    # #=28 Medicine=140 Category=85 Batch=55 Qty=40 Cost=52 Selling=57 Status=66 → 523
+    elements.extend(_section_label("Stock Items"))
+    hdrs = ['#', 'Medicine Name', 'Category', 'Batch', 'Qty', 'Cost (Rs)', 'Sell (Rs)', 'Status']
+    rows = [hdrs]
+    for i, t in enumerate(report_data.stock_items[:200], 1):
+        rows.append([
             str(i),
-            Paragraph(t.MedicineName, cell_style_left),
-            Paragraph(t.Category, cell_style_left),
+            _P(t.MedicineName),
+            _P(t.Category),
             t.BatchCode,
             str(t.Quantity),
             f"{int(round(t.CostPrice)):,}",
             f"{int(round(t.SellingPrice)):,}",
-            t.Status
+            t.Status,
         ])
-        
-    t = Table(data, repeatRows=1, colWidths=[25, 130, 90, 60, 50, 55, 60, 57])
-    t.setStyle(get_premium_table_style())
-    elements.append(t)
+    if len(rows) == 1:
+        rows.append(['—', _P('No stock items found'), '—', '—', '—', '—', '—', '—'])
+
+    tbl = Table(rows, repeatRows=1, colWidths=[28, 140, 85, 55, 40, 52, 57, 66])
+    style = get_premium_table_style()
+    style.add('ALIGN', (1, 1), (2, -1), 'LEFT')   # medicine/category left
+    style.add('ALIGN', (4, 1), (6, -1), 'RIGHT')  # qty/prices right
+    tbl.setStyle(style)
+    elements.append(tbl)
+
     if len(report_data.stock_items) > 200:
-        elements.append(Paragraph(f"(Showing first 200 records out of {len(report_data.stock_items)}. Export to Excel for full list.)", styles['Normal']))
-    
-    doc.build(elements, onFirstPage=lambda c, d: add_pdf_footer(c, d, pharmacy_name), onLaterPages=lambda c, d: add_pdf_footer(c, d, pharmacy_name))
-    response = Response(content=output.getvalue(), media_type="application/pdf")
-    response.headers["Content-Disposition"] = f"attachment; filename=inventory_report.pdf"
-    return response
+        elements.append(Spacer(1, 6))
+        elements.append(Paragraph(
+            f"Showing first 200 of {len(report_data.stock_items)} records. Export to Excel for the complete list.",
+            _styles()['footnote']))
+
+    on_fp, on_lp = _make_page_callbacks(pharmacy_name, "INVENTORY REPORT", "Inventory Report")
+    doc.build(elements, onFirstPage=on_fp, onLaterPages=on_lp)
+    resp = Response(content=output.getvalue(), media_type="application/pdf")
+    resp.headers["Content-Disposition"] = "attachment; filename=inventory_report.pdf"
+    return resp
+
 
 @router.post("/medicine/export/pdf")
 def export_medicine_report_pdf(req: dict = Body(...), db: Session = Depends(get_db)):
     req = PDFExportRequest(**req)
     sd, ed = get_reports_date_range(req.timeframe, req.start_date, req.end_date)
-    # Using page_size=0 to ensure we have all data without limit
     report_data = fetch_medicine_report_data(db, sd, ed, req.report_type, None, None, 1, 0)
     profile = db.query(models.PrinterSettings).first()
-    pharmacy_name = profile.PharmacyName if profile else "Pharmacy Management System"
-    logo_path = profile.ReceiptLogoPath if profile else None
-    
+    pharmacy_name = profile.PharmacyName if profile else "Pharmacy"
+
     output = io.BytesIO()
-    doc = SimpleDocTemplate(output, pagesize=A4, invariant=1)
+    doc = _new_doc(output)
     elements = []
-    styles = getSampleStyleSheet()
-    
-    cell_style = ParagraphStyle(
-        name='TableCell',
-        fontName='Helvetica',
-        fontSize=9,
-        alignment=TA_LEFT
-    )
-    
+    st = _styles()
+
     title_map = {
-        'expiry': 'Medicine Expiry Alerts',
+        'expiry':    'Medicine Expiry Alerts',
         'low_stock': 'Medicine Low Stock Report',
-        'moving': 'Medicine Performance Report'
+        'moving':    'Medicine Performance Report',
     }
-    
-    elements.extend(build_pdf_header(title_map.get(req.report_type, "Medicine Report"), f"Period: {sd.strftime('%d-%m-%Y')} to {ed.strftime('%d-%m-%Y')}" if req.report_type == 'moving' else f"Snapshot As Of: {ed.strftime('%d-%m-%Y')}", pharmacy_name=pharmacy_name, logo_path=logo_path))
-    
-    kpi_data = [
-        ("Total Expired Batches:", str(report_data.summary.TotalExpiredBatches)),
-        ("Expiring Soon (90d):", str(report_data.summary.ExpiringSoonBatches)),
-        ("Low Stock:", str(report_data.summary.LowStockMedicines)),
-        ("Fast Moving:", str(report_data.summary.FastMovingCount)),
+    report_title = title_map.get(req.report_type, "Medicine Report")
+
+    date_str = f"{sd.strftime('%d %b %Y')} – {ed.strftime('%d %b %Y')}"
+    elements.extend(build_pdf_header(report_title, date_str, pharmacy_name))
+
+    kpis = [
+        ("Expired Batches",    str(report_data.summary.TotalExpiredBatches)),
+        ("Expiring Soon (90d)", str(report_data.summary.ExpiringSoonBatches)),
+        ("Low Stock Items",    str(report_data.summary.LowStockMedicines)),
+        ("Fast Moving",        str(report_data.summary.FastMovingCount)),
     ]
-    elements.extend(build_report_summary(kpi_data))
-    
+    elements.extend(build_report_summary(kpis))
     embed_chart_in_pdf(elements, req.chart_image)
-    
+    elements.extend(_section_label("Detail"))
+
     if req.report_type == 'expiry':
-        # Cols: 25+120+65+120+35+70+35+57 = 527
-        # Adjusted: Give more to Medicine and Supplier
-        data = [['S.No', 'Medicine', 'Batch', 'Supplier', 'Qty', 'Expiry Date', 'Days', 'Status']]
-        col_widths = [25, 130, 60, 115, 35, 70, 35, 57]
+        # #=28 Medicine=140 Batch=65 Supplier=110 Qty=38 Expiry=68 Days=36 Status=38 → 523
+        hdrs = ['#', 'Medicine', 'Batch', 'Supplier', 'Qty', 'Expiry Date', 'Days', 'Status']
+        cw = [28, 140, 65, 110, 38, 68, 36, 38]
+        rows = [hdrs]
         for i, t in enumerate(report_data.expiry_items[:200], 1):
-            data.append([
+            rows.append([
                 str(i),
-                Paragraph(t.MedicineName, cell_style),
-                Paragraph(t.BatchCode, cell_style),
-                Paragraph(t.SupplierName if getattr(t, 'SupplierName', None) else '-', cell_style),
+                _P(t.MedicineName),
+                _P(t.BatchCode),
+                _P(getattr(t, 'SupplierName', None) or '—'),
                 str(t.Quantity),
-                t.ExpiryDate.strftime("%Y-%m-%d") if t.ExpiryDate else '',
+                t.ExpiryDate.strftime("%d-%m-%Y") if t.ExpiryDate else '—',
                 str(t.DaysToExpiry),
-                Paragraph(t.Status, cell_style)
+                _P(t.Status),
             ])
+        truncated = len(report_data.expiry_items) > 200
+
     elif req.report_type == 'low_stock':
-        # Old Cols: 25+115+70+115+40+60+46+56 = 527
-        # Adjusted: More width for Medicine and Category, less for Supplier and others
-        data = [['S.No', 'Medicine', 'Category', 'Supplier', 'Stock', 'Reorder Level', 'Deficit', 'Suggested']]
-        col_widths = [25, 130, 95, 80, 40, 60, 45, 52]
+        # #=28 Medicine=140 Category=90 Supplier=95 Stock=40 Reorder=52 Deficit=40 Sugg=38 → 523
+        hdrs = ['#', 'Medicine', 'Category', 'Supplier', 'Stock', 'Reorder Lvl', 'Deficit', 'Sugg Qty']
+        cw = [28, 140, 90, 95, 40, 52, 40, 38]
+        rows = [hdrs]
         for i, t in enumerate(report_data.low_stock_items[:200], 1):
-            data.append([
+            rows.append([
                 str(i),
-                Paragraph(t.MedicineName, cell_style),
-                Paragraph(t.Category, cell_style),
-                Paragraph(t.SupplierName if getattr(t, 'SupplierName', None) else '-', cell_style),
+                _P(t.MedicineName),
+                _P(t.Category),
+                _P(getattr(t, 'SupplierName', None) or '—'),
                 str(getattr(t, 'CurrentStock', 0)),
                 str(getattr(t, 'ReorderLevel', 0)),
                 str(getattr(t, 'Deficit', 0)),
-                str(getattr(t, 'SuggestedReorderQty', 0))
+                str(getattr(t, 'SuggestedReorderQty', 0)),
             ])
-    else:
-        # Old Cols: 25+125+70+45+45+45+50+65+57 = 527
-        data = [['S.No', 'Medicine', 'Category', 'Starting', 'Sold', 'Current', 'Velocity', 'Revenue', 'Class']]
-        col_widths = [25, 125, 70, 45, 45, 45, 50, 65, 57]
+        truncated = len(report_data.low_stock_items) > 200
+
+    else:  # moving / performance
+        # #=28 Medicine=160 Category=100 Sold=50 Velocity=55 Revenue=72 Class=58 → 523
+        hdrs = ['#', 'Medicine', 'Category', 'Sold', 'Velocity', 'Revenue (Rs)', 'Class']
+        cw = [28, 160, 100, 50, 55, 72, 58]
+        rows = [hdrs]
         for i, t in enumerate(report_data.movement_items[:200], 1):
-            data.append([
+            rows.append([
                 str(i),
-                Paragraph(t.MedicineName, cell_style),
-                Paragraph(t.Category, cell_style),
-                str(getattr(t, 'StartingStock', 0)),
-                str(getattr(t, 'SoldQty', 0)),
-                str(getattr(t, 'ClosingStock', 0)),
+                _P(t.MedicineName),
+                _P(t.Category),
+                str(getattr(t, 'SoldQuantity', 0)),
                 str(round(getattr(t, 'SalesVelocity', 0.0), 2)),
                 f"{int(round(getattr(t, 'Revenue', 0.0))):,}",
-                Paragraph(getattr(t, 'Classification', 'Unknown'), cell_style)
+                _P(getattr(t, 'Classification', '—')),
             ])
+        truncated = len(report_data.movement_items) > 200
 
-    t = Table(data, repeatRows=1, colWidths=col_widths)
-    t.setStyle(get_premium_table_style())
-    elements.append(t)
-    
-    if (req.report_type == 'expiry' and len(report_data.expiry_items) > 200) or \
-       (req.report_type == 'low_stock' and len(report_data.low_stock_items) > 200) or \
-       (req.report_type == 'moving' and len(report_data.movement_items) > 200):
-        elements.append(Paragraph("(Showing first 200 records. Export to CSV for full list.)", styles['Normal']))
-    
-    doc.build(elements, onFirstPage=lambda c, d: add_pdf_footer(c, d, pharmacy_name), onLaterPages=lambda c, d: add_pdf_footer(c, d, pharmacy_name))
-    response = Response(content=output.getvalue(), media_type="application/pdf")
-    response.headers["Content-Disposition"] = f"attachment; filename=medicine_{req.report_type}_report.pdf"
-    return response
+    if len(rows) == 1:
+        rows.append(['—'] + [_P('No data available')] + ['—'] * (len(hdrs) - 2))
+
+    tbl = Table(rows, repeatRows=1, colWidths=cw)
+    style = get_premium_table_style()
+    style.add('ALIGN', (1, 1), (2, -1), 'LEFT')
+    tbl.setStyle(style)
+    elements.append(tbl)
+
+    if truncated:
+        elements.append(Spacer(1, 6))
+        elements.append(Paragraph(
+            "Showing first 200 records. Export to CSV for the complete list.",
+            st['footnote']))
+
+    on_fp, on_lp = _make_page_callbacks(pharmacy_name, "MEDICINE REPORT", report_title)
+    doc.build(elements, onFirstPage=on_fp, onLaterPages=on_lp)
+    resp = Response(content=output.getvalue(), media_type="application/pdf")
+    resp.headers["Content-Disposition"] = f"attachment; filename=medicine_{req.report_type}_report.pdf"
+    return resp
+
 
 @router.post("/financial/export/pdf")
 def export_financial_report_pdf(req: dict = Body(...), db: Session = Depends(get_db)):
     req = PDFExportRequest(**req)
     sd, ed = get_reports_date_range(req.timeframe, req.start_date, req.end_date)
     profile = db.query(models.PrinterSettings).first()
-    pharmacy_name = profile.PharmacyName if profile else "Pharmacy Management System"
-    logo_path = profile.ReceiptLogoPath if profile else None
+    pharmacy_name = profile.PharmacyName if profile else "Pharmacy"
     report_data = fetch_financial_report_data(db, sd, ed)
-    
+    s = report_data.summary
+
     output = io.BytesIO()
-    doc = SimpleDocTemplate(output, pagesize=A4, invariant=1)
+    doc = _new_doc(output)
     elements = []
-    styles = getSampleStyleSheet()
-    
-    elements.extend(build_pdf_header("Profit & Loss Statement", f"Period: {sd.strftime('%d-%m-%Y')} to {ed.strftime('%d-%m-%Y')}", pharmacy_name=pharmacy_name, logo_path=logo_path))
-    
-    kpi_data = [
-        ("Total Revenue:", f"Rs. {int(round(report_data.summary.TotalRevenue))}"),
-        ("Cost of Goods Sold:", f"Rs. {int(round(report_data.summary.TotalCOGS))}"),
-        ("Gross Profit:", f"Rs. {int(round(report_data.summary.GrossProfit))}"),
-        ("Total Expenses:", f"Rs. {int(round(report_data.summary.TotalExpenses))}"),
-        ("Net Profit:", f"Rs. {int(round(report_data.summary.NetProfit))}"),
-        ("Profit Margin:", f"{round(report_data.summary.ProfitMargin, 2)}%"),
+    st = _styles()
+
+    date_str = f"{sd.strftime('%d %b %Y')} – {ed.strftime('%d %b %Y')}"
+    elements.extend(build_pdf_header("Profit & Loss Statement", date_str, pharmacy_name))
+
+    kpis = [
+        ("Total Revenue",       f"Rs. {int(round(s.TotalRevenue)):,}"),
+        ("Cost of Goods Sold",  f"Rs. {int(round(s.TotalCOGS)):,}"),
+        ("Gross Profit",        f"Rs. {int(round(s.GrossProfit)):,}"),
+        ("Total Expenses",      f"Rs. {int(round(s.TotalExpenses)):,}"),
+        ("Net Profit / Loss",   f"Rs. {int(round(s.NetProfit)):,}"),
+        ("Profit Margin",       f"{round(s.ProfitMargin, 2)}%"),
     ]
-    elements.extend(build_report_summary(kpi_data))
-    
+    elements.extend(build_report_summary(kpis))
     embed_chart_in_pdf(elements, req.chart_image)
-    
-    data = [['Description', 'Amount (Rs)', 'Section']]
-    
-    data.append(["Gross Sales Revenue", f"+ {int(round(report_data.summary.GrossSales)):,}", "1. Revenue (Income)"])
-    data.append(["Less: Sales Returns & Refunds", f"- {int(round(report_data.summary.SalesReturns)):,}", "1. Revenue (Income)"])
-    data.append(["Less: Discounts Given", f"- {int(round(report_data.summary.DiscountsApplied)):,}", "1. Revenue (Income)"])
-    data.append(["Subtotal: Net Revenue", f"{int(round(report_data.summary.TotalRevenue)):,}", "1. Revenue (Income)"])
+    elements.extend(_section_label("Statement of Operations"))
 
-    data.append(["Direct Cost of Sold Medicines", f"- {int(round(report_data.summary.TotalCOGS)):,}", "2. Cost of Goods Sold (COGS)"])
-    data.append(["Subtotal: Gross Profit", f"{int(round(report_data.summary.GrossProfit)):,}", "2. Cost of Goods Sold (COGS)"])
+    # Financial P&L table — full width, 3 cols
+    # Description=280  Amount=130  Section=113 → 523
+    hdrs = ['Description', 'Amount (Rs)', 'Section']
+    rows = [
+        hdrs,
+        ["Gross Sales Revenue",        f"Rs. {int(round(s.GrossSales)):,}",          "Revenue"],
+        ["Less: Sales Returns & Refunds", f"(Rs. {int(round(s.SalesReturns)):,})",   "Revenue"],
+        ["Less: Discounts Given",      f"(Rs. {int(round(s.DiscountsApplied)):,})",   "Revenue"],
+        [_P("Subtotal: Net Revenue", bold=True),
+         _P(f"Rs. {int(round(s.TotalRevenue)):,}", bold=True),
+         _P("Revenue", bold=True)],
 
-    data.append(["Inventory Expiry & Write-Offs", f"- {int(round(report_data.summary.InventoryLoss)):,}", "3. Expenses & Losses"])
-    data.append(["Operating Expenses", f"- {int(round(report_data.summary.TotalExpenses)):,}", "3. Expenses & Losses"])
+        ["Direct Cost of Sold Medicines", f"(Rs. {int(round(s.TotalCOGS)):,})",      "COGS"],
+        [_P("Subtotal: Gross Profit", bold=True),
+         _P(f"Rs. {int(round(s.GrossProfit)):,}", bold=True),
+         _P("COGS", bold=True)],
 
-    data.append(["NET PROFIT / LOSS", f"{int(round(report_data.summary.NetProfit)):,}", "4. Final Summary"])
-        
-    t = Table(data, repeatRows=1)
-    
+        ["Inventory Expiry & Write-Offs", f"(Rs. {int(round(s.InventoryLoss)):,})",  "Expenses"],
+        ["Operating Expenses",           f"(Rs. {int(round(s.TotalExpenses)):,})",   "Expenses"],
+    ]
+
+    # Final net profit row — highlighted
+    net_positive = s.NetProfit >= 0
+    rows.append([
+        Paragraph("NET PROFIT / LOSS",
+                  ParagraphStyle('NPL', fontName='Helvetica-Bold', fontSize=10,
+                                 textColor=C_SUCCESS if net_positive else C_DANGER)),
+        Paragraph(f"Rs. {int(round(s.NetProfit)):,}",
+                  ParagraphStyle('NPLV', fontName='Helvetica-Bold', fontSize=10,
+                                 textColor=C_SUCCESS if net_positive else C_DANGER,
+                                 alignment=TA_RIGHT)),
+        Paragraph("Final Summary",
+                  ParagraphStyle('NPLS', fontName='Helvetica-Bold', fontSize=10,
+                                 textColor=C_MID)),
+    ])
+
+    tbl = Table(rows, repeatRows=1, colWidths=[280, 130, 113])
     style = get_premium_table_style()
-    style.add('ALIGN', (0,1), (0,-1), 'LEFT')
-    style.add('ALIGN', (1,1), (1,-1), 'RIGHT')
-    style.add('FONTNAME', (0, 4), (-1, 4), 'Helvetica-Bold')
-    style.add('FONTNAME', (0, 6), (-1, 6), 'Helvetica-Bold')
-    style.add('FONTNAME', (0, 9), (-1, 9), 'Helvetica-Bold')
-    style.add('FONTSIZE', (0, 9), (-1, 9), 12)
-    
-    t.setStyle(style)
-    elements.append(t)
-    
-    doc.build(elements, onFirstPage=lambda c, d: add_pdf_footer(c, d, pharmacy_name), onLaterPages=lambda c, d: add_pdf_footer(c, d, pharmacy_name))
-    response = Response(content=output.getvalue(), media_type="application/pdf")
-    response.headers["Content-Disposition"] = f"attachment; filename=financial_report.pdf"
-    return response
+    # Left-align description and section cols
+    style.add('ALIGN', (0, 1), (0, -1), 'LEFT')
+    style.add('ALIGN', (2, 1), (2, -1), 'LEFT')
+    # Right-align amount col
+    style.add('ALIGN', (1, 1), (1, -1), 'RIGHT')
+    # Subtotal rows bold background tint
+    for bold_row in [4, 6]:
+        style.add('BACKGROUND', (0, bold_row), (-1, bold_row), colors.HexColor('#EFF6FF'))
+    # Net profit/loss row highlight
+    style.add('BACKGROUND', (0, len(rows) - 1), (-1, len(rows) - 1),
+              colors.HexColor('#DCFCE7') if net_positive else colors.HexColor('#FEE2E2'))
+    style.add('LINEABOVE', (0, len(rows) - 1), (-1, len(rows) - 1), 1.2, C_ACCENT)
+    tbl.setStyle(style)
+    elements.append(tbl)
+
+    on_fp, on_lp = _make_page_callbacks(pharmacy_name, "FINANCIAL REPORT", "Profit & Loss Statement")
+    doc.build(elements, onFirstPage=on_fp, onLaterPages=on_lp)
+    resp = Response(content=output.getvalue(), media_type="application/pdf")
+    resp.headers["Content-Disposition"] = "attachment; filename=financial_report.pdf"
+    return resp
+
+
+
+
+
+
 
 
 
