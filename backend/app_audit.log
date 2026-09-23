@@ -5235,3 +5235,337 @@ NoneType: None
 2026-09-23 03:31:10,007 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
 2026-09-23 03:31:21,713 - pms - INFO - PRODUCTION_TRACE auth accepted username=admin user_id=1
 2026-09-23 03:31:21,732 - pms - INFO - AUDIT: [SCREEN_UNLOCKED] Screen unlocked successfully by user (User: admin)
+2026-09-23 11:05:42,809 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-23 11:05:43,443 - pms - INFO - PRODUCTION_TRACE license storage path=E:\Projects\PMS-Software\backend\licenses\active.lic exists=True
+2026-09-23 11:05:45,682 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-23 11:05:46,215 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.schemas
+2026-09-23 11:05:46,216 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.tables
+2026-09-23 11:05:46,216 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.types
+2026-09-23 11:05:46,216 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.constraints
+2026-09-23 11:05:46,216 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.defaults
+2026-09-23 11:05:46,216 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.comments
+2026-09-23 11:05:46,216 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.checkconstraint_byname
+2026-09-23 11:05:46,430 - pms - INFO - Database schema already at migration head (2581b6ba3257).
+2026-09-23 11:05:46,693 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-23 11:06:20,308 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-23 11:06:26,164 - pms - WARNING - PRODUCTION_TRACE auth rejected username=admin reason=password-mismatch
+2026-09-23 11:06:26,179 - pms - ERROR - PMSException caught: Incorrect username or password (status: 401) | Path: /api/v1/auth/login
+2026-09-23 11:06:29,848 - pms - INFO - PRODUCTION_TRACE auth accepted username=admin user_id=1
+2026-09-23 11:12:34,179 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-23 11:39:37,297 - pms - WARNING - PRODUCTION_TRACE auth rejected username=admin reason=password-mismatch
+2026-09-23 11:39:37,299 - pms - ERROR - PMSException caught: Incorrect username or password (status: 401) | Path: /api/v1/auth/login
+2026-09-23 11:39:42,345 - pms - INFO - PRODUCTION_TRACE auth accepted username=admin user_id=1
+2026-09-23 11:58:48,397 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-23 11:58:48,918 - pms - INFO - PRODUCTION_TRACE license storage path=E:\Projects\PMS-Software\backend\licenses\active.lic exists=True
+2026-09-23 12:00:12,816 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-23 12:00:13,735 - pms - INFO - PRODUCTION_TRACE license storage path=E:\Projects\PMS-Software\backend\licenses\active.lic exists=True
+2026-09-23 12:02:29,835 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-23 12:02:30,257 - pms - INFO - PRODUCTION_TRACE license storage path=E:\Projects\PMS-Software\backend\licenses\active.lic exists=True
+2026-09-23 12:03:14,095 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-23 12:03:14,955 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-23 12:03:15,038 - pms - INFO - PRODUCTION_TRACE license storage path=E:\Projects\PMS-Software\backend\licenses\active.lic exists=True
+2026-09-23 12:03:15,526 - pms - INFO - PRODUCTION_TRACE license storage path=E:\Projects\PMS-Software\backend\licenses\active.lic exists=True
+2026-09-23 12:03:17,845 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-23 12:03:18,126 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-23 12:03:18,418 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.schemas
+2026-09-23 12:03:18,418 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.tables
+2026-09-23 12:03:18,419 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.types
+2026-09-23 12:03:18,419 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.constraints
+2026-09-23 12:03:18,419 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.defaults
+2026-09-23 12:03:18,419 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.comments
+2026-09-23 12:03:18,419 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.checkconstraint_byname
+2026-09-23 12:03:18,707 - pms - INFO - Database schema already at migration head (a3f8c9d2e1b4).
+2026-09-23 12:03:19,192 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-23 12:03:19,446 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.schemas
+2026-09-23 12:03:19,446 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.tables
+2026-09-23 12:03:19,446 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.types
+2026-09-23 12:03:19,446 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.constraints
+2026-09-23 12:03:19,447 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.defaults
+2026-09-23 12:03:19,447 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.comments
+2026-09-23 12:03:19,447 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.checkconstraint_byname
+2026-09-23 12:03:19,719 - pms - INFO - Database schema already at migration head (a3f8c9d2e1b4).
+2026-09-23 12:03:19,867 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-23 12:03:20,217 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-23 12:04:59,309 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-23 12:04:59,750 - pms - INFO - PRODUCTION_TRACE license storage path=E:\Projects\PMS-Software\backend\licenses\active.lic exists=True
+2026-09-23 12:05:01,209 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-23 12:05:01,695 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.schemas
+2026-09-23 12:05:01,696 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.tables
+2026-09-23 12:05:01,696 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.types
+2026-09-23 12:05:01,696 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.constraints
+2026-09-23 12:05:01,696 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.defaults
+2026-09-23 12:05:01,696 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.comments
+2026-09-23 12:05:01,697 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.checkconstraint_byname
+2026-09-23 12:05:01,826 - pms - INFO - Database schema already at migration head (a3f8c9d2e1b4).
+2026-09-23 12:05:02,041 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-23 12:05:36,874 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-23 12:05:37,311 - pms - INFO - PRODUCTION_TRACE license storage path=E:\Projects\PMS-Software\backend\licenses\active.lic exists=True
+2026-09-23 12:05:38,694 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-23 12:05:39,089 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.schemas
+2026-09-23 12:05:39,090 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.tables
+2026-09-23 12:05:39,090 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.types
+2026-09-23 12:05:39,090 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.constraints
+2026-09-23 12:05:39,090 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.defaults
+2026-09-23 12:05:39,090 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.comments
+2026-09-23 12:05:39,090 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.checkconstraint_byname
+2026-09-23 12:05:39,269 - pms - INFO - Database schema already at migration head (a3f8c9d2e1b4).
+2026-09-23 12:05:39,500 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-23 12:05:56,153 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-23 12:05:56,573 - pms - INFO - PRODUCTION_TRACE license storage path=E:\Projects\PMS-Software\backend\licenses\active.lic exists=True
+2026-09-23 12:05:57,918 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-23 12:05:58,307 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.schemas
+2026-09-23 12:05:58,308 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.tables
+2026-09-23 12:05:58,308 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.types
+2026-09-23 12:05:58,308 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.constraints
+2026-09-23 12:05:58,308 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.defaults
+2026-09-23 12:05:58,308 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.comments
+2026-09-23 12:05:58,308 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.checkconstraint_byname
+2026-09-23 12:05:58,419 - pms - INFO - Database schema already at migration head (a3f8c9d2e1b4).
+2026-09-23 12:05:58,606 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-23 12:07:01,825 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-23 12:07:02,248 - pms - INFO - PRODUCTION_TRACE license storage path=E:\Projects\PMS-Software\backend\licenses\active.lic exists=True
+2026-09-23 12:07:03,780 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-23 12:07:04,743 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.schemas
+2026-09-23 12:07:04,744 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.tables
+2026-09-23 12:07:04,744 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.types
+2026-09-23 12:07:04,745 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.constraints
+2026-09-23 12:07:04,745 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.defaults
+2026-09-23 12:07:04,745 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.comments
+2026-09-23 12:07:04,746 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.checkconstraint_byname
+2026-09-23 12:07:05,174 - pms - INFO - Database schema already at migration head (a3f8c9d2e1b4).
+2026-09-23 12:07:05,431 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-23 12:07:52,940 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-23 12:07:53,325 - pms - INFO - PRODUCTION_TRACE license storage path=E:\Projects\PMS-Software\backend\licenses\active.lic exists=True
+2026-09-23 12:07:54,536 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-23 12:07:54,971 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.schemas
+2026-09-23 12:07:54,972 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.tables
+2026-09-23 12:07:54,972 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.types
+2026-09-23 12:07:54,972 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.constraints
+2026-09-23 12:07:54,972 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.defaults
+2026-09-23 12:07:54,973 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.comments
+2026-09-23 12:07:54,973 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.checkconstraint_byname
+2026-09-23 12:07:55,094 - pms - INFO - Database schema already at migration head (a3f8c9d2e1b4).
+2026-09-23 12:07:55,270 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-23 12:08:25,725 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-23 12:08:26,108 - pms - INFO - PRODUCTION_TRACE license storage path=E:\Projects\PMS-Software\backend\licenses\active.lic exists=True
+2026-09-23 12:08:28,235 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-23 12:08:30,058 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.schemas
+2026-09-23 12:08:30,058 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.tables
+2026-09-23 12:08:30,058 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.types
+2026-09-23 12:08:30,059 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.constraints
+2026-09-23 12:08:30,059 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.defaults
+2026-09-23 12:08:30,059 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.comments
+2026-09-23 12:08:30,059 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.checkconstraint_byname
+2026-09-23 12:08:30,338 - pms - INFO - Database schema already at migration head (a3f8c9d2e1b4).
+2026-09-23 12:08:30,586 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-23 13:18:46,103 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-23 13:18:46,932 - pms - INFO - PRODUCTION_TRACE license storage path=E:\Projects\PMS-Software\backend\licenses\active.lic exists=True
+2026-09-23 13:18:49,694 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-23 13:18:50,832 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.schemas
+2026-09-23 13:18:50,833 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.tables
+2026-09-23 13:18:50,833 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.types
+2026-09-23 13:18:50,833 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.constraints
+2026-09-23 13:18:50,833 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.defaults
+2026-09-23 13:18:50,834 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.comments
+2026-09-23 13:18:50,834 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.checkconstraint_byname
+2026-09-23 13:18:50,953 - pms - INFO - Database schema already at migration head (a3f8c9d2e1b4).
+2026-09-23 13:18:51,140 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-23 13:25:13,334 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-23 13:25:14,312 - pms - INFO - PRODUCTION_TRACE license storage path=E:\Projects\PMS-Software\backend\licenses\active.lic exists=True
+2026-09-23 13:25:18,347 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-23 13:25:19,210 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.schemas
+2026-09-23 13:25:19,211 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.tables
+2026-09-23 13:25:19,211 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.types
+2026-09-23 13:25:19,212 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.constraints
+2026-09-23 13:25:19,213 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.defaults
+2026-09-23 13:25:19,213 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.comments
+2026-09-23 13:25:19,213 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.checkconstraint_byname
+2026-09-23 13:25:19,519 - pms - INFO - Database schema already at migration head (a3f8c9d2e1b4).
+2026-09-23 13:25:19,878 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-23 13:26:07,320 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-23 13:26:17,918 - pms - WARNING - PRODUCTION_TRACE auth rejected username=admin reason=password-mismatch
+2026-09-23 13:26:17,931 - pms - ERROR - PMSException caught: Incorrect username or password (status: 401) | Path: /api/v1/auth/login
+2026-09-23 13:26:21,746 - pms - INFO - PRODUCTION_TRACE auth accepted username=admin user_id=1
+2026-09-23 13:30:20,508 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-23 13:36:02,237 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-23 13:39:13,651 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-23 13:48:30,100 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-23 13:48:30,913 - pms - INFO - PRODUCTION_TRACE license storage path=E:\Projects\PMS-Software\backend\licenses\active.lic exists=True
+2026-09-23 13:48:34,058 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-23 13:48:35,346 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.schemas
+2026-09-23 13:48:35,347 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.tables
+2026-09-23 13:48:35,347 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.types
+2026-09-23 13:48:35,347 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.constraints
+2026-09-23 13:48:35,347 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.defaults
+2026-09-23 13:48:35,347 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.comments
+2026-09-23 13:48:35,347 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.checkconstraint_byname
+2026-09-23 13:48:35,714 - pms - INFO - Database schema already at migration head (a3f8c9d2e1b4).
+2026-09-23 13:48:36,076 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-23 13:48:47,177 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-23 13:48:57,336 - pms - INFO - PRODUCTION_TRACE auth accepted username=admin user_id=1
+2026-09-23 13:49:00,783 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-23 13:56:01,544 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-23 13:57:05,013 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-23 13:57:38,419 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-23 14:00:31,459 - pms - INFO - Database Backup Executed | Type: Manual | File: Backup_23_09_2026_140011.zip | Size: 36874 bytes | Status: Success
+2026-09-23 14:01:21,994 - pms - WARNING - Safe Data Reset | Auth Failed | User: admin
+2026-09-23 14:01:23,609 - pms - INFO - Clear Temp Data | User: admin | Deleted 4 files | Reclaimed: 1.76 KB
+2026-09-23 14:01:27,346 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-23 14:01:55,698 - pms - INFO - Safe Data Reset | SUCCESS | User: admin | Snapshot: pre_reset_snapshot_20260923_140155.sqlite
+2026-09-23 14:02:07,287 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-23 14:03:11,735 - pms - INFO - AUDIT: User admin imported 35 categories. Skipped: 0. Errors: 0
+2026-09-23 14:03:45,818 - pms - INFO - AUDIT: User admin imported 26 companies. Skipped: 0. Errors: 0
+2026-09-23 14:04:05,859 - pms - INFO - AUDIT: User admin imported 25 suppliers. Skipped: 0. Errors: 0
+2026-09-23 14:04:14,395 - pms - INFO - AUDIT: User admin imported 25 customers. Skipped: 0. Errors: 0
+2026-09-23 14:04:19,728 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-23 14:13:49,698 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-23 14:15:19,496 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-23 14:18:08,736 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-23 14:20:30,919 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-23 14:20:49,098 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-23 14:30:19,616 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-23 14:35:24,514 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-23 14:36:21,909 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-23 14:36:38,672 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-23 14:36:54,076 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-23 14:37:25,916 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-23 14:38:17,173 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-23 14:46:56,625 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-23 14:47:09,397 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-23 14:47:17,514 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-23 14:47:37,837 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-23 14:48:52,271 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-23 14:49:45,411 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-23 14:51:50,521 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-23 14:53:19,026 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-23 14:56:02,473 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-23 15:07:38,618 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-23 15:08:22,509 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-23 15:13:09,587 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-23 15:16:23,297 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-23 15:31:17,498 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-23 16:55:30,442 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-23 16:56:07,272 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-23 16:56:48,016 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-23 16:57:26,830 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-23 16:57:54,790 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-23 16:58:58,940 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-23 16:59:35,806 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-23 17:00:09,713 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-23 17:00:45,383 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-23 17:01:27,864 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-23 17:01:28,356 - pms - INFO - PRODUCTION_TRACE license storage path=E:\Projects\PMS-Software\backend\licenses\active.lic exists=True
+2026-09-23 17:01:30,367 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-23 17:01:31,817 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.schemas
+2026-09-23 17:01:31,817 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.tables
+2026-09-23 17:01:31,818 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.types
+2026-09-23 17:01:31,818 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.constraints
+2026-09-23 17:01:31,818 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.defaults
+2026-09-23 17:01:31,818 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.comments
+2026-09-23 17:01:31,819 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.checkconstraint_byname
+2026-09-23 17:01:32,339 - pms - INFO - Database schema already at migration head (a3f8c9d2e1b4).
+2026-09-23 17:01:32,814 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-23 17:01:51,700 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-23 17:01:59,887 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-23 17:02:04,590 - pms - WARNING - PRODUCTION_TRACE auth rejected username=admin reason=password-mismatch
+2026-09-23 17:02:04,600 - pms - ERROR - PMSException caught: Incorrect username or password (status: 401) | Path: /api/v1/auth/login
+2026-09-23 17:02:08,011 - pms - WARNING - PRODUCTION_TRACE auth rejected username=admin reason=password-mismatch
+2026-09-23 17:02:08,013 - pms - ERROR - PMSException caught: Incorrect username or password (status: 401) | Path: /api/v1/auth/login
+2026-09-23 17:02:11,201 - pms - WARNING - PRODUCTION_TRACE auth rejected username=admin reason=password-mismatch
+2026-09-23 17:02:11,203 - pms - ERROR - PMSException caught: Incorrect username or password (status: 401) | Path: /api/v1/auth/login
+2026-09-23 17:02:17,146 - pms - INFO - PRODUCTION_TRACE auth accepted username=admin user_id=1
+2026-09-23 17:03:57,011 - pms - WARNING - Safe Data Reset | Could not clear table 'stock_batches': (sqlite3.IntegrityError) FOREIGN KEY constraint failed
+[SQL: DELETE FROM stock_batches;]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2026-09-23 17:03:57,014 - pms - WARNING - Safe Data Reset | Could not clear table 'medicines': (sqlite3.IntegrityError) FOREIGN KEY constraint failed
+[SQL: DELETE FROM medicines;]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2026-09-23 17:03:57,017 - pms - WARNING - Safe Data Reset | Could not clear table 'companies': (sqlite3.IntegrityError) FOREIGN KEY constraint failed
+[SQL: DELETE FROM companies;]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2026-09-23 17:03:57,019 - pms - WARNING - Safe Data Reset | Could not clear table 'categories': (sqlite3.IntegrityError) FOREIGN KEY constraint failed
+[SQL: DELETE FROM categories;]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2026-09-23 17:03:57,060 - pms - INFO - Safe Data Reset | SUCCESS | User: admin | Snapshot: pre_reset_snapshot_20260923_170356.sqlite
+2026-09-23 17:04:02,816 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-23 17:04:16,949 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-23 17:04:55,748 - pms - WARNING - Safe Data Reset | Could not clear table 'stock_batches': (sqlite3.IntegrityError) FOREIGN KEY constraint failed
+[SQL: DELETE FROM stock_batches;]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2026-09-23 17:04:55,750 - pms - WARNING - Safe Data Reset | Could not clear table 'medicines': (sqlite3.IntegrityError) FOREIGN KEY constraint failed
+[SQL: DELETE FROM medicines;]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2026-09-23 17:04:55,752 - pms - WARNING - Safe Data Reset | Could not clear table 'companies': (sqlite3.IntegrityError) FOREIGN KEY constraint failed
+[SQL: DELETE FROM companies;]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2026-09-23 17:04:55,754 - pms - WARNING - Safe Data Reset | Could not clear table 'categories': (sqlite3.IntegrityError) FOREIGN KEY constraint failed
+[SQL: DELETE FROM categories;]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2026-09-23 17:04:55,791 - pms - INFO - Safe Data Reset | SUCCESS | User: admin | Snapshot: pre_reset_snapshot_20260923_170455.sqlite
+2026-09-23 17:05:02,809 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-23 17:05:20,096 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-23 17:05:40,167 - pms - WARNING - Safe Data Reset | Auth Failed | User: admin
+2026-09-23 17:05:47,163 - pms - INFO - Clear Temp Data | User: admin | Deleted 3 files | Reclaimed: 1.55 KB
+2026-09-23 17:05:51,447 - pms - WARNING - Safe Data Reset | Could not clear table 'stock_batches': (sqlite3.IntegrityError) FOREIGN KEY constraint failed
+[SQL: DELETE FROM stock_batches;]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2026-09-23 17:05:51,449 - pms - WARNING - Safe Data Reset | Could not clear table 'medicines': (sqlite3.IntegrityError) FOREIGN KEY constraint failed
+[SQL: DELETE FROM medicines;]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2026-09-23 17:05:51,452 - pms - WARNING - Safe Data Reset | Could not clear table 'companies': (sqlite3.IntegrityError) FOREIGN KEY constraint failed
+[SQL: DELETE FROM companies;]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2026-09-23 17:05:51,454 - pms - WARNING - Safe Data Reset | Could not clear table 'categories': (sqlite3.IntegrityError) FOREIGN KEY constraint failed
+[SQL: DELETE FROM categories;]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2026-09-23 17:05:51,491 - pms - INFO - Safe Data Reset | SUCCESS | User: admin | Snapshot: pre_reset_snapshot_20260923_170551.sqlite
+2026-09-23 17:06:11,245 - pms - WARNING - PRODUCTION_TRACE auth rejected username=admin reason=password-mismatch
+2026-09-23 17:06:11,246 - pms - ERROR - PMSException caught: Incorrect username or password (status: 401) | Path: /api/v1/auth/login
+2026-09-23 17:06:16,109 - pms - INFO - PRODUCTION_TRACE auth accepted username=admin user_id=1
+2026-09-23 17:07:02,605 - pms - INFO - Database Restore Initiated | Creating safety snapshot: backups\safety\pre_restore_safety_snapshot.sqlite
+2026-09-23 17:07:02,635 - pms - INFO - Database Restore Successful | Restored from: E:/PMS Backup/Backup_23_09_2026_140011.zip by user admin
+2026-09-23 17:07:04,591 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-23 17:07:34,231 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-23 17:07:51,111 - pms - INFO - Safe Data Reset | SUCCESS | User: admin | Snapshot: pre_reset_snapshot_20260923_170751.sqlite
+2026-09-23 17:07:56,164 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-23 17:08:11,536 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-23 17:08:20,413 - pms - INFO - AUDIT: User admin imported 35 categories. Skipped: 0. Errors: 0
+2026-09-23 17:08:27,286 - pms - INFO - AUDIT: User admin imported 26 companies. Skipped: 0. Errors: 0
+2026-09-23 17:08:47,057 - pms - INFO - AUDIT: User admin imported 25 suppliers. Skipped: 0. Errors: 0
+2026-09-23 17:08:51,742 - pms - INFO - AUDIT: User admin imported 25 customers. Skipped: 0. Errors: 0
+2026-09-23 17:08:54,207 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-23 17:41:17,599 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-23 18:18:46,173 - pms - INFO - AUDIT: [SCREEN_LOCKED] Screen automatically locked due to inactivity (User: admin)
+2026-09-23 18:29:52,169 - pms - INFO - PRODUCTION_TRACE auth accepted username=admin user_id=1
+2026-09-23 18:29:52,201 - pms - INFO - AUDIT: [SCREEN_UNLOCKED] Screen unlocked successfully by user (User: admin)
+2026-09-23 18:30:00,666 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-23 19:07:51,431 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-23 19:17:58,491 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-23 19:19:29,028 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-23 19:19:29,517 - pms - INFO - PRODUCTION_TRACE license storage path=E:\Projects\PMS-Software\backend\licenses\active.lic exists=True
+2026-09-23 19:19:31,326 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-23 19:19:32,554 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.schemas
+2026-09-23 19:19:32,554 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.tables
+2026-09-23 19:19:32,555 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.types
+2026-09-23 19:19:32,555 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.constraints
+2026-09-23 19:19:32,555 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.defaults
+2026-09-23 19:19:32,555 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.comments
+2026-09-23 19:19:32,555 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.checkconstraint_byname
+2026-09-23 19:19:33,177 - pms - INFO - Database schema already at migration head (a3f8c9d2e1b4).
+2026-09-23 19:19:33,760 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-23 19:19:48,081 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-23 19:20:10,859 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-23 19:37:03,080 - pms - INFO - PRODUCTION_TRACE auth accepted username=admin user_id=1
+2026-09-23 19:45:29,714 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-23 19:49:34,652 - pms - INFO - AUDIT: User admin removed the Receipt Logo.
+2026-09-23 19:49:43,586 - pms - INFO - AUDIT: User admin uploaded a new Receipt Logo.
+2026-09-23 19:50:17,326 - pms - INFO - AUDIT: User admin removed their Profile Photo.
+2026-09-23 19:50:55,206 - pms - INFO - AUDIT: User admin updated their profile information.
+2026-09-23 19:51:04,160 - pms - INFO - AUDIT: User admin updated their profile information.
+2026-09-23 19:51:04,192 - pms - INFO - AUDIT: User admin uploaded a new Profile Photo.
+2026-09-23 19:52:23,349 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-23 19:55:55,328 - pms - INFO - Database Optimization | User: admin | Reclaimed: 0 bytes
+2026-09-23 19:56:00,710 - pms - INFO - Clear Temp Data | User: admin | Deleted 0 files | Reclaimed: 0.00 KB
+2026-09-23 19:56:06,142 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-23 20:06:36,979 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-23 20:07:25,623 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic

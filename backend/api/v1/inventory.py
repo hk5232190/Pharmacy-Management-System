@@ -552,8 +552,9 @@ def get_stock_movements(
                     "SourceId": pur.PurchaseId,
                 })
 
-        # 2. Adjustments
-        if not movement_type or movement_type == "Stock Adjustment":
+        # 2. Adjustments (includes Opening Stock — classified by Reason prefix)
+        # movement_type filter accepts: "Stock Adjustment", "Opening Stock", "Opening Stock Void"
+        if not movement_type or movement_type in ("Stock Adjustment", "Opening Stock", "Opening Stock Void"):
             q = db.query(StockAdjustment).join(StockBatch).join(Medicine, StockBatch.MedicineId == Medicine.MedicineId)
             if batch_code:
                 q = q.filter(StockBatch.BatchCode.ilike(f"%{batch_code}%"))
@@ -565,15 +566,31 @@ def get_stock_movements(
                 q = q.filter(StockAdjustment.AdjustmentDate < end_dt)
                 
             for adj in q.all():
-                ref_val = f"Reason: {adj.Reason}"
+                reason = adj.Reason or ""
+                # Classify movement type by Reason prefix — no duplicate rows
+                if reason.startswith("OPENING_STOCK:"):
+                    label = "Opening Stock"
+                    ref_val = f"Session: {reason.split(':', 1)[1].strip()}"
+                elif reason.startswith("VOID_OPENING_STOCK:"):
+                    label = "Opening Stock Void"
+                    ref_val = f"Void: {reason.split(':', 1)[1].strip()}"
+                else:
+                    label = "Stock Adjustment"
+                    ref_val = f"Reason: {reason}"
+
+                # Apply movement_type filter after classification
+                if movement_type and movement_type != label:
+                    continue
+
                 if reference and reference.lower() not in ref_val.lower():
                     continue
+
                 movements.append({
                     "Date": adj.AdjustmentDate,
                     "MedicineName": adj.batch.medicine.BrandName if adj.batch and adj.batch.medicine else "Unknown",
                     "BatchCode": adj.batch.BatchCode if adj.batch else "Unknown",
                     "Barcode": adj.batch.medicine.Barcode if adj.batch and adj.batch.medicine else None,
-                    "MovementType": "Stock Adjustment",
+                    "MovementType": label,
                     "QuantityChange": adj.Quantity if adj.AdjustmentType == "Increase" else -adj.Quantity,
                     "Reference": ref_val,
                     "SourceId": adj.AdjustmentId,

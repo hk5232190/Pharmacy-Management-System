@@ -31,8 +31,10 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { useProfile } from "@/contexts/ProfileContext";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import { useSystemPreferences } from "@/contexts/SystemPreferencesContext";
+import { OpeningStockTab } from "@/components/opening-stock/opening-stock-tab";
 
 
 interface InventorySummary {
@@ -124,10 +126,22 @@ interface AuditLogEntry {
   UserName: string;
 }
 
-export default function InventoryManagementPage() {
+export default function InventoryManagementPageWrapper() {
+  return (
+    <Suspense fallback={<div className="flex h-screen items-center justify-center">Loading inventory module...</div>}>
+      <InventoryManagementPage />
+    </Suspense>
+  );
+}
+
+function InventoryManagementPage() {
+  const searchParams = useSearchParams();
+  const initialTab = searchParams?.get("tab") || "current";
+  const initialStatus = searchParams?.get("status") || "All";
+
   const [refreshKey, setRefreshKey] = useState(0);
   const [refreshState, setRefreshState] = useState<"idle" | "loading" | "done">("idle");
-  const [activeTab, setActiveTab] = useState("current");
+  const [activeTab, setActiveTab] = useState(initialTab);
   
   const handleRefresh = () => {
     if (refreshState === "loading") return;
@@ -139,10 +153,29 @@ export default function InventoryManagementPage() {
     }, 400);
   };
 
-  return <InventoryManagementPageInner key={refreshKey} refreshState={refreshState} onRefresh={handleRefresh} activeTab={activeTab} onTabChange={setActiveTab} />;
+  return <InventoryManagementPageInner 
+           key={refreshKey} 
+           refreshState={refreshState} 
+           onRefresh={handleRefresh} 
+           activeTab={activeTab} 
+           onTabChange={setActiveTab} 
+           initialStatus={initialStatus} 
+         />;
 }
 
-function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTabChange }: { onRefresh: () => void, refreshState: "idle" | "loading" | "done", activeTab: string, onTabChange: (tab: string) => void }) {
+function InventoryManagementPageInner({ 
+  onRefresh, 
+  refreshState, 
+  activeTab, 
+  onTabChange,
+  initialStatus
+}: { 
+  onRefresh: () => void, 
+  refreshState: "idle" | "loading" | "done", 
+  activeTab: string, 
+  onTabChange: (tab: string) => void,
+  initialStatus: string
+}) {
   const { formatCurrency, currencySymbol, triggerNotification } = useSystemPreferences();
   const { profile } = useProfile();
   const router = useRouter();
@@ -160,7 +193,7 @@ function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTa
 
   // Filters
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("All");
+  const [statusFilter, setStatusFilter] = useState(initialStatus);
   const [categoryFilter, setCategoryFilter] = useState("All");
   const [companyFilter, setCompanyFilter] = useState("All");
   
@@ -351,16 +384,7 @@ function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTa
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      const tabParam = params.get('tab');
-      const statusParam = params.get('status');
-      
-      if (tabParam) onTabChange(tabParam);
-      if (statusParam) setStatusFilter(statusParam);
-    }
-  }, []);
+
 
   const fetchData = async () => {
     mutateSummary();
@@ -852,6 +876,7 @@ function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTa
     { id: "adjustments", label: "Stock Adjustments" },
     { id: "history", label: "Stock Movement History" },
     { id: "expiry", label: "Expiry Tracking" },
+    { id: "opening_stock", label: "Opening Stock" },
   ];
 
   return (
@@ -1778,8 +1803,12 @@ function InventoryManagementPageInner({ onRefresh, refreshState, activeTab, onTa
           </div>
         )}
 
+        {activeTab === "opening_stock" && (
+          <OpeningStockTab />
+        )}
+
         {/* Placeholders for other tabs */}
-        {activeTab !== "current" && activeTab !== "adjustments" && activeTab !== "expiry" && activeTab !== "history" && activeTab !== "audit" && (
+        {activeTab !== "current" && activeTab !== "adjustments" && activeTab !== "expiry" && activeTab !== "history" && activeTab !== "audit" && activeTab !== "opening_stock" && (
           <div className="bg-white dark:bg-card rounded-xl border border-border shadow-sm p-16 text-center animate-in fade-in slide-in-from-bottom-2 duration-300">
             <h2 className="text-xl font-semibold text-foreground mb-2">Module Under Construction</h2>
             <p className="text-muted-foreground">The {tabs.find(t=>t.id===activeTab)?.label} section is coming soon.</p>

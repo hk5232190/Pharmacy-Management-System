@@ -19,6 +19,7 @@ from api.v1 import (
     license,
     medicine,
     notification,
+    opening_stock,
     purchase,
     purchase_return,
     reports,
@@ -44,8 +45,9 @@ def create_api_router(prefix: str) -> APIRouter:
         (system.router,            "/system",           ["System Diagnostics"],None),
         (notification.router,      "/notifications",    ["Notifications"],     None),
 
-        # ── Admin-only (users.py enforces its own admin guard) ────────────────
+        # ── Admin-only (users.py and opening_stock.py enforce their own admin guard) ────────────────
         (users.router,             "/users",            ["Users"],             None),
+        (opening_stock.router,     "/opening-stock",    ["Opening Stock"],     None),
 
         # ── Sales: always accessible to any authenticated user ────────────────
         (sales.router,             "/sales",            ["Sales"],             None),

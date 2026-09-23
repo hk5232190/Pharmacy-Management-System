@@ -100,9 +100,14 @@ class StockBatch(Base):
     ManufacturingDate = Column(Date, nullable=True)
     ExpiryDate = Column(Date, nullable=False)
     ReceivedDate = Column(DateTime, server_default=func.now())
+    # NULL = created via Purchase/Adjustment/legacy (not opening stock).
+    # 'OPENING_STOCK' = created via the Opening Stock module.
+    # No other values are written by the application.
+    Source = Column(String(30), nullable=True)
 
     medicine = relationship("Medicine", back_populates="batches")
     sales_items = relationship("SaleItem", back_populates="batch")
+    opening_stock_items = relationship("OpeningStockItem", back_populates="batch")
 
     __table_args__ = (
         Index('IX_StockBatches_Medicine_Expiry', 'MedicineId', 'ExpiryDate', 'Quantity'),
@@ -484,3 +489,49 @@ class Notification(Base):
     IsRead = Column(Boolean, default=False, nullable=False, index=True)
     CreatedAt = Column(DateTime, server_default=func.now(), nullable=False, index=True)
 
+
+class OpeningStockEntry(Base):
+    """Groups a single Opening Stock session (manual or bulk import)."""
+    __tablename__ = "opening_stock_entries"
+
+    EntryId = Column(Integer, primary_key=True, autoincrement=True)
+    ReferenceNo = Column(String(50), unique=True, nullable=False)  # e.g. OS-20240923-001
+    # SHA-256 of the canonicalized payload — prevents duplicate file imports
+    ImportHash = Column(String(64), unique=True, nullable=True)
+    Notes = Column(Text, nullable=True)
+    EntryDate = Column(DateTime, server_default=func.now())
+    CreatedBy = Column(Integer, ForeignKey("users.UserId"), nullable=False)
+    TotalItems = Column(Integer, default=0)
+    TotalValue = Column(Numeric(18, 2), default=0)
+    ImportFile = Column(String(255), nullable=True)  # original filename if bulk import
+    Status = Column(String(20), server_default="ACTIVE")  # 'ACTIVE' | 'VOIDED'
+    VoidedAt = Column(DateTime, nullable=True)
+    VoidedBy = Column(Integer, ForeignKey("users.UserId"), nullable=True)
+
+    created_by_user = relationship("User", foreign_keys=[CreatedBy])
+    voided_by_user = relationship("User", foreign_keys=[VoidedBy])
+    items = relationship("OpeningStockItem", back_populates="entry")
+
+
+class OpeningStockItem(Base):
+    """One batch line within an OpeningStockEntry."""
+    __tablename__ = "opening_stock_items"
+
+    ItemId = Column(Integer, primary_key=True, autoincrement=True)
+    EntryId = Column(Integer, ForeignKey("opening_stock_entries.EntryId"), nullable=False)
+    BatchId = Column(Integer, ForeignKey("stock_batches.BatchId"), nullable=False)
+    MedicineId = Column(Integer, ForeignKey("medicines.MedicineId"), nullable=False)
+    BatchCode = Column(String(50), nullable=False)   # stored normalized (strip+upper)
+    Quantity = Column(Integer, nullable=False)
+    CostPrice = Column(Numeric(18, 2), nullable=False)
+    SellingPrice = Column(Numeric(18, 2), nullable=False)
+    ExpiryDate = Column(Date, nullable=False)
+    ManufacturingDate = Column(Date, nullable=True)
+
+    entry = relationship("OpeningStockEntry", back_populates="items")
+    batch = relationship("StockBatch", back_populates="opening_stock_items")
+    medicine = relationship("Medicine")
+
+    __table_args__ = (
+        Index('IX_opening_stock_items_EntryId', 'EntryId'),
+    )

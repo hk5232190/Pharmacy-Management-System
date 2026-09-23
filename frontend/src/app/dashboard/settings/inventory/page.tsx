@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Save, RefreshCw, Box, AlertTriangle, Barcode, Settings2 } from "lucide-react";
+import { Save, RefreshCw, Box, AlertTriangle, Settings2 } from "lucide-react";
 import { useInventorySettings } from "@/contexts/InventorySettingsContext";
 import { SaveButton } from "@/components/ui/save-button";
 
@@ -248,17 +248,6 @@ export default function InventorySettingsPage() {
               <Label className="text-sm font-semibold">Default Retail Profit Margin (%)</Label>
               <Input type="number" name="DefaultProfitMargin" value={settings.DefaultProfitMargin} onChange={handleChange} step="0.1" className="rounded-xl bg-slate-50/70 dark:bg-secondary/30 border-border focus-visible:ring-indigo-500/30 focus-visible:border-indigo-500 transition-all shadow-sm" />
               <p className="text-xs text-muted-foreground">Auto-calculates sell price on purchase entry.</p>
-            </div>
-
-            <div className="flex items-center justify-between p-4 bg-slate-50/50 dark:bg-slate-900/20 rounded-xl border border-slate-100 dark:border-slate-800 transition-all hover:bg-slate-50 dark:hover:bg-slate-900/40">
-              <div className="flex items-start gap-3">
-                <Barcode className="w-5 h-5 mt-0.5 text-slate-500" />
-                <div>
-                  <Label className="text-sm font-bold text-slate-800 dark:text-slate-200">Auto-Generate Barcodes</Label>
-                  <p className="text-xs text-slate-500 mt-1">Automatically create standard EAN/UPC placeholders if none is provided.</p>
-                </div>
-              </div>
-              <Switch checked={settings.AutoGenerateBarcode} onCheckedChange={(c) => handleSwitchChange("AutoGenerateBarcode", c)} />
             </div>
           </CardContent>
         </Card>
