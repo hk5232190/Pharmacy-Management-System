@@ -1,6 +1,35 @@
-from pydantic import BaseModel, ConfigDict, Field
-from typing import Optional
+from pydantic import BaseModel, ConfigDict, Field, validator, model_validator
+from typing import Optional, List
 from decimal import Decimal
+from datetime import date
+
+
+class InitialStockBatch(BaseModel):
+    """One batch of initial stock to be created atomically with the medicine."""
+    BatchCode: str = Field(..., min_length=1, max_length=50)
+    Quantity: int = Field(..., gt=0, description="Positive integer, same unit as Purchase/POS")
+    CostPrice: Decimal = Field(..., ge=Decimal("0"))
+    SellingPrice: Decimal = Field(..., ge=Decimal("0"))
+    ExpiryDate: date
+    ManufacturingDate: Optional[date] = None
+
+    @validator("BatchCode")
+    def normalize_batch_code(cls, v: str) -> str:
+        normalized = v.strip().upper()
+        if not normalized:
+            raise ValueError("Batch Number cannot be blank or whitespace only")
+        return normalized
+
+    @model_validator(mode='after')
+    def mfg_before_expiry(self):
+        mfg = self.ManufacturingDate
+        exp = self.ExpiryDate
+        if mfg and exp and mfg > exp:
+            raise ValueError(
+                f"Manufacturing Date ({mfg}) must be on or before Expiry Date ({exp})"
+            )
+        return self
+
 
 class MedicineBase(BaseModel):
     BrandName: str
@@ -18,8 +47,18 @@ class MedicineBase(BaseModel):
     DefaultSellingPrice: Decimal = Field(default=0, ge=0)
     IsActive: bool = True
 
+
 class MedicineCreate(MedicineBase):
-    pass
+    """
+    Create medicine with optional initial stock batches (committed atomically).
+
+    ExistingMedicineId — set by the import preview endpoint when a medicine with
+    the same BrandName already exists. The bulk-import endpoint will skip medicine
+    creation and only add the supplied initial_stock batches to the existing record.
+    """
+    initial_stock: Optional[List[InitialStockBatch]] = None
+    ExistingMedicineId: Optional[int] = None  # import-only field
+
 
 class MedicineUpdate(BaseModel):
     BrandName: Optional[str] = None
@@ -36,6 +75,7 @@ class MedicineUpdate(BaseModel):
     DefaultCostPrice: Optional[Decimal] = None
     DefaultSellingPrice: Optional[Decimal] = None
     IsActive: Optional[bool] = None
+
 
 class MedicineResponse(MedicineBase):
     MedicineId: int

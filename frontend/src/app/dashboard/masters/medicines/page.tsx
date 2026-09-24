@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo } from "react";
 import useSWR from "swr";
-import { Search, Plus, Download, Upload, Eye, Edit, Trash2 } from "lucide-react";
+import { Search, Plus, Download, Upload, Eye, Edit, Trash2, Package, PackagePlus, X, FileDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SmartCombobox } from "@/components/ui/smart-combobox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -21,6 +21,10 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { apiClient, API_BASE_URL } from "@/lib/api-client";
 import { useInventorySettings } from "@/contexts/InventorySettingsContext";
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Types
+// ─────────────────────────────────────────────────────────────────────────────
 
 interface Medicine {
   MedicineId: number;
@@ -41,6 +45,235 @@ interface Medicine {
   CategoryName?: string;
   CompanyName?: string;
 }
+
+interface InitialStockBatch {
+  id: string; // local key for React rendering
+  BatchCode: string;
+  Quantity: string;
+  CostPrice: string;
+  SellingPrice: string;
+  ExpiryDate: string;
+  ManufacturingDate: string;
+}
+
+function makeEmptyBatch(): InitialStockBatch {
+  return {
+    id: Math.random().toString(36).slice(2),
+    BatchCode: "",
+    Quantity: "",
+    CostPrice: "",
+    SellingPrice: "",
+    ExpiryDate: "",
+    ManufacturingDate: "",
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Initial Stock Section sub-component
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface InitialStockSectionProps {
+  batches: InitialStockBatch[];
+  onChange: (batches: InitialStockBatch[]) => void;
+  isEditing: boolean;
+}
+
+function InitialStockSection({ batches, onChange, isEditing }: InitialStockSectionProps) {
+  const updateBatch = (idx: number, field: keyof InitialStockBatch, value: string) => {
+    const next = batches.map((b, i) => (i === idx ? { ...b, [field]: value } : b));
+    onChange(next);
+  };
+
+  const addBatch = () => onChange([...batches, makeEmptyBatch()]);
+
+  const removeBatch = (idx: number) => onChange(batches.filter((_, i) => i !== idx));
+
+  return (
+    <div className="md:col-span-2 space-y-4">
+      {/* Section header — same border-t divider as Status row */}
+      <div className="flex items-center gap-2 pt-2 border-t border-border">
+        <Package className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+        <span className="text-sm font-semibold text-foreground">Initial Stock</span>
+        <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+          Optional
+        </span>
+        {isEditing && (
+          <span className="text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 px-2 py-0.5 rounded-full">
+            Not available in Edit mode — use Opening Stock module to add stock
+          </span>
+        )}
+      </div>
+
+      {isEditing ? null : (
+        <>
+          {batches.length === 0 ? (
+            <div className="border border-dashed border-border rounded-lg p-4 text-center">
+              <p className="text-sm text-muted-foreground">
+                No initial stock added. Click below to add a batch.
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                className="mt-3 h-10 text-sm border-emerald-500/50 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
+                onClick={addBatch}
+              >
+                <PackagePlus className="h-4 w-4 mr-2" />
+                Add Batch
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {batches.map((batch, idx) => (
+                <div key={batch.id}>
+                  {/* Batch header row — same style as other labels */}
+                  <div className="flex items-center justify-between mb-3">
+                    <label className="text-sm font-semibold text-foreground">
+                      Batch {idx + 1}
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => removeBatch(idx)}
+                      className="text-sm text-muted-foreground hover:text-rose-500 transition-colors flex items-center gap-1"
+                      title="Remove batch"
+                    >
+                      <X className="h-4 w-4" />
+                      Remove
+                    </button>
+                  </div>
+
+                  {/* Fields — exact same grid and spacing as the rest of the form */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-semibold text-foreground">
+                        Batch Number <span className="text-rose-500">*</span>
+                      </label>
+                      <Input
+                        className="h-10"
+                        placeholder="e.g. BT-2025-001"
+                        value={batch.BatchCode}
+                        onChange={e => updateBatch(idx, "BatchCode", e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-semibold text-foreground">
+                        Quantity <span className="text-rose-500">*</span>
+                      </label>
+                      <Input
+                        className="h-10"
+                        type="number"
+                        min="1"
+                        placeholder="e.g. 100"
+                        value={batch.Quantity}
+                        onChange={e => updateBatch(idx, "Quantity", e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-semibold text-foreground">
+                        Cost Price <span className="text-rose-500">*</span>
+                      </label>
+                      <Input
+                        className="h-10"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        placeholder="e.g. 50.00"
+                        value={batch.CostPrice}
+                        onChange={e => updateBatch(idx, "CostPrice", e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-semibold text-foreground">
+                        Selling Price <span className="text-rose-500">*</span>
+                      </label>
+                      <Input
+                        className="h-10"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        placeholder="e.g. 75.00"
+                        value={batch.SellingPrice}
+                        onChange={e => updateBatch(idx, "SellingPrice", e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-semibold text-foreground">
+                        Expiry Date <span className="text-rose-500">*</span>
+                      </label>
+                      <Input
+                        className="h-10"
+                        type="date"
+                        value={batch.ExpiryDate}
+                        onChange={e => updateBatch(idx, "ExpiryDate", e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-semibold text-foreground">
+                        Manufacturing Date{" "}
+                        <span className="text-muted-foreground font-normal">(optional)</span>
+                      </label>
+                      <Input
+                        className="h-10"
+                        type="date"
+                        value={batch.ManufacturingDate}
+                        onChange={e => updateBatch(idx, "ManufacturingDate", e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Thin divider between batches */}
+                  {idx < batches.length - 1 && (
+                    <div className="border-t border-border mt-4" />
+                  )}
+                </div>
+              ))}
+
+              {/* Add Another Batch — same h-10 height as all other buttons */}
+              <Button
+                type="button"
+                variant="outline"
+                className="h-10 w-full border-dashed border-emerald-500/50 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
+                onClick={addBatch}
+              >
+                <PackagePlus className="h-4 w-4 mr-2" />
+                + Add Another Batch
+              </Button>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Validate initial stock batches before save
+// ─────────────────────────────────────────────────────────────────────────────
+
+function validateInitialStock(batches: InitialStockBatch[]): string | null {
+  if (batches.length === 0) return null;
+
+  const codes = new Set<string>();
+  for (let i = 0; i < batches.length; i++) {
+    const b = batches[i];
+    const num = i + 1;
+    if (!b.BatchCode.trim()) return `Batch ${num}: Batch Number is required`;
+    const code = b.BatchCode.trim().toUpperCase();
+    if (codes.has(code)) return `Batch ${num}: Duplicate Batch Number '${code}'`;
+    codes.add(code);
+    if (!b.Quantity || parseInt(b.Quantity) <= 0) return `Batch ${num}: Quantity must be > 0`;
+    if (!b.CostPrice || parseFloat(b.CostPrice) < 0) return `Batch ${num}: Cost Price is required`;
+    if (!b.SellingPrice || parseFloat(b.SellingPrice) < 0) return `Batch ${num}: Selling Price is required`;
+    if (!b.ExpiryDate) return `Batch ${num}: Expiry Date is required`;
+    if (b.ManufacturingDate && b.ManufacturingDate > b.ExpiryDate) {
+      return `Batch ${num}: Manufacturing Date must be on or before Expiry Date`;
+    }
+  }
+  return null;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Page component
+// ─────────────────────────────────────────────────────────────────────────────
 
 export default function MedicinesPage() {
   const { inventorySettings } = useInventorySettings();
@@ -124,6 +357,9 @@ export default function MedicinesPage() {
   const [isSaving, setIsSaving] = useState(false);
   const brandNameInputRef = useRef<HTMLInputElement>(null);
 
+  // Initial Stock state (only used in Add mode)
+  const [initialStockBatches, setInitialStockBatches] = useState<InitialStockBatch[]>([]);
+
   const handleCreateCategory = async (name: string) => {
     try {
       const res = await apiClient.post("/categories", { CategoryName: name, IsActive: true });
@@ -194,20 +430,46 @@ export default function MedicinesPage() {
       toast.error("Please select a Category and Company");
       return;
     }
+
+    const isEditing = !!currentMedicine.MedicineId;
+
+    // Validate initial stock batches (only for new medicines)
+    if (!isEditing && initialStockBatches.length > 0) {
+      const stockError = validateInitialStock(initialStockBatches);
+      if (stockError) {
+        toast.error(stockError);
+        return;
+      }
+    }
     
     setIsSaving(true);
     try {
-      const isEditing = !!currentMedicine.MedicineId;
       const url = isEditing 
         ? `/medicines/${currentMedicine.MedicineId}`
         : `/medicines`;
       
-      const payload = {
+      const medicinePayload = {
         ...currentMedicine,
         DefaultCostPrice: Number(currentMedicine.DefaultCostPrice || 0),
         DefaultSellingPrice: Number(currentMedicine.DefaultSellingPrice || 0),
-        ReorderLevel: Number(currentMedicine.ReorderLevel || 10)
+        ReorderLevel: Number(currentMedicine.ReorderLevel || 10),
       };
+
+      // For new medicines, attach initial_stock if provided
+      let payload: any = medicinePayload;
+      if (!isEditing && initialStockBatches.length > 0) {
+        payload = {
+          ...medicinePayload,
+          initial_stock: initialStockBatches.map(b => ({
+            BatchCode: b.BatchCode.trim().toUpperCase(),
+            Quantity: parseInt(b.Quantity),
+            CostPrice: parseFloat(b.CostPrice),
+            SellingPrice: parseFloat(b.SellingPrice),
+            ExpiryDate: b.ExpiryDate,
+            ManufacturingDate: b.ManufacturingDate || null,
+          })),
+        };
+      }
       
       const data = isEditing 
         ? await apiClient.put(url, payload)
@@ -224,6 +486,7 @@ export default function MedicinesPage() {
             DosageForm: "", Strength: "", Barcode: "",
             DefaultCostPrice: 0, DefaultSellingPrice: 0, IsActive: true
           });
+          setInitialStockBatches([]);
           setTimeout(() => brandNameInputRef.current?.focus(), 100);
         } else {
           setIsDialogOpen(false);
@@ -302,15 +565,42 @@ export default function MedicinesPage() {
     setIsImporting(true);
     try {
       const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
+
+      // Transform grouped preview entries into MedicineCreate payloads.
+      // Each entry may have multiple batches (InitialBatches) and optionally an ExistingMedicineId.
+      const payload = validData.map((row: any) => {
+        const med: any = {
+          BrandName:            row.BrandName,
+          GenericName:          row.GenericName,
+          CategoryId:           row.CategoryId,
+          CompanyId:            row.CompanyId,
+          Unit:                 row.Unit || "Box",
+          DosageForm:           row.DosageForm || null,
+          ReorderLevel:         row.ReorderLevel || 10,
+          RackNumber:           row.RackNumber || null,
+          RequiresPrescription: row.RequiresPrescription || false,
+          IsActive:             row.IsActive !== false,
+          DefaultCostPrice:     row.DefaultCostPrice || 0,
+          DefaultSellingPrice:  row.DefaultSellingPrice || 0,
+          Barcode:              row.Barcode || null,
+          ExistingMedicineId:   row.ExistingMedicineId || null,
+        };
+        // InitialBatches is now an array (may be empty)
+        if (row.InitialBatches && row.InitialBatches.length > 0) {
+          med.initial_stock = row.InitialBatches;
+        }
+        return med;
+      });
+
       const res = await fetch(`${API_BASE_URL}/medicines/import-bulk`, {
         method: "POST",
-        headers: { 
+        headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json"
         },
-        body: JSON.stringify(validData),
+        body: JSON.stringify(payload),
       });
-      
+
       const data = await res.json();
       if (res.ok && data.success) {
         toast.success(data.message || "Import successful");
@@ -323,6 +613,31 @@ export default function MedicinesPage() {
       toast.error("Network error during import");
     } finally {
       setIsImporting(false);
+    }
+  };
+
+  const handleExportWithStock = async () => {
+    const toastId = toast.loading("Building medicines + stock export...");
+    try {
+      const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
+      const res = await fetch(`${API_BASE_URL}/medicines/export-with-stock`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error("Export failed");
+      const blob = await res.blob();
+      const url  = window.URL.createObjectURL(blob);
+      const a    = document.createElement("a");
+      a.href     = url;
+      a.download = "medicines_with_stock_export.xlsx";
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      toast.dismiss(toastId);
+      setTimeout(() => toast.success("Export with stock downloaded!"), 800);
+    } catch {
+      toast.dismiss(toastId);
+      toast.error("Failed to export medicines with stock");
     }
   };
 
@@ -400,11 +715,13 @@ export default function MedicinesPage() {
       DefaultSellingPrice: 0, 
       IsActive: true
     });
+    setInitialStockBatches([]);
     setIsDialogOpen(true);
   };
 
   const openEditDialog = (medicine: Medicine) => {
     setCurrentMedicine(medicine);
+    setInitialStockBatches([]); // Not editable in edit mode
     setIsDialogOpen(true);
   };
 
@@ -445,6 +762,8 @@ export default function MedicinesPage() {
   if (currentMedicine?.DosageForm && !dosageOptions.find(o => o.value === currentMedicine.DosageForm)) {
     dosageOptions.push({ value: currentMedicine.DosageForm, label: `${currentMedicine.DosageForm} (Legacy)` });
   }
+
+  const isEditing = !!currentMedicine.MedicineId;
 
   return (
     <div className="flex flex-col h-full bg-card">
@@ -503,6 +822,9 @@ export default function MedicinesPage() {
           </Button>
           <Button variant="outline" className="h-10 bg-background text-foreground hidden sm:flex" onClick={handleExport} disabled={isExporting}>
             <Upload className="mr-2 h-4 w-4" /> {isExporting ? "Exporting..." : "Export CSV"}
+          </Button>
+          <Button variant="outline" className="h-10 bg-background text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 hidden sm:flex" onClick={handleExportWithStock}>
+            <FileDown className="mr-2 h-4 w-4" /> Export with Stock
           </Button>
         </div>
       </div>
@@ -639,10 +961,11 @@ export default function MedicinesPage() {
         )}
       </div>
 
+      {/* ── Add / Edit Dialog ─────────────────────────────────────────────── */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[640px] max-h-[92vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{currentMedicine.MedicineId ? "Edit Medicine" : "Add New Medicine"}</DialogTitle>
+            <DialogTitle>{isEditing ? "Edit Medicine" : "Add New Medicine"}</DialogTitle>
           </DialogHeader>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
             
@@ -764,12 +1087,19 @@ export default function MedicinesPage() {
                 </button>
               </div>
             </div>
-            
+
+            {/* ── Initial Stock Section ──────────────────────────────────────── */}
+            <InitialStockSection
+              batches={initialStockBatches}
+              onChange={setInitialStockBatches}
+              isEditing={isEditing}
+            />
+
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isSaving}>Close</Button>
             <Button onClick={handleSave} disabled={isSaving}>
-              {isSaving ? "Saving..." : (currentMedicine.MedicineId ? "Save Changes" : "Save & Add Another")}
+              {isSaving ? "Saving..." : (isEditing ? "Save Changes" : "Save & Add Another")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -889,4 +1219,3 @@ export default function MedicinesPage() {
     </div>
   );
 }
-
