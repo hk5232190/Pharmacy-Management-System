@@ -28,8 +28,8 @@ export function StartupProvider({ children }: { children: React.ReactNode }) {
         
         const licenseRes = await fetch(`${baseUrl}/license/status`, { cache: "no-store" }).catch(() => null);
         if (!licenseRes || !licenseRes.ok) {
-          console.warn("Backend not ready yet. Retrying in 2 seconds...");
-          setTimeout(initializeApp, 2000);
+          console.warn("Backend not ready yet. Retrying in 200ms...");
+          setTimeout(initializeApp, 200);
           return;
         }
         
@@ -59,9 +59,11 @@ export function StartupProvider({ children }: { children: React.ReactNode }) {
           return;
         }
 
-        const authRes = await fetch(`${baseUrl}/auth/me`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        // Fetch auth and appearance settings in parallel to speed up startup
+        const [authRes, prefRes] = await Promise.all([
+          fetch(`${baseUrl}/auth/me`, { headers: { Authorization: `Bearer ${token}` } }),
+          fetch(`${baseUrl}/settings/appearance`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => null)
+        ]);
 
         if (authRes.ok) {
           if (pathname === "/" || pathname === "/activate") {
@@ -70,13 +72,10 @@ export function StartupProvider({ children }: { children: React.ReactNode }) {
               let target = "/dashboard";
               if (authData.role === "cashier") {
                 target = "/dashboard/sales";
-              } else {
-                const prefRes = await fetch(`${baseUrl}/settings/appearance`);
-                if (prefRes.ok) {
-                  const pref = await prefRes.json();
-                  if (pref.StartupModule === "POS Terminal") target = "/dashboard/sales";
-                  else if (pref.StartupModule === "Inventory") target = "/dashboard/inventory";
-                }
+              } else if (prefRes && prefRes.ok) {
+                const pref = await prefRes.json();
+                if (pref.StartupModule === "POS Terminal") target = "/dashboard/sales";
+                else if (pref.StartupModule === "Inventory") target = "/dashboard/inventory";
               }
               setExpectedPath(target);
               router.push(target);

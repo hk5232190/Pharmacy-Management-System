@@ -15,6 +15,7 @@ export default function ActivatePage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [licenseData, setLicenseData] = useState<any>(null);
+  const [copiedMac, setCopiedMac] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
@@ -37,9 +38,25 @@ export default function ActivatePage() {
       .catch(() => setError("Failed to fetch MAC Address from backend. Is the server running?"));
   }, []);
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(mac);
-    alert("MAC Address copied to clipboard!");
+  const handleCopy = async () => {
+    if (!mac) return;
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(mac);
+      } else {
+        const textArea = document.createElement("textarea");
+        textArea.value = mac;
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        try { document.execCommand('copy'); } catch (err) {}
+        document.body.removeChild(textArea);
+      }
+      setCopiedMac(true);
+      setTimeout(() => setCopiedMac(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy', err);
+    }
   };
 
   const handleActivate = async () => {
@@ -123,7 +140,7 @@ export default function ActivatePage() {
                   {mac || "Loading..."}
                 </div>
                 <Button variant="outline" onClick={handleCopy} className="border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 hover:border-indigo-200 dark:hover:text-indigo-400 dark:hover:bg-indigo-900/20 h-auto px-4 rounded-xl transition-all">
-                  <Copy size={16} />
+                  {copiedMac ? <CheckCircle2 size={16} className="text-emerald-500" /> : <Copy size={16} />}
                 </Button>
               </div>
             </div>

@@ -66,7 +66,7 @@ function createPortPromise(): Promise<number> {
             doResolve(port);
             return;
           }
-          await new Promise((r) => setTimeout(r, 100));
+          await new Promise((r) => setTimeout(r, 20));
         }
       } catch (e: unknown) {
         console.warn("[PMS] get_api_port poll error:", e);
