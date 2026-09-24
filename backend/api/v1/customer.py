@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File, Response
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy import or_
+from sqlalchemy import or_, func
 from typing import List
 import csv
 import io
@@ -18,6 +18,7 @@ router = APIRouter()
 def get_customers(
     search: str = Query(None, description="Search by customer name or phone"),
     status: str = Query(None, description="Filter by status (active/inactive)"),
+    balance_filter: str = Query(None, description="Filter by payment status: all | paid | due"),
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(25, ge=0, description="Items per page. 0 for all."),
     db: Session = Depends(get_db),
@@ -25,7 +26,7 @@ def get_customers(
 ):
     # Exclude the default walk-in customer (CustomerId 0) from the UI list
     query = db.query(Customer).filter(Customer.CustomerId != 0)
-    
+
     if search:
         query = query.filter(
             or_(
@@ -33,20 +34,57 @@ def get_customers(
                 Customer.Phone.ilike(f"%{search}%")
             )
         )
-        
+
     if status and status.lower() != 'all':
         is_active = status.lower() == 'active'
         query = query.filter(Customer.IsActive == is_active)
-        
-    total = query.count()
-    
+
+    # Fetch all matching customers (balance filter requires post-query computation)
+    all_customers = query.order_by(Customer.CustomerId).all()
+
+    # Compute live BalanceDue per customer: SUM(GrandTotal - PaidAmount) where GrandTotal > PaidAmount
+    customer_ids = [c.CustomerId for c in all_customers]
+    balance_map: dict = {}
+    if customer_ids:
+        rows = (
+            db.query(Sale.CustomerId, func.sum(Sale.GrandTotal - Sale.PaidAmount))
+            .filter(
+                Sale.CustomerId.in_(customer_ids),
+                Sale.GrandTotal > Sale.PaidAmount
+            )
+            .group_by(Sale.CustomerId)
+            .all()
+        )
+        for cid, bal in rows:
+            balance_map[cid] = round(float(bal), 2)
+
+    # Apply balance_filter on computed values
+    if balance_filter and balance_filter.lower() == 'due':
+        all_customers = [c for c in all_customers if balance_map.get(c.CustomerId, 0.0) > 0]
+    elif balance_filter and balance_filter.lower() == 'paid':
+        all_customers = [c for c in all_customers if balance_map.get(c.CustomerId, 0.0) <= 0]
+
+    total = len(all_customers)
+
+    # Paginate after filtering
     if page_size > 0:
-        query = query.order_by(Customer.CustomerId).offset((page - 1) * page_size).limit(page_size)
+        paged = all_customers[(page - 1) * page_size: page * page_size]
     else:
-        query = query.order_by(Customer.CustomerId)
-        
-    customers = query.all()
-    return {"success": True, "data": customers, "total": total, "page": page, "page_size": page_size}
+        paged = all_customers
+
+    result = []
+    for c in paged:
+        result.append({
+            "CustomerId": c.CustomerId,
+            "Name": c.Name,
+            "Phone": c.Phone,
+            "Address": c.Address,
+            "LoyaltyPoints": c.LoyaltyPoints,
+            "IsActive": c.IsActive,
+            "BalanceDue": balance_map.get(c.CustomerId, 0.0),
+        })
+
+    return {"success": True, "data": result, "total": total, "page": page, "page_size": page_size}
 
 @router.post("", response_model=BaseResponse[CustomerResponse], summary="Create a new customer")
 def create_customer(
@@ -121,20 +159,36 @@ def toggle_customer_status(
 @router.get("/export", summary="Export all customers to CSV")
 def export_customers(db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     try:
-        customers = db.query(Customer).all()
-        
+        customers = db.query(Customer).filter(Customer.CustomerId != 0).order_by(Customer.CustomerId).all()
+
+        # Compute live BalanceDue for all customers
+        customer_ids = [c.CustomerId for c in customers]
+        balance_map: dict = {}
+        if customer_ids:
+            rows = (
+                db.query(Sale.CustomerId, func.sum(Sale.GrandTotal - Sale.PaidAmount))
+                .filter(Sale.CustomerId.in_(customer_ids), Sale.GrandTotal > Sale.PaidAmount)
+                .group_by(Sale.CustomerId)
+                .all()
+            )
+            for cid, bal in rows:
+                balance_map[cid] = round(float(bal), 2)
+
         output = io.StringIO()
         writer = csv.writer(output)
-        
+
         # Write header
-        writer.writerow(["Name", "Phone", "LoyaltyPoints", "IsActive"])
-        
+        writer.writerow(["Code", "Name", "Phone", "Address", "Balance Due", "Loyalty Points", "Status"])
+
         # Write rows
         for cust in customers:
-            writer.writerow([cust.Name, cust.Phone, cust.LoyaltyPoints, cust.IsActive])
-            
+            code = f"CUST-{str(cust.CustomerId).zfill(5)}"
+            balance_due = balance_map.get(cust.CustomerId, 0.0)
+            status = "Active" if cust.IsActive else "Inactive"
+            writer.writerow([code, cust.Name, cust.Phone or "", cust.Address or "", balance_due, cust.LoyaltyPoints, status])
+
         logger.info(f"AUDIT: User {current_user.Username} exported {len(customers)} customers to CSV.")
-        
+
         return Response(
             content=output.getvalue(),
             media_type="text/csv",
@@ -150,14 +204,15 @@ def import_customers(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
-    if not file.filename.endswith(('.csv', '.xlsx', '.xls')):
+    fname_lower = (file.filename or '').lower()
+    if not (fname_lower.endswith('.csv') or fname_lower.endswith('.xlsx') or fname_lower.endswith('.xls')):
         raise HTTPException(status_code=400, detail="Only CSV and Excel files are allowed")
         
     try:
         contents = file.file.read()
         
         rows = []
-        if file.filename.endswith('.csv'):
+        if fname_lower.endswith('.csv'):
             decoded = contents.decode('utf-8')
             csv_reader = csv.DictReader(io.StringIO(decoded))
             rows = list(csv_reader)
@@ -282,3 +337,4 @@ def delete_customer(
         db.rollback()
         logger.error(f"AUDIT: User {current_user.Username} failed to delete customer {customer_id}. Error: {str(e)}")
         raise HTTPException(status_code=500, detail="An error occurred while deleting the customer")
+

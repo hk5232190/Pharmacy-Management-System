@@ -743,6 +743,7 @@ def get_sales_history(
     start_date: Optional[str] = Query(None),
     end_date: Optional[str] = Query(None),
     payment_method: Optional[str] = Query(None),
+    payment_status: Optional[str] = Query(None, description="Paid | Due"),
     user_id: Optional[int] = Query(None),
     q: Optional[str] = Query(None),
     page: int = Query(1),
@@ -774,7 +775,13 @@ def get_sales_history(
                 
         if payment_method:
             query = query.filter(Sale.PaymentMethod == payment_method)
-            
+
+        if payment_status:
+            if payment_status.lower() == 'paid':
+                query = query.filter(Sale.PaidAmount >= Sale.GrandTotal)
+            elif payment_status.lower() == 'due':
+                query = query.filter(Sale.GrandTotal > Sale.PaidAmount)
+
         if user_id:
             query = query.filter(Sale.UserId == user_id)
             
@@ -1002,7 +1009,8 @@ def process_sales_return(
                     Quantity=ret_item.ReturnQuantity,
                     PreviousQuantity=prev_qty,
                     NewQuantity=batch.Quantity,
-                    Reason=f"Sale Return (+) {ret_invoice_no}: {return_data.Reason}"
+                    Reason=f"Sale Return (+) {ret_invoice_no}: {return_data.Reason}",
+                    AdjustmentDate=datetime.now(timezone.utc)
                 )
                 db.add(adjustment)
             elif ret_item.ItemCondition == "Damaged/Quarantine":
@@ -1014,7 +1022,8 @@ def process_sales_return(
                     Quantity=ret_item.ReturnQuantity,
                     PreviousQuantity=prev_qty,
                     NewQuantity=prev_qty,
-                    Reason=f"Quarantine Write-off from Return {ret_invoice_no}: {return_data.Reason}"
+                    Reason=f"Quarantine Write-off from Return {ret_invoice_no}: {return_data.Reason}",
+                    AdjustmentDate=datetime.now(timezone.utc)
                 )
                 db.add(adjustment)
             else:

@@ -2,7 +2,21 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc, or_, text
 from typing import List, Optional
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta, date, timezone
+
+def ensure_utc_dt(dt_val):
+    if dt_val is None:
+        return None
+    if isinstance(dt_val, str):
+        try:
+            dt_val = datetime.fromisoformat(dt_val.replace("Z", "+00:00"))
+        except Exception:
+            return dt_val
+    if isinstance(dt_val, datetime):
+        if dt_val.tzinfo is None:
+            return dt_val.replace(tzinfo=timezone.utc)
+        return dt_val.astimezone(timezone.utc)
+    return dt_val
 
 from models import StockBatch, Medicine, Category, Company, Supplier, PurchaseItem, Purchase, PurchaseReturnItem, PurchaseReturn, StockAdjustment, AuditLog, SaleItem, Sale, InventorySettings
 from schemas.base import BaseResponse
@@ -217,7 +231,8 @@ def adjust_stock(
             Quantity=adjustment_in.Quantity,
             PreviousQuantity=previous_qty,
             NewQuantity=new_qty,
-            Reason=adjustment_in.Reason
+            Reason=adjustment_in.Reason,
+            AdjustmentDate=datetime.now(timezone.utc)
         )
         db.add(new_adj)
 
@@ -301,7 +316,8 @@ def update_stock_batch(
                     Quantity=adj_qty,
                     PreviousQuantity=prev_qty,
                     NewQuantity=new_qty,
-                    Reason="Current Stock Manual Edit"
+                    Reason="Current Stock Manual Edit",
+                    AdjustmentDate=datetime.now(timezone.utc)
                 )
                 db.add(new_adj)
 
@@ -329,7 +345,7 @@ def update_stock_batch(
                 CostPrice=batch_in.PurchasePrice if batch_in.PurchasePrice is not None else float(medicine.DefaultCostPrice or 0),
                 SellingPrice=batch_in.SellingPrice if batch_in.SellingPrice is not None else float(medicine.DefaultSellingPrice or 0),
                 ExpiryDate=batch_in.ExpiryDate or (date.today() + timedelta(days=365)),
-                ReceivedDate=datetime.utcnow()
+                ReceivedDate=datetime.now(timezone.utc)
             )
             db.add(new_batch)
             db.flush()
@@ -341,7 +357,8 @@ def update_stock_batch(
                 Quantity=int(batch_in.CurrentStock),
                 PreviousQuantity=0,
                 NewQuantity=int(batch_in.CurrentStock),
-                Reason="Initial Stock Entry"
+                Reason="Initial Stock Entry",
+                AdjustmentDate=datetime.now(timezone.utc)
             )
             db.add(new_adj)
 
@@ -381,7 +398,7 @@ def get_adjustments(
                 "PreviousQuantity": adj.PreviousQuantity,
                 "NewQuantity": adj.NewQuantity,
                 "Reason": adj.Reason,
-                "AdjustmentDate": adj.AdjustmentDate,
+                "AdjustmentDate": ensure_utc_dt(adj.AdjustmentDate),
                 "UserName": adj.user.FullName if adj.user else "Unknown"
             })
             
@@ -532,17 +549,17 @@ def get_stock_movements(
                 q = q.filter(PurchaseItem.BatchCode.ilike(f"%{batch_code}%"))
             if medicine_name:
                 q = q.filter(Medicine.BrandName.ilike(f"%{medicine_name}%"))
-            if start_dt:
-                q = q.filter(Purchase.PurchaseDate >= start_dt)
-            if end_dt:
-                q = q.filter(Purchase.PurchaseDate < end_dt)
+            if start_date:
+                q = q.filter(func.date(Purchase.PurchaseDate, 'localtime') >= start_date)
+            if end_date:
+                q = q.filter(func.date(Purchase.PurchaseDate, 'localtime') <= end_date)
                 
             for pi, pur in q.all():
                 ref_val = f"Invoice: {pur.InvoiceNumber}"
                 if reference and reference.lower() not in ref_val.lower():
                     continue
                 movements.append({
-                    "Date": pur.PurchaseDate,
+                    "Date": ensure_utc_dt(pur.PurchaseDate),
                     "MedicineName": pi.medicine.BrandName if pi.medicine else "Unknown",
                     "BatchCode": pi.BatchCode,
                     "Barcode": pi.medicine.Barcode if pi.medicine else None,
@@ -560,10 +577,10 @@ def get_stock_movements(
                 q = q.filter(StockBatch.BatchCode.ilike(f"%{batch_code}%"))
             if medicine_name:
                 q = q.filter(Medicine.BrandName.ilike(f"%{medicine_name}%"))
-            if start_dt:
-                q = q.filter(StockAdjustment.AdjustmentDate >= start_dt)
-            if end_dt:
-                q = q.filter(StockAdjustment.AdjustmentDate < end_dt)
+            if start_date:
+                q = q.filter(func.date(StockAdjustment.AdjustmentDate, 'localtime') >= start_date)
+            if end_date:
+                q = q.filter(func.date(StockAdjustment.AdjustmentDate, 'localtime') <= end_date)
                 
             for adj in q.all():
                 reason = adj.Reason or ""
@@ -589,7 +606,7 @@ def get_stock_movements(
                     continue
 
                 movements.append({
-                    "Date": adj.AdjustmentDate,
+                    "Date": ensure_utc_dt(adj.AdjustmentDate),
                     "MedicineName": adj.batch.medicine.BrandName if adj.batch and adj.batch.medicine else "Unknown",
                     "BatchCode": adj.batch.BatchCode if adj.batch else "Unknown",
                     "Barcode": adj.batch.medicine.Barcode if adj.batch and adj.batch.medicine else None,
@@ -606,17 +623,17 @@ def get_stock_movements(
                 q = q.filter(StockBatch.BatchCode.ilike(f"%{batch_code}%"))
             if medicine_name:
                 q = q.filter(Medicine.BrandName.ilike(f"%{medicine_name}%"))
-            if start_dt:
-                q = q.filter(Sale.TransactionDate >= start_dt)
-            if end_dt:
-                q = q.filter(Sale.TransactionDate < end_dt)
+            if start_date:
+                q = q.filter(func.date(Sale.TransactionDate, 'localtime') >= start_date)
+            if end_date:
+                q = q.filter(func.date(Sale.TransactionDate, 'localtime') <= end_date)
                 
             for si, sale in q.all():
                 ref_val = f"Invoice: {sale.InvoiceNumber}"
                 if reference and reference.lower() not in ref_val.lower():
                     continue
                 movements.append({
-                    "Date": sale.TransactionDate,
+                    "Date": ensure_utc_dt(sale.TransactionDate),
                     "MedicineName": si.batch.medicine.BrandName if si.batch and si.batch.medicine else "Unknown",
                     "BatchCode": si.batch.BatchCode if si.batch else "Unknown",
                     "Barcode": si.batch.medicine.Barcode if si.batch and si.batch.medicine else None,
@@ -633,17 +650,17 @@ def get_stock_movements(
                 q = q.filter(PurchaseReturnItem.BatchCode.ilike(f"%{batch_code}%"))
             if medicine_name:
                 q = q.filter(Medicine.BrandName.ilike(f"%{medicine_name}%"))
-            if start_dt:
-                q = q.filter(PurchaseReturn.ReturnDate >= start_dt)
-            if end_dt:
-                q = q.filter(PurchaseReturn.ReturnDate < end_dt)
+            if start_date:
+                q = q.filter(func.date(PurchaseReturn.ReturnDate, 'localtime') >= start_date)
+            if end_date:
+                q = q.filter(func.date(PurchaseReturn.ReturnDate, 'localtime') <= end_date)
                 
             for pri, pr in q.all():
                 ref_val = f"Return Inv: {pr.ReturnInvoiceNumber}"
                 if reference and reference.lower() not in ref_val.lower():
                     continue
                 movements.append({
-                    "Date": pr.ReturnDate,
+                    "Date": ensure_utc_dt(pr.ReturnDate),
                     "MedicineName": pri.medicine.BrandName if pri.medicine else "Unknown",
                     "BatchCode": pri.BatchCode,
                     "Barcode": pri.medicine.Barcode if pri.medicine else None,
@@ -684,7 +701,7 @@ def get_audit_logs(
         for log in logs:
             formatted_data.append({
                 "LogId": log.LogId,
-                "Timestamp": log.Timestamp,
+                "Timestamp": ensure_utc_dt(log.Timestamp),
                 "Action": log.Action,
                 "Description": log.Description,
                 "UserName": log.user.FullName if log.user else "Unknown"

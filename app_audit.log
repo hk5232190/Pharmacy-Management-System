@@ -113,3 +113,5 @@
 2026-09-21 23:14:12,915 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.comments
 2026-09-21 23:14:12,915 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.checkconstraint_byname
 2026-09-22 00:35:11,840 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-24 19:20:04,075 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-24 19:49:42,470 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.

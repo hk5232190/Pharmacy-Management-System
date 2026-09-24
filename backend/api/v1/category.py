@@ -151,14 +151,15 @@ def import_categories(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
-    if not file.filename.endswith(('.csv', '.xlsx', '.xls')):
+    fname_lower = (file.filename or '').lower()
+    if not (fname_lower.endswith('.csv') or fname_lower.endswith('.xlsx') or fname_lower.endswith('.xls')):
         raise HTTPException(status_code=400, detail="Only CSV and Excel files are allowed")
         
     try:
         contents = file.file.read()
         
         rows = []
-        if file.filename.endswith('.csv'):
+        if fname_lower.endswith('.csv'):
             decoded = contents.decode('utf-8')
             csv_reader = csv.DictReader(io.StringIO(decoded))
             rows = list(csv_reader)
@@ -261,3 +262,4 @@ def delete_category(
         db.rollback()
         logger.error(f"AUDIT: User {current_user.Username} failed to delete category {category_id}. Error: {str(e)}")
         raise HTTPException(status_code=500, detail="An error occurred while deleting the category")
+

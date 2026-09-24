@@ -29,7 +29,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { cn } from "@/lib/utils";
+import { cn, parseDateTime } from "@/lib/utils";
 import { format } from "date-fns";
 import { useProfile } from "@/contexts/ProfileContext";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -350,8 +350,8 @@ function InventoryManagementPageInner({
     }
     if (adjTypeFilter === "Additions (+)" && adj.AdjustmentType !== "Increase") return false;
     if (adjTypeFilter === "Deductions (-)" && adj.AdjustmentType !== "Decrease") return false;
-    if (adjStartDate && new Date(adj.AdjustmentDate) < new Date(adjStartDate)) return false;
-    if (adjEndDate && new Date(adj.AdjustmentDate) > new Date(adjEndDate + "T23:59:59")) return false;
+    if (adjStartDate && parseDateTime(adj.AdjustmentDate) < new Date(adjStartDate + "T00:00:00")) return false;
+    if (adjEndDate && parseDateTime(adj.AdjustmentDate) > new Date(adjEndDate + "T23:59:59")) return false;
     return true;
   });
 
@@ -742,8 +742,8 @@ function InventoryManagementPageInner({
         }
 
         if (typeof val === 'string') {
-          if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(val)) {
-            const date = new Date(val.endsWith('Z') ? val : val + 'Z');
+          if (/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}/.test(val)) {
+            const date = parseDateTime(val);
             return date.toLocaleString('en-GB', { 
               day: '2-digit', month: 'short', year: 'numeric', 
               hour: '2-digit', minute: '2-digit', hour12: true 
@@ -929,8 +929,8 @@ function InventoryManagementPageInner({
           }
           return val.toLocaleString();
         }
-        if (typeof val === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(val)) {
-          const d = new Date(val.endsWith('Z') ? val : val + 'Z');
+        if (typeof val === 'string' && /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}/.test(val)) {
+          const d = parseDateTime(val);
           return `${d.toLocaleDateString('en-GB').replaceAll('/', '-')} ${d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}`;
         }
         return String(val);
@@ -1232,15 +1232,15 @@ function InventoryManagementPageInner({
 
             {/* Data Table */}
             <div className="overflow-auto flex-1 custom-scrollbar">
-              <table className="w-full text-left text-sm border-collapse min-w-[1200px]">
+              <table className="w-full text-left text-sm border-collapse min-w-[1600px]">
                 <thead className="sticky top-0 z-10 bg-white dark:bg-card text-left">
                   <tr className="bg-secondary/40 text-muted-foreground text-xs uppercase tracking-wider border-b border-border">
                     <th className="px-4 py-3 font-semibold">#</th>
                     <th className="px-4 py-3 font-semibold min-w-[140px] text-center">Code / Barcode</th>
-                    <th className="px-4 py-3 font-semibold text-left">Medicine Name</th>
-                    <th className="px-4 py-3 font-semibold text-left">Category</th>
-                    <th className="px-4 py-3 font-semibold text-left">Rack / Shelf</th>
-                    <th className="px-4 py-3 font-semibold text-left">Company</th>
+                    <th className="px-4 py-3 font-semibold min-w-[250px] whitespace-nowrap text-left">Medicine Name</th>
+                    <th className="px-4 py-3 font-semibold min-w-[200px] text-left">Category</th>
+                    <th className="px-4 py-3 font-semibold whitespace-nowrap text-left">Rack / Shelf</th>
+                    <th className="px-4 py-3 font-semibold min-w-[200px] text-left">Company</th>
                     <th className="px-4 py-3 font-semibold text-left">Batch No.</th>
                     <th className="px-4 py-3 font-semibold text-left">Expiry Date</th>
                     <th className="px-4 py-3 font-semibold text-center">Pur. Price</th>
@@ -1248,7 +1248,7 @@ function InventoryManagementPageInner({
                     <th className="px-4 py-3 font-semibold text-center">Current Stock</th>
                     <th className="px-4 py-3 font-semibold text-center">Min. Stock</th>
                     <th className="px-4 py-3 font-semibold text-center">Status</th>
-                    <th className="px-4 py-3 font-semibold text-center">Actions</th>
+                    <th className="px-4 py-3 font-semibold w-[100px] text-center">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border border-b border-border">
@@ -1277,7 +1277,7 @@ function InventoryManagementPageInner({
                         )}>
                           <td className="px-4 py-3 text-muted-foreground text-center">{idx + 1}</td>
                           <td className="px-4 py-3 font-mono text-xs min-w-[140px] text-left">{item.CodeBarcode}</td>
-                          <td className="px-4 py-3 font-semibold text-foreground text-left">{item.MedicineName}</td>
+                          <td className="px-4 py-3 font-semibold text-foreground text-left whitespace-nowrap min-w-[250px]">{item.MedicineName}</td>
                           <td className="px-4 py-3 text-muted-foreground text-left">{item.CategoryName}</td>
                           <td className="px-4 py-3 text-left">
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-slate-100 dark:bg-secondary/60 text-xs font-mono text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-border">
@@ -1317,7 +1317,7 @@ function InventoryManagementPageInner({
                           <td className="px-4 py-3 text-center tabular-nums">{formatCurrency(item.SellingPrice)}</td>
                           <td className="px-4 py-3 text-center font-bold tabular-nums">{item.CurrentStock}</td>
                           <td className="px-4 py-3 text-center text-muted-foreground tabular-nums">
-                            <div className="flex flex-col items-end">
+                            <div className="flex flex-col items-center">
                               <span>{item.MinStock}</span>
                               <span className="text-[10px] opacity-70">({item.ThresholdSource || "Global Setting"})</span>
                             </div>
@@ -1333,7 +1333,7 @@ function InventoryManagementPageInner({
                               {item.Status}
                             </span>
                           </td>
-                          <td className="px-4 py-3 text-center">
+                          <td className="px-4 py-3 text-center w-[100px] whitespace-nowrap">
                             <div className="flex items-center justify-center gap-2">
                               <button onClick={() => setSelectedBatch(item)} className="p-1.5 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-md transition-colors">
                                 <Eye className="h-4 w-4" />
@@ -1450,7 +1450,7 @@ function InventoryManagementPageInner({
                   <tr className="bg-secondary/40 text-muted-foreground text-xs uppercase tracking-wider border-b border-border">
                     <th className="px-4 py-3 font-semibold w-12 text-center">#</th>
                     <th className="px-4 py-3 font-semibold text-left">Date</th>
-                    <th className="px-4 py-3 font-semibold text-left">Medicine Name</th>
+                    <th className="px-4 py-3 font-semibold min-w-[250px] whitespace-nowrap text-left">Medicine Name</th>
                     <th className="px-4 py-3 font-semibold text-left">Batch No.</th>
                     <th className="px-4 py-3 font-semibold text-center">Type</th>
                     <th className="px-4 py-3 font-semibold text-center">Previous Qty</th>
@@ -1469,9 +1469,9 @@ function InventoryManagementPageInner({
                       <tr key={adj.AdjustmentId} className="hover:bg-secondary/10 transition-colors">
                         <td className="px-4 py-3 text-center font-medium text-muted-foreground">{(adjCurrentPage - 1) * adjPageSize + index + 1}</td>
                         <td className="px-4 py-3 text-muted-foreground whitespace-nowrap text-left">
-                          {format(new Date(adj.AdjustmentDate), "dd/MM/yyyy, hh:mm a")}
+                          {format(parseDateTime(adj.AdjustmentDate), "dd/MM/yyyy, hh:mm a")}
                         </td>
-                        <td className="px-4 py-3 font-semibold text-foreground text-left">{adj.MedicineName}</td>
+                        <td className="px-4 py-3 font-semibold text-foreground whitespace-nowrap min-w-[250px] text-left">{adj.MedicineName}</td>
                         <td className="px-4 py-3 font-mono text-xs text-left">{adj.BatchCode}</td>
                         <td className="px-4 py-3 text-center">
                           <span className={cn(
@@ -1603,7 +1603,7 @@ function InventoryManagementPageInner({
                   <thead className="sticky top-0 z-10 bg-white dark:bg-card text-left">
                     <tr className="bg-secondary/40 text-muted-foreground text-[11px] uppercase tracking-wider border-b border-border">
                       <th className="px-4 py-3 font-semibold w-12 text-center">#</th>
-                      <th className="px-4 py-3 font-semibold text-left">Medicine Name</th>
+                      <th className="px-4 py-3 font-semibold min-w-[250px] whitespace-nowrap text-left">Medicine Name</th>
                       <th className="px-4 py-3 font-semibold text-left">Batch No.</th>
                       <th className="px-4 py-3 font-semibold text-left">Supplier</th>
                       <th className="px-4 py-3 font-semibold text-center">Stock Remaining</th>
@@ -1611,7 +1611,7 @@ function InventoryManagementPageInner({
                       <th className="px-4 py-3 font-semibold text-center">Days Remaining</th>
                       <th className="px-4 py-3 font-semibold text-center">Value at Risk (Rs.)</th>
                       <th className="px-4 py-3 font-semibold text-center">Status</th>
-                      <th className="px-4 py-3 font-semibold text-center">Actions</th>
+                      <th className="px-4 py-3 font-semibold w-[120px] text-center">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border border-b border-border">
@@ -1626,7 +1626,7 @@ function InventoryManagementPageInner({
                           item.DaysToExpiry < 0 ? "bg-rose-50/30 dark:bg-rose-950/10" : ""
                         )}>
                           <td className="px-4 py-3 text-center font-medium text-muted-foreground">{(expiryPage - 1) * expiryPageSize + index + 1}</td>
-                          <td className="px-4 py-3 font-semibold text-foreground text-left">{item.MedicineName}</td>
+                          <td className="px-4 py-3 font-semibold text-foreground text-left whitespace-nowrap min-w-[250px]">{item.MedicineName}</td>
                           <td className="px-4 py-3 font-mono text-xs text-left">{item.BatchCode}</td>
                           <td className="px-4 py-3 text-muted-foreground truncate max-w-[150px] text-left" title={item.SupplierName}>{item.SupplierName}</td>
                           <td className="px-4 py-3 text-center font-bold text-foreground">{item.CurrentStock}</td>
@@ -1661,7 +1661,7 @@ function InventoryManagementPageInner({
                               </span>
                             </div>
                           </td>
-                          <td className="px-4 py-3 text-center">
+                          <td className="px-4 py-3 text-center w-[120px] whitespace-nowrap">
                             <div className="flex justify-center gap-2">
                               <Button 
                                 variant="outline" 
@@ -1831,7 +1831,7 @@ function InventoryManagementPageInner({
                     <tr className="bg-secondary/40 text-muted-foreground text-xs uppercase tracking-wider border-b border-border">
                       <th className="px-4 py-3 font-semibold w-12 text-center">#</th>
                       <th className="px-4 py-3 font-semibold whitespace-nowrap text-left">Date &amp; Time</th>
-                      <th className="px-4 py-3 font-semibold text-left">Medicine Name</th>
+                      <th className="px-4 py-3 font-semibold min-w-[250px] whitespace-nowrap text-left">Medicine Name</th>
                       <th className="px-4 py-3 font-semibold text-left">Batch No.</th>
                       <th className="px-4 py-3 font-semibold text-center">Movement Type</th>
                       <th className="px-4 py-3 font-semibold text-center">Qty Change</th>
@@ -1849,9 +1849,9 @@ function InventoryManagementPageInner({
                         <tr key={idx} className="hover:bg-secondary/10 transition-colors">
                           <td className="px-4 py-3 text-center font-medium text-muted-foreground">{(safePage - 1) * movPageSize + idx + 1}</td>
                           <td className="px-4 py-3 text-muted-foreground whitespace-nowrap text-xs text-left">
-                            {format(new Date(mov.Date), "dd/MM/yyyy, hh:mm a")}
+                            {format(parseDateTime(mov.Date), "dd/MM/yyyy, hh:mm a")}
                           </td>
-                          <td className="px-4 py-3 font-semibold text-foreground text-left">{mov.MedicineName}</td>
+                          <td className="px-4 py-3 font-semibold text-foreground whitespace-nowrap min-w-[250px] text-left">{mov.MedicineName}</td>
                           <td className="px-4 py-3 font-mono text-xs text-muted-foreground text-left">{mov.BatchCode}</td>
                           {/* Movement Type Badge */}
                           <td className="px-4 py-3 text-center">
@@ -1974,7 +1974,7 @@ function InventoryManagementPageInner({
                       <tr key={log.LogId} className="hover:bg-secondary/10 transition-colors">
                         <td className="px-4 py-3 text-muted-foreground text-left">#{log.LogId}</td>
                         <td className="px-4 py-3 text-muted-foreground whitespace-nowrap text-left">
-                          {new Date(log.Timestamp).toLocaleString('en-GB', { day:'2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute:'2-digit', second:'2-digit', hour12: true }).toUpperCase()}
+                          {parseDateTime(log.Timestamp).toLocaleString('en-GB', { day:'2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute:'2-digit', second:'2-digit', hour12: true }).toUpperCase()}
                         </td>
                         <td className="px-4 py-3 font-bold text-indigo-600 dark:text-indigo-400 text-left">{log.Action}</td>
                         <td className="px-4 py-3 text-foreground break-words max-w-md text-left">{log.Description}</td>
@@ -2493,7 +2493,7 @@ function InventoryManagementPageInner({
                     {previewDoc.type === "Purchase" && (
                       <>
                         <div><p className="text-xs text-muted-foreground">Supplier</p><p className="font-semibold text-sm">{previewData.SupplierName || "—"}</p></div>
-                        <div><p className="text-xs text-muted-foreground">Date</p><p className="font-semibold text-sm">{new Date(previewData.PurchaseDate).toLocaleDateString()}</p></div>
+                        <div><p className="text-xs text-muted-foreground">Date</p><p className="font-semibold text-sm">{parseDateTime(previewData.PurchaseDate).toLocaleDateString()}</p></div>
                         <div><p className="text-xs text-muted-foreground">Payment Status</p><p className="font-semibold text-sm">{previewData.PaymentStatus}</p></div>
                         <div><p className="text-xs text-muted-foreground">Grand Total</p><p className="font-semibold text-sm text-primary">{formatCurrency(previewData?.GrandTotal)}</p></div>
                       </>
@@ -2501,7 +2501,7 @@ function InventoryManagementPageInner({
                     {previewDoc.type === "POS Sale" && (
                       <>
                         <div><p className="text-xs text-muted-foreground">Customer</p><p className="font-semibold text-sm">{previewData.CustomerName || "Walk-in"}</p></div>
-                        <div><p className="text-xs text-muted-foreground">Date</p><p className="font-semibold text-sm">{new Date(previewData.TransactionDate).toLocaleDateString()}</p></div>
+                        <div><p className="text-xs text-muted-foreground">Date</p><p className="font-semibold text-sm">{parseDateTime(previewData.TransactionDate).toLocaleDateString()}</p></div>
                         <div><p className="text-xs text-muted-foreground">Payment Mode</p><p className="font-semibold text-sm">{previewData.PaymentMethod}</p></div>
                         <div><p className="text-xs text-muted-foreground">Grand Total</p><p className="font-semibold text-sm text-primary">{formatCurrency(previewData?.GrandTotal)}</p></div>
                       </>
@@ -2509,7 +2509,7 @@ function InventoryManagementPageInner({
                     {previewDoc.type === "Purchase Return" && (
                       <>
                         <div><p className="text-xs text-muted-foreground">Supplier</p><p className="font-semibold text-sm">{previewData.SupplierName || "—"}</p></div>
-                        <div><p className="text-xs text-muted-foreground">Date</p><p className="font-semibold text-sm">{new Date(previewData.ReturnDate).toLocaleDateString()}</p></div>
+                        <div><p className="text-xs text-muted-foreground">Date</p><p className="font-semibold text-sm">{parseDateTime(previewData.ReturnDate).toLocaleDateString()}</p></div>
                         <div><p className="text-xs text-muted-foreground">Original Invoice</p><p className="font-semibold text-sm">{previewData.OriginalInvoiceNumber || "—"}</p></div>
                         <div><p className="text-xs text-muted-foreground">Refund Total</p><p className="font-semibold text-sm text-rose-500">{formatCurrency(previewData.TotalRefundAmount)}</p></div>
                       </>

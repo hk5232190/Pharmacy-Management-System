@@ -271,23 +271,34 @@ export function useMasterCRUD<T extends object>(
   const handleFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    // Client-side validation: only allow CSV and Excel files
+    const fname = file.name.toLowerCase();
+    if (!fname.endsWith('.csv') && !fname.endsWith('.xlsx') && !fname.endsWith('.xls')) {
+      toast.error("Invalid file type. Please upload a CSV (.csv) or Excel (.xlsx / .xls) file.");
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+
     setIsImporting(true);
     try {
       const formData = new FormData();
       formData.append("file", file);
       const data = await apiClient.post(`/${endpoint}/import`, formData);
       if (data.success || data.data) {
-        toast.success(`Imported: ${data.data.imported_count}, Skipped: ${data.data.skipped_count}`);
-        if (data.data.errors?.length > 0) {
+        const imported = data.data?.imported_count ?? 0;
+        const skipped = data.data?.skipped_count ?? 0;
+        toast.success(`Import complete — ${imported} added, ${skipped} skipped.`);
+        if (data.data?.errors?.length > 0) {
           console.warn("Import errors:", data.data.errors);
-          toast.error(`There were ${data.data.errors.length} errors. Check console.`);
+          toast.warning(`${data.data.errors.length} row(s) had errors. Check browser console for details.`);
         }
         fetchItems();
       } else {
         toast.error(data.error || data.detail || data.message || "Failed to import");
       }
     } catch {
-      toast.error("Network error during import");
+      toast.error("Network error during import. Please try again.");
     } finally {
       setIsImporting(false);
       if (fileInputRef.current) fileInputRef.current.value = "";

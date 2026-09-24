@@ -12,7 +12,7 @@ from openpyxl.utils import get_column_letter
 import openpyxl
 from pydantic import ValidationError
 from decimal import Decimal, ROUND_HALF_UP, InvalidOperation
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from typing import Optional
 
 from models import Medicine, Category, Company, StockBatch, SaleItem, PurchaseItem, InventorySettings, StockAdjustment, AuditLog
@@ -101,6 +101,7 @@ def _commit_initial_stock_batches(
             PreviousQuantity=0,
             NewQuantity=batch.Quantity,
             Reason=f"INITIAL_STOCK:{reference_no}",
+            AdjustmentDate=datetime.now(timezone.utc),
         )
         db.add(adj)
 
