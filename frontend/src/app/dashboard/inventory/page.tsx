@@ -35,7 +35,6 @@ import { useProfile } from "@/contexts/ProfileContext";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { useSystemPreferences } from "@/contexts/SystemPreferencesContext";
-import { OpeningStockTab } from "@/components/opening-stock/opening-stock-tab";
 
 
 interface InventorySummary {
@@ -1059,7 +1058,6 @@ function InventoryManagementPageInner({
     { id: "adjustments", label: "Stock Adjustments" },
     { id: "history", label: "Stock Movement History" },
     { id: "expiry", label: "Expiry Tracking" },
-    { id: "opening_stock", label: "Opening Stock" },
   ];
 
   return (
@@ -1990,12 +1988,8 @@ function InventoryManagementPageInner({
           </div>
         )}
 
-        {activeTab === "opening_stock" && (
-          <OpeningStockTab />
-        )}
-
         {/* Placeholders for other tabs */}
-        {activeTab !== "current" && activeTab !== "adjustments" && activeTab !== "expiry" && activeTab !== "history" && activeTab !== "audit" && activeTab !== "opening_stock" && (
+        {activeTab !== "current" && activeTab !== "adjustments" && activeTab !== "expiry" && activeTab !== "history" && activeTab !== "audit" && (
           <div className="bg-white dark:bg-card rounded-xl border border-border shadow-sm p-16 text-center animate-in fade-in slide-in-from-bottom-2 duration-300">
             <h2 className="text-xl font-semibold text-foreground mb-2">Module Under Construction</h2>
             <p className="text-muted-foreground">The {tabs.find(t=>t.id===activeTab)?.label} section is coming soon.</p>

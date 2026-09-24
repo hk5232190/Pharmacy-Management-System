@@ -568,11 +568,14 @@ def get_stock_movements(
             for adj in q.all():
                 reason = adj.Reason or ""
                 # Classify movement type by Reason prefix — no duplicate rows
-                if reason.startswith("OPENING_STOCK:"):
-                    label = "Opening Stock"
+                if reason.startswith("INITIAL_STOCK:"):
+                    label = "Initial Stock"
+                    ref_val = f"Session: {reason.split(':', 1)[1].strip()}"
+                elif reason.startswith("OPENING_STOCK:"):
+                    label = "Opening Stock (Legacy)"
                     ref_val = f"Session: {reason.split(':', 1)[1].strip()}"
                 elif reason.startswith("VOID_OPENING_STOCK:"):
-                    label = "Opening Stock Void"
+                    label = "Opening Stock Void (Legacy)"
                     ref_val = f"Void: {reason.split(':', 1)[1].strip()}"
                 else:
                     label = "Stock Adjustment"

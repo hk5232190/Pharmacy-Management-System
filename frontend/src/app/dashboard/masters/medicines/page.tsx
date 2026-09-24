@@ -99,7 +99,7 @@ function InitialStockSection({ batches, onChange, isEditing }: InitialStockSecti
         </span>
         {isEditing && (
           <span className="text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 px-2 py-0.5 rounded-full">
-            Not available in Edit mode — use Opening Stock module to add stock
+            Not available in Edit mode — use Stock Adjustments or Purchases to add stock
           </span>
         )}
       </div>

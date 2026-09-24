@@ -15,10 +15,9 @@ from decimal import Decimal, ROUND_HALF_UP, InvalidOperation
 from datetime import date, datetime
 from typing import Optional
 
-from models import Medicine, Category, Company, StockBatch, SaleItem, PurchaseItem, InventorySettings, OpeningStockEntry, OpeningStockItem, StockAdjustment, AuditLog
+from models import Medicine, Category, Company, StockBatch, SaleItem, PurchaseItem, InventorySettings, StockAdjustment, AuditLog
 from schemas.medicine import MedicineCreate, MedicineUpdate, MedicineResponse, InitialStockBatch
 from schemas.base import BaseResponse
-from schemas.opening_stock import normalize_batch_code, compute_payload_hash, OpeningStockLineItem
 from api.deps import get_current_user, get_db
 from core.logger import logger
 
@@ -29,22 +28,12 @@ router = APIRouter(dependencies=[Depends(get_current_user)])
 # Internal helpers
 # ─────────────────────────────────────────────────────────────────────────────
 
-def _generate_initial_stock_reference(db: Session) -> str:
-    """Generate a unique IS-YYYYMMDD-NNN reference for initial stock sessions."""
-    today_str = datetime.utcnow().strftime("%Y%m%d")
-    prefix = f"IS-{today_str}-"
-    existing = (
-        db.query(OpeningStockEntry)
-        .filter(OpeningStockEntry.ReferenceNo.like(f"{prefix}%"))
-        .count()
-    )
-    seq = existing + 1
-    for _ in range(100):
-        candidate = f"{prefix}{seq:03d}"
-        if not db.query(OpeningStockEntry).filter(OpeningStockEntry.ReferenceNo == candidate).first():
-            return candidate
-        seq += 1
-    raise RuntimeError("Could not generate a unique reference number")
+def normalize_batch_code(code: str) -> str:
+    return code.strip().upper() if code else ""
+
+def _generate_initial_stock_reference() -> str:
+    """Generate a unique IS-YYYYMMDDHHMMSS reference for initial stock sessions."""
+    return f"INIT-STOCK-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}"
 
 
 def _commit_initial_stock_batches(
@@ -55,26 +44,10 @@ def _commit_initial_stock_batches(
     medicine_name: str,
 ) -> str:
     """
-    Atomically create StockBatch + OpeningStockEntry/Item + StockAdjustment records
-    for the given batches, reusing Opening Stock logic.
-
+    Atomically create StockBatch + StockAdjustment records
+    for the given batches.
     Returns the reference number of the created session.
-    Must be called inside an already-open transaction; caller handles commit/rollback.
     """
-    # Build canonical line items to generate the idempotency token
-    line_items = [
-        OpeningStockLineItem(
-            MedicineId=medicine_id,
-            BatchCode=b.BatchCode,
-            Quantity=b.Quantity,
-            CostPrice=b.CostPrice,
-            SellingPrice=b.SellingPrice,
-            ExpiryDate=b.ExpiryDate,
-            ManufacturingDate=b.ManufacturingDate,
-        )
-        for b in batches
-    ]
-
     # Duplicate batch code check within this request
     seen_codes: set = set()
     for batch in batches:
@@ -100,21 +73,8 @@ def _commit_initial_stock_batches(
                 detail=f"Batch '{code}' already exists for '{medicine_name}'."
             )
 
-    token = compute_payload_hash(line_items)
-    reference_no = _generate_initial_stock_reference(db)
+    reference_no = _generate_initial_stock_reference()
     total_value = sum(Decimal(str(b.Quantity)) * b.CostPrice for b in batches)
-
-    entry = OpeningStockEntry(
-        ReferenceNo=reference_no,
-        ImportHash=token,
-        Notes=f"Initial stock added with medicine '{medicine_name}'",
-        CreatedBy=user_id,
-        TotalItems=len(batches),
-        TotalValue=total_value,
-        Status="ACTIVE",
-    )
-    db.add(entry)
-    db.flush()  # get EntryId
 
     for batch in batches:
         code = normalize_batch_code(batch.BatchCode)
@@ -127,26 +87,12 @@ def _commit_initial_stock_batches(
             SellingPrice=batch.SellingPrice,
             ManufacturingDate=batch.ManufacturingDate,
             ExpiryDate=batch.ExpiryDate,
-            Source="OPENING_STOCK",
+            Source="INITIAL_STOCK",
         )
         db.add(new_batch)
         db.flush()  # get BatchId
 
-        os_item = OpeningStockItem(
-            EntryId=entry.EntryId,
-            BatchId=new_batch.BatchId,
-            MedicineId=medicine_id,
-            BatchCode=code,
-            Quantity=batch.Quantity,
-            CostPrice=batch.CostPrice,
-            SellingPrice=batch.SellingPrice,
-            ExpiryDate=batch.ExpiryDate,
-            ManufacturingDate=batch.ManufacturingDate,
-        )
-        db.add(os_item)
-
-        # Stock movement record — Reason prefix "OPENING_STOCK:" is recognized
-        # by get_stock_movements() as "Opening Stock" type, not "Stock Adjustment".
+        # Stock movement record
         adj = StockAdjustment(
             BatchId=new_batch.BatchId,
             UserId=user_id,
@@ -154,7 +100,7 @@ def _commit_initial_stock_batches(
             Quantity=batch.Quantity,
             PreviousQuantity=0,
             NewQuantity=batch.Quantity,
-            Reason=f"OPENING_STOCK:{reference_no}",
+            Reason=f"INITIAL_STOCK:{reference_no}",
         )
         db.add(adj)
 
