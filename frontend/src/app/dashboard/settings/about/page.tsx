@@ -288,48 +288,27 @@ export default function AboutPage() {
       </div>
 
       {/* ── Hero Banner ── */}
-      <div className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-primary/10 via-background to-secondary/30 p-8 flex items-center justify-between gap-6 flex-wrap">
-        {/* Decorative circles */}
-        <div className="absolute -top-10 -right-10 w-48 h-48 rounded-full bg-primary/5 blur-2xl pointer-events-none" />
-        <div className="absolute -bottom-10 -left-10 w-36 h-36 rounded-full bg-primary/5 blur-2xl pointer-events-none" />
+      <div className="relative overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-card p-6 md:p-8 flex items-center justify-between shadow-sm">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-indigo-500/10 via-transparent to-transparent opacity-50 pointer-events-none" />
 
         <div className="relative flex items-center gap-6">
           {/* App Icon */}
-          <div className="w-20 h-20 rounded-2xl bg-primary flex items-center justify-center shadow-lg shadow-primary/30 shrink-0">
-            <Package size={36} className="text-primary-foreground" />
+          <div className="w-20 h-20 rounded-[1.1rem] flex items-center justify-center shadow-lg shadow-indigo-500/20 shrink-0 overflow-hidden ring-1 ring-black/5 dark:ring-white/10">
+            <img src="/images/logo.jpg" alt="Pharmacy Logo" className="w-full h-full object-cover scale-[1.15]" />
           </div>
 
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 space-y-1.5">
             <div className="flex items-center gap-3 flex-wrap">
-              <h1 className="text-2xl font-black text-foreground">{app.software_name}</h1>
-              <span className="bg-primary/10 text-primary border border-primary/20 text-sm font-bold px-3 py-1 rounded-full">
+              <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">{app.software_name}</h1>
+              <span className="bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400 border border-indigo-200/50 dark:border-indigo-500/20 text-[11px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider">
                 {app.edition}
               </span>
             </div>
-            <p className="text-sm text-muted-foreground mt-1 font-medium">{app.framework}</p>
-            <div className="flex items-center gap-4 mt-3 flex-wrap">
-              <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                <Tag size={15} />
-                <span className="font-semibold text-foreground">V {app.version}</span>
-              </div>
-              <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                <Code2 size={15} />
-                <span>Build {app.build_number}</span>
-              </div>
-              <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                <Calendar size={15} />
-                <span>Released {new Date(app.release_date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}</span>
-              </div>
-              <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                <Database size={15} />
-                <span>{app.database_engine}</span>
-              </div>
-
-            </div>
+            <p className="text-slate-500 dark:text-slate-400 font-medium text-sm">
+              Version {app.version}
+            </p>
           </div>
         </div>
-        
-
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
