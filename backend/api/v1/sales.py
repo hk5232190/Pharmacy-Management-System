@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session, joinedload, selectinload
-from sqlalchemy import func, or_
+from sqlalchemy import func, or_, and_
 from typing import List, Optional
 from datetime import datetime, timezone
 import os
@@ -744,6 +744,8 @@ def get_sales_history(
     end_date: Optional[str] = Query(None),
     payment_method: Optional[str] = Query(None),
     payment_status: Optional[str] = Query(None, description="Paid | Due"),
+    status: Optional[str] = Query(None, description="All | Paid | Partial Return | Returned"),
+    return_status: Optional[str] = Query(None, description="Alias for status filter"),
     user_id: Optional[int] = Query(None),
     q: Optional[str] = Query(None),
     page: int = Query(1),
@@ -758,14 +760,14 @@ def get_sales_history(
             selectinload(Sale.items),
         )
         
-        if start_date:
+        if isinstance(start_date, str) and start_date:
             try:
                 sd = datetime.strptime(start_date, "%Y-%m-%d")
                 sd_utc = sd.astimezone().astimezone(timezone.utc).replace(tzinfo=None)
                 query = query.filter(Sale.TransactionDate >= sd_utc)
             except Exception as e:
                 pass
-        if end_date:
+        if isinstance(end_date, str) and end_date:
             try:
                 ed = datetime.strptime(end_date, "%Y-%m-%d").replace(hour=23, minute=59, second=59, microsecond=999999)
                 ed_utc = ed.astimezone().astimezone(timezone.utc).replace(tzinfo=None)
@@ -773,19 +775,54 @@ def get_sales_history(
             except Exception as e:
                 pass
                 
-        if payment_method:
+        if isinstance(payment_method, str) and payment_method:
             query = query.filter(Sale.PaymentMethod == payment_method)
 
-        if payment_status:
+        # Status Filter: All | Paid | Partial Return | Returned
+        # Logic:
+        # - Paid: sale has no returned items/amount
+        # - Partial Return: some amount/items returned, but not the full sale
+        # - Returned: complete sale returned
+        # - All: show everything
+        raw_status = status if isinstance(status, str) else (return_status if isinstance(return_status, str) else "")
+        selected_status = (raw_status or "").strip().lower()
+        if selected_status in ("paid",):
+            query = query.filter(
+                and_(
+                    or_(Sale.ReturnedAmount == 0, Sale.ReturnedAmount == None),
+                    ~Sale.Status.in_(["Returned", "Fully Refunded", "Partially Returned"]),
+                    ~Sale.SalesId.in_(db.query(SaleReturn.SalesId))
+                )
+            )
+        elif selected_status in ("partial return", "partial_return", "partial"):
+            query = query.filter(
+                or_(
+                    and_(
+                        Sale.ReturnedAmount > 0,
+                        Sale.ReturnedAmount < Sale.GrandTotal,
+                        ~Sale.Status.in_(["Returned", "Fully Refunded"])
+                    ),
+                    Sale.Status == "Partially Returned"
+                )
+            )
+        elif selected_status in ("returned", "fully refunded"):
+            query = query.filter(
+                or_(
+                    Sale.Status.in_(["Returned", "Fully Refunded"]),
+                    and_(Sale.ReturnedAmount >= Sale.GrandTotal, Sale.GrandTotal > 0),
+                    and_(Sale.NetAmount <= 0, Sale.ReturnedAmount > 0)
+                )
+            )
+        elif isinstance(payment_status, str) and payment_status:
             if payment_status.lower() == 'paid':
                 query = query.filter(Sale.PaidAmount >= Sale.GrandTotal)
             elif payment_status.lower() == 'due':
                 query = query.filter(Sale.GrandTotal > Sale.PaidAmount)
 
-        if user_id:
+        if isinstance(user_id, int):
             query = query.filter(Sale.UserId == user_id)
             
-        if q:
+        if isinstance(q, str) and q:
             search_term = f"%{q}%"
             query = query.outerjoin(Customer).filter(
                 or_(
@@ -797,8 +834,11 @@ def get_sales_history(
         query = query.order_by(Sale.TransactionDate.desc())
         total_count = query.count()
         
-        if page_size > 0:
-            sales = query.offset((page - 1) * page_size).limit(page_size).all()
+        actual_page = page if isinstance(page, int) and page > 0 else 1
+        actual_page_size = page_size if isinstance(page_size, int) else 15
+
+        if actual_page_size > 0:
+            sales = query.offset((actual_page - 1) * actual_page_size).limit(actual_page_size).all()
         else:
             sales = query.all()
         
@@ -849,8 +889,8 @@ def get_sales_history(
             "data": {
                 "items": results,
                 "total": total_count,
-                "page": page,
-                "page_size": page_size
+                "page": actual_page,
+                "page_size": actual_page_size
             }
         }
     except Exception as e:

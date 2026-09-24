@@ -25,7 +25,8 @@ import {
   Banknote,
   CircleDollarSign,
   RefreshCcw,
-  Check
+  Check,
+  X
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -208,7 +209,7 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
     return res.data;
   };
 
-  const [historyFilters, setHistoryFilters] = useState({ datePreset: "Today", startDate: "", endDate: "", paymentMethod: "", userId: "", q: "" });
+  const [historyFilters, setHistoryFilters] = useState({ datePreset: "Today", startDate: "", endDate: "", paymentMethod: "", userId: "", q: "", status: "all" });
   const [historyPage, setHistoryPage] = useState(1);
   const [historyPageSize, setHistoryPageSize] = useState(25);
 
@@ -247,6 +248,9 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
       }
     }
     
+    if (historyFilters.status && historyFilters.status !== "all") {
+      params.append("status", historyFilters.status);
+    }
     params.append("page", String(historyPage));
     params.append("page_size", String(historyPageSize));
     if (historyFilters.q) params.append("q", historyFilters.q);
@@ -2018,16 +2022,94 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
                   </div>
                 )}
               </div>
-              <div className="flex items-center gap-2 w-full md:w-auto">
+              <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
+                {/* Status Filter: All | Paid | Partial Return | Returned */}
+                <div className="inline-flex items-center bg-slate-100/90 dark:bg-slate-800/80 p-1 rounded-xl border border-slate-200/80 dark:border-slate-700/80 shadow-sm h-10">
+                  {[
+                    {
+                      value: "all",
+                      label: "All",
+                      dot: "bg-slate-400 dark:bg-slate-500",
+                      activeText: "text-slate-900 dark:text-slate-100",
+                      activeRing: "ring-slate-300 dark:ring-slate-600",
+                    },
+                    {
+                      value: "paid",
+                      label: "Paid",
+                      dot: "bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.4)]",
+                      activeText: "text-emerald-700 dark:text-emerald-400",
+                      activeRing: "ring-emerald-500/25",
+                    },
+                    {
+                      value: "partial_return",
+                      label: "Partial Return",
+                      dot: "bg-amber-500 shadow-[0_0_6px_rgba(245,158,11,0.4)]",
+                      activeText: "text-amber-700 dark:text-amber-400",
+                      activeRing: "ring-amber-500/25",
+                    },
+                    {
+                      value: "returned",
+                      label: "Returned",
+                      dot: "bg-rose-500 shadow-[0_0_6px_rgba(244,63,94,0.4)]",
+                      activeText: "text-rose-700 dark:text-rose-400",
+                      activeRing: "ring-rose-500/25",
+                    },
+                  ].map(opt => {
+                    const isActive = (historyFilters.status || "all") === opt.value;
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => {
+                          setHistoryFilters(prev => ({ ...prev, status: opt.value }));
+                          setHistoryPage(1);
+                        }}
+                        className={cn(
+                          "relative px-3 py-1.5 text-xs font-semibold rounded-lg transition-all duration-200 select-none flex items-center gap-1.5 whitespace-nowrap",
+                          isActive
+                            ? cn("bg-white dark:bg-slate-900 shadow-sm ring-1", opt.activeText, opt.activeRing)
+                            : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-white/50 dark:hover:bg-slate-700/50"
+                        )}
+                      >
+                        <span
+                          className={cn(
+                            "w-2 h-2 rounded-full shrink-0 transition-all duration-200",
+                            opt.dot,
+                            isActive ? "scale-110" : "opacity-60"
+                          )}
+                        />
+                        <span>{opt.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Search bar */}
                 <div className="relative flex-1 md:w-64">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                   <Input
                     placeholder="Search Invoice or Customer..."
-                    className="pl-9 h-9"
+                    className="pl-9 pr-8 h-10 bg-white dark:bg-slate-900/90 rounded-xl border-slate-200/80 dark:border-slate-700/80 shadow-sm text-xs placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-blue-500/20 transition-all"
                     value={historyFilters.q}
-                    onChange={e => setHistoryFilters({ ...historyFilters, q: e.target.value })}
+                    onChange={e => {
+                      setHistoryFilters(prev => ({ ...prev, q: e.target.value }));
+                      setHistoryPage(1);
+                    }}
                     onKeyDown={e => { if (e.key === 'Enter') { setHistoryPage(1); fetchHistory(); } }}
                   />
+                  {historyFilters.q && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setHistoryFilters(prev => ({ ...prev, q: "" }));
+                        setHistoryPage(1);
+                      }}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                      title="Clear search"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
