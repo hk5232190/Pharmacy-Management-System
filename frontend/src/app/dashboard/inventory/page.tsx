@@ -281,6 +281,7 @@ function InventoryManagementPageInner({
   const [isAdjustModalOpen, setIsAdjustModalOpen] = useState(false);
   const [adjustData, setAdjustData] = useState({ BatchId: 0, Type: "Increase", Quantity: "", Reason: "", Notes: "" });
   const [adjustBatchLabel, setAdjustBatchLabel] = useState("");
+  const [isAdjustingStock, setIsAdjustingStock] = useState(false);
 
   // Edit Stock Batch Modal state
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -588,6 +589,7 @@ function InventoryManagementPageInner({
 
 
   const handleStockAdjustment = async () => {
+    if (isAdjustingStock) return;
     if (!adjustData.BatchId || adjustData.BatchId <= 0) return triggerNotification('warning', 'AlertTriggerErrors', "Please select a valid batch from the list");
     if (!adjustData.Quantity || isNaN(Number(adjustData.Quantity)) || Number(adjustData.Quantity) <= 0) return triggerNotification('warning', 'AlertTriggerErrors', "Enter a valid quantity > 0");
     if (!adjustData.Reason) return triggerNotification('warning', 'AlertTriggerErrors', "Please select a justification reason");
@@ -599,6 +601,7 @@ function InventoryManagementPageInner({
 
     const finalReason = adjustData.Notes ? `[${adjustData.Reason}] ${adjustData.Notes}` : adjustData.Reason;
 
+    setIsAdjustingStock(true);
     try {
       const res = await apiClient.post("/inventory/adjust", {
         BatchId: adjustData.BatchId,
@@ -626,6 +629,8 @@ function InventoryManagementPageInner({
       }
     } catch (err: any) {
       triggerNotification('error', 'AlertTriggerErrors', err.response?.data?.detail || "An error occurred");
+    } finally {
+      setIsAdjustingStock(false);
     }
   };
 
@@ -2264,8 +2269,8 @@ function InventoryManagementPageInner({
             
             <div className="p-4 border-t border-border bg-slate-50/50 dark:bg-secondary/20 flex justify-end gap-3">
               <Button variant="outline" onClick={() => setIsAdjustModalOpen(false)}>Cancel</Button>
-              <Button onClick={handleStockAdjustment} className="bg-primary hover:bg-primary/90 text-white shadow-sm">
-                Confirm Adjustment
+              <Button onClick={handleStockAdjustment} disabled={isAdjustingStock} className="bg-primary hover:bg-primary/90 text-white shadow-sm">
+                {isAdjustingStock ? "Adjusting..." : "Confirm Adjustment"}
               </Button>
             </div>
           </div>

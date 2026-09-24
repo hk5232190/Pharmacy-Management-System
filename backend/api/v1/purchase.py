@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import desc, func
 from typing import List
 from datetime import datetime, date
+from decimal import Decimal
 
 from models import Purchase, PurchaseItem, StockBatch, Supplier, Medicine, PurchaseReturn
 from schemas.purchase import PurchaseCreate, PurchaseResponse, PurchaseSummaryResponse
@@ -53,6 +54,8 @@ def create_purchase(
             PurchaseDate=purchase_in.PurchaseDate
         )
         db.add(new_purchase)
+        if purchase_in.RemainingBalance and purchase_in.RemainingBalance > 0:
+            supplier.CurrentBalance = (supplier.CurrentBalance or Decimal("0")) + Decimal(str(purchase_in.RemainingBalance))
         db.flush() # To get PurchaseId
         
         # 3. Process Items and update Inventory (StockBatches)

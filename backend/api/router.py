@@ -60,7 +60,8 @@ def create_api_router(prefix: str) -> APIRouter:
         # ── Settings sub-features: gated by 'settings' permission ─────────────
         # Cashiers with Settings permission can use Backup/Restore & About.
         (backup.router,            "/backup",           ["Backup & Restore"],  "settings"),
-        (backup.exit_backup_router,"/backup",           ["Backup & Restore"],  "settings"),
+        # Exit auto-backup is triggered on logout/beforeunload by ANY authenticated user
+        (backup.exit_backup_router,"/backup",           ["Backup & Restore"],  None),
         (backup_settings.router,   "/backup-settings",  ["Backup Settings"],   "settings"),
         (about.router,             "/about",            ["About"],             "settings"),
 

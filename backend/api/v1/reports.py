@@ -118,7 +118,7 @@ def fetch_sales_report_data(
     completed_sales = base_query.options(
         joinedload(models.Sale.customer),
         selectinload(models.Sale.items),
-    ).filter(models.Sale.Status == 'Completed').all()
+    ).filter(~models.Sale.Status.in_(["Returned", "Fully Refunded", "Cancelled"])).all()
     # Returns from SaleReturn model
     returns_query = db.query(models.SaleReturn).filter(
         func.date(models.SaleReturn.ReturnDate, 'localtime') >= start_date,
@@ -991,7 +991,7 @@ def fetch_financial_report_data(
     completed_sales = db.query(models.Sale).options(selectinload(models.Sale.items)).filter(
         func.date(models.Sale.TransactionDate, 'localtime') >= start_date,
         func.date(models.Sale.TransactionDate, 'localtime') <= end_date,
-        models.Sale.Status == 'Completed'
+        ~models.Sale.Status.in_(["Returned", "Fully Refunded", "Cancelled"])
     ).all()
     
     returned_sales = db.query(models.SaleReturn).filter(

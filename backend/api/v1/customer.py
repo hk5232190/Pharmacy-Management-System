@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File, Response
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy import or_, func
+from sqlalchemy import or_, func, case, and_
 from typing import List
 import csv
 import io
@@ -13,6 +13,32 @@ from api.deps import get_current_user, get_db
 from core.logger import logger
 
 router = APIRouter()
+
+def compute_customer_balance_map(db: Session, customer_ids: list) -> dict:
+    if not customer_ids:
+        return {}
+    effective_due = case(
+        (Sale.Status.in_(["Returned", "Fully Refunded", "Cancelled"]), 0),
+        (
+            and_(Sale.ReturnedAmount > 0, Sale.NetAmount != None),
+            case((Sale.NetAmount > Sale.PaidAmount, Sale.NetAmount - Sale.PaidAmount), else_=0)
+        ),
+        else_=case((Sale.GrandTotal > Sale.PaidAmount, Sale.GrandTotal - Sale.PaidAmount), else_=0)
+    )
+    rows = (
+        db.query(Sale.CustomerId, func.sum(effective_due))
+        .filter(
+            Sale.CustomerId.in_(customer_ids),
+            ~Sale.Status.in_(["Returned", "Fully Refunded", "Cancelled"]),
+            or_(
+                and_(Sale.ReturnedAmount > 0, Sale.NetAmount > Sale.PaidAmount),
+                and_(or_(Sale.ReturnedAmount == 0, Sale.ReturnedAmount == None), Sale.GrandTotal > Sale.PaidAmount)
+            )
+        )
+        .group_by(Sale.CustomerId)
+        .all()
+    )
+    return {cid: round(float(bal or 0), 2) for cid, bal in rows}
 
 @router.get("", summary="Get all customers")
 def get_customers(
@@ -42,21 +68,9 @@ def get_customers(
     # Fetch all matching customers (balance filter requires post-query computation)
     all_customers = query.order_by(Customer.CustomerId).all()
 
-    # Compute live BalanceDue per customer: SUM(GrandTotal - PaidAmount) where GrandTotal > PaidAmount
+    # Compute live BalanceDue per customer with returns accounted for
     customer_ids = [c.CustomerId for c in all_customers]
-    balance_map: dict = {}
-    if customer_ids:
-        rows = (
-            db.query(Sale.CustomerId, func.sum(Sale.GrandTotal - Sale.PaidAmount))
-            .filter(
-                Sale.CustomerId.in_(customer_ids),
-                Sale.GrandTotal > Sale.PaidAmount
-            )
-            .group_by(Sale.CustomerId)
-            .all()
-        )
-        for cid, bal in rows:
-            balance_map[cid] = round(float(bal), 2)
+    balance_map = compute_customer_balance_map(db, customer_ids)
 
     # Apply balance_filter on computed values
     if balance_filter and balance_filter.lower() == 'due':
@@ -82,6 +96,7 @@ def get_customers(
             "LoyaltyPoints": c.LoyaltyPoints,
             "IsActive": c.IsActive,
             "BalanceDue": balance_map.get(c.CustomerId, 0.0),
+            "DueBalance": balance_map.get(c.CustomerId, 0.0),
         })
 
     return {"success": True, "data": result, "total": total, "page": page, "page_size": page_size}
@@ -163,16 +178,7 @@ def export_customers(db: Session = Depends(get_db), current_user = Depends(get_c
 
         # Compute live BalanceDue for all customers
         customer_ids = [c.CustomerId for c in customers]
-        balance_map: dict = {}
-        if customer_ids:
-            rows = (
-                db.query(Sale.CustomerId, func.sum(Sale.GrandTotal - Sale.PaidAmount))
-                .filter(Sale.CustomerId.in_(customer_ids), Sale.GrandTotal > Sale.PaidAmount)
-                .group_by(Sale.CustomerId)
-                .all()
-            )
-            for cid, bal in rows:
-                balance_map[cid] = round(float(bal), 2)
+        balance_map = compute_customer_balance_map(db, customer_ids)
 
         output = io.StringIO()
         writer = csv.writer(output)

@@ -207,6 +207,7 @@ from core.exceptions import ValidationError
 import datetime as dt
 from decimal import Decimal
 
+@router.post("", response_model=BaseResponse[dict], include_in_schema=False)
 @router.post("/", response_model=BaseResponse[dict], summary="Complete a sale")
 def complete_sale(
     sale_data: SaleCreate,
@@ -692,21 +693,21 @@ def get_sales_kpi(
         todays_sales = db.query(func.sum(Sale.NetAmount)).filter(
             Sale.TransactionDate >= start_utc,
             Sale.TransactionDate <= end_utc,
-            Sale.Status == "Completed"
+            ~Sale.Status.in_(["Returned", "Fully Refunded", "Cancelled"])
         ).scalar() or 0.0
         
         # Total Revenue (Today's PaidAmount)
         total_revenue = db.query(func.sum(Sale.PaidAmount)).filter(
             Sale.TransactionDate >= start_utc,
             Sale.TransactionDate <= end_utc,
-            Sale.Status == "Completed"
+            ~Sale.Status.in_(["Returned", "Fully Refunded", "Cancelled"])
         ).scalar() or 0.0
         
         # Total Invoices Today
         total_invoices = db.query(func.count(Sale.SalesId)).filter(
             Sale.TransactionDate >= start_utc,
             Sale.TransactionDate <= end_utc,
-            Sale.Status == "Completed"
+            ~Sale.Status.in_(["Returned", "Fully Refunded", "Cancelled"])
         ).scalar() or 0
         
         # Items Sold Today
@@ -715,13 +716,13 @@ def get_sales_kpi(
         ).filter(
             Sale.TransactionDate >= start_utc,
             Sale.TransactionDate <= end_utc,
-            Sale.Status == "Completed"
+            ~Sale.Status.in_(["Returned", "Fully Refunded", "Cancelled"])
         ).scalar() or 0
         
         # Pending Payments (All time)
         pending_payments = db.query(func.sum(Sale.GrandTotal - Sale.PaidAmount)).filter(
             Sale.GrandTotal > Sale.PaidAmount,
-            Sale.Status == "Completed"
+            ~Sale.Status.in_(["Returned", "Fully Refunded", "Cancelled"])
         ).scalar() or 0.0
         
         return {"success": True, "data": {
@@ -1095,7 +1096,7 @@ def process_sales_return(
         if return_data.RefundMode == "Balance" and sale.CustomerId:
             customer = db.query(Customer).filter(Customer.CustomerId == sale.CustomerId).with_for_update().first()
             if customer:
-                customer.DueBalance = float(customer.DueBalance or 0) + total_refund
+                customer.DueBalance = float(customer.DueBalance or 0) - total_refund
             else:
                 raise ValidationError("Customer not found for balance adjustment.")
         elif return_data.RefundMode == "Balance" and not sale.CustomerId:

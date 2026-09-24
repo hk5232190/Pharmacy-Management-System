@@ -177,6 +177,8 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
   const [returnInvNo, setReturnInvNo] = useState(`DN-${new Date().getFullYear().toString().slice(-2)}${Math.floor(1000 + Math.random() * 9000)}`);
   const [returnsCurrentPage, setReturnsCurrentPage] = useState(1);
   const [returnsPageSize, setReturnsPageSize] = useState(25);
+  const [isSavingPurchase, setIsSavingPurchase] = useState(false);
+  const [isSavingReturn, setIsSavingReturn] = useState(false);
 
   const fmt = (n: number) => formatNumber ? formatNumber(n) : n.toLocaleString('en-PK', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
@@ -336,6 +338,7 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
   };
 
   const handleSave = async (printAfterSave: boolean = false) => {
+    if (isSavingPurchase) return;
     if (!supplierId || supplierId === 0) return toast.error("Please select a supplier");
     if (items.length === 0) return toast.error("Please add at least one medicine to the invoice");
     
@@ -390,6 +393,7 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
       }))
     };
 
+    setIsSavingPurchase(true);
     try {
       const data = await apiClient.post("/purchases", payload);
       if (data.success) {
@@ -430,6 +434,8 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
       }
     } catch (e) {
       toast.error("Network error");
+    } finally {
+      setIsSavingPurchase(false);
     }
   };
 
@@ -473,6 +479,7 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
   };
 
   const handleSaveReturn = async () => {
+    if (isSavingReturn) return;
     if (!selectedReturnInvoice) return toast.error("Select an invoice to return items from.");
     const itemsToReturn = returnItems.filter(i => i.ReturnQty > 0);
     if (itemsToReturn.length === 0) return toast.error("No items selected to return.");
@@ -495,6 +502,7 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
       }))
     };
 
+    setIsSavingReturn(true);
     try {
       const data = await apiClient.post("/purchase-returns", payload);
       if (data.success) {
@@ -509,6 +517,8 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
       }
     } catch (e) {
       toast.error("Network error");
+    } finally {
+      setIsSavingReturn(false);
     }
   };
 
@@ -879,11 +889,11 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
 
                   {/* Action Buttons */}
                   <div className="mt-auto pt-3 border-t border-slate-700 grid grid-cols-2 gap-2">
-                    <Button onClick={() => handleSave(false)} className="bg-blue-600 hover:bg-blue-700 text-white font-semibold h-9 text-xs col-span-1">
-                      <Save className="h-3.5 w-3.5 mr-1.5" /> Save
+                    <Button onClick={() => handleSave(false)} disabled={isSavingPurchase} className="bg-blue-600 hover:bg-blue-700 text-white font-semibold h-9 text-xs col-span-1">
+                      <Save className="h-3.5 w-3.5 mr-1.5" /> {isSavingPurchase ? "Saving..." : "Save"}
                     </Button>
-                    <Button onClick={() => handleSave(true)} className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold h-9 text-xs col-span-1">
-                      <Printer className="h-3.5 w-3.5 mr-1.5" /> Save & Print
+                    <Button onClick={() => handleSave(true)} disabled={isSavingPurchase} className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold h-9 text-xs col-span-1">
+                      <Printer className="h-3.5 w-3.5 mr-1.5" /> {isSavingPurchase ? "Saving..." : "Save & Print"}
                     </Button>
                     <Button onClick={() => setShowDraftPreview(true)} variant="outline" className="h-9 text-xs border-slate-600 text-slate-300 hover:bg-slate-800 hover:text-white bg-transparent col-span-1">
                       <Eye className="h-3.5 w-3.5 mr-1.5" /> Preview
@@ -1583,8 +1593,8 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
                   </div>
                 </div>
                 
-                <Button onClick={handleSaveReturn} className="bg-rose-600 hover:bg-rose-700 text-white font-semibold shadow-sm w-full h-11" disabled={totalRefundDue <= 0}>
-                  <ArrowDownToLine className="h-4 w-4 mr-2" /> Process Return (Generate Debit Note)
+                <Button onClick={handleSaveReturn} className="bg-rose-600 hover:bg-rose-700 text-white font-semibold shadow-sm w-full h-11" disabled={isSavingReturn || totalRefundDue <= 0}>
+                  <ArrowDownToLine className="h-4 w-4 mr-2" /> {isSavingReturn ? "Processing Return..." : "Process Return (Generate Debit Note)"}
                 </Button>
               </div>
             )}

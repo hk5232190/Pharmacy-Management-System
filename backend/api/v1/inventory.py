@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func, desc, or_, text
 from typing import List, Optional
 from datetime import datetime, timedelta, date, timezone
@@ -138,16 +138,30 @@ def get_stock_list(
             
         results = query.order_by(desc(StockBatch.ReceivedDate)).limit(limit).all()
         
+        # Batch pre-fetch suppliers for all batches in results to avoid N+1 queries
+        batch_supplier_map = {}
+        if results:
+            med_ids = list({b.MedicineId for _, b, _, _ in results if b})
+            batch_codes = list({b.BatchCode for _, b, _, _ in results if b and b.BatchCode})
+            if med_ids and batch_codes:
+                purchase_items = (
+                    db.query(PurchaseItem.MedicineId, PurchaseItem.BatchCode, Supplier.Name)
+                    .join(Purchase, PurchaseItem.PurchaseId == Purchase.PurchaseId)
+                    .join(Supplier, Purchase.SupplierId == Supplier.SupplierId)
+                    .filter(PurchaseItem.MedicineId.in_(med_ids), PurchaseItem.BatchCode.in_(batch_codes))
+                    .order_by(desc(Purchase.PurchaseDate))
+                    .all()
+                )
+                for m_id, b_code, s_name in purchase_items:
+                    key = (m_id, b_code)
+                    if key not in batch_supplier_map:
+                        batch_supplier_map[key] = s_name
+
         formatted_data = []
         for med, batch, cat, comp in results:
-            
             supplier_name = "Unknown"
             if batch:
-                pi = db.query(PurchaseItem).join(Purchase, PurchaseItem.PurchaseId == Purchase.PurchaseId)\
-                    .filter(PurchaseItem.BatchCode == batch.BatchCode, PurchaseItem.MedicineId == batch.MedicineId)\
-                    .order_by(desc(Purchase.PurchaseDate)).first()
-                if pi and pi.purchase and pi.purchase.supplier:
-                    supplier_name = pi.purchase.supplier.Name
+                supplier_name = batch_supplier_map.get((batch.MedicineId, batch.BatchCode), "Unknown")
 
             # Determine Status
             current_stock = batch.Quantity if batch else 0
@@ -447,8 +461,13 @@ def get_expiry_tracking(
             "expiring_90d_value": kpi_values[90]
         }
         
-        # 2. Main Query for List
-        query = db.query(StockBatch).join(Medicine).filter(StockBatch.Quantity > 0)
+        # 2. Main Query for List (eager load medicine and category)
+        query = (
+            db.query(StockBatch)
+            .options(joinedload(StockBatch.medicine).joinedload(Medicine.category))
+            .join(Medicine)
+            .filter(StockBatch.Quantity > 0)
+        )
         
         if days == -1:
             query = query.filter(StockBatch.ExpiryDate < today)
@@ -464,26 +483,28 @@ def get_expiry_tracking(
         query = query.order_by(StockBatch.ExpiryDate)
         all_batches = query.all()
         
-        # 3. Post-query processing and Supplier lookup
+        # 3. Post-query processing and Supplier lookup (batch pre-fetched to avoid N+1 queries)
+        batch_supplier_map = {}
+        if all_batches:
+            med_ids = list({b.MedicineId for b in all_batches})
+            batch_codes = list({b.BatchCode for b in all_batches if b.BatchCode})
+            if med_ids and batch_codes:
+                purchase_items = (
+                    db.query(PurchaseItem.MedicineId, PurchaseItem.BatchCode, Supplier.Name)
+                    .join(Purchase, PurchaseItem.PurchaseId == Purchase.PurchaseId)
+                    .join(Supplier, Purchase.SupplierId == Supplier.SupplierId)
+                    .filter(PurchaseItem.MedicineId.in_(med_ids), PurchaseItem.BatchCode.in_(batch_codes))
+                    .order_by(desc(Purchase.PurchaseDate))
+                    .all()
+                )
+                for m_id, b_code, s_name in purchase_items:
+                    key = (m_id, b_code)
+                    if key not in batch_supplier_map:
+                        batch_supplier_map[key] = s_name
+
         formatted_data = []
         for batch in all_batches:
-            latest_pi = (
-                db.query(PurchaseItem)
-                .join(Purchase, PurchaseItem.PurchaseId == Purchase.PurchaseId)
-                .join(Supplier, Purchase.SupplierId == Supplier.SupplierId)
-                .filter(
-                    PurchaseItem.BatchCode == batch.BatchCode,
-                    PurchaseItem.MedicineId == batch.MedicineId
-                )
-                .order_by(desc(Purchase.PurchaseDate))
-                .first()
-            )
-            
-            supplier_val = (
-                latest_pi.purchase.supplier.Name
-                if latest_pi and latest_pi.purchase and latest_pi.purchase.supplier
-                else "N/A"
-            )
+            supplier_val = batch_supplier_map.get((batch.MedicineId, batch.BatchCode), "N/A")
             
             if supplier_name and supplier_name.lower() not in supplier_val.lower():
                 continue
@@ -544,7 +565,13 @@ def get_stock_movements(
 
         # 1. Purchases
         if not movement_type or movement_type == "Purchase":
-            q = db.query(PurchaseItem, Purchase).join(Purchase, PurchaseItem.PurchaseId == Purchase.PurchaseId).join(StockBatch, PurchaseItem.BatchCode == StockBatch.BatchCode, isouter=True).join(Medicine, PurchaseItem.MedicineId == Medicine.MedicineId)
+            q = (
+                db.query(PurchaseItem, Purchase)
+                .options(joinedload(PurchaseItem.medicine))
+                .join(Purchase, PurchaseItem.PurchaseId == Purchase.PurchaseId)
+                .join(StockBatch, PurchaseItem.BatchCode == StockBatch.BatchCode, isouter=True)
+                .join(Medicine, PurchaseItem.MedicineId == Medicine.MedicineId)
+            )
             if batch_code:
                 q = q.filter(PurchaseItem.BatchCode.ilike(f"%{batch_code}%"))
             if medicine_name:
@@ -564,15 +591,20 @@ def get_stock_movements(
                     "BatchCode": pi.BatchCode,
                     "Barcode": pi.medicine.Barcode if pi.medicine else None,
                     "MovementType": "Purchase",
-                    "QuantityChange": pi.Quantity,
+                    "QuantityChange": pi.Quantity + (pi.FreeQty or 0),
                     "Reference": ref_val,
                     "SourceId": pur.PurchaseId,
                 })
 
-        # 2. Adjustments (includes Opening Stock — classified by Reason prefix)
-        # movement_type filter accepts: "Stock Adjustment", "Opening Stock", "Opening Stock Void"
-        if not movement_type or movement_type in ("Stock Adjustment", "Opening Stock", "Opening Stock Void"):
-            q = db.query(StockAdjustment).join(StockBatch).join(Medicine, StockBatch.MedicineId == Medicine.MedicineId)
+        # 2. Adjustments (includes Opening Stock & Sale Returns — classified by Reason prefix)
+        # movement_type filter accepts: "Stock Adjustment", "Opening Stock", "Opening Stock Void", "Sale Return"
+        if not movement_type or movement_type in ("Stock Adjustment", "Opening Stock", "Opening Stock Void", "Sale Return"):
+            q = (
+                db.query(StockAdjustment)
+                .options(joinedload(StockAdjustment.batch).joinedload(StockBatch.medicine))
+                .join(StockBatch)
+                .join(Medicine, StockBatch.MedicineId == Medicine.MedicineId)
+            )
             if batch_code:
                 q = q.filter(StockBatch.BatchCode.ilike(f"%{batch_code}%"))
             if medicine_name:
@@ -594,6 +626,9 @@ def get_stock_movements(
                 elif reason.startswith("VOID_OPENING_STOCK:"):
                     label = "Opening Stock Void (Legacy)"
                     ref_val = f"Void: {reason.split(':', 1)[1].strip()}"
+                elif reason.startswith("Sale Return"):
+                    label = "Sale Return"
+                    ref_val = f"Return: {reason}"
                 else:
                     label = "Stock Adjustment"
                     ref_val = f"Reason: {reason}"
@@ -618,7 +653,13 @@ def get_stock_movements(
 
         # 3. Sales
         if not movement_type or movement_type == "POS Sale":
-            q = db.query(SaleItem, Sale).join(Sale, SaleItem.SalesId == Sale.SalesId).join(StockBatch, SaleItem.BatchId == StockBatch.BatchId).join(Medicine, StockBatch.MedicineId == Medicine.MedicineId)
+            q = (
+                db.query(SaleItem, Sale)
+                .options(joinedload(SaleItem.batch).joinedload(StockBatch.medicine))
+                .join(Sale, SaleItem.SalesId == Sale.SalesId)
+                .join(StockBatch, SaleItem.BatchId == StockBatch.BatchId)
+                .join(Medicine, StockBatch.MedicineId == Medicine.MedicineId)
+            )
             if batch_code:
                 q = q.filter(StockBatch.BatchCode.ilike(f"%{batch_code}%"))
             if medicine_name:
@@ -645,7 +686,12 @@ def get_stock_movements(
 
         # 4. Purchase Returns
         if not movement_type or movement_type == "Purchase Return":
-            q = db.query(PurchaseReturnItem, PurchaseReturn).join(PurchaseReturn, PurchaseReturnItem.ReturnId == PurchaseReturn.ReturnId).join(Medicine, PurchaseReturnItem.MedicineId == Medicine.MedicineId)
+            q = (
+                db.query(PurchaseReturnItem, PurchaseReturn)
+                .options(joinedload(PurchaseReturnItem.medicine))
+                .join(PurchaseReturn, PurchaseReturnItem.ReturnId == PurchaseReturn.ReturnId)
+                .join(Medicine, PurchaseReturnItem.MedicineId == Medicine.MedicineId)
+            )
             if batch_code:
                 q = q.filter(PurchaseReturnItem.BatchCode.ilike(f"%{batch_code}%"))
             if medicine_name:

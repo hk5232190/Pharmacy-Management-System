@@ -28,7 +28,7 @@ def get_dashboard_summary(
     today_sales = db.query(func.sum(models.Sale.NetAmount)).filter(
         func.date(models.Sale.TransactionDate, 'localtime') >= filter_start,
         func.date(models.Sale.TransactionDate, 'localtime') <= filter_end,
-        models.Sale.Status == "Completed"
+        ~models.Sale.Status.in_(["Returned", "Fully Refunded", "Cancelled"])
     ).scalar() or 0.0
 
     # Filtered Purchases
@@ -56,7 +56,7 @@ def get_dashboard_summary(
     ).filter(
         func.date(models.Sale.TransactionDate, 'localtime') >= filter_start,
         func.date(models.Sale.TransactionDate, 'localtime') <= filter_end,
-        models.Sale.Status == "Completed"
+        ~models.Sale.Status.in_(["Returned", "Fully Refunded", "Cancelled"])
     ).scalar() or 0.0
 
     today_profit = float(today_sales) - float(today_cogs)
@@ -129,7 +129,7 @@ def get_dashboard_summary(
 
     # --- Overall Financial Summary ---
     total_sales = db.query(func.sum(models.Sale.NetAmount)).filter(
-        models.Sale.Status == "Completed"
+        ~models.Sale.Status.in_(["Returned", "Fully Refunded", "Cancelled"])
     ).scalar() or 0.0
 
     total_purchases_gross = db.query(func.sum(models.Purchase.NetAmount)).scalar() or 0.0
@@ -145,7 +145,7 @@ def get_dashboard_summary(
     ).join(
         models.Sale, models.SaleItem.SalesId == models.Sale.SalesId
     ).filter(
-        models.Sale.Status == "Completed"
+        ~models.Sale.Status.in_(["Returned", "Fully Refunded", "Cancelled"])
     ).scalar() or 0.0
 
     net_profit = float(total_sales) - float(total_cogs)
@@ -245,7 +245,7 @@ def get_dashboard_charts(
     ).filter(
         func.date(models.Sale.TransactionDate, 'localtime') >= start_date,
         func.date(models.Sale.TransactionDate, 'localtime') <= end_date,
-        models.Sale.Status == "Completed"
+        ~models.Sale.Status.in_(["Returned", "Fully Refunded", "Cancelled"])
     ).group_by('period').all()
     for row in sales_results:
         if row.period in sales_dict:
@@ -276,7 +276,7 @@ def get_dashboard_charts(
     ).filter(
         func.date(models.Sale.TransactionDate, 'localtime') >= start_date,
         func.date(models.Sale.TransactionDate, 'localtime') <= end_date,
-        models.Sale.Status == "Completed"
+        ~models.Sale.Status.in_(["Returned", "Fully Refunded", "Cancelled"])
     ).group_by('period').all()
     
     # Calculate profit = sales - cogs per period
@@ -306,7 +306,7 @@ def get_dashboard_charts(
     ).filter(
         func.date(models.Sale.TransactionDate, 'localtime') >= start_date,
         func.date(models.Sale.TransactionDate, 'localtime') <= end_date,
-        models.Sale.Status == "Completed"
+        ~models.Sale.Status.in_(["Returned", "Fully Refunded", "Cancelled"])
     ).group_by(models.Medicine.BrandName).order_by(func.sum(models.SaleItem.Quantity).desc()).limit(10).all()
 
     top_medicines = [{"name": m.name, "quantity": int(m.quantity)} for m in top_meds]
@@ -327,7 +327,7 @@ def get_dashboard_charts(
     ).filter(
         func.date(models.Sale.TransactionDate, 'localtime') >= start_date,
         func.date(models.Sale.TransactionDate, 'localtime') <= end_date,
-        models.Sale.Status == "Completed"
+        ~models.Sale.Status.in_(["Returned", "Fully Refunded", "Cancelled"])
     ).group_by(func.coalesce(models.Category.CategoryName, 'Uncategorized')).all()
 
     sales_by_category = [{"category": str(c.category), "total_sales": float(c.total_sales or 0.0)} for c in cat_sales]
@@ -345,7 +345,7 @@ def get_dashboard_charts(
         func.sum(models.Sale.GrandTotal).label('total')
     ).filter(
         func.date(models.Sale.TransactionDate, 'localtime') >= twelve_months_ago,
-        models.Sale.Status == "Completed"
+        ~models.Sale.Status.in_(["Returned", "Fully Refunded", "Cancelled"])
     ).group_by('month').all()
     for row in m_sales:
         if row.month in monthly_sales_dict:
