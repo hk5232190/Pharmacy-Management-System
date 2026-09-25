@@ -118,14 +118,18 @@ def fetch_sales_report_data(
     completed_sales = base_query.options(
         joinedload(models.Sale.customer),
         selectinload(models.Sale.items),
-    ).filter(~models.Sale.Status.in_(["Returned", "Fully Refunded", "Cancelled"])).all()
+    ).filter(~models.Sale.Status.in_(["Cancelled"])).all()
     # Returns from SaleReturn model
     returns_query = db.query(models.SaleReturn).filter(
         func.date(models.SaleReturn.ReturnDate, 'localtime') >= start_date,
         func.date(models.SaleReturn.ReturnDate, 'localtime') <= end_date
     )
-    if customer_id and customer_id != "all":
-        returns_query = returns_query.join(models.Sale).filter(models.Sale.CustomerId == customer_id)
+    if (customer_id and customer_id != "all") or (payment_method and payment_method != "all"):
+        returns_query = returns_query.join(models.Sale, models.SaleReturn.SalesId == models.Sale.SalesId)
+        if customer_id and customer_id != "all":
+            returns_query = returns_query.filter(models.Sale.CustomerId == customer_id)
+        if payment_method and payment_method != "all":
+            returns_query = returns_query.filter(models.Sale.PaymentMethod == payment_method)
     
     returned_sales = returns_query.all()
     
@@ -141,7 +145,7 @@ def fetch_sales_report_data(
         .options(joinedload(models.StockBatch.medicine))
         .filter(models.StockBatch.BatchId.in_(all_batch_ids)).all()
     } if all_batch_ids else {}
-    total_cogs = 0
+    total_cogs = 0.0
     for sale in completed_sales:
         for item in sale.items:
             batch = batch_map.get(item.BatchId)
@@ -150,20 +154,21 @@ def fetch_sales_report_data(
 
     net_profit = net_sales - total_cogs
     profit_margin = (net_profit / net_sales * 100) if net_sales > 0 else 0.0
-    total_invoices = len(completed_sales)
+    active_sales = [s for s in completed_sales if s.Status != "Returned" and float(s.NetAmount or 0.0) > 0]
+    total_invoices = len(active_sales)
     average_sale = (net_sales / total_invoices) if total_invoices > 0 else 0.0
-    highest_sale = max([float(s.GrandTotal or 0.0) for s in completed_sales], default=0.0)
+    highest_sale = max([float(s.NetAmount or 0.0) for s in active_sales], default=0.0)
 
     summary = SalesReportSummary(
-        TotalGrossSales=total_gross_sales,
-        TotalReturns=total_returns,
-        NetSales=net_sales,
-        TotalCOGS=total_cogs,
-        NetProfit=net_profit,
-        ProfitMarginPercent=profit_margin,
+        TotalGrossSales=round(total_gross_sales, 2),
+        TotalReturns=round(total_returns, 2),
+        NetSales=round(net_sales, 2),
+        TotalCOGS=round(total_cogs, 2),
+        NetProfit=round(net_profit, 2),
+        ProfitMarginPercent=round(profit_margin, 2),
         TotalInvoices=total_invoices,
-        AverageSale=average_sale,
-        HighestSale=highest_sale
+        AverageSale=round(average_sale, 2),
+        HighestSale=round(highest_sale, 2)
     )
 
     transactions = []
@@ -173,17 +178,23 @@ def fetch_sales_report_data(
         tx_dt = s.TransactionDate
         if tx_dt and tx_dt.tzinfo is None:
             tx_dt = tx_dt.replace(tzinfo=timezone.utc)
+        sale_cogs = sum(
+            (i.Quantity - i.ReturnedQuantity) * float(batch_map[i.BatchId].CostPrice or 0.0)
+            for i in s.items if i.BatchId in batch_map
+        )
+        inv_profit = float(s.NetAmount or 0.0) - sale_cogs
         transactions.append(SalesTransaction(
             InvoiceNo=s.InvoiceNumber or str(s.SalesId),
             TransactionDate=tx_dt,
             CustomerName=customer_name,
             MedicinesSold=len(s.items),
             TotalQty=total_qty,
-            Discount=s.DiscountAmount,
-            Tax=s.TaxAmount,
+            Discount=float(s.DiscountAmount or 0.0),
+            Tax=float(s.TaxAmount or 0.0),
             GrandTotal=float(s.NetAmount or 0.0),
             PaymentMethod=s.PaymentMethod,
-            Status=s.Status
+            Status=s.Status,
+            Profit=round(inv_profit, 2)
         ))
 
     # Trend Data
@@ -220,29 +231,33 @@ def fetch_sales_report_data(
         s = trend_dict[d]["sales"]
         c = trend_dict[d]["cogs"]
         p = s - c
-        trend_data.append(SalesTrendPoint(label=d, sales=s, profit=p))
+        trend_data.append(SalesTrendPoint(label=d, sales=round(s, 2), profit=round(p, 2)))
 
     # Payment Methods
     pm_dict = {}
     for s in completed_sales:
         pm = s.PaymentMethod or 'Unknown'
-        pm_dict[pm] = pm_dict.get(pm, 0) + float(s.GrandTotal or 0.0)
-    payment_methods = [PaymentMethodStats(name=k, value=v) for k, v in pm_dict.items()]
+        pm_dict[pm] = pm_dict.get(pm, 0) + float(s.NetAmount or 0.0)
+    payment_methods = [PaymentMethodStats(name=k, value=round(v, 2)) for k, v in pm_dict.items() if v > 0]
 
-    # Top Medicines — reuse the already-fetched batch_map
+    # Top Medicines — reuse the already-fetched batch_map, accounting for returns
     med_dict = {}
     for s in completed_sales:
         for i in s.items:
+            net_qty = i.Quantity - i.ReturnedQuantity
+            if net_qty <= 0:
+                continue
             batch = batch_map.get(i.BatchId)
             if batch and batch.medicine:
                 name = batch.medicine.BrandName
                 if name not in med_dict:
                     med_dict[name] = {"qty": 0, "rev": 0.0}
-                med_dict[name]["qty"] += i.Quantity
-                med_dict[name]["rev"] += float(i.TotalPrice or 0.0)
+                med_dict[name]["qty"] += net_qty
+                item_unit_net = float(i.TotalPrice or 0.0) / i.Quantity if i.Quantity > 0 else float(i.UnitPrice or 0.0)
+                med_dict[name]["rev"] += (item_unit_net * net_qty)
 
     top_meds_sorted = sorted(med_dict.items(), key=lambda x: x[1]["rev"], reverse=True)[:5]
-    top_medicines = [TopMedicineStats(name=k, quantity=v["qty"], revenue=v["rev"]) for k, v in top_meds_sorted]
+    top_medicines = [TopMedicineStats(name=k, quantity=v["qty"], revenue=round(v["rev"], 2)) for k, v in top_meds_sorted]
 
     return SalesReportResponse(
         summary=summary,
@@ -1003,10 +1018,10 @@ def fetch_financial_report_data(
     end_date: date
 ):
     # 1. Sales Data (Revenue & Discounts & Returns & COGS)
-    completed_sales = db.query(models.Sale).options(selectinload(models.Sale.items)).filter(
+    all_sales = db.query(models.Sale).options(selectinload(models.Sale.items)).filter(
         func.date(models.Sale.TransactionDate, 'localtime') >= start_date,
         func.date(models.Sale.TransactionDate, 'localtime') <= end_date,
-        ~models.Sale.Status.in_(["Returned", "Fully Refunded", "Cancelled"])
+        ~models.Sale.Status.in_(["Cancelled"])
     ).all()
     
     returned_sales = db.query(models.SaleReturn).filter(
@@ -1014,13 +1029,17 @@ def fetch_financial_report_data(
         func.date(models.SaleReturn.ReturnDate, 'localtime') <= end_date
     ).all()
     
-    gross_sales = sum(float(s.SubTotal or 0.0) for s in completed_sales)
-    discounts_applied = sum(float(s.DiscountAmount or 0.0) for s in completed_sales)
+    # Discounts and returns
+    discounts_applied = sum(float(s.DiscountAmount or 0.0) for s in all_sales)
     sales_returns = sum(float(r.TotalRefundAmount or 0.0) for r in returned_sales)
+    # Gross sales revenue before discounts and returns:
+    # GrandTotal = SubTotal - DiscountAmount + TaxAmount => GrandTotal + DiscountAmount = Gross Invoiced Amount
+    gross_sales = sum(float(s.GrandTotal or 0.0) + float(s.DiscountAmount or 0.0) for s in all_sales)
     
+    # Total Revenue (Net): Gross Sales - Discounts - Returns == sum(s.NetAmount)
     total_revenue = gross_sales - discounts_applied - sales_returns
     
-    all_batch_ids = {item.BatchId for sale in completed_sales for item in sale.items}
+    all_batch_ids = {item.BatchId for sale in all_sales for item in sale.items}
     batch_costs = {
         batch_id: float(cost or 0.0)
         for batch_id, cost in db.query(models.StockBatch.BatchId, models.StockBatch.CostPrice)
@@ -1028,7 +1047,7 @@ def fetch_financial_report_data(
     } if all_batch_ids else {}
 
     total_cogs = 0.0
-    for sale in completed_sales:
+    for sale in all_sales:
         for item in sale.items:
             total_cogs += ((item.Quantity - item.ReturnedQuantity) * batch_costs.get(item.BatchId, 0.0))
                 
@@ -1043,34 +1062,34 @@ def fetch_financial_report_data(
     
     # 3. Profits
     gross_profit = total_revenue - total_cogs
-    total_expenses = 0.0  # Operating Expenses set to 0.0 for this phase as proposed
+    total_expenses = 0.0  # Operating Expenses
     net_profit = gross_profit - total_expenses - inventory_loss
     
     profit_margin = (net_profit / total_revenue * 100) if total_revenue > 0 else 0.0
     
     summary = FinancialReportSummary(
-        GrossSales=gross_sales,
-        DiscountsApplied=discounts_applied,
-        SalesReturns=sales_returns,
-        TotalRevenue=total_revenue,
-        TotalCOGS=total_cogs,
-        InventoryLoss=inventory_loss,
-        GrossProfit=gross_profit,
-        TotalExpenses=total_expenses,
-        NetProfit=net_profit,
-        ProfitMargin=profit_margin
+        GrossSales=round(gross_sales, 2),
+        DiscountsApplied=round(discounts_applied, 2),
+        SalesReturns=round(sales_returns, 2),
+        TotalRevenue=round(total_revenue, 2),
+        TotalCOGS=round(total_cogs, 2),
+        InventoryLoss=round(inventory_loss, 2),
+        GrossProfit=round(gross_profit, 2),
+        TotalExpenses=round(total_expenses, 2),
+        NetProfit=round(net_profit, 2),
+        ProfitMargin=round(profit_margin, 2)
     )
     
     income_breakdown = [
-        FinancialBreakdownItem(Category="Sales Revenue (Gross)", Amount=gross_sales)
+        FinancialBreakdownItem(Category="Sales Revenue (Gross)", Amount=round(gross_sales, 2))
     ]
     
     expense_breakdown = [
-        FinancialBreakdownItem(Category="Cost of Goods Sold", Amount=total_cogs),
-        FinancialBreakdownItem(Category="Discounts Applied", Amount=discounts_applied),
-        FinancialBreakdownItem(Category="Sales Returns / Refunds", Amount=sales_returns),
-        FinancialBreakdownItem(Category="Inventory Loss / Expiry Write-Off", Amount=inventory_loss),
-        FinancialBreakdownItem(Category="Operating Expenses", Amount=total_expenses)
+        FinancialBreakdownItem(Category="Cost of Goods Sold", Amount=round(total_cogs, 2)),
+        FinancialBreakdownItem(Category="Discounts Applied", Amount=round(discounts_applied, 2)),
+        FinancialBreakdownItem(Category="Sales Returns / Refunds", Amount=round(sales_returns, 2)),
+        FinancialBreakdownItem(Category="Inventory Loss / Expiry Write-Off", Amount=round(inventory_loss, 2)),
+        FinancialBreakdownItem(Category="Operating Expenses", Amount=round(total_expenses, 2))
     ]
     
     # 4. Trend Data
@@ -1088,40 +1107,27 @@ def fetch_financial_report_data(
     date_seq = generate_trend_sequence(start_date, end_date, interval)
     trend_dict = {d: {"revenue": 0.0, "expenses": 0.0} for d in date_seq}
 
-    # Add daily revenue
-    for s in completed_sales:
+    # Add daily net revenue and net COGS per sale
+    for s in all_sales:
         if s.TransactionDate:
             local_dt = s.TransactionDate.replace(tzinfo=timezone.utc).astimezone() if s.TransactionDate.tzinfo is None else s.TransactionDate.astimezone()
             period = local_dt.strftime(fmt)
         else:
             period = ""
         if period in trend_dict:
-            # Net revenue for the sale (SubTotal - Discount)
-            trend_dict[period]["revenue"] += (float(s.SubTotal or 0.0) - float(s.DiscountAmount or 0.0))
+            # Net revenue for the sale (NetAmount)
+            trend_dict[period]["revenue"] += float(s.NetAmount or 0.0)
             
-            # Add COGS to expenses for the sale
-            sale_cogs = sum(i.Quantity * batch_costs.get(i.BatchId, 0.0) for i in s.items)
+            # Net COGS for the sale
+            sale_cogs = sum((i.Quantity - i.ReturnedQuantity) * batch_costs.get(i.BatchId, 0.0) for i in s.items)
             trend_dict[period]["expenses"] += sale_cogs
-            
-    # Add daily returns to expenses (as a reduction of revenue)
-    for r in returned_sales:
-        if r.ReturnDate:
-            local_r_dt = r.ReturnDate.replace(tzinfo=timezone.utc).astimezone() if r.ReturnDate.tzinfo is None else r.ReturnDate.astimezone()
-            period = local_r_dt.strftime(fmt)
-        else:
-            period = ""
-        if period in trend_dict:
-            trend_dict[period]["expenses"] += float(r.TotalRefundAmount or 0.0)
 
-    # Note: Inventory loss is static (current active expired stock), so we distribute it evenly or just skip it in daily trend? 
-    # Skipping it in daily trend because it's a cumulative current loss, not realized on a specific day in this date range.
-            
     trend_data = []
     for d in date_seq:
         rev = trend_dict[d]["revenue"]
         exp = trend_dict[d]["expenses"]
         prof = rev - exp
-        trend_data.append(FinancialTrendPoint(label=d, revenue=rev, expenses=exp, profit=prof))
+        trend_data.append(FinancialTrendPoint(label=d, revenue=round(rev, 2), expenses=round(exp, 2), profit=round(prof, 2)))
         
     return FinancialReportResponse(
         summary=summary,

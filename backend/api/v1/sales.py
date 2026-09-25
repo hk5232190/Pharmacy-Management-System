@@ -700,7 +700,7 @@ def get_sales_kpi(
         todays_sales = db.query(func.sum(Sale.NetAmount)).filter(
             Sale.TransactionDate >= start_utc,
             Sale.TransactionDate <= end_utc,
-            ~Sale.Status.in_(["Returned", "Fully Refunded", "Cancelled"])
+            ~Sale.Status.in_(["Cancelled"])
         ).scalar() or 0.0
         
         # Total Revenue (Today's PaidAmount)
@@ -717,18 +717,25 @@ def get_sales_kpi(
             ~Sale.Status.in_(["Returned", "Fully Refunded", "Cancelled"])
         ).scalar() or 0
         
-        # Items Sold Today
-        items_sold = db.query(func.sum(SaleItem.Quantity)).join(
+        # Items Sold Today (Net of returns)
+        items_sold = db.query(func.sum(SaleItem.Quantity - SaleItem.ReturnedQuantity)).join(
             Sale, SaleItem.SalesId == Sale.SalesId
         ).filter(
             Sale.TransactionDate >= start_utc,
             Sale.TransactionDate <= end_utc,
-            ~Sale.Status.in_(["Returned", "Fully Refunded", "Cancelled"])
+            ~Sale.Status.in_(["Cancelled"])
         ).scalar() or 0
         
-        # Pending Payments (All time)
-        pending_payments = db.query(func.sum(Sale.GrandTotal - Sale.PaidAmount)).filter(
-            Sale.GrandTotal > Sale.PaidAmount,
+        # Pending Payments (All time, taking returns into account)
+        effective_pending = case(
+            (Sale.Status.in_(["Returned", "Fully Refunded", "Cancelled"]), 0),
+            (
+                and_(Sale.ReturnedAmount > 0, Sale.NetAmount != None),
+                case((Sale.NetAmount > Sale.PaidAmount, Sale.NetAmount - Sale.PaidAmount), else_=0)
+            ),
+            else_=case((Sale.GrandTotal > Sale.PaidAmount, Sale.GrandTotal - Sale.PaidAmount), else_=0)
+        )
+        pending_payments = db.query(func.sum(effective_pending)).filter(
             ~Sale.Status.in_(["Returned", "Fully Refunded", "Cancelled"])
         ).scalar() or 0.0
         

@@ -786,7 +786,15 @@ function ReportsPageInner({
                                   <td className="px-4 py-3 text-center font-medium text-emerald-600 tabular-nums">{formatCurrency(t.Profit || 0)}</td>
                                   <td className="px-4 py-3 text-center">{t.PaymentMethod}</td>
                                   <td className="px-4 py-3 text-center">
-                                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${t.Status === 'Completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
+                                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                      t.Status === 'Completed'
+                                        ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400'
+                                        : t.Status === 'Pending'
+                                        ? 'bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400'
+                                        : t.Status === 'Partially Returned'
+                                        ? 'bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400'
+                                        : 'bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400'
+                                    }`}>
                                       {t.Status}
                                     </span>
                                   </td>

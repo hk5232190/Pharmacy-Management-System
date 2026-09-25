@@ -14,6 +14,7 @@ class SalesTransaction(BaseModel):
     GrandTotal: float
     PaymentMethod: str
     Status: str
+    Profit: Optional[float] = 0.0
 
 class SalesTrendPoint(BaseModel):
     label: str
