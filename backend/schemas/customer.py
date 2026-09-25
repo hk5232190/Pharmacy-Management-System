@@ -24,3 +24,25 @@ class CustomerResponse(CustomerBase):
     CustomerId: int
 
     model_config = ConfigDict(from_attributes=True)
+
+class CustomerPaymentCreate(BaseModel):
+    Amount: float = Field(..., gt=0, description="Payment amount must be greater than zero")
+    PaymentMethod: str = Field("Cash", description="Payment method (Cash, Card, Bank Transfer, Online, Cheque)")
+    Notes: Optional[str] = None
+    PaymentDate: Optional[str] = None
+
+class CustomerPaymentResponse(BaseModel):
+    PaymentId: int
+    PaymentReceiptNumber: str
+    CustomerId: int
+    CustomerName: Optional[str] = None
+    Amount: float
+    PaymentMethod: str
+    PaymentDate: str
+    Notes: Optional[str] = None
+    InvoicesCovered: Optional[str] = None
+    CashierName: Optional[str] = None
+    RemainingBalanceDue: Optional[float] = None
+    IsFullyPaid: Optional[bool] = None
+
+    model_config = ConfigDict(from_attributes=True)

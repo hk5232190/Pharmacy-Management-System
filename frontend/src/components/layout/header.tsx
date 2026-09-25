@@ -2,7 +2,7 @@
 import { getApiBaseUrl } from "@/lib/api-client";
 
 import { ThemeToggle } from "@/components/ui/theme-toggle";
-import { Bell, Calendar, User, Search, X, LayoutDashboard, ShoppingCart, Package, TrendingUp, BarChart3, Settings, Pill, Grid2X2, Building2, Truck, Users, Database, Loader2 } from "lucide-react";
+import { Calendar, User, Loader2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,28 +11,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { useProfile } from "@/contexts/ProfileContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSystemPreferences } from "@/contexts/SystemPreferencesContext";
 import { NotificationDropdown } from "@/components/layout/notification-dropdown";
+import { GlobalSearch } from "@/components/layout/global-search";
 import { toast } from "sonner";
-import { triggerExitBackup } from "@/lib/exit-backup";
-
-const SEARCH_ITEMS = [
-  { title: "Dashboard", desc: "Overview & analytics", icon: LayoutDashboard, href: "/dashboard", category: "Modules", roles: ["admin"] },
-  { title: "Sales & POS Billing", desc: "Point of sale & billing", icon: TrendingUp, href: "/dashboard/sales", category: "Modules", roles: ["admin", "cashier"] },
-  { title: "Purchases", desc: "Purchase orders & invoices", icon: ShoppingCart, href: "/dashboard/purchases", category: "Modules", roles: ["admin"] },
-  { title: "Inventory", desc: "Stock & inventory tracking", icon: Package, href: "/dashboard/inventory", category: "Modules", roles: ["admin"] },
-  { title: "Medicines", desc: "Manage medicine catalog", icon: Pill, href: "/dashboard/masters/medicines", category: "Medicines", roles: ["admin"] },
-  { title: "Categories", desc: "Medicine categories", icon: Grid2X2, href: "/dashboard/masters/categories", category: "Medicines", roles: ["admin"] },
-  { title: "Companies", desc: "Pharmaceutical companies", icon: Building2, href: "/dashboard/masters/companies", category: "Medicines", roles: ["admin"] },
-  { title: "Suppliers", desc: "Manage suppliers", icon: Truck, href: "/dashboard/masters/suppliers", category: "Modules", roles: ["admin"] },
-  { title: "Customers", desc: "Customer records", icon: Users, href: "/dashboard/masters/customers", category: "Modules", roles: ["admin"] },
-  { title: "Reports", desc: "Analytics & export reports", icon: BarChart3, href: "/dashboard/reports", category: "Modules", roles: ["admin"] },
-  { title: "Backup & Restore", desc: "Database backup", icon: Database, href: "/dashboard/settings/backup-restore", category: "Modules", roles: ["admin"] },
-  { title: "Settings", desc: "System preferences", icon: Settings, href: "/dashboard/settings", category: "Modules", roles: ["admin"] },
-];
+import { triggerExitBackup, checkExitBackupStatus } from "@/lib/exit-backup";
 
 function getGreeting(): string {
   const hour = new Date().getHours();
@@ -59,79 +45,42 @@ export function Header() {
   const [currentDate, setCurrentDate] = useState("");
   const [currentDayName, setCurrentDayName] = useState("");
   const [greeting, setGreeting] = useState("");
-  const [query, setQuery] = useState("");
-  const [focused, setFocused] = useState(false);
-  const [activeIdx, setActiveIdx] = useState(0);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const updateTime = () => {
       const now = new Date();
       setGreeting(getGreeting());
       setCurrentDate(formatDate(now));
-      setCurrentDayName(now.toLocaleDateString('en-US', { weekday: 'long' }));
+      setCurrentDayName(now.toLocaleDateString("en-US", { weekday: "long" }));
     };
-    
+
     updateTime(); // Initial call
     const timer = setInterval(updateTime, 1000);
     return () => clearInterval(timer);
   }, [formatDate]);
-
-  const searchItems = SEARCH_ITEMS.filter(item => !item.roles || item.roles.includes(user.role));
-
-  const filtered = query.trim().length > 0
-    ? searchItems.filter(item =>
-        item.title.toLowerCase().includes(query.toLowerCase()) ||
-        item.desc.toLowerCase().includes(query.toLowerCase()) ||
-        item.category.toLowerCase().includes(query.toLowerCase())
-      )
-    : searchItems;
-
-  const navigate = useCallback((href: string) => {
-    router.push(href);
-    setQuery("");
-    setFocused(false);
-    inputRef.current?.blur();
-  }, [router]);
-
-  useEffect(() => { setActiveIdx(0); }, [query]);
-
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setFocused(false);
-      }
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "ArrowDown") { e.preventDefault(); setActiveIdx(i => Math.min(i + 1, filtered.length - 1)); }
-    if (e.key === "ArrowUp")   { e.preventDefault(); setActiveIdx(i => Math.max(i - 1, 0)); }
-    if (e.key === "Enter" && filtered[activeIdx]) { navigate(filtered[activeIdx].href); }
-    if (e.key === "Escape")    { setFocused(false); setQuery(""); }
-  };
 
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const handleLogout = async () => {
     if (isLoggingOut) return;
     const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
-    setIsLoggingOut(true);
 
     // Cashiers log out immediately; admins get the safety backup first
     if (user.role !== "cashier") {
-      const result = await triggerExitBackup(token ?? "");
+      const isBackupEnabled = await checkExitBackupStatus(token ?? "");
+      
+      if (isBackupEnabled) {
+        setIsLoggingOut(true);
+        const result = await triggerExitBackup(token ?? "");
 
-      if (!result.success && result.error) {
-        toast.error(`Backup failed before logout: ${result.error}`, {
-          duration: 5000,
-          description: "Your session will close, but the last backup may be incomplete. Check Backup History.",
-        });
-        // Give user 2 s to read the toast before navigating away
-        await new Promise((r) => setTimeout(r, 2000));
+        if (!result.success && result.error) {
+          toast.error(`Backup failed before logout: ${result.error}`, {
+            duration: 5000,
+            description: "Your session will close, but the last backup may be incomplete. Check Backup History.",
+          });
+          // Give user 2 s to read the toast before navigating away
+          await new Promise((r) => setTimeout(r, 2000));
+        }
       }
     }
 
@@ -141,173 +90,194 @@ export function Header() {
 
   return (
     <>
-    <header className="h-16 flex items-center justify-between px-6 bg-card border-b border-border shadow-sm shrink-0 z-40">
-      <div className="flex items-center gap-4 flex-1 min-w-0">
-        <div className="flex flex-col shrink-0">
-          <span className="font-bold text-[15px] text-foreground leading-tight">{greeting || "Welcome"}, {user.full_name || user.username || "Admin"}!</span>
-          <span className="text-[11px] text-muted-foreground font-medium">{profile.PharmacyName || "Pharmacy"}</span>
-        </div>
-        <div className="w-[1px] h-8 bg-border hidden sm:block shrink-0" />
-        <div ref={dropdownRef} className="relative w-full max-w-sm hidden sm:block">
-          <div className={`flex items-center gap-2.5 px-3 py-2 rounded-xl border transition-all duration-200 bg-background ${focused ? "border-primary ring-2 ring-primary/15 shadow-lg" : "border-border hover:border-primary/40 dark:hover:border-slate-500"}`}>
-            <Search className={`w-4 h-4 shrink-0 transition-colors duration-200 ${focused ? "text-primary" : "text-muted-foreground"}`} />
-            <input
-              ref={inputRef}
-              type="text"
-              placeholder="Search pages, medicines, reports..."
-              value={query}
-              onChange={e => setQuery(e.target.value)}
-              onFocus={() => setFocused(true)}
-              onKeyDown={handleKeyDown}
-              className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground/70 outline-none min-w-0"
-            />
-            {query ? (
-              <button onClick={() => { setQuery(""); inputRef.current?.focus(); }} className="text-muted-foreground hover:text-foreground transition-colors p-0.5 rounded">
-                <X className="w-3.5 h-3.5" />
-              </button>
-            ) : (
-              <kbd className="hidden lg:flex items-center text-[10px] text-muted-foreground/60 bg-muted px-1.5 py-0.5 rounded font-mono border border-border shrink-0 select-none">
-                /
-              </kbd>
-            )}
+      <header className="h-16 flex items-center justify-between px-6 bg-card border-b border-border shadow-sm shrink-0 z-40">
+        <div className="flex items-center gap-4 flex-1 min-w-0">
+          <div className="flex flex-col shrink-0">
+            <span className="font-bold text-[15px] text-foreground leading-tight">
+              {greeting || "Welcome"}, {user.full_name || user.username || "Admin"}!
+            </span>
+            <span className="text-[11px] text-muted-foreground font-medium">
+              {profile.PharmacyName || "Pharmacy"}
+            </span>
           </div>
-          {focused && (
-            <div className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-xl shadow-2xl z-50 overflow-hidden">
-              <div className="max-h-72 overflow-y-auto">
-                {filtered.length === 0 ? (
-                  <div className="px-4 py-8 text-center">
-                    <Search className="w-8 h-8 text-muted-foreground/40 mx-auto mb-2" />
-                    <p className="text-sm text-muted-foreground">No results found</p>
-                  </div>
-                ) : (
-                  ["Modules", "Medicines"].map(cat => {
-                    const items = filtered.filter(i => i.category === cat);
-                    if (items.length === 0) return null;
-                    return (
-                      <div key={cat}>
-                        <div className="px-3 pt-3 pb-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 select-none">{cat}</div>
-                        {items.map((item) => {
-                          const globalIdx = filtered.indexOf(item);
-                          const Icon = item.icon;
-                          const isActive = activeIdx === globalIdx;
-                          return (
-                            <button
-                              key={item.href}
-                              onClick={() => navigate(item.href)}
-                              onMouseEnter={() => setActiveIdx(globalIdx)}
-                              className={`w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors ${isActive ? "bg-primary/10" : "hover:bg-secondary"}`}
-                            >
-                              <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors ${isActive ? "bg-primary/20 text-primary" : "bg-secondary text-muted-foreground"}`}>
-                                <Icon className="w-4 h-4" />
-                              </div>
-                              <div className="flex flex-col min-w-0">
-                                <span className={`text-sm font-medium leading-tight ${isActive ? "text-primary" : "text-foreground"}`}>{item.title}</span>
-                                <span className="text-xs text-muted-foreground truncate">{item.desc}</span>
-                              </div>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-              <div className="px-3 py-2 border-t border-border flex items-center gap-3 text-[10px] text-muted-foreground/60 bg-muted/30 select-none">
-                <span><kbd className="bg-background border border-border rounded px-1 font-mono">↑↓</kbd> navigate</span>
-                <span><kbd className="bg-background border border-border rounded px-1 font-mono">↵</kbd> open</span>
-                <span><kbd className="bg-background border border-border rounded px-1 font-mono">Esc</kbd> close</span>
+
+          <div className="w-[1px] h-8 bg-border hidden sm:block shrink-0" />
+
+          {/* Redesigned Global Search */}
+          <GlobalSearch />
+        </div>
+
+        <div className="flex items-center gap-3 shrink-0">
+          {currentDate && (
+            <div className="hidden lg:flex items-center gap-3 text-sm text-muted-foreground bg-secondary/50 px-4 py-1.5 rounded-lg border border-border">
+              <Calendar className="w-5 h-5 text-primary/70" />
+              <div className="flex flex-col leading-tight">
+                <span className="font-bold text-foreground text-[13px]">{currentDate}</span>
+                <span className="text-[11px] font-medium">{currentDayName}</span>
               </div>
             </div>
           )}
-        </div>
-      </div>
-
-      <div className="flex items-center gap-3 shrink-0">
-        {currentDate && (
-          <div className="hidden lg:flex items-center gap-3 text-sm text-muted-foreground bg-secondary/50 px-4 py-1.5 rounded-lg border border-border">
-            <Calendar className="w-5 h-5 text-primary/70" />
-            <div className="flex flex-col leading-tight">
-              <span className="font-bold text-foreground text-[13px]">{currentDate}</span>
-              <span className="text-[11px] font-medium">{currentDayName}</span>
-            </div>
-          </div>
-        )}
-        <ThemeToggle />
-        <NotificationDropdown />
-        <div className="w-[1px] h-6 bg-border mx-0.5" />
-        <DropdownMenu>
-          <DropdownMenuTrigger className="flex items-center gap-2.5 hover:bg-secondary p-1.5 pr-3 rounded-full transition-colors outline-none focus:ring-2 focus:ring-primary/20">
-            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary border border-primary/20 overflow-hidden">
-              {user.profile_photo_path ? (
-                <img src={`${getApiBaseUrl().replace("/api/v1","")}${user.profile_photo_path}`} alt="Profile" className="w-full h-full object-cover" />
-              ) : (
-                <span className="text-xs font-bold tracking-wider">{getInitials(user.full_name || user.username || "")}</span>
+          <ThemeToggle />
+          <NotificationDropdown />
+          <div className="w-[1px] h-6 bg-border mx-0.5" />
+          <DropdownMenu>
+            <DropdownMenuTrigger className="flex items-center gap-2.5 hover:bg-secondary p-1.5 pr-3 rounded-full transition-colors outline-none focus:ring-2 focus:ring-primary/20">
+              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary border border-primary/20 overflow-hidden">
+                {user.profile_photo_path ? (
+                  <img
+                    src={`${getApiBaseUrl().replace("/api/v1", "")}${user.profile_photo_path}`}
+                    alt="Profile"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-xs font-bold tracking-wider">
+                    {getInitials(user.full_name || user.username || "")}
+                  </span>
+                )}
+              </div>
+              <div className="hidden md:flex items-center gap-1.5">
+                <span className="text-sm font-semibold text-foreground">
+                  {user.full_name || user.username || "Admin"}
+                </span>
+                <ChevronDownIcon className="w-4 h-4 text-muted-foreground" />
+              </div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56 mt-2">
+              {user.role !== "cashier" && (
+                <>
+                  <DropdownMenuItem
+                    onClick={() => router.push("/dashboard/settings/my-profile")}
+                    className="text-sm cursor-pointer py-2"
+                  >
+                    <User className="mr-2 w-4 h-4 text-slate-500" /> My Profile
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => router.push("/dashboard/settings/security")}
+                    className="text-sm cursor-pointer py-2"
+                  >
+                    <LockIcon className="mr-2 w-4 h-4 text-slate-500" /> Change Password
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => router.push("/dashboard/settings/about")}
+                    className="text-sm cursor-pointer py-2"
+                  >
+                    <InfoIcon className="mr-2 w-4 h-4 text-slate-500" /> About Software
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                </>
               )}
-            </div>
-            <div className="hidden md:flex items-center gap-1.5">
-              <span className="text-sm font-semibold text-foreground">{user.full_name || user.username || "Admin"}</span>
-              <ChevronDownIcon className="w-4 h-4 text-muted-foreground" />
-            </div>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56 mt-2">
-            {user.role !== "cashier" && (
-              <>
-                <DropdownMenuItem onClick={() => router.push("/dashboard/settings/my-profile")} className="text-sm cursor-pointer py-2">
-                  <User className="mr-2 w-4 h-4 text-slate-500" /> My Profile
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => router.push("/dashboard/settings/security")} className="text-sm cursor-pointer py-2">
-                  <LockIcon className="mr-2 w-4 h-4 text-slate-500" /> Change Password
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => router.push("/dashboard/settings/about")} className="text-sm cursor-pointer py-2">
-                  <InfoIcon className="mr-2 w-4 h-4 text-slate-500" /> About Software
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-              </>
-            )}
-            <DropdownMenuItem
-              onClick={handleLogout}
-              disabled={isLoggingOut}
-              className="text-sm cursor-pointer text-destructive focus:bg-destructive/10 focus:text-destructive py-2"
-            >
-              {isLoggingOut ? (
-                <Loader2 className="mr-2 w-4 h-4 animate-spin" />
-              ) : (
-                <LogOutIcon className="mr-2 w-4 h-4" />
-              )}
-              {isLoggingOut ? "Backing up..." : "Logout"}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-    </header>
+              <DropdownMenuItem
+                onClick={handleLogout}
+                disabled={isLoggingOut}
+                className="text-sm cursor-pointer text-destructive focus:bg-destructive/10 focus:text-destructive py-2"
+              >
+                {isLoggingOut ? (
+                  <Loader2 className="mr-2 w-4 h-4 animate-spin" />
+                ) : (
+                  <LogOutIcon className="mr-2 w-4 h-4" />
+                )}
+                {isLoggingOut ? "Backing up..." : "Logout"}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </header>
 
-    {/* Non-dismissible backup loading overlay */}
-    {isLoggingOut && (
-      <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-slate-950/75 backdrop-blur-sm">
-        <div className="bg-card border border-border rounded-2xl p-8 flex flex-col items-center gap-4 shadow-2xl max-w-sm w-full mx-4">
-          <div className="bg-blue-500/10 p-4 rounded-full">
-            <Loader2 className="h-10 w-10 text-blue-500 animate-spin" />
-          </div>
-          <div className="text-center">
-            <p className="text-foreground text-base font-bold">Creating Secure Backup</p>
-            <p className="text-muted-foreground text-sm mt-1">Please wait, do not close the application.</p>
+      {/* Non-dismissible backup loading overlay */}
+      {isLoggingOut && (
+        <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-slate-950/75 backdrop-blur-sm">
+          <div className="bg-card border border-border rounded-2xl p-8 flex flex-col items-center gap-4 shadow-2xl max-w-sm w-full mx-4">
+            <div className="bg-blue-500/10 p-4 rounded-full">
+              <Loader2 className="h-10 w-10 text-blue-500 animate-spin" />
+            </div>
+            <div className="text-center">
+              <p className="text-foreground text-base font-bold">Creating Secure Backup</p>
+              <p className="text-muted-foreground text-sm mt-1">Please wait, do not close the application.</p>
+            </div>
           </div>
         </div>
-      </div>
-    )}
+      )}
     </>
   );
 }
 
 function ChevronDownIcon(props: any) {
-  return (<svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>);
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="m6 9 6 6 6-6" />
+    </svg>
+  );
 }
+
 function LockIcon(props: any) {
-  return (<svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>);
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+    </svg>
+  );
 }
+
 function InfoIcon(props: any) {
-  return (<svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>);
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <circle cx="12" cy="12" r="10" />
+      <path d="M12 16v-4" />
+      <path d="M12 8h.01" />
+    </svg>
+  );
 }
+
 function LogOutIcon(props: any) {
-  return (<svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>);
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <polyline points="16 17 21 12 16 7" />
+      <line x1="21" x2="9" y1="12" y2="12" />
+    </svg>
+  );
 }

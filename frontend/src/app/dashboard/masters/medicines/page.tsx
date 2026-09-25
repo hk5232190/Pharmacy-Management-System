@@ -281,6 +281,13 @@ export default function MedicinesPage() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      const q = new URLSearchParams(window.location.search).get("search");
+      if (q) setSearch(q);
+    }
+  }, []);
+
+  useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search), 300);
     return () => clearTimeout(timer);
   }, [search]);

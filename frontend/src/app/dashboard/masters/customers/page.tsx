@@ -1,7 +1,10 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Search, Plus, Download, Upload, Eye, Edit, Trash2, AlertCircle, Users, CheckCircle2, Clock } from "lucide-react";
+import { 
+  Search, Plus, Download, Upload, Eye, Edit, Trash2, AlertCircle, 
+  Users, CheckCircle2, Clock, Banknote, Receipt, Calendar, DollarSign
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -26,6 +29,28 @@ interface Customer {
   BalanceDue: number;
 }
 
+interface CustomerPayment {
+  PaymentId: number;
+  PaymentReceiptNumber: string;
+  CustomerId: number;
+  CustomerName?: string;
+  Amount: number;
+  PaymentMethod: string;
+  PaymentDate: string;
+  Notes?: string;
+  InvoicesCovered?: string;
+  CashierName?: string;
+}
+
+interface PendingInvoice {
+  SalesId: number;
+  InvoiceNumber: string;
+  GrandTotal: number;
+  PaidAmount: number;
+  DueAmount: number;
+  TransactionDate: string;
+}
+
 const formatCurrency = (amount: number) => {
   if (!amount || amount === 0) return "Rs 0";
   return `Rs ${amount.toLocaleString("en-PK", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
@@ -37,6 +62,13 @@ export default function CustomersPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const q = new URLSearchParams(window.location.search).get("search");
+      if (q) setSearch(q);
+    }
+  }, []);
   const [filterStatus, setFilterStatus] = useState("all");
   const [balanceFilter, setBalanceFilter] = useState<BalanceFilter>("all");
   const [page, setPage] = useState(1);
@@ -50,6 +82,24 @@ export default function CustomersPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+
+  // Receive Payment Dialog state
+  const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
+  const [paymentCustomer, setPaymentCustomer] = useState<Customer | null>(null);
+  const [paymentAmount, setPaymentAmount] = useState<string>("");
+  const [paymentMethod, setPaymentMethod] = useState<string>("Cash");
+  const [paymentNote, setPaymentNote] = useState<string>("");
+  const [paymentDateStr, setPaymentDateStr] = useState<string>("");
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [customerDueDetails, setCustomerDueDetails] = useState<{
+    CurrentBalanceDue: number;
+    PendingInvoices: PendingInvoice[];
+  } | null>(null);
+  const [loadingDueDetails, setLoadingDueDetails] = useState(false);
+
+  // Customer Payment History state (for View Dialog)
+  const [customerPayments, setCustomerPayments] = useState<CustomerPayment[]>([]);
+  const [loadingPayments, setLoadingPayments] = useState(false);
 
   const [currentItem, setCurrentItem] = useState<Partial<Customer>>({ Name: "", Phone: "", Address: "", LoyaltyPoints: 0, IsActive: true });
   const [itemToDelete, setItemToDelete] = useState<Customer | null>(null);
@@ -75,8 +125,85 @@ export default function CustomersPage() {
 
   const openNewDialog = () => { setCurrentItem({ Name: "", Phone: "", Address: "", LoyaltyPoints: 0, IsActive: true }); setIsDialogOpen(true); };
   const openEditDialog = (c: Customer) => { setCurrentItem({ ...c }); setIsDialogOpen(true); };
-  const openViewDialog = (c: Customer) => { setCurrentItem({ ...c }); setIsViewDialogOpen(true); };
+  const openViewDialog = async (c: Customer) => {
+    setCurrentItem({ ...c });
+    setIsViewDialogOpen(true);
+    setCustomerPayments([]);
+    setLoadingPayments(true);
+    try {
+      const res = await apiClient.get<any>(`/customers/${c.CustomerId}/payments`);
+      if (res.success !== false) {
+        setCustomerPayments(res.data || []);
+      }
+    } catch {
+      setCustomerPayments([]);
+    } finally {
+      setLoadingPayments(false);
+    }
+  };
   const openDeleteDialog = (c: Customer) => { setItemToDelete(c); setIsDeleteDialogOpen(true); };
+
+  const openReceivePaymentDialog = async (c: Customer) => {
+    setPaymentCustomer(c);
+    setPaymentAmount(c.BalanceDue ? String(c.BalanceDue) : "");
+    setPaymentMethod("Cash");
+    setPaymentNote("");
+    setPaymentDateStr(new Date().toLocaleString("en-PK", {
+      dateStyle: "medium",
+      timeStyle: "short",
+    }));
+    setIsPaymentDialogOpen(true);
+    setLoadingDueDetails(true);
+    try {
+      const res = await apiClient.get<any>(`/customers/${c.CustomerId}/due-details`);
+      if (res.success && res.data) {
+        setCustomerDueDetails(res.data);
+        if (res.data.CurrentBalanceDue > 0) {
+          setPaymentAmount(String(res.data.CurrentBalanceDue));
+        }
+      }
+    } catch (err) {
+      console.error("Failed to load customer due details:", err);
+    } finally {
+      setLoadingDueDetails(false);
+    }
+  };
+
+  const handleReceivePayment = async () => {
+    if (!paymentCustomer) return;
+    const amountNum = parseFloat(paymentAmount);
+    const maxDue = customerDueDetails?.CurrentBalanceDue ?? paymentCustomer.BalanceDue;
+
+    if (isNaN(amountNum) || amountNum <= 0) {
+      return toast.error("Please enter a valid payment amount greater than 0");
+    }
+
+    if (amountNum > maxDue) {
+      return toast.error(`Payment amount (${formatCurrency(amountNum)}) cannot exceed current balance due (${formatCurrency(maxDue)})`);
+    }
+
+    setIsProcessingPayment(true);
+    try {
+      const payload = {
+        Amount: amountNum,
+        PaymentMethod: paymentMethod,
+        Notes: paymentNote.trim() || null,
+        PaymentDate: new Date().toISOString(),
+      };
+      const res = await apiClient.post<any>(`/customers/${paymentCustomer.CustomerId}/receive-payment`, payload);
+      if (res.success !== false) {
+        toast.success(res.message || `Payment of ${formatCurrency(amountNum)} received successfully!`);
+        setIsPaymentDialogOpen(false);
+        fetchCustomers();
+      } else {
+        toast.error(res.error || "Failed to process payment");
+      }
+    } catch (e: any) {
+      toast.error(e?.response?.data?.detail || e.message || "Failed to receive payment");
+    } finally {
+      setIsProcessingPayment(false);
+    }
+  };
 
   const handleSave = async () => {
     if (!currentItem.Name?.trim()) return toast.error("Customer name is required");
@@ -202,7 +329,7 @@ export default function CustomersPage() {
                 <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-36 text-center">Balance Due</TableHead>
                 <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-28 text-center">Loyalty</TableHead>
                 <TableHead className="font-semibold text-slate-700 dark:text-slate-300 w-24 text-center">Status</TableHead>
-                <TableHead className="font-semibold text-slate-700 dark:text-slate-300 text-center pr-6 w-28">Actions</TableHead>
+                <TableHead className="font-semibold text-slate-700 dark:text-slate-300 text-center pr-6 w-52">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -247,10 +374,30 @@ export default function CustomersPage() {
                       </button>
                     </TableCell>
                     <TableCell className="text-center pr-6 py-3">
-                      <div className="flex items-center justify-end gap-3 text-muted-foreground">
-                        <button onClick={() => openViewDialog(customer)} className="hover:text-primary transition-colors"><Eye className="h-4 w-4" /></button>
-                        <button onClick={() => openEditDialog(customer)} disabled={customer.CustomerId === 0} className={cn("hover:text-blue-500 transition-colors", customer.CustomerId === 0 && "opacity-30 cursor-not-allowed")}><Edit className="h-4 w-4" /></button>
-                        <button onClick={() => openDeleteDialog(customer)} disabled={customer.CustomerId === 0} className={cn("hover:text-rose-500 transition-colors", customer.CustomerId === 0 && "opacity-30 cursor-not-allowed")}><Trash2 className="h-4 w-4" /></button>
+                      <div className="flex items-center justify-end gap-2 text-muted-foreground">
+                        {customer.BalanceDue > 0 ? (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => openReceivePaymentDialog(customer)}
+                            className="h-8 px-2.5 text-xs font-semibold text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 flex items-center gap-1.5 transition-all shadow-xs"
+                            title="Receive Payment"
+                          >
+                            <Banknote className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                            <span>Receive Payment</span>
+                          </Button>
+                        ) : (
+                          <button
+                            onClick={() => openReceivePaymentDialog(customer)}
+                            title="Receive Payment (No dues)"
+                            className="p-1.5 text-muted-foreground/40 hover:text-emerald-600 transition-colors"
+                          >
+                            <Banknote className="h-4 w-4" />
+                          </button>
+                        )}
+                        <button onClick={() => openViewDialog(customer)} title="View Details" className="p-1 hover:text-primary transition-colors"><Eye className="h-4 w-4" /></button>
+                        <button onClick={() => openEditDialog(customer)} disabled={customer.CustomerId === 0} title="Edit Customer" className={cn("p-1 hover:text-blue-500 transition-colors", customer.CustomerId === 0 && "opacity-30 cursor-not-allowed")}><Edit className="h-4 w-4" /></button>
+                        <button onClick={() => openDeleteDialog(customer)} disabled={customer.CustomerId === 0} title="Delete Customer" className={cn("p-1 hover:text-rose-500 transition-colors", customer.CustomerId === 0 && "opacity-30 cursor-not-allowed")}><Trash2 className="h-4 w-4" /></button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -320,21 +467,222 @@ export default function CustomersPage() {
         </DialogContent>
       </Dialog>
 
+      {/* Receive Payment Dialog */}
+      <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
+        <DialogContent className="sm:max-w-[480px] p-0 overflow-hidden border-emerald-500/20">
+          <DialogHeader className="p-6 pb-4 bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-transparent border-b border-border">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-200 dark:border-emerald-800 shadow-xs">
+                <Banknote className="w-5 h-5" />
+              </div>
+              <div>
+                <DialogTitle className="text-lg font-bold text-foreground">Receive Payment</DialogTitle>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Record payment against customer outstanding balance
+                </p>
+              </div>
+            </div>
+          </DialogHeader>
+
+          <div className="p-6 space-y-4">
+            {/* Customer & Current Balance Due Card */}
+            <div className="bg-secondary/40 dark:bg-secondary/20 rounded-xl p-4 border border-border flex items-center justify-between gap-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded bg-background border border-border text-foreground">
+                    CUST-{paymentCustomer?.CustomerId?.toString().padStart(5, "0")}
+                  </span>
+                  <span className="text-xs text-muted-foreground">{paymentCustomer?.Phone || "No Phone"}</span>
+                </div>
+                <h4 className="text-base font-bold text-foreground">{paymentCustomer?.Name}</h4>
+              </div>
+              <div className="text-right">
+                <span className="text-[11px] font-semibold text-rose-600 dark:text-rose-400 uppercase tracking-wider block">
+                  Current Balance Due
+                </span>
+                <span className="text-xl font-extrabold text-rose-600 dark:text-rose-400">
+                  {formatCurrency(customerDueDetails?.CurrentBalanceDue ?? paymentCustomer?.BalanceDue ?? 0)}
+                </span>
+              </div>
+            </div>
+
+            {/* Pending Invoices List (if any) */}
+            {customerDueDetails?.PendingInvoices && customerDueDetails.PendingInvoices.length > 0 && (
+              <div className="rounded-lg border border-border/70 bg-background/50 p-2.5 text-xs space-y-1.5">
+                <span className="font-semibold text-muted-foreground block text-[11px] uppercase tracking-wide">
+                  Pending Invoices with Dues ({customerDueDetails.PendingInvoices.length})
+                </span>
+                <div className="max-h-24 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
+                  {customerDueDetails.PendingInvoices.map((inv) => (
+                    <div key={inv.SalesId} className="flex items-center justify-between text-xs py-1 px-2 rounded bg-secondary/30">
+                      <span className="font-mono font-medium text-foreground">{inv.InvoiceNumber}</span>
+                      <span className="text-muted-foreground text-[11px]">{inv.TransactionDate}</span>
+                      <span className="font-bold text-rose-600 dark:text-rose-400">Due: {formatCurrency(inv.DueAmount)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Payment Amount Input */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-semibold text-foreground flex items-center gap-1">
+                  Payment Amount <span className="text-rose-500">*</span>
+                </label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const due = customerDueDetails?.CurrentBalanceDue ?? paymentCustomer?.BalanceDue ?? 0;
+                    setPaymentAmount(String(due));
+                  }}
+                  className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline"
+                >
+                  Pay Full Amount ({formatCurrency(customerDueDetails?.CurrentBalanceDue ?? paymentCustomer?.BalanceDue ?? 0)})
+                </button>
+              </div>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-muted-foreground">
+                  Rs
+                </span>
+                <Input
+                  type="number"
+                  min="0"
+                  step="any"
+                  autoFocus
+                  placeholder="0.00"
+                  value={paymentAmount}
+                  onChange={(e) => setPaymentAmount(e.target.value)}
+                  className="pl-10 h-11 text-base font-bold text-foreground"
+                />
+              </div>
+
+              {/* Real-time remaining balance calculation */}
+              {(() => {
+                const due = customerDueDetails?.CurrentBalanceDue ?? paymentCustomer?.BalanceDue ?? 0;
+                const entered = parseFloat(paymentAmount) || 0;
+                const remaining = Math.max(0, due - entered);
+                const isOverpaying = entered > due;
+
+                if (isOverpaying) {
+                  return (
+                    <p className="text-xs font-semibold text-rose-600 dark:text-rose-400 flex items-center gap-1 mt-1">
+                      <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                      Payment cannot exceed current balance of {formatCurrency(due)}
+                    </p>
+                  );
+                }
+
+                if (entered > 0) {
+                  return (
+                    <div className="flex items-center justify-between text-xs px-2.5 py-1.5 rounded-md bg-secondary/40 text-muted-foreground mt-1.5">
+                      <span>Remaining Balance After Payment:</span>
+                      <span className={cn("font-bold", remaining === 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400")}>
+                        {formatCurrency(remaining)} {remaining === 0 && "✓ (Fully Paid)"}
+                      </span>
+                    </div>
+                  );
+                }
+                return null;
+              })()}
+            </div>
+
+            {/* Payment Method & Date/Time (Grid) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <label className="text-sm font-semibold text-foreground">Payment Method</label>
+                <select
+                  value={paymentMethod}
+                  onChange={(e) => setPaymentMethod(e.target.value)}
+                  className="w-full h-11 rounded-md border border-input bg-background px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  <option value="Cash">Cash</option>
+                  <option value="Card">Card</option>
+                  <option value="Bank Transfer">Bank Transfer</option>
+                  <option value="Online">Online / Wallet</option>
+                  <option value="Cheque">Cheque</option>
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-sm font-semibold text-foreground flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5 text-muted-foreground" />
+                  Date/Time <span className="text-[11px] font-normal text-muted-foreground">(Automatic)</span>
+                </label>
+                <div className="h-11 rounded-md border border-input bg-secondary/30 px-3 flex items-center text-xs font-medium text-foreground">
+                  {paymentDateStr}
+                </div>
+              </div>
+            </div>
+
+            {/* Note (optional) */}
+            <div className="space-y-1.5">
+              <label className="text-sm font-semibold text-foreground">
+                Note <span className="text-muted-foreground font-normal">(Optional)</span>
+              </label>
+              <Input
+                placeholder="e.g., Bank transaction ID, Cheque #, or remarks..."
+                value={paymentNote}
+                onChange={(e) => setPaymentNote(e.target.value)}
+                className="h-11"
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="p-4 bg-secondary/20 border-t border-border flex items-center justify-end gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setIsPaymentDialogOpen(false)}
+              disabled={isProcessingPayment}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleReceivePayment}
+              disabled={
+                isProcessingPayment ||
+                !paymentAmount ||
+                parseFloat(paymentAmount) <= 0 ||
+                parseFloat(paymentAmount) > (customerDueDetails?.CurrentBalanceDue ?? paymentCustomer?.BalanceDue ?? 0)
+              }
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold shadow-md shadow-emerald-600/20"
+            >
+              {isProcessingPayment ? "Processing..." : "Confirm & Receive Payment"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* View Dialog */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent className="sm:max-w-[440px]">
-          <DialogHeader><DialogTitle>Customer Details</DialogTitle></DialogHeader>
+        <DialogContent className="sm:max-w-[540px] max-h-[85vh] overflow-y-auto custom-scrollbar">
+          <DialogHeader><DialogTitle>Customer Details & History</DialogTitle></DialogHeader>
           <div className="space-y-4 py-2">
             {(currentItem as Customer).BalanceDue > 0 ? (
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800">
-                <AlertCircle className="h-5 w-5 text-rose-600 shrink-0" />
-                <div><p className="text-sm font-bold text-rose-700 dark:text-rose-400">Outstanding Balance</p>
-                  <p className="text-lg font-bold text-rose-600">{formatCurrency((currentItem as Customer).BalanceDue)}</p></div>
+              <div className="flex items-center justify-between gap-3 p-3 rounded-lg bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800">
+                <div className="flex items-center gap-3">
+                  <AlertCircle className="h-5 w-5 text-rose-600 shrink-0" />
+                  <div>
+                    <p className="text-sm font-bold text-rose-700 dark:text-rose-400">Outstanding Balance</p>
+                    <p className="text-lg font-bold text-rose-600">{formatCurrency((currentItem as Customer).BalanceDue)}</p>
+                  </div>
+                </div>
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    setIsViewDialogOpen(false);
+                    openReceivePaymentDialog(currentItem as Customer);
+                  }}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs h-8 px-3 shadow-xs"
+                >
+                  <Banknote className="h-3.5 w-3.5 mr-1" />
+                  Receive Payment
+                </Button>
               </div>
             ) : (
               <div className="flex items-center gap-3 p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800">
                 <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
-                <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">No outstanding balance ? fully paid</p>
+                <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">No outstanding balance — fully paid</p>
               </div>
             )}
             <div className="grid grid-cols-2 gap-4">
@@ -350,6 +698,51 @@ export default function CustomersPage() {
               <div className="space-y-1"><p className="text-sm font-medium text-muted-foreground">Address</p><p className="text-sm">{(currentItem as Customer).Address || "N/A"}</p></div>
             </div>
             <div className="space-y-1"><p className="text-sm font-medium text-muted-foreground">Loyalty Points</p><p className="text-sm font-semibold text-amber-600 dark:text-amber-400">{(currentItem as Customer).LoyaltyPoints} pts</p></div>
+
+            {/* Payment History Section */}
+            <div className="pt-3 border-t border-border space-y-2">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-bold text-foreground flex items-center gap-1.5">
+                  <Receipt className="w-4 h-4 text-emerald-600" />
+                  Payment History ({customerPayments.length})
+                </p>
+              </div>
+              {loadingPayments ? (
+                <div className="text-xs text-muted-foreground py-3 text-center">Loading payments...</div>
+              ) : customerPayments.length === 0 ? (
+                <div className="text-xs text-muted-foreground py-2.5 text-center bg-secondary/20 rounded-md">
+                  No payment records found.
+                </div>
+              ) : (
+                <div className="max-h-48 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
+                  {customerPayments.map((p) => (
+                    <div
+                      key={p.PaymentId}
+                      className="p-2.5 rounded-lg border border-border bg-secondary/20 hover:bg-secondary/40 transition-colors text-xs space-y-1"
+                    >
+                      <div className="flex items-center justify-between font-semibold">
+                        <span className="font-mono text-foreground text-[11px]">{p.PaymentReceiptNumber}</span>
+                        <span className="text-emerald-600 dark:text-emerald-400 font-bold">{formatCurrency(p.Amount)}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-muted-foreground text-[11px]">
+                        <span>{p.PaymentMethod} • By {p.CashierName || "Admin"}</span>
+                        <span>{p.PaymentDate}</span>
+                      </div>
+                      {p.InvoicesCovered && (
+                        <div className="text-[11px] text-muted-foreground/80 truncate" title={p.InvoicesCovered}>
+                          Invoices: {p.InvoicesCovered}
+                        </div>
+                      )}
+                      {p.Notes && (
+                        <div className="text-[11px] text-muted-foreground/90 italic truncate" title={p.Notes}>
+                          "{p.Notes}"
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
           <DialogFooter><Button onClick={() => setIsViewDialogOpen(false)}>Close</Button></DialogFooter>
         </DialogContent>

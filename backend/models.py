@@ -176,6 +176,7 @@ class Customer(Base):
     IsActive = Column(Boolean, default=True)
 
     sales = relationship("Sale", back_populates="customer")
+    payments = relationship("CustomerPayment", back_populates="customer")
 
 class Sale(Base):
     __tablename__ = "sales"
@@ -242,6 +243,24 @@ class AuditLog(Base):
     Timestamp = Column(DateTime, server_default=func.now())
 
     user = relationship("User", back_populates="audit_logs")
+ 
+class CustomerPayment(Base):
+    __tablename__ = "customer_payments"
+
+    PaymentId = Column(Integer, primary_key=True, autoincrement=True)
+    PaymentReceiptNumber = Column(String(50), unique=True, nullable=False, index=True)
+    CustomerId = Column(Integer, ForeignKey("customers.CustomerId"), nullable=False, index=True)
+    UserId = Column(Integer, ForeignKey("users.UserId"), nullable=False)
+    SalesId = Column(Integer, ForeignKey("sales.SalesId"), nullable=True)
+    Amount = Column(Numeric(18, 2), nullable=False)
+    PaymentMethod = Column(String(50), nullable=False, default="Cash")
+    PaymentDate = Column(DateTime, server_default=func.now(), nullable=False, index=True)
+    Notes = Column(Text, nullable=True)
+    InvoicesCovered = Column(Text, nullable=True)
+
+    customer = relationship("Customer", back_populates="payments")
+    user = relationship("User")
+    sale = relationship("Sale")
 
 class PurchaseReturn(Base):
     __tablename__ = "purchase_returns"
@@ -488,4 +507,12 @@ class Notification(Base):
     ActionUrl = Column(String(255), nullable=True) # Frontend URL to navigate on click
     IsRead = Column(Boolean, default=False, nullable=False, index=True)
     CreatedAt = Column(DateTime, server_default=func.now(), nullable=False, index=True)
+
+
+class DismissedNotification(Base):
+    __tablename__ = "dismissed_notifications"
+
+    Id = Column(Integer, primary_key=True, autoincrement=True)
+    EntityKey = Column(String(150), nullable=False, index=True, unique=True)
+    DismissedAt = Column(DateTime, server_default=func.now(), nullable=False)
 

@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { triggerExitBackup } from "@/lib/exit-backup";
+import { triggerExitBackup, checkExitBackupStatus } from "@/lib/exit-backup";
 
 interface NavItem {
   title: string;
@@ -110,19 +110,23 @@ export function Sidebar() {
   const handleLogout = async () => {
     if (isLoggingOut) return;
     const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
-    setIsLoggingOut(true);
 
     // Cashiers log out immediately; admins get the safety backup first
     if (user.role !== "cashier") {
-      const result = await triggerExitBackup(token ?? "");
+      const isBackupEnabled = await checkExitBackupStatus(token ?? "");
+      
+      if (isBackupEnabled) {
+        setIsLoggingOut(true);
+        const result = await triggerExitBackup(token ?? "");
 
-      if (!result.success && result.error) {
-        toast.error(`Backup failed before logout: ${result.error}`, {
-          duration: 5000,
-          description: "Your session will close, but the last backup may be incomplete. Check Backup History.",
-        });
-        // Give user 2 s to read the toast before navigating away
-        await new Promise((r) => setTimeout(r, 2000));
+        if (!result.success && result.error) {
+          toast.error(`Backup failed before logout: ${result.error}`, {
+            duration: 5000,
+            description: "Your session will close, but the last backup may be incomplete. Check Backup History.",
+          });
+          // Give user 2 s to read the toast before navigating away
+          await new Promise((r) => setTimeout(r, 2000));
+        }
       }
     }
 

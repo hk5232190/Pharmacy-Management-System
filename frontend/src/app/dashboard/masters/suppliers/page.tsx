@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { Search, Plus, Download, Upload, Eye, Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -80,6 +81,13 @@ export default function SuppliersPage() {
       return null;
     },
   });
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const q = new URLSearchParams(window.location.search).get("search");
+      if (q) setSearch(q);
+    }
+  }, [setSearch]);
 
   return (
     <div className="flex flex-col h-full bg-card">

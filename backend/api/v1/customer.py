@@ -1,18 +1,34 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File, Response
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import or_, func, case, and_
-from typing import List
+from typing import List, Optional
+from datetime import datetime, timezone
 import csv
 import io
+import uuid
 
-from models import Customer, Sale
-from schemas.customer import CustomerCreate, CustomerUpdate, CustomerResponse
+from models import Customer, Sale, CustomerPayment, AuditLog, User
+from schemas.customer import (
+    CustomerCreate, 
+    CustomerUpdate, 
+    CustomerResponse, 
+    CustomerPaymentCreate, 
+    CustomerPaymentResponse
+)
 from schemas.base import BaseResponse
 from api.deps import get_current_user, get_db
 from core.logger import logger
 
 router = APIRouter()
+
+def utc_to_local_str(dt_obj):
+    if not dt_obj:
+        return ""
+    try:
+        return dt_obj.replace(tzinfo=timezone.utc).astimezone().strftime('%d/%m/%Y, %I:%M %p')
+    except Exception:
+        return str(dt_obj)
 
 def compute_customer_balance_map(db: Session, customer_ids: list) -> dict:
     if not customer_ids:
@@ -39,6 +55,39 @@ def compute_customer_balance_map(db: Session, customer_ids: list) -> dict:
         .all()
     )
     return {cid: round(float(bal or 0), 2) for cid, bal in rows}
+
+def get_customer_due_details(db: Session, customer: Customer):
+    """
+    Returns:
+      due_sales: list of (Sale, target_total, due_amount) ordered FIFO (TransactionDate asc, SalesId asc)
+      total_due: float (real outstanding balance)
+    """
+    sales = (
+        db.query(Sale)
+        .filter(
+            Sale.CustomerId == customer.CustomerId,
+            ~Sale.Status.in_(["Returned", "Fully Refunded", "Cancelled"])
+        )
+        .order_by(Sale.TransactionDate.asc(), Sale.SalesId.asc())
+        .all()
+    )
+
+    due_sales = []
+    total_sales_due = 0.0
+
+    for s in sales:
+        target_amount = float(s.NetAmount) if (s.ReturnedAmount and s.ReturnedAmount > 0 and s.NetAmount is not None) else float(s.GrandTotal)
+        paid = float(s.PaidAmount or 0)
+        due = round(max(0.0, target_amount - paid), 2)
+        if due > 0.001:
+            due_sales.append((s, target_amount, due))
+            total_sales_due += due
+
+    total_sales_due = round(total_sales_due, 2)
+    recorded_due = round(float(customer.DueBalance or 0), 2)
+    real_due = max(total_sales_due, recorded_due)
+
+    return due_sales, real_due
 
 @router.get("", summary="Get all customers")
 def get_customers(
@@ -72,11 +121,17 @@ def get_customers(
     customer_ids = [c.CustomerId for c in all_customers]
     balance_map = compute_customer_balance_map(db, customer_ids)
 
+    def get_effective_balance(c):
+        bal = balance_map.get(c.CustomerId, 0.0)
+        if bal <= 0 and float(c.DueBalance or 0) > 0:
+            bal = round(float(c.DueBalance), 2)
+        return bal
+
     # Apply balance_filter on computed values
     if balance_filter and balance_filter.lower() == 'due':
-        all_customers = [c for c in all_customers if balance_map.get(c.CustomerId, 0.0) > 0]
+        all_customers = [c for c in all_customers if get_effective_balance(c) > 0]
     elif balance_filter and balance_filter.lower() == 'paid':
-        all_customers = [c for c in all_customers if balance_map.get(c.CustomerId, 0.0) <= 0]
+        all_customers = [c for c in all_customers if get_effective_balance(c) <= 0]
 
     total = len(all_customers)
 
@@ -88,6 +143,7 @@ def get_customers(
 
     result = []
     for c in paged:
+        bal = get_effective_balance(c)
         result.append({
             "CustomerId": c.CustomerId,
             "Name": c.Name,
@@ -95,8 +151,8 @@ def get_customers(
             "Address": c.Address,
             "LoyaltyPoints": c.LoyaltyPoints,
             "IsActive": c.IsActive,
-            "BalanceDue": balance_map.get(c.CustomerId, 0.0),
-            "DueBalance": balance_map.get(c.CustomerId, 0.0),
+            "BalanceDue": bal,
+            "DueBalance": bal,
         })
 
     return {"success": True, "data": result, "total": total, "page": page, "page_size": page_size}
@@ -190,6 +246,8 @@ def export_customers(db: Session = Depends(get_db), current_user = Depends(get_c
         for cust in customers:
             code = f"CUST-{str(cust.CustomerId).zfill(5)}"
             balance_due = balance_map.get(cust.CustomerId, 0.0)
+            if balance_due <= 0 and float(cust.DueBalance or 0) > 0:
+                balance_due = round(float(cust.DueBalance), 2)
             status = "Active" if cust.IsActive else "Inactive"
             writer.writerow([code, cust.Name, cust.Phone or "", cust.Address or "", balance_due, cust.LoyaltyPoints, status])
 
@@ -296,6 +354,231 @@ def import_customers(
         raise HTTPException(status_code=500, detail=f"Failed to import customers: {str(e)}")
 
 
+@router.get("/{customer_id}/due-details", summary="Get detailed due balance and pending invoices for a customer")
+def get_customer_due_details_endpoint(
+    customer_id: int,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    if customer_id == 0:
+        return {
+            "success": True,
+            "data": {
+                "CustomerId": 0,
+                "Name": "Walk-in Customer",
+                "CurrentBalanceDue": 0.0,
+                "PendingInvoices": []
+            }
+        }
+
+    customer = db.query(Customer).filter(Customer.CustomerId == customer_id).first()
+    if not customer:
+        raise HTTPException(status_code=404, detail="Customer not found")
+
+    due_sales, current_due = get_customer_due_details(db, customer)
+
+    pending_invoices = []
+    for s, target_total, due in due_sales:
+        pending_invoices.append({
+            "SalesId": s.SalesId,
+            "InvoiceNumber": s.InvoiceNumber,
+            "GrandTotal": target_total,
+            "PaidAmount": float(s.PaidAmount or 0),
+            "DueAmount": due,
+            "TransactionDate": utc_to_local_str(s.TransactionDate)
+        })
+
+    return {
+        "success": True,
+        "data": {
+            "CustomerId": customer.CustomerId,
+            "Name": customer.Name,
+            "CurrentBalanceDue": current_due,
+            "PendingInvoices": pending_invoices
+        }
+    }
+
+
+@router.post("/{customer_id}/receive-payment", response_model=BaseResponse[CustomerPaymentResponse], summary="Receive payment for customer outstanding balance")
+def receive_customer_payment(
+    customer_id: int,
+    payment_in: CustomerPaymentCreate,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    if customer_id == 0:
+        raise HTTPException(status_code=400, detail="Cannot receive balance payment for the default Walk-in Customer.")
+
+    customer = db.query(Customer).filter(Customer.CustomerId == customer_id).first()
+    if not customer:
+        raise HTTPException(status_code=404, detail="Customer not found")
+
+    due_sales, current_due = get_customer_due_details(db, customer)
+
+    if current_due <= 0:
+        raise HTTPException(status_code=400, detail=f"Customer {customer.Name} has no outstanding balance due.")
+
+    if payment_in.Amount <= 0:
+        raise HTTPException(status_code=400, detail="Payment amount must be greater than zero.")
+
+    if round(payment_in.Amount, 2) > round(current_due, 2):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Payment amount (Rs {payment_in.Amount:.2f}) cannot exceed current balance due (Rs {current_due:.2f})."
+        )
+
+    # Allocate payment to due sales in FIFO order
+    remaining_payment = round(payment_in.Amount, 2)
+    covered_invoices = []
+    primary_sales_id = None
+
+    for sale_obj, target_amount, sale_due in due_sales:
+        if remaining_payment <= 0.001:
+            break
+
+        allocated = min(remaining_payment, sale_due)
+        new_paid = round(float(sale_obj.PaidAmount or 0) + allocated, 2)
+        sale_obj.PaidAmount = new_paid
+
+        # If sale is now paid in full, update status to Completed
+        if new_paid >= target_amount - 0.001:
+            if sale_obj.Status == "Pending":
+                sale_obj.Status = "Completed"
+
+        covered_invoices.append(f"{sale_obj.InvoiceNumber} (Rs {allocated:.2f})")
+        if primary_sales_id is None:
+            primary_sales_id = sale_obj.SalesId
+
+        remaining_payment = round(remaining_payment - allocated, 2)
+
+    # Update customer DueBalance
+    new_balance = max(0.0, round(current_due - payment_in.Amount, 2))
+    customer.DueBalance = new_balance
+
+    # Generate sequential receipt number
+    now = datetime.now()
+    date_str = now.strftime('%Y%m')
+    payment_count = db.query(func.count(CustomerPayment.PaymentId)).scalar() or 0
+    receipt_no = f"PAY-{date_str}-{str(payment_count + 1).zfill(4)}"
+
+    # Check for collision
+    collision = db.query(CustomerPayment).filter(CustomerPayment.PaymentReceiptNumber == receipt_no).first()
+    if collision:
+        receipt_no = f"PAY-{date_str}-{uuid.uuid4().hex[:4].upper()}"
+
+    # Payment date
+    p_date = datetime.utcnow()
+    if payment_in.PaymentDate:
+        try:
+            cleaned_date = payment_in.PaymentDate.replace("Z", "+00:00")
+            p_date = datetime.fromisoformat(cleaned_date)
+            if p_date.tzinfo is not None:
+                p_date = p_date.astimezone(timezone.utc).replace(tzinfo=None)
+        except Exception:
+            p_date = datetime.utcnow()
+
+    # Create CustomerPayment record
+    invoices_str = ", ".join(covered_invoices) if covered_invoices else "Direct Balance Adjustment"
+    payment_record = CustomerPayment(
+        PaymentReceiptNumber=receipt_no,
+        CustomerId=customer.CustomerId,
+        UserId=current_user.UserId,
+        SalesId=primary_sales_id if len(covered_invoices) == 1 else None,
+        Amount=payment_in.Amount,
+        PaymentMethod=payment_in.PaymentMethod or "Cash",
+        PaymentDate=p_date,
+        Notes=payment_in.Notes,
+        InvoicesCovered=invoices_str
+    )
+    db.add(payment_record)
+    db.flush()
+
+    # Create AuditLog record
+    audit_desc = (
+        f"Received payment of Rs {payment_in.Amount:.2f} via {payment_in.PaymentMethod} "
+        f"from customer {customer.Name} (CUST-{customer.CustomerId:05d}). "
+        f"Receipt: {receipt_no}. Invoices: {invoices_str}. "
+        f"Previous Due: Rs {current_due:.2f}, New Due: Rs {new_balance:.2f}."
+    )
+    if payment_in.Notes:
+        audit_desc += f" Note: {payment_in.Notes}"
+
+    audit = AuditLog(
+        UserId=current_user.UserId,
+        Action="Customer Payment Received",
+        Description=audit_desc
+    )
+    db.add(audit)
+
+    db.commit()
+    db.refresh(payment_record)
+
+    logger.info(f"AUDIT: User {current_user.Username} received customer payment {receipt_no} of Rs {payment_in.Amount:.2f} from {customer.Name}.")
+
+    response_data = CustomerPaymentResponse(
+        PaymentId=payment_record.PaymentId,
+        PaymentReceiptNumber=payment_record.PaymentReceiptNumber,
+        CustomerId=customer.CustomerId,
+        CustomerName=customer.Name,
+        Amount=float(payment_record.Amount),
+        PaymentMethod=payment_record.PaymentMethod,
+        PaymentDate=utc_to_local_str(payment_record.PaymentDate),
+        Notes=payment_record.Notes,
+        InvoicesCovered=payment_record.InvoicesCovered,
+        CashierName=current_user.Username,
+        RemainingBalanceDue=new_balance,
+        IsFullyPaid=(new_balance <= 0)
+    )
+
+    return {
+        "success": True,
+        "data": response_data,
+        "message": f"Payment of Rs {payment_in.Amount:.2f} received successfully. Remaining due: Rs {new_balance:.2f}."
+    }
+
+
+@router.get("/{customer_id}/payments", response_model=BaseResponse[List[CustomerPaymentResponse]], summary="Get customer payment history")
+def get_customer_payment_history(
+    customer_id: int,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    if customer_id == 0:
+        return {"success": True, "data": []}
+
+    customer = db.query(Customer).filter(Customer.CustomerId == customer_id).first()
+    if not customer:
+        raise HTTPException(status_code=404, detail="Customer not found")
+
+    payments = (
+        db.query(CustomerPayment)
+        .options(joinedload(CustomerPayment.user))
+        .filter(CustomerPayment.CustomerId == customer_id)
+        .order_by(CustomerPayment.PaymentDate.desc())
+        .all()
+    )
+
+    results = []
+    for p in payments:
+        cashier = p.user.Username if p.user else "Admin"
+        results.append(CustomerPaymentResponse(
+            PaymentId=p.PaymentId,
+            PaymentReceiptNumber=p.PaymentReceiptNumber,
+            CustomerId=p.CustomerId,
+            CustomerName=customer.Name,
+            Amount=float(p.Amount),
+            PaymentMethod=p.PaymentMethod,
+            PaymentDate=utc_to_local_str(p.PaymentDate),
+            Notes=p.Notes,
+            InvoicesCovered=p.InvoicesCovered,
+            CashierName=cashier,
+            RemainingBalanceDue=None,
+            IsFullyPaid=None
+        ))
+
+    return {"success": True, "data": results}
+
+
 @router.delete("/{customer_id}", summary="Delete a customer")
 def delete_customer(
     customer_id: int,
@@ -325,6 +608,15 @@ def delete_customer(
                 status_code=400, 
                 detail=f"Cannot delete customer: {len(customer_sales)} sales invoices are linked to it."
             )
+
+    # Check for linked payments
+    customer_payments = db.query(CustomerPayment).filter(CustomerPayment.CustomerId == customer_id).all()
+    if customer_payments:
+        logger.warning(f"AUDIT: User {current_user.Username} attempted to delete customer {customer_id} ({customer.Name}) but was blocked. Reason: Payment records are linked to it.")
+        raise HTTPException(
+            status_code=400,
+            detail=f"Cannot delete customer: {len(customer_payments)} payment records are linked to it."
+        )
         
     try:
         customer_name = customer.Name

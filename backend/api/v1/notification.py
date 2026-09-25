@@ -4,7 +4,7 @@ from sqlalchemy import or_, desc
 from typing import Optional
 from datetime import datetime
 
-from models import Notification, AuditLog
+from models import Notification, AuditLog, DismissedNotification
 from schemas.notification import (
     NotificationResponse,
     NotificationListResponse,
@@ -165,44 +165,20 @@ def mark_all_as_read(
     return {"success": True, "count": updated_count, "message": f"{updated_count} notifications marked as read"}
 
 
-@router.delete("/{notification_id}", summary="Delete a notification with SRS Chapter 6 Audit Logging")
-def delete_notification(
-    notification_id: int,
-    db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
-):
-    notif = db.query(Notification).filter(Notification.NotificationId == notification_id).first()
-    if not notif:
-        raise HTTPException(status_code=404, detail="Notification not found")
-
-    notif_type = notif.Type
-    notif_title = notif.Title
-
-    db.delete(notif)
-
-    # ── SRS Chapter 6 (Module 10) Audit Logging ───────────────────────────────
-    audit_desc = f"Deleted notification #{notification_id} (Type: {notif_type}, Title: '{notif_title}')"
-    logger.info(f"AUDIT: User {current_user.Username} {audit_desc}.")
-
-    audit_entry = AuditLog(
-        UserId=current_user.UserId,
-        Action="NOTIFICATION_DELETE",
-        Description=audit_desc
-    )
-    db.add(audit_entry)
-
-    db.commit()
-    return {"success": True, "message": "Notification deleted successfully"}
-
-
 @router.delete("/clear-read", summary="Delete all read notifications with SRS Chapter 6 Audit Logging")
 def clear_read_notifications(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
-    read_count = db.query(Notification).filter(Notification.IsRead == True).count()
+    read_notifs = db.query(Notification).filter(Notification.IsRead == True).all()
+    read_count = len(read_notifs)
     if read_count > 0:
-        db.query(Notification).filter(Notification.IsRead == True).delete(synchronize_session=False)
+        for notif in read_notifs:
+            if notif.EntityKey:
+                existing = db.query(DismissedNotification).filter(DismissedNotification.EntityKey == notif.EntityKey).first()
+                if not existing:
+                    db.add(DismissedNotification(EntityKey=notif.EntityKey))
+            db.delete(notif)
 
         # ── SRS Chapter 6 (Module 10) Audit Logging ───────────────────────────
         audit_desc = f"Cleared {read_count} read notifications from Notification Center"
@@ -218,6 +194,72 @@ def clear_read_notifications(
         db.commit()
 
     return {"success": True, "cleared_count": read_count, "message": f"{read_count} read notifications cleared"}
+
+
+@router.delete("/clear-all", summary="Permanently delete all notifications")
+def clear_all_notifications(
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    all_notifs = db.query(Notification).all()
+    total_count = len(all_notifs)
+    if total_count > 0:
+        for notif in all_notifs:
+            if notif.EntityKey:
+                existing = db.query(DismissedNotification).filter(DismissedNotification.EntityKey == notif.EntityKey).first()
+                if not existing:
+                    db.add(DismissedNotification(EntityKey=notif.EntityKey))
+            db.delete(notif)
+
+        audit_desc = f"Cleared ALL {total_count} notifications from Notification Center"
+        logger.info(f"AUDIT: User {current_user.Username} {audit_desc}.")
+
+        audit_entry = AuditLog(
+            UserId=current_user.UserId,
+            Action="NOTIFICATION_CLEAR_ALL",
+            Description=audit_desc
+        )
+        db.add(audit_entry)
+
+        db.commit()
+
+    return {"success": True, "cleared_count": total_count, "message": f"{total_count} notifications permanently cleared"}
+
+
+@router.delete("/{notification_id}", summary="Delete a notification with SRS Chapter 6 Audit Logging")
+def delete_notification(
+    notification_id: int,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    notif = db.query(Notification).filter(Notification.NotificationId == notification_id).first()
+    if not notif:
+        raise HTTPException(status_code=404, detail="Notification not found")
+
+    notif_type = notif.Type
+    notif_title = notif.Title
+    entity_key = notif.EntityKey
+
+    db.delete(notif)
+    
+    if entity_key:
+        existing = db.query(DismissedNotification).filter(DismissedNotification.EntityKey == entity_key).first()
+        if not existing:
+            db.add(DismissedNotification(EntityKey=entity_key))
+
+    # ── SRS Chapter 6 (Module 10) Audit Logging ───────────────────────────────
+    audit_desc = f"Deleted notification #{notification_id} (Type: {notif_type}, Title: '{notif_title}')"
+    logger.info(f"AUDIT: User {current_user.Username} {audit_desc}.")
+
+    audit_entry = AuditLog(
+        UserId=current_user.UserId,
+        Action="NOTIFICATION_DELETE",
+        Description=audit_desc
+    )
+    db.add(audit_entry)
+
+    db.commit()
+    return {"success": True, "message": "Notification deleted successfully"}
 
 
 @router.post("/sync", summary="Trigger manual notification sync and 90-day cleanup")

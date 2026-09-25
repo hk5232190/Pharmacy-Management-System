@@ -10,7 +10,8 @@ from models import (
     StockBatch,
     InventorySettings,
     BackupHistory,
-    AuditLog
+    AuditLog,
+    DismissedNotification
 )
 from core.logger import logger
 
@@ -77,6 +78,11 @@ def sync_system_notifications(db: Session) -> dict:
             r[0] for r in db.query(Notification.EntityKey).filter(Notification.EntityKey.isnot(None)).all()
         }
 
+        # Keys that have been manually dismissed/deleted by the user
+        dismissed_keys = {
+            r[0] for r in db.query(DismissedNotification.EntityKey).all()
+        }
+
         # ── 3. Stock Conditions (Out of Stock & Low Stock) ─────────────────────
         # Aggregate active stock quantities per active medicine
         medicine_stocks = (
@@ -102,7 +108,7 @@ def sync_system_notifications(db: Session) -> dict:
                 entity_key = f"OUT_OF_STOCK:med:{med_id}"
                 active_condition_keys.add(entity_key)
 
-                if entity_key not in existing_keys:
+                if entity_key not in existing_keys and entity_key not in dismissed_keys:
                     new_notifications.append(
                         Notification(
                             Type="OUT_OF_STOCK",
@@ -120,7 +126,7 @@ def sync_system_notifications(db: Session) -> dict:
                 entity_key = f"LOW_STOCK:med:{med_id}"
                 active_condition_keys.add(entity_key)
 
-                if entity_key not in existing_keys:
+                if entity_key not in existing_keys and entity_key not in dismissed_keys:
                     new_notifications.append(
                         Notification(
                             Type="LOW_STOCK",
@@ -156,7 +162,7 @@ def sync_system_notifications(db: Session) -> dict:
                 entity_key = f"EXPIRED_MEDICINE:batch:{batch.BatchId}"
                 active_condition_keys.add(entity_key)
 
-                if entity_key not in existing_keys:
+                if entity_key not in existing_keys and entity_key not in dismissed_keys:
                     formatted_exp = batch_exp.strftime("%d %b %Y")
                     new_notifications.append(
                         Notification(
@@ -176,7 +182,7 @@ def sync_system_notifications(db: Session) -> dict:
                 entity_key = f"EXPIRING_SOON:batch:{batch.BatchId}"
                 active_condition_keys.add(entity_key)
 
-                if entity_key not in existing_keys:
+                if entity_key not in existing_keys and entity_key not in dismissed_keys:
                     days_left = (batch_exp - today).days
                     formatted_exp = batch_exp.strftime("%d %b %Y")
                     priority = "High" if days_left <= 30 else "Normal"
@@ -199,7 +205,7 @@ def sync_system_notifications(db: Session) -> dict:
             if not os.path.exists(ACTIVE_LICENSE_PATH):
                 lic_key = "LICENSE_ALERT:missing"
                 active_condition_keys.add(lic_key)
-                if lic_key not in existing_keys:
+                if lic_key not in existing_keys and lic_key not in dismissed_keys:
                     new_notifications.append(
                         Notification(
                             Type="LICENSE_ALERT",
@@ -231,7 +237,7 @@ def sync_system_notifications(db: Session) -> dict:
                         if days_left <= 0:
                             lic_key = "LICENSE_ALERT:expired"
                             active_condition_keys.add(lic_key)
-                            if lic_key not in existing_keys:
+                            if lic_key not in existing_keys and lic_key not in dismissed_keys:
                                 new_notifications.append(
                                     Notification(
                                         Type="LICENSE_ALERT",
@@ -248,7 +254,7 @@ def sync_system_notifications(db: Session) -> dict:
                         elif days_left <= 30:
                             lic_key = "LICENSE_ALERT:expiring_soon"
                             active_condition_keys.add(lic_key)
-                            if lic_key not in existing_keys:
+                            if lic_key not in existing_keys and lic_key not in dismissed_keys:
                                 priority = "Critical" if days_left <= 3 else "High" if days_left <= 7 else "Normal"
                                 new_notifications.append(
                                     Notification(
@@ -266,7 +272,7 @@ def sync_system_notifications(db: Session) -> dict:
                 except Exception as lic_err:
                     lic_key = "LICENSE_ALERT:invalid"
                     active_condition_keys.add(lic_key)
-                    if lic_key not in existing_keys:
+                    if lic_key not in existing_keys and lic_key not in dismissed_keys:
                         new_notifications.append(
                             Notification(
                                 Type="LICENSE_ALERT",
@@ -294,7 +300,7 @@ def sync_system_notifications(db: Session) -> dict:
             )
             for bkp in recent_backups:
                 bkp_key = f"BACKUP:{bkp.BackupId}"
-                if bkp_key not in existing_keys:
+                if bkp_key not in existing_keys and bkp_key not in dismissed_keys:
                     if bkp.Status == "Success":
                         new_notifications.append(
                             Notification(
@@ -357,6 +363,14 @@ def sync_system_notifications(db: Session) -> dict:
         if ghosts_to_remove:
             db.query(Notification).filter(Notification.NotificationId.in_(ghosts_to_remove)).delete(synchronize_session=False)
             stats["auto_resolved_ghosts"] = len(ghosts_to_remove)
+
+        # Also remove from DismissedNotification if the condition is no longer active
+        dismissed_ghosts = [
+            key for key in dismissed_keys
+            if key not in active_condition_keys
+        ]
+        if dismissed_ghosts:
+            db.query(DismissedNotification).filter(DismissedNotification.EntityKey.in_(dismissed_ghosts)).delete(synchronize_session=False)
 
         # ── 8. Commit Newly Detected Condition Notifications ──────────────────
         if new_notifications:

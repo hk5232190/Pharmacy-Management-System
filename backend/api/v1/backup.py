@@ -418,6 +418,16 @@ import time
 import anyio
 from datetime import timedelta
 
+@exit_backup_router.get("/backup-on-exit/status")
+def get_backup_on_exit_status(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Fast endpoint to check if we should show the backup UI during logout."""
+    settings = db.query(BackupSettings).first()
+    enabled = settings is not None and settings.IsAutoBackupEnabled and getattr(settings, 'BackupOnExit', True)
+    return {"enabled": enabled}
+
 @exit_backup_router.post("/backup-on-exit")
 def backup_on_exit(
     db: Session = Depends(get_db),

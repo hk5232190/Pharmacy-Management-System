@@ -6365,3 +6365,458 @@ NoneType: None
 2026-09-25 07:49:19,056 - pms - INFO - Completed startup system notifications synchronization.
 2026-09-25 07:49:49,861 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
 2026-09-25 07:55:30,271 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-25 08:01:06,859 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-25 08:02:51,253 - pms - INFO - AUDIT: User admin Deleted notification #143 (Type: LOW_STOCK, Title: 'Low Stock: Surbex-Z').
+2026-09-25 08:02:52,268 - pms - INFO - AUDIT: User admin Deleted notification #142 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Herbion Naturals Cough Syrup').
+2026-09-25 08:02:52,588 - pms - INFO - AUDIT: User admin Deleted notification #141 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Dowphage 1g').
+2026-09-25 08:02:52,894 - pms - INFO - AUDIT: User admin Deleted notification #139 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Gloxil Forte Suspension').
+2026-09-25 08:02:53,210 - pms - INFO - AUDIT: User admin Deleted notification #138 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Acemed 100mg').
+2026-09-25 08:02:53,521 - pms - INFO - AUDIT: User admin Deleted notification #137 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Duspatalin 135mg').
+2026-09-25 08:02:54,008 - pms - INFO - AUDIT: User admin Deleted notification #136 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Duphalac').
+2026-09-25 08:02:54,241 - pms - INFO - AUDIT: User admin Deleted notification #135 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Brufen 400mg').
+2026-09-25 08:02:54,526 - pms - INFO - AUDIT: User admin Deleted notification #133 (Type: LICENSE_ALERT, Title: 'Software License Expiring Soon').
+2026-09-25 08:02:54,734 - pms - INFO - AUDIT: User admin Deleted notification #125 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Gloxil Forte Suspension').
+2026-09-25 08:02:54,952 - pms - INFO - AUDIT: User admin Deleted notification #124 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Gloxil Suspension').
+2026-09-25 08:02:55,196 - pms - INFO - AUDIT: User admin Deleted notification #123 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Briltiga 90mg').
+2026-09-25 08:02:55,451 - pms - INFO - AUDIT: User admin Deleted notification #122 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Briltiga 60mg').
+2026-09-25 08:02:55,688 - pms - INFO - AUDIT: User admin Deleted notification #121 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Ecogrel 5mg').
+2026-09-25 08:02:55,949 - pms - INFO - AUDIT: User admin Deleted notification #118 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Canderel 16mg').
+2026-09-25 08:02:56,207 - pms - INFO - AUDIT: User admin Deleted notification #117 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Canderel 8mg').
+2026-09-25 08:02:56,461 - pms - INFO - AUDIT: User admin Deleted notification #116 (Type: OUT_OF_STOCK, Title: 'Out of Stock: MF-Tablet MR 500mg').
+2026-09-25 08:02:56,737 - pms - INFO - AUDIT: User admin Deleted notification #115 (Type: OUT_OF_STOCK, Title: 'Out of Stock: MF-Tablet 500mg').
+2026-09-25 08:02:56,990 - pms - INFO - AUDIT: User admin Deleted notification #114 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Lochol 40mg').
+2026-09-25 08:02:57,269 - pms - INFO - AUDIT: User admin Deleted notification #92 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Macprofen Syrup').
+2026-09-25 08:03:07,353 - pms - INFO - AUDIT: User admin Deleted notification #91 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Iprazyme Nebulization Solution').
+2026-09-25 08:03:07,678 - pms - INFO - AUDIT: User admin Deleted notification #90 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Eglaro-M 2.5/1000mg').
+2026-09-25 08:03:08,026 - pms - INFO - AUDIT: User admin Deleted notification #89 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Eglaro-M 2.5/500mg').
+2026-09-25 08:03:08,381 - pms - INFO - AUDIT: User admin Deleted notification #88 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Bongard 70mg').
+2026-09-25 08:03:08,701 - pms - INFO - AUDIT: User admin Deleted notification #87 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Anplag 90mg').
+2026-09-25 08:03:09,050 - pms - INFO - AUDIT: User admin Deleted notification #86 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Anplag 60mg').
+2026-09-25 08:03:09,444 - pms - INFO - AUDIT: User admin Deleted notification #85 (Type: OUT_OF_STOCK, Title: 'Out of Stock: TioCap 18mcg').
+2026-09-25 08:03:09,766 - pms - INFO - AUDIT: User admin Deleted notification #84 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Avsar 10/160mg').
+2026-09-25 08:03:10,094 - pms - INFO - AUDIT: User admin Deleted notification #83 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Avsar 5/160mg').
+2026-09-25 08:03:10,452 - pms - INFO - AUDIT: User admin Deleted notification #82 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Avsar 5/80mg').
+2026-09-25 08:03:10,678 - pms - INFO - AUDIT: User admin Deleted notification #81 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Lochol 20mg').
+2026-09-25 08:03:10,913 - pms - INFO - AUDIT: User admin Deleted notification #80 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Pronitron 20mg').
+2026-09-25 08:03:11,279 - pms - INFO - AUDIT: User admin Deleted notification #78 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Dowphage ER 1000mg').
+2026-09-25 08:03:11,554 - pms - INFO - AUDIT: User admin Deleted notification #77 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Dowphage ER 500mg').
+2026-09-25 08:03:11,813 - pms - INFO - AUDIT: User admin Deleted notification #76 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Dowphage 1g').
+2026-09-25 08:03:12,069 - pms - INFO - AUDIT: User admin Deleted notification #75 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Dowphage 850mg').
+2026-09-25 08:03:12,444 - pms - INFO - AUDIT: User admin Deleted notification #74 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Dowphage 500mg').
+2026-09-25 08:03:12,716 - pms - INFO - AUDIT: User admin Deleted notification #73 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Braso 10mg').
+2026-09-25 08:03:13,084 - pms - INFO - AUDIT: User admin Deleted notification #113 (Type: BACKUP_SUCCESS, Title: 'Backup Successful (Manual)').
+2026-09-25 08:03:13,392 - pms - INFO - AUDIT: User admin Deleted notification #72 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Braso 5mg').
+2026-09-25 08:03:13,636 - pms - INFO - AUDIT: User admin Deleted notification #71 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Rigix 10mg').
+2026-09-25 08:03:13,926 - pms - INFO - AUDIT: User admin Deleted notification #70 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Ertafloz Met 7.5/1000mg').
+2026-09-25 08:03:14,176 - pms - INFO - AUDIT: User admin Deleted notification #69 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Ertafloz Met 2.5/1000mg').
+2026-09-25 08:03:14,449 - pms - INFO - AUDIT: User admin Deleted notification #68 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Ertafloz Met 2.5/500mg').
+2026-09-25 08:03:14,730 - pms - INFO - AUDIT: User admin Deleted notification #67 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Ertafloz-S 15/100mg').
+2026-09-25 08:03:15,026 - pms - INFO - AUDIT: User admin Deleted notification #66 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Ertafloz-S 5/100mg').
+2026-09-25 08:03:15,291 - pms - INFO - AUDIT: User admin Deleted notification #65 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Aerocort HFA Inhaler').
+2026-09-25 08:03:15,577 - pms - INFO - AUDIT: User admin Deleted notification #64 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Effigrel 10mg').
+2026-09-25 08:03:15,879 - pms - INFO - AUDIT: User admin Deleted notification #63 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Fabecal 60mg').
+2026-09-25 08:03:16,126 - pms - INFO - AUDIT: User admin Deleted notification #62 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Fabecol 120mg').
+2026-09-25 08:03:16,391 - pms - INFO - AUDIT: User admin Deleted notification #61 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Azifex-D 70mg/2800IU').
+2026-09-25 08:03:16,688 - pms - INFO - AUDIT: User admin Deleted notification #60 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Calfina Plus 37.5/325mg').
+2026-09-25 08:03:16,997 - pms - INFO - AUDIT: User admin Deleted notification #59 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Calfina 50mg').
+2026-09-25 08:03:17,235 - pms - INFO - AUDIT: User admin Deleted notification #58 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Acemed 100mg').
+2026-09-25 08:03:17,501 - pms - INFO - AUDIT: User admin Deleted notification #57 (Type: OUT_OF_STOCK, Title: 'Out of Stock: A-Plat 10mg').
+2026-09-25 08:03:17,791 - pms - INFO - AUDIT: User admin Deleted notification #56 (Type: OUT_OF_STOCK, Title: 'Out of Stock: A-Plat 5mg').
+2026-09-25 08:03:18,083 - pms - INFO - AUDIT: User admin Deleted notification #55 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Acozar-H 100/25mg').
+2026-09-25 08:03:18,360 - pms - INFO - AUDIT: User admin Deleted notification #54 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Acozar-H 100/12.5mg').
+2026-09-25 08:03:18,632 - pms - INFO - AUDIT: User admin Deleted notification #53 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Acozar-H 50/12.5mg').
+2026-09-25 08:03:18,897 - pms - INFO - AUDIT: User admin Deleted notification #50 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Anglozar-D 100/25mg').
+2026-09-25 08:03:19,167 - pms - INFO - AUDIT: User admin Deleted notification #49 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Anglozar-D 100/12.5mg').
+2026-09-25 08:03:19,446 - pms - INFO - AUDIT: User admin Deleted notification #48 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Anglozar 100mg').
+2026-09-25 08:03:19,726 - pms - INFO - AUDIT: User admin Deleted notification #47 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Anglozar 50mg').
+2026-09-25 08:03:20,011 - pms - INFO - AUDIT: User admin Deleted notification #46 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Anglozar 25mg').
+2026-09-25 08:03:20,314 - pms - INFO - AUDIT: User admin Deleted notification #45 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Salvaj 20/120mg').
+2026-09-25 08:03:20,598 - pms - INFO - AUDIT: User admin Deleted notification #44 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Meblot Suspension').
+2026-09-25 08:03:20,886 - pms - INFO - AUDIT: User admin Deleted notification #43 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Jython Dry Suspension').
+2026-09-25 08:03:21,167 - pms - INFO - AUDIT: User admin Deleted notification #42 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Dowtel-AM 40/10mg').
+2026-09-25 08:03:21,474 - pms - INFO - AUDIT: User admin Deleted notification #41 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Epigard 500mg').
+2026-09-25 08:03:21,788 - pms - INFO - AUDIT: User admin Deleted notification #40 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Epigard 250mg').
+2026-09-25 08:03:33,684 - pms - INFO - AUDIT: User admin Deleted notification #58 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Dowphage ER 500mg').
+2026-09-25 08:03:34,018 - pms - INFO - AUDIT: User admin Deleted notification #57 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Dowphage ER 1000mg').
+2026-09-25 08:03:34,348 - pms - INFO - AUDIT: User admin Deleted notification #56 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Dowphage 850mg').
+2026-09-25 08:03:34,731 - pms - INFO - AUDIT: User admin Deleted notification #55 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Dowphage 500mg').
+2026-09-25 08:03:35,080 - pms - INFO - AUDIT: User admin Deleted notification #54 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Dowphage 1g').
+2026-09-25 08:03:35,427 - pms - INFO - AUDIT: User admin Deleted notification #53 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Decadron Injection').
+2026-09-25 08:03:35,840 - pms - INFO - AUDIT: User admin Deleted notification #52 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Ceftas-DS Suspension').
+2026-09-25 08:03:36,116 - pms - INFO - AUDIT: User admin Deleted notification #51 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Canderel 8mg').
+2026-09-25 08:03:36,469 - pms - INFO - AUDIT: User admin Deleted notification #50 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Canderel 16mg').
+2026-09-25 08:03:36,747 - pms - INFO - AUDIT: User admin Deleted notification #49 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Calfina Plus 37.5/325mg').
+2026-09-25 08:03:37,036 - pms - INFO - AUDIT: User admin Deleted notification #48 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Calfina 50mg').
+2026-09-25 08:03:37,285 - pms - INFO - AUDIT: User admin Deleted notification #47 (Type: OUT_OF_STOCK, Title: 'Out of Stock: CCL Amlodipine 5mg').
+2026-09-25 08:03:37,552 - pms - INFO - AUDIT: User admin Deleted notification #46 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Brufen Syrup').
+2026-09-25 08:03:37,885 - pms - INFO - AUDIT: User admin Deleted notification #45 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Brufen 400mg').
+2026-09-25 08:03:38,255 - pms - INFO - AUDIT: User admin Deleted notification #44 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Brookes Paracetamol 500mg').
+2026-09-25 08:03:38,535 - pms - INFO - AUDIT: User admin Deleted notification #43 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Briltiga 90mg').
+2026-09-25 08:03:38,778 - pms - INFO - AUDIT: User admin Deleted notification #42 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Acozar-H 100/12.5mg').
+2026-09-25 08:03:39,062 - pms - INFO - AUDIT: User admin Deleted notification #41 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Acemed 100mg').
+2026-09-25 08:03:39,317 - pms - INFO - AUDIT: User admin Deleted notification #40 (Type: OUT_OF_STOCK, Title: 'Out of Stock: A-Plat 5mg').
+2026-09-25 08:03:39,612 - pms - INFO - AUDIT: User admin Deleted notification #39 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Decadron Injection').
+2026-09-25 08:03:39,882 - pms - INFO - AUDIT: User admin Deleted notification #38 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Lofat 120mg').
+2026-09-25 08:03:40,186 - pms - INFO - AUDIT: User admin Deleted notification #37 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Ascorel 5mg').
+2026-09-25 08:03:40,462 - pms - INFO - AUDIT: User admin Deleted notification #36 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Ascorel 10mg').
+2026-09-25 08:03:40,751 - pms - INFO - AUDIT: User admin Deleted notification #35 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Bonfit 70mg').
+2026-09-25 08:03:41,065 - pms - INFO - AUDIT: User admin Deleted notification #34 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Klisty 1 MIU').
+2026-09-25 08:03:41,352 - pms - INFO - AUDIT: User admin Deleted notification #33 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Rolastym Combi 400/12mcg').
+2026-09-25 08:03:41,613 - pms - INFO - AUDIT: User admin Deleted notification #32 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Metrozine Suspension').
+2026-09-25 08:03:41,893 - pms - INFO - AUDIT: User admin Deleted notification #31 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Actim-H 10/12.5mg').
+2026-09-25 08:03:42,188 - pms - INFO - AUDIT: User admin Deleted notification #30 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Actim-H 10/6.25mg').
+2026-09-25 08:03:42,461 - pms - INFO - AUDIT: User admin Deleted notification #29 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Actim-H 5/6.25mg').
+2026-09-25 08:03:42,730 - pms - INFO - AUDIT: User admin Deleted notification #28 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Bisleri').
+2026-09-25 08:03:43,025 - pms - INFO - AUDIT: User admin Deleted notification #27 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Arceva 20/120mg').
+2026-09-25 08:03:43,341 - pms - INFO - AUDIT: User admin Deleted notification #26 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Telarb-Plus 80/5mg').
+2026-09-25 08:03:43,615 - pms - INFO - AUDIT: User admin Deleted notification #25 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Telarb-Plus 40/10mg').
+2026-09-25 08:03:43,889 - pms - INFO - AUDIT: User admin Deleted notification #24 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Telarb-Plus 40/5mg').
+2026-09-25 08:03:44,193 - pms - INFO - AUDIT: User admin Deleted notification #23 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Telarb 80mg').
+2026-09-25 08:03:44,477 - pms - INFO - AUDIT: User admin Deleted notification #22 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Telarb 40mg').
+2026-09-25 08:03:44,792 - pms - INFO - AUDIT: User admin Deleted notification #21 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Sangobion').
+2026-09-25 08:03:45,117 - pms - INFO - AUDIT: User admin Deleted notification #20 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Surbex-Z').
+2026-09-25 08:03:45,457 - pms - INFO - AUDIT: User admin Deleted notification #19 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Entamizole Suspension').
+2026-09-25 08:03:45,780 - pms - INFO - AUDIT: User admin Deleted notification #18 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Entamizole').
+2026-09-25 08:03:46,121 - pms - INFO - AUDIT: User admin Deleted notification #17 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Duspatalin Retard 200mg').
+2026-09-25 08:03:46,496 - pms - INFO - AUDIT: User admin Deleted notification #16 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Duspatalin 135mg').
+2026-09-25 08:03:46,830 - pms - INFO - AUDIT: User admin Deleted notification #15 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Duphalac').
+2026-09-25 08:03:47,180 - pms - INFO - AUDIT: User admin Deleted notification #14 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Brufen Syrup').
+2026-09-25 08:03:47,482 - pms - INFO - AUDIT: User admin Deleted notification #13 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Brufen 400mg').
+2026-09-25 08:03:47,930 - pms - INFO - AUDIT: User admin Deleted notification #12 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Klaricid XL 500mg').
+2026-09-25 08:03:48,202 - pms - INFO - AUDIT: User admin Deleted notification #11 (Type: OUT_OF_STOCK, Title: 'Out of Stock: dispirin').
+2026-09-25 08:03:48,460 - pms - INFO - AUDIT: User admin Deleted notification #8 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Gaviscon').
+2026-09-25 08:03:54,407 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-25 08:03:55,177 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-25 08:04:17,071 - pms - INFO - AUDIT: User admin Deleted notification #109 (Type: OUT_OF_STOCK, Title: 'Out of Stock: A-Plat 5mg').
+2026-09-25 08:04:17,467 - pms - INFO - AUDIT: User admin Deleted notification #110 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Abnil 120mg').
+2026-09-25 08:04:17,823 - pms - INFO - AUDIT: User admin Deleted notification #111 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Acemed 100mg').
+2026-09-25 08:04:18,242 - pms - INFO - AUDIT: User admin Deleted notification #112 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Acozar-H 100/12.5mg').
+2026-09-25 08:04:18,613 - pms - INFO - AUDIT: User admin Deleted notification #113 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Acozar-H 100/25mg').
+2026-09-25 08:04:18,997 - pms - INFO - AUDIT: User admin Deleted notification #114 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Acozar-H 50/12.5mg').
+2026-09-25 08:04:19,377 - pms - INFO - AUDIT: User admin Deleted notification #115 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Actim-H 10/12.5mg').
+2026-09-25 08:04:19,697 - pms - INFO - AUDIT: User admin Deleted notification #116 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Actim-H 10/6.25mg').
+2026-09-25 08:04:20,142 - pms - INFO - AUDIT: User admin Deleted notification #117 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Actim-H 5/6.25mg').
+2026-09-25 08:04:20,428 - pms - INFO - AUDIT: User admin Deleted notification #118 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Aerocort HFA Inhaler').
+2026-09-25 08:04:20,677 - pms - INFO - AUDIT: User admin Deleted notification #119 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Anglozar 100mg').
+2026-09-25 08:04:20,937 - pms - INFO - AUDIT: User admin Deleted notification #120 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Anglozar 25mg').
+2026-09-25 08:04:21,186 - pms - INFO - AUDIT: User admin Deleted notification #121 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Anglozar 50mg').
+2026-09-25 08:04:21,458 - pms - INFO - AUDIT: User admin Deleted notification #122 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Anglozar-D 100/12.5mg').
+2026-09-25 08:04:21,719 - pms - INFO - AUDIT: User admin Deleted notification #123 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Anglozar-D 100/25mg').
+2026-09-25 08:04:21,991 - pms - INFO - AUDIT: User admin Deleted notification #124 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Anplag 60mg').
+2026-09-25 08:04:22,240 - pms - INFO - AUDIT: User admin Deleted notification #125 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Anplag 90mg').
+2026-09-25 08:04:22,482 - pms - INFO - AUDIT: User admin Deleted notification #126 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Arceva 20/120mg').
+2026-09-25 08:04:22,742 - pms - INFO - AUDIT: User admin Deleted notification #127 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Artem Plus 20/120mg').
+2026-09-25 08:04:23,012 - pms - INFO - AUDIT: User admin Deleted notification #128 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Ascorel 10mg').
+2026-09-25 08:04:27,377 - pms - INFO - AUDIT: User admin Deleted notification #157 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Dowphage ER 500mg').
+2026-09-25 08:04:27,767 - pms - INFO - AUDIT: User admin Deleted notification #156 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Dowphage ER 1000mg').
+2026-09-25 08:05:53,791 - pms - INFO - AUDIT: User admin Deleted notification #177 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Dowphage ER 500mg').
+2026-09-25 08:05:54,709 - pms - INFO - AUDIT: User admin Deleted notification #176 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Dowphage ER 1000mg').
+2026-09-25 08:05:55,022 - pms - INFO - AUDIT: User admin Deleted notification #175 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Ascorel 10mg').
+2026-09-25 08:05:55,339 - pms - INFO - AUDIT: User admin Deleted notification #174 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Artem Plus 20/120mg').
+2026-09-25 08:05:55,655 - pms - INFO - AUDIT: User admin Deleted notification #173 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Arceva 20/120mg').
+2026-09-25 08:05:56,011 - pms - INFO - AUDIT: User admin Deleted notification #172 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Anplag 90mg').
+2026-09-25 08:05:56,334 - pms - INFO - AUDIT: User admin Deleted notification #171 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Anplag 60mg').
+2026-09-25 08:05:56,652 - pms - INFO - AUDIT: User admin Deleted notification #170 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Anglozar-D 100/25mg').
+2026-09-25 08:05:56,965 - pms - INFO - AUDIT: User admin Deleted notification #169 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Anglozar-D 100/12.5mg').
+2026-09-25 08:05:57,292 - pms - INFO - AUDIT: User admin Deleted notification #168 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Anglozar 50mg').
+2026-09-25 08:05:57,556 - pms - INFO - AUDIT: User admin Deleted notification #167 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Anglozar 25mg').
+2026-09-25 08:05:57,884 - pms - INFO - AUDIT: User admin Deleted notification #166 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Anglozar 100mg').
+2026-09-25 08:05:58,267 - pms - INFO - AUDIT: User admin Deleted notification #165 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Aerocort HFA Inhaler').
+2026-09-25 08:05:58,651 - pms - INFO - AUDIT: User admin Deleted notification #164 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Actim-H 5/6.25mg').
+2026-09-25 08:05:58,988 - pms - INFO - AUDIT: User admin Deleted notification #163 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Actim-H 10/6.25mg').
+2026-09-25 08:05:59,307 - pms - INFO - AUDIT: User admin Deleted notification #162 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Actim-H 10/12.5mg').
+2026-09-25 08:05:59,649 - pms - INFO - AUDIT: User admin Deleted notification #161 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Acozar-H 50/12.5mg').
+2026-09-25 08:06:00,041 - pms - INFO - AUDIT: User admin Deleted notification #160 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Acozar-H 100/25mg').
+2026-09-25 08:06:00,375 - pms - INFO - AUDIT: User admin Deleted notification #159 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Acozar-H 100/12.5mg').
+2026-09-25 08:06:00,703 - pms - INFO - AUDIT: User admin Deleted notification #158 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Acemed 100mg').
+2026-09-25 08:06:09,420 - pms - INFO - AUDIT: User admin Deleted notification #158 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Acemed 100mg').
+2026-09-25 08:06:09,752 - pms - INFO - AUDIT: User admin Deleted notification #159 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Acozar-H 100/12.5mg').
+2026-09-25 08:06:10,105 - pms - INFO - AUDIT: User admin Deleted notification #160 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Acozar-H 100/25mg').
+2026-09-25 08:06:10,453 - pms - INFO - AUDIT: User admin Deleted notification #161 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Acozar-H 50/12.5mg').
+2026-09-25 08:06:10,799 - pms - INFO - AUDIT: User admin Deleted notification #162 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Actim-H 10/12.5mg').
+2026-09-25 08:06:11,162 - pms - INFO - AUDIT: User admin Deleted notification #163 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Actim-H 10/6.25mg').
+2026-09-25 08:06:11,375 - pms - INFO - AUDIT: User admin Deleted notification #164 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Actim-H 5/6.25mg').
+2026-09-25 08:06:11,631 - pms - INFO - AUDIT: User admin Deleted notification #165 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Aerocort HFA Inhaler').
+2026-09-25 08:06:12,030 - pms - INFO - AUDIT: User admin Deleted notification #166 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Anglozar 100mg').
+2026-09-25 08:06:12,297 - pms - INFO - AUDIT: User admin Deleted notification #167 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Anglozar 25mg').
+2026-09-25 08:06:12,537 - pms - INFO - AUDIT: User admin Deleted notification #168 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Anglozar 50mg').
+2026-09-25 08:06:12,826 - pms - INFO - AUDIT: User admin Deleted notification #169 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Anglozar-D 100/12.5mg').
+2026-09-25 08:06:13,104 - pms - INFO - AUDIT: User admin Deleted notification #170 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Anglozar-D 100/25mg').
+2026-09-25 08:06:13,443 - pms - INFO - AUDIT: User admin Deleted notification #171 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Anplag 60mg').
+2026-09-25 08:06:13,713 - pms - INFO - AUDIT: User admin Deleted notification #172 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Anplag 90mg').
+2026-09-25 08:06:14,062 - pms - INFO - AUDIT: User admin Deleted notification #173 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Arceva 20/120mg').
+2026-09-25 08:06:14,416 - pms - INFO - AUDIT: User admin Deleted notification #174 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Artem Plus 20/120mg').
+2026-09-25 08:06:14,744 - pms - INFO - AUDIT: User admin Deleted notification #175 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Ascorel 10mg').
+2026-09-25 08:06:15,085 - pms - INFO - AUDIT: User admin Deleted notification #176 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Dowphage ER 1000mg').
+2026-09-25 08:06:15,347 - pms - INFO - AUDIT: User admin Deleted notification #177 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Dowphage ER 500mg').
+2026-09-25 08:06:19,217 - pms - INFO - AUDIT: User admin Deleted notification #108 (Type: LICENSE_ALERT, Title: 'Software License Expiring Soon').
+2026-09-25 08:06:25,699 - pms - INFO - AUDIT: User admin Deleted notification #156 (Type: OUT_OF_STOCK, Title: 'Out of Stock: A-Plat 5mg').
+2026-09-25 08:06:26,037 - pms - INFO - AUDIT: User admin Deleted notification #157 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Abnil 120mg').
+2026-09-25 08:06:26,356 - pms - INFO - AUDIT: User admin Deleted notification #129 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Ascorel 5mg').
+2026-09-25 08:06:30,040 - pms - INFO - AUDIT: User admin Deleted notification #156 (Type: OUT_OF_STOCK, Title: 'Out of Stock: A-Plat 5mg').
+2026-09-25 08:06:30,366 - pms - INFO - AUDIT: User admin Deleted notification #157 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Abnil 120mg').
+2026-09-25 08:06:30,714 - pms - INFO - AUDIT: User admin Deleted notification #158 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Acemed 100mg').
+2026-09-25 08:06:31,090 - pms - INFO - AUDIT: User admin Deleted notification #159 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Acozar-H 100/12.5mg').
+2026-09-25 08:06:31,383 - pms - INFO - AUDIT: User admin Deleted notification #160 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Acozar-H 100/25mg').
+2026-09-25 08:06:31,776 - pms - INFO - AUDIT: User admin Deleted notification #161 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Acozar-H 50/12.5mg').
+2026-09-25 08:06:32,178 - pms - INFO - AUDIT: User admin Deleted notification #162 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Actim-H 10/12.5mg').
+2026-09-25 08:06:32,446 - pms - INFO - AUDIT: User admin Deleted notification #163 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Actim-H 10/6.25mg').
+2026-09-25 08:06:32,692 - pms - INFO - AUDIT: User admin Deleted notification #164 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Actim-H 5/6.25mg').
+2026-09-25 08:07:01,375 - pms - INFO - AUDIT: User admin Deleted notification #188 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Actim-H 5/6.25mg').
+2026-09-25 08:07:01,711 - pms - INFO - AUDIT: User admin Deleted notification #187 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Actim-H 10/6.25mg').
+2026-09-25 08:07:02,047 - pms - INFO - AUDIT: User admin Deleted notification #186 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Actim-H 10/12.5mg').
+2026-09-25 08:07:02,383 - pms - INFO - AUDIT: User admin Deleted notification #185 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Acozar-H 50/12.5mg').
+2026-09-25 08:07:02,748 - pms - INFO - AUDIT: User admin Deleted notification #184 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Acozar-H 100/25mg').
+2026-09-25 08:07:03,096 - pms - INFO - AUDIT: User admin Deleted notification #183 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Acozar-H 100/12.5mg').
+2026-09-25 08:07:03,448 - pms - INFO - AUDIT: User admin Deleted notification #182 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Acemed 100mg').
+2026-09-25 08:07:03,784 - pms - INFO - AUDIT: User admin Deleted notification #181 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Abnil 120mg').
+2026-09-25 08:07:04,128 - pms - INFO - AUDIT: User admin Deleted notification #180 (Type: OUT_OF_STOCK, Title: 'Out of Stock: A-Plat 5mg').
+2026-09-25 08:07:04,513 - pms - INFO - AUDIT: User admin Deleted notification #179 (Type: LICENSE_ALERT, Title: 'Software License Expiring Soon').
+2026-09-25 08:07:04,890 - pms - INFO - AUDIT: User admin Deleted notification #178 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Dowphage ER 500mg').
+2026-09-25 08:07:05,259 - pms - INFO - AUDIT: User admin Deleted notification #177 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Dowphage ER 1000mg').
+2026-09-25 08:07:05,662 - pms - INFO - AUDIT: User admin Deleted notification #176 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Ascorel 5mg').
+2026-09-25 08:07:06,017 - pms - INFO - AUDIT: User admin Deleted notification #175 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Ascorel 10mg').
+2026-09-25 08:07:06,363 - pms - INFO - AUDIT: User admin Deleted notification #174 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Artem Plus 20/120mg').
+2026-09-25 08:07:06,744 - pms - INFO - AUDIT: User admin Deleted notification #173 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Arceva 20/120mg').
+2026-09-25 08:07:07,124 - pms - INFO - AUDIT: User admin Deleted notification #172 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Anplag 90mg').
+2026-09-25 08:07:07,500 - pms - INFO - AUDIT: User admin Deleted notification #171 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Anplag 60mg').
+2026-09-25 08:07:07,915 - pms - INFO - AUDIT: User admin Deleted notification #170 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Anglozar-D 100/25mg').
+2026-09-25 08:07:08,482 - pms - INFO - AUDIT: User admin Deleted notification #169 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Anglozar-D 100/12.5mg').
+2026-09-25 08:07:08,829 - pms - INFO - AUDIT: User admin Deleted notification #168 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Anglozar 50mg').
+2026-09-25 08:07:09,250 - pms - INFO - AUDIT: User admin Deleted notification #167 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Anglozar 25mg').
+2026-09-25 08:07:09,699 - pms - INFO - AUDIT: User admin Deleted notification #166 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Anglozar 100mg').
+2026-09-25 08:07:10,406 - pms - INFO - AUDIT: User admin Deleted notification #165 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Aerocort HFA Inhaler').
+2026-09-25 08:07:22,113 - pms - INFO - AUDIT: User admin Deleted notification #179 (Type: LICENSE_ALERT, Title: 'Software License Expiring Soon').
+2026-09-25 08:07:22,435 - pms - INFO - AUDIT: User admin Deleted notification #178 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Dowphage ER 500mg').
+2026-09-25 08:07:22,740 - pms - INFO - AUDIT: User admin Deleted notification #177 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Dowphage ER 1000mg').
+2026-09-25 08:07:23,045 - pms - INFO - AUDIT: User admin Deleted notification #176 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Ascorel 5mg').
+2026-09-25 08:07:23,426 - pms - INFO - AUDIT: User admin Deleted notification #175 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Ascorel 10mg').
+2026-09-25 08:07:23,778 - pms - INFO - AUDIT: User admin Deleted notification #174 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Artem Plus 20/120mg').
+2026-09-25 08:07:24,142 - pms - INFO - AUDIT: User admin Deleted notification #173 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Arceva 20/120mg').
+2026-09-25 08:07:24,486 - pms - INFO - AUDIT: User admin Deleted notification #172 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Anplag 90mg').
+2026-09-25 08:07:24,892 - pms - INFO - AUDIT: User admin Deleted notification #171 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Anplag 60mg').
+2026-09-25 08:07:45,046 - pms - INFO - AUDIT: User admin Deleted notification #179 (Type: LICENSE_ALERT, Title: 'Software License Expiring Soon').
+2026-09-25 08:07:45,385 - pms - INFO - AUDIT: User admin Deleted notification #178 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Dowphage ER 500mg').
+2026-09-25 08:07:45,697 - pms - INFO - AUDIT: User admin Deleted notification #177 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Dowphage ER 1000mg').
+2026-09-25 08:07:46,049 - pms - INFO - AUDIT: User admin Deleted notification #176 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Ascorel 5mg').
+2026-09-25 08:07:46,398 - pms - INFO - AUDIT: User admin Deleted notification #175 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Ascorel 10mg').
+2026-09-25 08:07:46,744 - pms - INFO - AUDIT: User admin Deleted notification #174 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Artem Plus 20/120mg').
+2026-09-25 08:07:47,154 - pms - INFO - AUDIT: User admin Deleted notification #173 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Arceva 20/120mg').
+2026-09-25 08:07:47,534 - pms - INFO - AUDIT: User admin Deleted notification #172 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Anplag 90mg').
+2026-09-25 08:07:47,932 - pms - INFO - AUDIT: User admin Deleted notification #171 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Anplag 60mg').
+2026-09-25 08:07:48,357 - pms - INFO - AUDIT: User admin Deleted notification #170 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Anglozar-D 100/25mg').
+2026-09-25 08:07:48,722 - pms - INFO - AUDIT: User admin Deleted notification #169 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Anglozar-D 100/12.5mg').
+2026-09-25 08:07:49,107 - pms - INFO - AUDIT: User admin Deleted notification #168 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Anglozar 50mg').
+2026-09-25 08:07:49,567 - pms - INFO - AUDIT: User admin Deleted notification #167 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Anglozar 25mg').
+2026-09-25 08:08:14,429 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-25 08:08:30,925 - pms - INFO - AUDIT: User admin Deleted notification #179 (Type: LICENSE_ALERT, Title: 'Software License Expiring Soon').
+2026-09-25 08:08:31,246 - pms - INFO - AUDIT: User admin Deleted notification #178 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Dowphage ER 500mg').
+2026-09-25 08:08:31,555 - pms - INFO - AUDIT: User admin Deleted notification #177 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Dowphage ER 1000mg').
+2026-09-25 08:08:31,880 - pms - INFO - AUDIT: User admin Deleted notification #176 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Ascorel 5mg').
+2026-09-25 08:08:32,212 - pms - INFO - AUDIT: User admin Deleted notification #175 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Ascorel 10mg').
+2026-09-25 08:08:32,580 - pms - INFO - AUDIT: User admin Deleted notification #174 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Artem Plus 20/120mg').
+2026-09-25 08:08:32,973 - pms - INFO - AUDIT: User admin Deleted notification #173 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Arceva 20/120mg').
+2026-09-25 08:08:33,461 - pms - INFO - AUDIT: User admin Deleted notification #172 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Anplag 90mg').
+2026-09-25 08:08:33,895 - pms - INFO - AUDIT: User admin Deleted notification #171 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Anplag 60mg').
+2026-09-25 08:08:34,268 - pms - INFO - AUDIT: User admin Deleted notification #170 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Anglozar-D 100/25mg').
+2026-09-25 08:08:34,648 - pms - INFO - AUDIT: User admin Deleted notification #169 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Anglozar-D 100/12.5mg').
+2026-09-25 08:08:35,023 - pms - INFO - AUDIT: User admin Deleted notification #168 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Anglozar 50mg').
+2026-09-25 08:08:35,390 - pms - INFO - AUDIT: User admin Deleted notification #167 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Anglozar 25mg').
+2026-09-25 08:08:35,771 - pms - INFO - AUDIT: User admin Deleted notification #166 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Anglozar 100mg').
+2026-09-25 08:08:36,133 - pms - INFO - AUDIT: User admin Deleted notification #165 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Aerocort HFA Inhaler').
+2026-09-25 08:08:36,488 - pms - INFO - AUDIT: User admin Deleted notification #164 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Actim-H 5/6.25mg').
+2026-09-25 08:08:36,830 - pms - INFO - AUDIT: User admin Deleted notification #163 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Actim-H 10/6.25mg').
+2026-09-25 08:08:37,148 - pms - INFO - AUDIT: User admin Deleted notification #162 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Actim-H 10/12.5mg').
+2026-09-25 08:08:37,481 - pms - INFO - AUDIT: User admin Deleted notification #161 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Acozar-H 50/12.5mg').
+2026-09-25 08:08:37,783 - pms - INFO - AUDIT: User admin Deleted notification #160 (Type: OUT_OF_STOCK, Title: 'Out of Stock: Acozar-H 100/25mg').
+2026-09-25 08:09:14,548 - pms - ERROR - PMSException caught: Session expired. Please log in again. (status: 401) | Path: /api/v1/backup/backup-on-exit
+2026-09-25 08:09:14,984 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-25 08:09:29,188 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-25 08:23:46,186 - pms - INFO - PRODUCTION_TRACE license storage path=E:\Projects\PMS-Software\backend\licenses\active.lic exists=True
+2026-09-25 08:23:47,329 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-25 08:23:47,633 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.schemas
+2026-09-25 08:23:47,633 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.tables
+2026-09-25 08:23:47,633 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.types
+2026-09-25 08:23:47,634 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.constraints
+2026-09-25 08:23:47,634 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.defaults
+2026-09-25 08:23:47,634 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.comments
+2026-09-25 08:23:47,634 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.checkconstraint_byname
+2026-09-25 08:23:47,733 - pms - INFO - Unstamped schema detected; stamping to head (c1d2e3f4a5b6).
+2026-09-25 08:26:24,630 - pms - INFO - PRODUCTION_TRACE auth accepted username=admin user_id=1
+2026-09-25 08:27:24,581 - pms - INFO - PRODUCTION_TRACE license storage path=E:\Projects\PMS-Software\backend\licenses\active.lic exists=True
+2026-09-25 08:27:25,574 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-25 08:27:25,796 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.schemas
+2026-09-25 08:27:25,796 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.tables
+2026-09-25 08:27:25,796 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.types
+2026-09-25 08:27:25,796 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.constraints
+2026-09-25 08:27:25,797 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.defaults
+2026-09-25 08:27:25,797 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.comments
+2026-09-25 08:27:25,797 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.checkconstraint_byname
+2026-09-25 08:27:25,871 - pms - INFO - Unstamped schema detected; stamping to head (c1d2e3f4a5b6).
+2026-09-25 08:27:59,686 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-25 08:38:24,507 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-25 08:38:25,780 - pms - INFO - PRODUCTION_TRACE license storage path=E:\Projects\PMS-Software\backend\licenses\active.lic exists=True
+2026-09-25 08:38:29,738 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-25 08:38:30,455 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.schemas
+2026-09-25 08:38:30,455 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.tables
+2026-09-25 08:38:30,455 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.types
+2026-09-25 08:38:30,455 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.constraints
+2026-09-25 08:38:30,456 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.defaults
+2026-09-25 08:38:30,456 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.comments
+2026-09-25 08:38:30,456 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.checkconstraint_byname
+2026-09-25 08:38:30,730 - pms - INFO - Database schema already at migration head (c1d2e3f4a5b6).
+2026-09-25 08:38:31,237 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-25 08:38:46,386 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-25 08:41:20,601 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-25 08:41:21,093 - pms - INFO - PRODUCTION_TRACE license storage path=E:\Projects\PMS-Software\backend\licenses\active.lic exists=True
+2026-09-25 08:41:22,439 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-25 08:41:22,846 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.schemas
+2026-09-25 08:41:22,846 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.tables
+2026-09-25 08:41:22,847 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.types
+2026-09-25 08:41:22,847 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.constraints
+2026-09-25 08:41:22,847 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.defaults
+2026-09-25 08:41:22,847 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.comments
+2026-09-25 08:41:22,847 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.checkconstraint_byname
+2026-09-25 08:41:22,971 - pms - INFO - Database schema already at migration head (be237f406e8a).
+2026-09-25 08:41:23,120 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-25 08:44:29,619 - pms - INFO - PRODUCTION_TRACE license storage path=E:\Projects\PMS-Software\backend\licenses\active.lic exists=True
+2026-09-25 08:44:30,692 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-25 08:44:30,948 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.schemas
+2026-09-25 08:44:30,948 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.tables
+2026-09-25 08:44:30,948 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.types
+2026-09-25 08:44:30,949 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.constraints
+2026-09-25 08:44:30,949 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.defaults
+2026-09-25 08:44:30,949 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.comments
+2026-09-25 08:44:30,949 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.checkconstraint_byname
+2026-09-25 08:44:31,034 - pms - INFO - Unstamped schema detected; stamping to head (be237f406e8a).
+2026-09-25 08:45:16,633 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-25 08:45:17,398 - pms - INFO - PRODUCTION_TRACE license storage path=E:\Projects\PMS-Software\backend\licenses\active.lic exists=True
+2026-09-25 08:45:20,086 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-25 08:45:21,534 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.schemas
+2026-09-25 08:45:21,535 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.tables
+2026-09-25 08:45:21,535 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.types
+2026-09-25 08:45:21,536 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.constraints
+2026-09-25 08:45:21,538 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.defaults
+2026-09-25 08:45:21,539 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.comments
+2026-09-25 08:45:21,540 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.checkconstraint_byname
+2026-09-25 08:45:21,806 - pms - INFO - Database schema already at migration head (be237f406e8a).
+2026-09-25 08:45:22,002 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-25 08:45:36,923 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-25 08:46:01,087 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-25 08:51:43,665 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-25 08:52:40,738 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-25 08:53:11,466 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-25 08:55:17,272 - pms - INFO - PRODUCTION_TRACE license storage path=E:\Projects\PMS-Software\backend\licenses\active.lic exists=True
+2026-09-25 08:55:18,436 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-25 08:55:18,738 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.schemas
+2026-09-25 08:55:18,738 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.tables
+2026-09-25 08:55:18,739 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.types
+2026-09-25 08:55:18,739 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.constraints
+2026-09-25 08:55:18,739 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.defaults
+2026-09-25 08:55:18,739 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.comments
+2026-09-25 08:55:18,739 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.checkconstraint_byname
+2026-09-25 08:55:18,847 - pms - INFO - Unstamped schema detected; stamping to head (be237f406e8a).
+2026-09-25 08:56:26,319 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-25 08:56:26,737 - pms - INFO - PRODUCTION_TRACE license storage path=E:\Projects\PMS-Software\backend\licenses\active.lic exists=True
+2026-09-25 08:56:28,577 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-25 08:56:31,013 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.schemas
+2026-09-25 08:56:31,014 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.tables
+2026-09-25 08:56:31,015 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.types
+2026-09-25 08:56:31,015 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.constraints
+2026-09-25 08:56:31,015 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.defaults
+2026-09-25 08:56:31,015 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.comments
+2026-09-25 08:56:31,016 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.checkconstraint_byname
+2026-09-25 08:56:31,496 - pms - INFO - Database schema already at migration head (be237f406e8a).
+2026-09-25 08:56:32,106 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-25 08:56:46,966 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-25 08:58:49,426 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-25 08:59:13,607 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-25 08:59:24,298 - pms - INFO - PRODUCTION_TRACE auth accepted username=admin user_id=1
+2026-09-25 08:59:33,750 - pms - INFO - PRODUCTION_TRACE auth accepted username=admin user_id=1
+2026-09-25 09:00:45,630 - pms - INFO - PRODUCTION_TRACE auth accepted username=admin user_id=1
+2026-09-25 09:02:05,078 - pms - INFO - PRODUCTION_TRACE auth accepted username=admin user_id=1
+2026-09-25 09:06:14,997 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-25 09:14:08,583 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-25 09:14:09,630 - pms - INFO - PRODUCTION_TRACE license storage path=E:\Projects\PMS-Software\backend\licenses\active.lic exists=True
+2026-09-25 09:14:13,878 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-25 09:14:15,113 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.schemas
+2026-09-25 09:14:15,116 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.tables
+2026-09-25 09:14:15,117 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.types
+2026-09-25 09:14:15,117 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.constraints
+2026-09-25 09:14:15,118 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.defaults
+2026-09-25 09:14:15,119 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.comments
+2026-09-25 09:14:15,119 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.checkconstraint_byname
+2026-09-25 09:14:15,541 - pms - INFO - Database schema already at migration head (be237f406e8a).
+2026-09-25 09:14:16,284 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-25 09:14:32,456 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-25 09:14:40,447 - pms - INFO - PRODUCTION_TRACE auth accepted username=admin user_id=1
+2026-09-25 09:16:18,439 - pms - INFO - PRODUCTION_TRACE auth accepted username=admin user_id=1
+2026-09-25 09:44:35,029 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-25 09:45:55,043 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-25 09:45:55,283 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.schemas
+2026-09-25 09:45:55,283 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.tables
+2026-09-25 09:45:55,284 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.types
+2026-09-25 09:45:55,284 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.constraints
+2026-09-25 09:45:55,284 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.defaults
+2026-09-25 09:45:55,284 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.comments
+2026-09-25 09:45:55,284 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.checkconstraint_byname
+2026-09-25 09:45:55,363 - pms - INFO - Database at revision be237f406e8a; upgrading to head (d1e2f3a4b5c6).
+2026-09-25 09:49:13,300 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-25 09:49:25,434 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-25 09:49:38,772 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-25 09:49:47,257 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-25 09:49:57,132 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-25 09:56:25,169 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-25 09:56:26,034 - pms - INFO - PRODUCTION_TRACE license storage path=E:\Projects\PMS-Software\backend\licenses\active.lic exists=True
+2026-09-25 09:56:29,384 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/customers "HTTP/1.1 200 OK"
+2026-09-25 09:56:29,423 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/sales "HTTP/1.1 422 Unprocessable Entity"
+2026-09-25 09:56:56,781 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-25 09:56:57,791 - pms - INFO - PRODUCTION_TRACE license storage path=E:\Projects\PMS-Software\backend\licenses\active.lic exists=True
+2026-09-25 09:57:01,113 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/customers "HTTP/1.1 200 OK"
+2026-09-25 09:57:01,196 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/sales "HTTP/1.1 200 OK"
+2026-09-25 09:57:01,236 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/customers/30/due-details "HTTP/1.1 200 OK"
+2026-09-25 09:57:01,262 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/customers/30/receive-payment "HTTP/1.1 400 Bad Request"
+2026-09-25 09:57:01,286 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/customers/30/receive-payment "HTTP/1.1 422 Unprocessable Entity"
+2026-09-25 09:57:18,736 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-25 09:57:19,579 - pms - INFO - PRODUCTION_TRACE license storage path=E:\Projects\PMS-Software\backend\licenses\active.lic exists=True
+2026-09-25 09:57:22,775 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/customers "HTTP/1.1 200 OK"
+2026-09-25 09:57:22,841 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/sales "HTTP/1.1 200 OK"
+2026-09-25 09:57:22,883 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/customers/31/due-details "HTTP/1.1 200 OK"
+2026-09-25 09:57:22,933 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/customers/31/receive-payment "HTTP/1.1 400 Bad Request"
+2026-09-25 09:57:22,969 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/customers/31/receive-payment "HTTP/1.1 422 Unprocessable Entity"
+2026-09-25 09:57:23,007 - pms - INFO - AUDIT: User admin received customer payment PAY-202609-0001 of Rs 100.00 from API Test Customer 095722.
+2026-09-25 09:57:23,014 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/customers/31/receive-payment "HTTP/1.1 200 OK"
+2026-09-25 09:57:23,052 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/customers/31/payments "HTTP/1.1 200 OK"
+2026-09-25 09:57:23,095 - pms - INFO - AUDIT: User admin received customer payment PAY-202609-0002 of Rs 200.00 from API Test Customer 095722.
+2026-09-25 09:57:23,099 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/customers/31/receive-payment "HTTP/1.1 200 OK"
+2026-09-25 09:57:23,137 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/customers?balance_filter=paid "HTTP/1.1 200 OK"
+2026-09-25 09:57:44,543 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-25 09:57:45,375 - pms - INFO - PRODUCTION_TRACE license storage path=E:\Projects\PMS-Software\backend\licenses\active.lic exists=True
+2026-09-25 09:57:48,337 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/customers "HTTP/1.1 200 OK"
+2026-09-25 09:57:48,411 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/sales "HTTP/1.1 200 OK"
+2026-09-25 09:57:48,438 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/customers/32/due-details "HTTP/1.1 200 OK"
+2026-09-25 09:57:48,461 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/customers/32/receive-payment "HTTP/1.1 400 Bad Request"
+2026-09-25 09:57:48,481 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/customers/32/receive-payment "HTTP/1.1 422 Unprocessable Entity"
+2026-09-25 09:57:48,524 - pms - INFO - AUDIT: User admin received customer payment PAY-202609-0003 of Rs 100.00 from API Test Customer 095747.
+2026-09-25 09:57:48,528 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/customers/32/receive-payment "HTTP/1.1 200 OK"
+2026-09-25 09:57:48,563 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/customers/32/payments "HTTP/1.1 200 OK"
+2026-09-25 09:57:48,601 - pms - INFO - AUDIT: User admin received customer payment PAY-202609-0004 of Rs 200.00 from API Test Customer 095747.
+2026-09-25 09:57:48,607 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/customers/32/receive-payment "HTTP/1.1 200 OK"
+2026-09-25 09:57:48,645 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/customers?balance_filter=paid&page_size=100 "HTTP/1.1 200 OK"
+2026-09-25 09:57:48,668 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/customers?balance_filter=due&page_size=100 "HTTP/1.1 200 OK"
+2026-09-25 09:57:48,690 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/customers/32/payments "HTTP/1.1 200 OK"
+2026-09-25 10:00:00,317 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-25 10:00:00,665 - pms - INFO - PRODUCTION_TRACE license storage path=E:\Projects\PMS-Software\backend\licenses\active.lic exists=True
+2026-09-25 10:00:02,235 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-25 10:00:02,741 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.schemas
+2026-09-25 10:00:02,742 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.tables
+2026-09-25 10:00:02,742 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.types
+2026-09-25 10:00:02,742 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.constraints
+2026-09-25 10:00:02,742 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.defaults
+2026-09-25 10:00:02,742 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.comments
+2026-09-25 10:00:02,742 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.checkconstraint_byname
+2026-09-25 10:00:02,867 - pms - INFO - Database schema already at migration head (d1e2f3a4b5c6).
+2026-09-25 10:00:03,035 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-25 10:00:21,418 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-25 10:00:38,358 - pms - INFO - PRODUCTION_TRACE auth accepted username=admin user_id=1
+2026-09-25 10:02:06,157 - pms - INFO - AUDIT: User admin received customer payment PAY-202609-0003 of Rs 300.00 from API Test Customer 095700.

@@ -220,6 +220,15 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
   const [historyPage, setHistoryPage] = useState(1);
   const [historyPageSize, setHistoryPageSize] = useState(25);
 
+  const searchParams = useSearchParams();
+  useEffect(() => {
+    const qParam = searchParams.get("q");
+    if (qParam) {
+      setHistoryFilters(prev => ({ ...prev, q: qParam, datePreset: "All" }));
+      onTabChange("history");
+    }
+  }, [searchParams, onTabChange]);
+
   const buildHistoryParams = () => {
     const params = new URLSearchParams();
     if (historyFilters.datePreset && historyFilters.datePreset !== "All") {

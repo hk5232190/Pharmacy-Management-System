@@ -215,6 +215,19 @@ export default function NotificationCenterPage() {
     }
   };
 
+  // Clear ALL notifications
+  const handleClearAll = async () => {
+    if (!window.confirm("Are you sure you want to permanently delete ALL notifications? This cannot be undone.")) return;
+    try {
+      const res = await apiClient.delete("/notifications/clear-all");
+      fetchNotifications();
+      window.dispatchEvent(new CustomEvent("refresh-notifications"));
+      showToast(res?.message || "All notifications permanently cleared");
+    } catch (err) {
+      console.error("Error clearing all:", err);
+    }
+  };
+
   // Dynamic KPI calculations
   const stats = useMemo(() => {
     const criticalCount = notifications.filter(
@@ -460,6 +473,16 @@ export default function NotificationCenterPage() {
           >
             <Trash2 className="w-3.5 h-3.5" />
             <span>Clear Read</span>
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleClearAll}
+            className="h-9 px-3.5 rounded-full font-bold text-xs gap-2 text-rose-600 border-rose-200 dark:border-rose-900/40 bg-rose-50/50 dark:bg-rose-950/20 hover:bg-rose-600 hover:text-white dark:hover:bg-rose-600 dark:hover:text-white shadow-xs transition-all"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            <span>Clear All</span>
           </Button>
         </div>
       </div>
@@ -962,63 +985,6 @@ export default function NotificationCenterPage() {
                 );
               })}
             </div>
-          </div>
-
-          {/* Widget 2: System Health & Automation Status */}
-          <div className="bg-white dark:bg-card rounded-2xl border border-border p-4.5 shadow-xs space-y-3">
-            <div className="flex items-center justify-between pb-2 border-b border-border">
-              <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
-                <Activity className="w-4 h-4 text-emerald-600" />
-                Engine Diagnostics
-              </h3>
-              <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 rounded-full border border-emerald-200 dark:border-emerald-800">
-                Operational
-              </span>
-            </div>
-
-            <div className="space-y-2.5 text-xs">
-              <div className="flex items-center justify-between text-muted-foreground">
-                <span>90-Day Auto Purge</span>
-                <span className="font-bold text-foreground flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                  SQLite Native
-                </span>
-              </div>
-              <div className="flex items-center justify-between text-muted-foreground">
-                <span>Ghost Prevention</span>
-                <span className="font-bold text-foreground flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                  Stateful Sync
-                </span>
-              </div>
-              <div className="flex items-center justify-between text-muted-foreground">
-                <span>Background Refresh</span>
-                <span className="font-bold text-foreground flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                  Every 30s
-                </span>
-              </div>
-              <div className="flex items-center justify-between text-muted-foreground">
-                <span>Audit Deletions</span>
-                <span className="font-bold text-foreground">SRS Chapter 6</span>
-              </div>
-            </div>
-
-
-          </div>
-
-          {/* Widget 3: Helpful Alert Guidelines */}
-          <div className="bg-slate-50/70 dark:bg-secondary/20 rounded-2xl border border-border p-4.5 space-y-2 text-xs text-muted-foreground">
-            <h4 className="font-bold text-foreground flex items-center gap-1.5">
-              <HelpCircle className="w-3.5 h-3.5 text-blue-500" />
-              Quick Reference
-            </h4>
-            <p className="leading-relaxed">
-              Condition alerts (low stock, expiry, license) automatically resolve when conditions are fixed (e.g. restocking medicine or renewing license).
-            </p>
-            <p className="leading-relaxed text-[11px] text-muted-foreground/80">
-              Notification deletions are logged in <code className="font-mono text-foreground font-semibold">app_audit.log</code> per compliance requirements.
-            </p>
           </div>
         </div>
       </div>

@@ -8,11 +8,34 @@ import { getApiBaseUrl } from "@/lib/api-client";
  */
 
 const BACKUP_ON_EXIT_URL = `${getApiBaseUrl()}/backup/backup-on-exit`;
+const BACKUP_STATUS_URL = `${getApiBaseUrl()}/backup/backup-on-exit/status`;
 
 export interface ExitBackupResult {
   success: boolean;
   skipped?: boolean;
   error?: string;
+}
+
+/**
+ * Fast check to see if backup on exit is enabled.
+ */
+export async function checkExitBackupStatus(token: string): Promise<boolean> {
+  if (!token) return false;
+  try {
+    const res = await fetch(BACKUP_STATUS_URL, {
+      method: 'GET',
+      headers: {
+        Authorization: 'Bearer ' + token,
+      },
+    });
+    if (res.ok) {
+      const data = await res.json();
+      return data.enabled === true;
+    }
+  } catch {
+    // Ignore errors, default to false
+  }
+  return false;
 }
 
 /**
