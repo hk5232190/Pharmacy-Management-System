@@ -45,6 +45,12 @@ interface SaleInit {
   DefaultTaxRate: number;
   MaxDiscountPercentage: number;
   DiscountEnabled: boolean;
+  DefaultDiscountRate?: number;
+  RequireAdminPinForDiscount?: boolean;
+  AdminDiscountThreshold?: number;
+  DefaultPaymentMethod?: string;
+  AutoPrintReceipt?: boolean;
+  ShowKeyboardShortcuts?: boolean;
 }
 
 interface ProductSearchBatch {
@@ -130,6 +136,7 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
 
   const [invoiceDiscountType, setInvoiceDiscountType] = useState<"percent" | "fixed">("percent");
   const [invoiceDiscountValue, setInvoiceDiscountValue] = useState<number>(0);
+  const [defaultDiscountRate, setDefaultDiscountRate] = useState<number>(0);
 
   const [maxDiscount, setMaxDiscount] = useState(0);
   const [discountEnabled, setDiscountEnabled] = useState(false);
@@ -304,7 +311,14 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
       if (e.key === "F4") { e.preventDefault(); document.getElementById("customer-select")?.focus(); }
       if (e.key === "F5") { e.preventDefault(); toast("Sale Held temporarily."); }
       if (e.key === "F8") { e.preventDefault(); toast("Opening Recent Sales..."); }
-      if (e.key === "F9") { e.preventDefault(); setCart([]); setPaidAmount(0); setInvoiceDiscountValue(0); toast.success("Cart cleared"); }
+      if (e.key === "F9") { 
+        e.preventDefault(); 
+        setCart([]); 
+        setPaidAmount(0); 
+        setInvoiceDiscountType("percent"); 
+        setInvoiceDiscountValue(discountEnabled ? defaultDiscountRate : 0); 
+        toast.success("Cart cleared"); 
+      }
       if (e.key === "F10") { e.preventDefault(); document.getElementById("complete-sale-btn")?.click(); }
     };
     window.addEventListener("keydown", handleKeyDown);
@@ -320,8 +334,17 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
         setTaxRate(initRes.data.DefaultTaxRate);
         setMaxDiscount(initRes.data.MaxDiscountPercentage);
         setDiscountEnabled(initRes.data.DiscountEnabled);
-        setRequireAdminPin(initRes.data.RequireAdminPinForDiscount);
-        setAdminDiscountThreshold(initRes.data.AdminDiscountThreshold);
+        setRequireAdminPin(initRes.data.RequireAdminPinForDiscount ?? false);
+        setAdminDiscountThreshold(initRes.data.AdminDiscountThreshold ?? 10);
+        
+        const defDiscount = initRes.data.DefaultDiscountRate ?? (initRes.data.DiscountEnabled ? (initRes.data.MaxDiscountPercentage <= 20 ? initRes.data.MaxDiscountPercentage : 0) : 0);
+        setDefaultDiscountRate(defDiscount);
+        if (initRes.data.DiscountEnabled && defDiscount > 0) {
+          setInvoiceDiscountType("percent");
+          setInvoiceDiscountValue(defDiscount);
+        } else {
+          setInvoiceDiscountValue(0);
+        }
         
         // POS Behavior
         if (initRes.data.DefaultPaymentMethod) {
@@ -487,12 +510,14 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
   const subtotal = cart.reduce((sum, item) => sum + (item.Quantity * item.UnitPrice), 0);
   
   let totalDiscount = 0;
-  if (invoiceDiscountType === "percent") {
+  if (discountEnabled) {
+    if (invoiceDiscountType === "percent") {
       totalDiscount = subtotal * ((invoiceDiscountValue || 0) / 100);
-  } else {
+    } else {
       totalDiscount = invoiceDiscountValue || 0;
+    }
+    if (totalDiscount > subtotal) totalDiscount = subtotal;
   }
-  if (totalDiscount > subtotal) totalDiscount = subtotal;
   
   const discountedSubtotal = subtotal - totalDiscount;
   const totalTax = discountedSubtotal * ((taxRate || 0) / 100);
@@ -569,6 +594,14 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
       return;
     }
 
+    if (discountEnabled && maxDiscount > 0) {
+      const discountPct = subtotal > 0 ? (totalDiscount / subtotal) * 100 : 0;
+      if (discountPct > maxDiscount + 0.01) {
+        toast.error(`Discount (${discountPct.toFixed(1)}%) exceeds maximum allowed limit of ${maxDiscount}%`);
+        return;
+      }
+    }
+
     if (!isSkip && requireAdminPin) {
       const discountPct = subtotal > 0 ? (totalDiscount / subtotal) * 100 : 0;
       const needsPin = discountPct > adminDiscountThreshold;
@@ -623,7 +656,8 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
 
         setCart([]);
         setPaidAmount(0);
-        setInvoiceDiscountValue(0);
+        setInvoiceDiscountType("percent");
+        setInvoiceDiscountValue(discountEnabled ? defaultDiscountRate : 0);
         setSelectedCustomerId("walkin");
         setCustomerSearchQuery("");
         fetchInitData(); // get next invoice number
@@ -1562,9 +1596,14 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
                   {/* Discount & Tax in One Row */}
                   <div className="grid grid-cols-2 gap-2 pt-2 pb-1 border-t border-border/50">
                     {/* Discount Box */}
-                    <div className="bg-secondary/30 dark:bg-secondary/20 p-2 rounded-lg border border-border/60 flex flex-col justify-between gap-1.5">
+                    <div className={cn(
+                      "bg-secondary/30 dark:bg-secondary/20 p-2 rounded-lg border border-border/60 flex flex-col justify-between gap-1.5",
+                      !discountEnabled && "opacity-60"
+                    )}>
                       <div className="flex justify-between items-center text-xs">
-                        <span className="font-semibold text-muted-foreground">Discount</span>
+                        <span className="font-semibold text-muted-foreground">
+                          Discount {discountEnabled && invoiceDiscountValue > 0 ? (invoiceDiscountType === 'percent' ? `(${invoiceDiscountValue}%)` : `(${currencySymbol}${invoiceDiscountValue})`) : ''}
+                        </span>
                         <span className="font-bold text-rose-600 dark:text-rose-400 text-xs truncate">
                           -{formatCurrency(totalDiscount)}
                         </span>
@@ -1573,12 +1612,14 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
                         <div className="flex rounded border border-border bg-background p-0.5 shrink-0">
                           <button
                             type="button"
+                            disabled={!discountEnabled}
                             onClick={() => setInvoiceDiscountType("percent")}
                             className={cn(
                               "px-1.5 py-0.5 text-[11px] font-bold rounded transition-all",
                               invoiceDiscountType === "percent"
                                 ? "bg-blue-600 text-white shadow-xs"
-                                : "text-muted-foreground hover:text-foreground"
+                                : "text-muted-foreground hover:text-foreground",
+                              !discountEnabled && "cursor-not-allowed opacity-50"
                             )}
                             title="Percent (%)"
                           >
@@ -1586,12 +1627,14 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
                           </button>
                           <button
                             type="button"
+                            disabled={!discountEnabled}
                             onClick={() => setInvoiceDiscountType("fixed")}
                             className={cn(
                               "px-1.5 py-0.5 text-[11px] font-bold rounded transition-all",
                               invoiceDiscountType === "fixed"
                                 ? "bg-blue-600 text-white shadow-xs"
-                                : "text-muted-foreground hover:text-foreground"
+                                : "text-muted-foreground hover:text-foreground",
+                              !discountEnabled && "cursor-not-allowed opacity-50"
                             )}
                             title={`Fixed (${currencySymbol})`}
                           >
@@ -1601,12 +1644,14 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
                         <Input
                           id="invoice-discount-input"
                           type="number"
+                          disabled={!discountEnabled}
                           min="0"
-                          max={invoiceDiscountType === "percent" ? 100 : subtotal}
+                          max={invoiceDiscountType === "percent" ? (maxDiscount > 0 ? Math.min(100, maxDiscount) : 100) : subtotal}
                           step="any"
                           placeholder="0"
-                          value={invoiceDiscountValue === 0 ? "" : invoiceDiscountValue}
+                          value={!discountEnabled ? "0" : (invoiceDiscountValue === 0 ? "" : invoiceDiscountValue)}
                           onChange={(e) => {
+                            if (!discountEnabled) return;
                             const val = Math.max(0, parseFloat(e.target.value) || 0);
                             if (invoiceDiscountType === "percent" && val > 100) {
                               setInvoiceDiscountValue(100);
@@ -1729,7 +1774,7 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
                   <Button variant="outline" onClick={() => { toast("Sale held temporarily. Cart preserved."); }} className="w-full h-11 border-blue-200 text-blue-600 hover:bg-blue-50 dark:border-blue-900/50 dark:text-blue-400 font-medium">
                     <Pause className="mr-2 w-4 h-4" /> Hold Sale
                   </Button>
-                  <Button variant="outline" onClick={() => { setCart([]); setPaidAmount(0); setInvoiceDiscountValue(0); }} className="w-full h-11 border-rose-200 text-rose-600 hover:bg-rose-50 dark:border-rose-900/50 dark:text-rose-400 font-medium">
+                  <Button variant="outline" onClick={() => { setCart([]); setPaidAmount(0); setInvoiceDiscountType("percent"); setInvoiceDiscountValue(discountEnabled ? defaultDiscountRate : 0); }} className="w-full h-11 border-rose-200 text-rose-600 hover:bg-rose-50 dark:border-rose-900/50 dark:text-rose-400 font-medium">
                     <Trash2 className="mr-2 w-4 h-4" /> Clear Cart
                   </Button>
                 </div>

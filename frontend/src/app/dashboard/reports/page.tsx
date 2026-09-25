@@ -14,7 +14,7 @@ import {
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from "recharts";
-import { cn } from "@/lib/utils";
+import { cn, parseDateTime } from "@/lib/utils";
 import { format } from "date-fns";
 import { useSystemPreferences } from "@/contexts/SystemPreferencesContext";
 import { useProfile } from "@/contexts/ProfileContext";
@@ -778,7 +778,7 @@ function ReportsPageInner({
                                 <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-secondary/30 cursor-pointer" onClick={() => setSelectedInvoice(t)}>
                                   <td className="px-4 py-3 text-muted-foreground text-left">{startIndex + idx + 1}</td>
                                   <td className="px-4 py-3 font-medium text-blue-600 text-left">{t.InvoiceNo}</td>
-                                  <td className="px-4 py-3 text-left">{format(new Date(t.TransactionDate), "dd/MM/yyyy")}</td>
+                                  <td className="px-4 py-3 text-left">{format(parseDateTime(t.TransactionDate), "dd/MM/yyyy")}</td>
                                   <td className="px-4 py-3 text-left">{t.CustomerName}</td>
                                   <td className="px-4 py-3 text-center tabular-nums">{t.MedicinesSold}</td>
                                   <td className="px-4 py-3 text-center tabular-nums">{t.TotalQty}</td>
@@ -896,7 +896,7 @@ function ReportsPageInner({
                         {printData.map((t: any, idx: number) => (
                           <tr key={idx} className="border-b border-gray-200 even:bg-gray-50">
                             <td className="px-3 py-2 font-mono font-bold text-gray-800 text-left">{t.InvoiceNo}</td>
-                            <td className="px-3 py-2 text-gray-600 text-left">{new Date(t.TransactionDate).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}</td>
+                            <td className="px-3 py-2 text-gray-600 text-left">{parseDateTime(t.TransactionDate).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}</td>
                             <td className="px-3 py-2 text-gray-800 text-left">{t.CustomerName || '-'}</td>
                             <td className="px-3 py-2 text-center tabular-nums text-gray-600">{t.MedicinesSold}</td>
                             <td className="px-3 py-2 text-center tabular-nums text-gray-600">{t.TotalQty}</td>
@@ -1643,7 +1643,7 @@ function ReportsPageInner({
                             <tr key={idx} className="hover:bg-slate-50/80 dark:hover:bg-secondary/30 cursor-pointer transition-colors" onClick={() => setSelectedPurchaseTransaction(t)}>
                               <td className="px-4 py-3 text-muted-foreground text-left">{startIndex + idx + 1}</td>
                               <td className="px-4 py-3 font-medium text-blue-600 text-left">{t.InvoiceNo}</td>
-                              <td className="px-4 py-3 whitespace-nowrap text-left">{format(new Date(t.PurchaseDate), "dd/MM/yyyy")}</td>
+                              <td className="px-4 py-3 whitespace-nowrap text-left">{format(parseDateTime(t.PurchaseDate), "dd/MM/yyyy")}</td>
                               <td className="px-4 py-3 font-medium text-left">{t.SupplierName}</td>
                               <td className="px-4 py-3 text-center tabular-nums text-muted-foreground">{t.MedicinesPurchased}</td>
                               <td className="px-4 py-3 text-center tabular-nums text-muted-foreground">{t.TotalQty}</td>
@@ -1740,7 +1740,7 @@ function ReportsPageInner({
                   <DialogHeader>
                     <DialogTitle>Purchase Invoice: <span className="text-primary">{selectedPurchaseTransaction?.InvoiceNo}</span></DialogTitle>
                     <DialogDescription>
-                      Supplier: <span className="font-medium text-foreground">{selectedPurchaseTransaction?.SupplierName}</span> | Date: {selectedPurchaseTransaction ? new Date(selectedPurchaseTransaction.PurchaseDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : ''}
+                      Supplier: <span className="font-medium text-foreground">{selectedPurchaseTransaction?.SupplierName}</span> | Date: {selectedPurchaseTransaction ? parseDateTime(selectedPurchaseTransaction.PurchaseDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : ''}
                     </DialogDescription>
                   </DialogHeader>
                   <div className="py-2">
@@ -1829,7 +1829,7 @@ function ReportsPageInner({
                         {printData.map((t: any, idx: number) => (
                           <tr key={idx} className="border-b border-gray-200 even:bg-gray-50">
                             <td className="px-3 py-2 font-mono font-bold text-gray-800 text-left">{t.InvoiceNo}</td>
-                            <td className="px-3 py-2 text-gray-600 text-left">{new Date(t.PurchaseDate).toLocaleDateString('en-GB')}</td>
+                            <td className="px-3 py-2 text-gray-600 text-left">{parseDateTime(t.PurchaseDate).toLocaleDateString('en-GB')}</td>
                             <td className="px-3 py-2 text-gray-800 text-left">{t.SupplierName || '-'}</td>
                             <td className="px-3 py-2 text-center tabular-nums text-gray-600">{t.MedicinesPurchased}</td>
                             <td className="px-3 py-2 text-center tabular-nums text-gray-600">{t.TotalQty}</td>
@@ -2472,7 +2472,7 @@ function ReportsPageInner({
               </div>
               <div>
                 <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Transaction Date</p>
-                <p className="font-semibold text-foreground">{new Date(selectedInvoice.TransactionDate).toLocaleDateString()}</p>
+                <p className="font-semibold text-foreground">{parseDateTime(selectedInvoice.TransactionDate).toLocaleDateString()}</p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Customer</p>

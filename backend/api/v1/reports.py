@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Query, Response, Body
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session, joinedload, selectinload
 from sqlalchemy import func
-from datetime import date, timedelta, datetime
+from datetime import date, timedelta, datetime, timezone
 import csv
 import openpyxl
 
@@ -170,9 +170,12 @@ def fetch_sales_report_data(
     for s in completed_sales:
         customer_name = s.customer.Name if s.customer else "Walk-in"
         total_qty = sum(i.Quantity for i in s.items)
+        tx_dt = s.TransactionDate
+        if tx_dt and tx_dt.tzinfo is None:
+            tx_dt = tx_dt.replace(tzinfo=timezone.utc)
         transactions.append(SalesTransaction(
             InvoiceNo=s.InvoiceNumber or str(s.SalesId),
-            TransactionDate=s.TransactionDate,
+            TransactionDate=tx_dt,
             CustomerName=customer_name,
             MedicinesSold=len(s.items),
             TotalQty=total_qty,
@@ -199,7 +202,11 @@ def fetch_sales_report_data(
     trend_dict = {d: {"sales": 0.0, "cogs": 0.0} for d in date_seq}
 
     for s in completed_sales:
-        period = s.TransactionDate.strftime(fmt)
+        if s.TransactionDate:
+            local_dt = s.TransactionDate.replace(tzinfo=timezone.utc).astimezone() if s.TransactionDate.tzinfo is None else s.TransactionDate.astimezone()
+            period = local_dt.strftime(fmt)
+        else:
+            period = ""
         if period in trend_dict:
             trend_dict[period]["sales"] += float(s.NetAmount or 0.0)
             sale_cogs = sum(
@@ -278,9 +285,10 @@ def export_sales_report_csv(
     writer.writerow(['Invoice No', 'Date', 'Customer', 'Medicines Sold', 'Total Qty', 'Discount', 'Tax', 'Grand Total', 'Payment Method', 'Status'])
     
     for t in report_data.transactions:
+        t_dt = t.TransactionDate.astimezone() if t.TransactionDate.tzinfo else t.TransactionDate
         writer.writerow([
             t.InvoiceNo, 
-            t.TransactionDate.strftime("%Y-%m-%d %H:%M:%S"),
+            t_dt.strftime("%Y-%m-%d %H:%M:%S"),
             t.CustomerName,
             t.MedicinesSold,
             t.TotalQty,
@@ -343,9 +351,12 @@ def fetch_purchase_report_data(
     for p in completed_purchases:
         supplier_name = p.supplier.Name if p.supplier else "Unknown"
         total_qty = sum(i.Quantity for i in p.items)
+        p_dt = p.PurchaseDate
+        if p_dt and p_dt.tzinfo is None:
+            p_dt = p_dt.replace(tzinfo=timezone.utc)
         transactions.append(PurchaseTransaction(
             InvoiceNo=p.InvoiceNumber or str(p.PurchaseId),
-            PurchaseDate=p.PurchaseDate,
+            PurchaseDate=p_dt,
             SupplierName=supplier_name,
             MedicinesPurchased=len(p.items),
             TotalQty=total_qty,
@@ -371,7 +382,11 @@ def fetch_purchase_report_data(
     trend_dict = {d: 0.0 for d in date_seq}
 
     for p in completed_purchases:
-        period = p.PurchaseDate.strftime(fmt)
+        if p.PurchaseDate:
+            local_p_dt = p.PurchaseDate.replace(tzinfo=timezone.utc).astimezone() if p.PurchaseDate.tzinfo is None else p.PurchaseDate.astimezone()
+            period = local_p_dt.strftime(fmt)
+        else:
+            period = ""
         if period in trend_dict:
             trend_dict[period] += float(p.NetAmount or 0.0)
 
@@ -1075,7 +1090,11 @@ def fetch_financial_report_data(
 
     # Add daily revenue
     for s in completed_sales:
-        period = s.TransactionDate.strftime(fmt)
+        if s.TransactionDate:
+            local_dt = s.TransactionDate.replace(tzinfo=timezone.utc).astimezone() if s.TransactionDate.tzinfo is None else s.TransactionDate.astimezone()
+            period = local_dt.strftime(fmt)
+        else:
+            period = ""
         if period in trend_dict:
             # Net revenue for the sale (SubTotal - Discount)
             trend_dict[period]["revenue"] += (float(s.SubTotal or 0.0) - float(s.DiscountAmount or 0.0))
@@ -1086,7 +1105,11 @@ def fetch_financial_report_data(
             
     # Add daily returns to expenses (as a reduction of revenue)
     for r in returned_sales:
-        period = r.ReturnDate.strftime(fmt)
+        if r.ReturnDate:
+            local_r_dt = r.ReturnDate.replace(tzinfo=timezone.utc).astimezone() if r.ReturnDate.tzinfo is None else r.ReturnDate.astimezone()
+            period = local_r_dt.strftime(fmt)
+        else:
+            period = ""
         if period in trend_dict:
             trend_dict[period]["expenses"] += float(r.TotalRefundAmount or 0.0)
 
@@ -1141,9 +1164,10 @@ def export_sales_report_excel(
         cell.fill = PatternFill(start_color="DDDDDD", end_color="DDDDDD", fill_type="solid")
     
     for t in report_data.transactions:
+        t_dt = t.TransactionDate.astimezone() if t.TransactionDate.tzinfo else t.TransactionDate
         ws.append([
             t.InvoiceNo, 
-            t.TransactionDate.strftime("%Y-%m-%d %H:%M:%S"),
+            t_dt.strftime("%Y-%m-%d %H:%M:%S"),
             t.CustomerName,
             t.MedicinesSold,
             t.TotalQty,
@@ -1681,10 +1705,11 @@ def export_sales_report_pdf(req: dict = Body(...), db: Session = Depends(get_db)
     hdrs = ['#', 'Invoice No', 'Date & Time', 'Customer', 'Qty', 'Items', 'Total (Rs)', 'Status']
     rows = [hdrs]
     for i, t in enumerate(report_data.transactions, 1):
+        t_dt = t.TransactionDate.astimezone() if t.TransactionDate.tzinfo else t.TransactionDate
         rows.append([
             str(i),
             t.InvoiceNo,
-            t.TransactionDate.strftime("%d-%m-%Y %I:%M %p"),
+            t_dt.strftime("%d-%m-%Y %I:%M %p"),
             _P(t.CustomerName or 'Walk-in'),
             str(t.TotalQty),
             str(t.MedicinesSold),

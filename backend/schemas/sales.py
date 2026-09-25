@@ -7,6 +7,7 @@ class SaleInitResponse(BaseModel):
     DefaultTaxRate: float
     MaxDiscountPercentage: float = 0.0
     DiscountEnabled: bool = False
+    DefaultDiscountRate: float = 0.0
     RequireAdminPinForDiscount: bool = False
     AdminDiscountThreshold: float = 0.0
     DefaultPaymentMethod: str = "Cash"

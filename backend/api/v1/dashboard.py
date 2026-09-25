@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func, or_
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime, timezone
 from api.deps import get_db, get_current_user
 import models
 from schemas.dashboard import DashboardSummaryResponse, DashboardChartsResponse, DashboardWidgetsResponse
@@ -401,10 +401,19 @@ def get_dashboard_widgets(
         if s.customer:
             customer_name = s.customer.Name
             
+        tx_date_iso = ""
+        if s.TransactionDate:
+            if hasattr(s.TransactionDate, "tzinfo") and s.TransactionDate.tzinfo is None:
+                tx_date_iso = s.TransactionDate.replace(tzinfo=timezone.utc).isoformat()
+            elif hasattr(s.TransactionDate, "isoformat"):
+                tx_date_iso = s.TransactionDate.isoformat()
+            else:
+                tx_date_iso = str(s.TransactionDate)
+
         recent_sales.append({
             "sales_id": s.SalesId,
             "invoice_no": s.InvoiceNumber,
-            "date": s.TransactionDate.strftime('%Y-%m-%d %H:%M') if hasattr(s.TransactionDate, 'strftime') else str(s.TransactionDate)[:16],
+            "date": tx_date_iso,
             "amount": float(s.GrandTotal),
             "customer": customer_name,
             "status": s.Status

@@ -55,6 +55,7 @@ def init_sale(
         default_tax_rate = 0.0
         max_discount = 0.0
         discount_enabled = False
+        default_discount_rate = 0.0
         require_admin_pin = False
         admin_discount_threshold = 0.0
         default_payment = "Cash"
@@ -77,6 +78,11 @@ def init_sale(
             discount_enabled = bool(billing_settings.DiscountEnabled)
             if discount_enabled:
                 max_discount = float(billing_settings.MaxDiscountPercentage)
+                saved_default = getattr(billing_settings, 'DefaultDiscountRate', 0.0)
+                if saved_default is not None and float(saved_default) > 0:
+                    default_discount_rate = float(saved_default)
+                elif float(billing_settings.MaxDiscountPercentage or 0) > 0 and float(billing_settings.MaxDiscountPercentage or 0) <= 20:
+                    default_discount_rate = float(billing_settings.MaxDiscountPercentage)
             require_admin_pin = bool(billing_settings.RequireAdminPinForDiscount)
             admin_discount_threshold = float(billing_settings.AdminDiscountThreshold)
             
@@ -89,6 +95,7 @@ def init_sale(
             DefaultTaxRate=default_tax_rate,
             MaxDiscountPercentage=max_discount,
             DiscountEnabled=discount_enabled,
+            DefaultDiscountRate=default_discount_rate,
             RequireAdminPinForDiscount=require_admin_pin,
             AdminDiscountThreshold=admin_discount_threshold,
             DefaultPaymentMethod=default_payment,

@@ -9,6 +9,7 @@ class BillingSettingsBase(BaseModel):
     TaxEnabled: bool
     DefaultTaxRate: float
     DiscountEnabled: bool
+    DefaultDiscountRate: float = 0.00
     MaxDiscountPercentage: float
     AdminDiscountThreshold: float
     RequireAdminPinForDiscount: bool

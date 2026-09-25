@@ -20,6 +20,7 @@ interface BillingSettings {
   TaxEnabled: boolean;
   DefaultTaxRate: number;
   DiscountEnabled: boolean;
+  DefaultDiscountRate: number;
   MaxDiscountPercentage: number;
   AdminDiscountThreshold: number;
   RequireAdminPinForDiscount: boolean;
@@ -36,6 +37,7 @@ const DEFAULT_SETTINGS: BillingSettings = {
   TaxEnabled: false,
   DefaultTaxRate: 0.0,
   DiscountEnabled: true,
+  DefaultDiscountRate: 0.0,
   MaxDiscountPercentage: 100.0,
   AdminDiscountThreshold: 10.0,
   RequireAdminPinForDiscount: true,
@@ -182,16 +184,21 @@ export default function BillingSettingsPage() {
             <div className="flex items-center justify-between p-5 bg-slate-50/80 dark:bg-slate-900/40 rounded-xl border border-slate-200/60 dark:border-slate-800 mt-8">
               <div>
                 <Label className="text-base font-semibold">Enable Global Discounts</Label>
-                <p className="text-sm text-slate-500 mt-0.5">Allow cashiers to apply discounts on the POS screen.</p>
+                <p className="text-sm text-slate-500 mt-0.5">Allow discounts on invoices and pre-fill default discount rate.</p>
               </div>
               <Switch checked={settings.DiscountEnabled} onCheckedChange={(c) => handleSwitchChange("DiscountEnabled", c)} />
             </div>
-            <div className={`space-y-3 transition-opacity ${!settings.DiscountEnabled ? 'opacity-50 pointer-events-none' : ''}`}>
-              <Label className="text-sm font-semibold">Absolute Max Discount (%)</Label>
-              <Input type="number" step="0.01" name="MaxDiscountPercentage" value={settings.MaxDiscountPercentage} onChange={handleChange} disabled={!settings.DiscountEnabled} className="rounded-xl bg-slate-50/70 dark:bg-secondary/30 border-border focus-visible:ring-emerald-500/30 focus-visible:border-emerald-500 transition-all shadow-sm" />
-              <p className="text-sm text-slate-500 font-medium bg-slate-50/50 dark:bg-secondary/20 p-3 rounded-xl border border-border mt-2 block">
-                The POS will physically prevent any discount above this percentage.
-              </p>
+            <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 transition-opacity ${!settings.DiscountEnabled ? 'opacity-50 pointer-events-none' : ''}`}>
+              <div className="space-y-3">
+                <Label className="text-sm font-semibold">Default Discount Rate (%)</Label>
+                <Input type="number" step="0.01" name="DefaultDiscountRate" value={settings.DefaultDiscountRate} onChange={handleChange} disabled={!settings.DiscountEnabled} className="rounded-xl bg-slate-50/70 dark:bg-secondary/30 border-border focus-visible:ring-emerald-500/30 focus-visible:border-emerald-500 transition-all shadow-sm" placeholder="0" />
+                <p className="text-xs text-slate-500">Automatically pre-applied to new sales bills.</p>
+              </div>
+              <div className="space-y-3">
+                <Label className="text-sm font-semibold">Absolute Max Discount (%)</Label>
+                <Input type="number" step="0.01" name="MaxDiscountPercentage" value={settings.MaxDiscountPercentage} onChange={handleChange} disabled={!settings.DiscountEnabled} className="rounded-xl bg-slate-50/70 dark:bg-secondary/30 border-border focus-visible:ring-emerald-500/30 focus-visible:border-emerald-500 transition-all shadow-sm" />
+                <p className="text-xs text-slate-500">The POS will physically prevent any discount above this rate.</p>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -298,6 +305,10 @@ export default function BillingSettingsPage() {
                 <li className="flex justify-between items-center bg-slate-50/50 dark:bg-secondary/20 p-2.5 rounded-lg border border-border">
                   <span className="text-slate-600 dark:text-slate-400 font-medium">Default Tax</span>
                   <span className="font-bold">{settings.TaxEnabled ? `${settings.DefaultTaxRate}%` : "Disabled"}</span>
+                </li>
+                <li className="flex justify-between items-center bg-slate-50/50 dark:bg-secondary/20 p-2.5 rounded-lg border border-border">
+                  <span className="text-slate-600 dark:text-slate-400 font-medium">Default Discount</span>
+                  <span className="font-bold">{settings.DiscountEnabled ? `${settings.DefaultDiscountRate}%` : "Disabled"}</span>
                 </li>
                 <li className="flex justify-between items-center bg-slate-50/50 dark:bg-secondary/20 p-2.5 rounded-lg border border-border">
                   <span className="text-slate-600 dark:text-slate-400 font-medium">Max Discount</span>

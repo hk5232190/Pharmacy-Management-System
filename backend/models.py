@@ -364,6 +364,7 @@ class BillingSettings(Base):
     TaxEnabled = Column(Boolean, default=False, nullable=False)
     DefaultTaxRate = Column(Numeric(5, 2), default=0.00, nullable=False)
     DiscountEnabled = Column(Boolean, default=True, nullable=False)
+    DefaultDiscountRate = Column(Numeric(5, 2), default=0.00, nullable=False)
     MaxDiscountPercentage = Column(Numeric(5, 2), default=100.00, nullable=False)
     AdminDiscountThreshold = Column(Numeric(5, 2), default=10.00, nullable=False)
     RequireAdminPinForDiscount = Column(Boolean, default=True, nullable=False)
