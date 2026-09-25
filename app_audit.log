@@ -121,3 +121,134 @@
 2026-09-25 01:25:15,978 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
 2026-09-25 01:26:05,689 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
 2026-09-25 07:22:45,658 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-25 12:10:26,385 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-25 12:13:17,446 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-25 12:13:18,389 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.schemas
+2026-09-25 12:13:18,390 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.tables
+2026-09-25 12:13:18,390 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.types
+2026-09-25 12:13:18,390 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.constraints
+2026-09-25 12:13:18,391 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.defaults
+2026-09-25 12:13:18,391 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.comments
+2026-09-25 12:13:18,391 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.checkconstraint_byname
+2026-09-25 14:53:32,839 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-25 14:55:21,158 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-25 14:56:04,420 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-25 14:57:08,009 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-25 14:59:25,383 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-25 15:01:01,124 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-25 15:04:24,555 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-25 15:04:24,906 - pms - INFO - PRODUCTION_TRACE license storage path=E:\Projects\PMS-Software\backend\licenses\active.lic exists=True
+2026-09-25 15:05:55,954 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-25 15:05:56,493 - pms - INFO - PRODUCTION_TRACE license storage path=E:\Projects\PMS-Software\backend\licenses\active.lic exists=True
+2026-09-25 15:06:06,585 - pms - ERROR - Unhandled Exception caught: invalid literal for int() with base 10: 'admin' | Path: /api/v1/dashboard/summary
+NoneType: None
+2026-09-25 15:06:06,995 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/dashboard/sales-profit-chart "HTTP/1.1 404 Not Found"
+2026-09-25 15:06:07,078 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/dashboard/low-stock-alerts "HTTP/1.1 404 Not Found"
+2026-09-25 15:06:07,127 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/dashboard/near-expiry-alerts "HTTP/1.1 404 Not Found"
+2026-09-25 15:06:07,166 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/reports/sales-summary "HTTP/1.1 404 Not Found"
+2026-09-25 15:06:07,259 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/reports/financial-summary "HTTP/1.1 404 Not Found"
+2026-09-25 15:06:07,342 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/reports/inventory-valuation "HTTP/1.1 404 Not Found"
+2026-09-25 15:06:07,374 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/reports/expiry-risk "HTTP/1.1 404 Not Found"
+2026-09-25 15:06:07,420 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/reports/fast-slow-moving "HTTP/1.1 404 Not Found"
+2026-09-25 15:06:07,581 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/reports/stock-movement "HTTP/1.1 404 Not Found"
+2026-09-25 15:06:07,808 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/settings/billing "HTTP/1.1 200 OK"
+2026-09-25 15:06:07,961 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/settings/printer "HTTP/1.1 200 OK"
+2026-09-25 15:06:08,079 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/settings/inventory "HTTP/1.1 200 OK"
+2026-09-25 15:06:08,104 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/settings/security "HTTP/1.1 404 Not Found"
+2026-09-25 15:06:08,251 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/settings/appearance "HTTP/1.1 200 OK"
+2026-09-25 15:06:08,271 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/medicines/ "HTTP/1.1 307 Temporary Redirect"
+2026-09-25 15:06:08,382 - pms - ERROR - Unhandled Exception caught: invalid literal for int() with base 10: 'admin' | Path: /api/v1/medicines
+NoneType: None
+2026-09-25 15:06:08,470 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/inventory/batches "HTTP/1.1 404 Not Found"
+2026-09-25 15:06:08,505 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/customer-payments/summary "HTTP/1.1 404 Not Found"
+2026-09-25 15:08:30,300 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-25 15:08:31,309 - pms - INFO - PRODUCTION_TRACE license storage path=E:\Projects\PMS-Software\backend\licenses\active.lic exists=True
+2026-09-25 15:08:33,421 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/dashboard/summary "HTTP/1.1 200 OK"
+2026-09-25 15:08:33,654 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/dashboard/charts "HTTP/1.1 200 OK"
+2026-09-25 15:08:33,816 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/dashboard/widgets "HTTP/1.1 200 OK"
+2026-09-25 15:08:34,418 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/reports/sales "HTTP/1.1 200 OK"
+2026-09-25 15:08:34,519 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/reports/financial "HTTP/1.1 200 OK"
+2026-09-25 15:08:34,697 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/reports/purchases "HTTP/1.1 200 OK"
+2026-09-25 15:08:34,765 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/reports/inventory "HTTP/1.1 200 OK"
+2026-09-25 15:08:35,091 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/reports/medicine "HTTP/1.1 200 OK"
+2026-09-25 15:08:35,149 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/settings/billing "HTTP/1.1 200 OK"
+2026-09-25 15:08:35,299 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/settings/printer "HTTP/1.1 200 OK"
+2026-09-25 15:08:35,358 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/settings/inventory "HTTP/1.1 200 OK"
+2026-09-25 15:08:35,477 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/settings/security/settings "HTTP/1.1 404 Not Found"
+2026-09-25 15:08:35,666 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/settings/appearance "HTTP/1.1 200 OK"
+2026-09-25 15:08:35,880 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/settings/general "HTTP/1.1 200 OK"
+2026-09-25 15:08:36,137 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/medicines "HTTP/1.1 200 OK"
+2026-09-25 15:08:36,419 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/inventory/summary "HTTP/1.1 200 OK"
+2026-09-25 15:08:36,581 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/inventory/stock "HTTP/1.1 200 OK"
+2026-09-25 15:11:29,822 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-25 15:11:32,360 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.schemas
+2026-09-25 15:11:32,361 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.tables
+2026-09-25 15:11:32,361 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.types
+2026-09-25 15:11:32,361 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.constraints
+2026-09-25 15:11:32,361 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.defaults
+2026-09-25 15:11:32,361 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.comments
+2026-09-25 15:11:32,361 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.checkconstraint_byname
+2026-09-25 15:15:00,965 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-25 15:15:01,272 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.schemas
+2026-09-25 15:15:01,272 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.tables
+2026-09-25 15:15:01,272 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.types
+2026-09-25 15:15:01,272 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.constraints
+2026-09-25 15:15:01,272 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.defaults
+2026-09-25 15:15:01,272 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.comments
+2026-09-25 15:15:01,272 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.checkconstraint_byname
+2026-09-25 15:15:01,305 - pms - ERROR - Migrations/schema healing error (name 'sys' is not defined); continuing startup.
+2026-09-25 15:15:41,817 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-25 15:15:42,217 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.schemas
+2026-09-25 15:15:42,217 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.tables
+2026-09-25 15:15:42,217 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.types
+2026-09-25 15:15:42,217 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.constraints
+2026-09-25 15:15:42,217 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.defaults
+2026-09-25 15:15:42,218 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.comments
+2026-09-25 15:15:42,218 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.checkconstraint_byname
+2026-09-25 15:15:42,444 - pms - INFO - Schema healing: adding missing column stock_batches.Source (VARCHAR(30))
+2026-09-25 15:15:42,452 - pms - INFO - Schema healing: adding missing column billing_settings.DefaultDiscountRate (NUMERIC(5, 2))
+2026-09-25 15:15:43,450 - pms - INFO - PRODUCTION_TRACE license storage path=E:\Projects\PMS-Software\backend\licenses\active.lic exists=True
+2026-09-25 15:16:52,427 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-25 15:16:54,589 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.schemas
+2026-09-25 15:16:54,589 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.tables
+2026-09-25 15:16:54,589 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.types
+2026-09-25 15:16:54,589 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.constraints
+2026-09-25 15:16:54,589 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.defaults
+2026-09-25 15:16:54,589 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.comments
+2026-09-25 15:16:54,589 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.checkconstraint_byname
+2026-09-25 15:16:54,812 - pms - INFO - Schema healing: adding missing column stock_batches.Source (VARCHAR(30))
+2026-09-25 15:16:54,831 - pms - INFO - Schema healing: adding missing column billing_settings.DefaultDiscountRate (NUMERIC(5, 2))
+2026-09-25 15:17:00,911 - pms - INFO - PRODUCTION_TRACE license storage path=E:\Projects\PMS-Software\backend\licenses\active.lic exists=True
+2026-09-25 15:17:10,546 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/dashboard/summary "HTTP/1.1 200 OK"
+2026-09-25 15:17:10,883 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/dashboard/charts "HTTP/1.1 200 OK"
+2026-09-25 15:17:11,009 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/dashboard/widgets "HTTP/1.1 200 OK"
+2026-09-25 15:17:11,582 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/reports/sales "HTTP/1.1 200 OK"
+2026-09-25 15:17:11,710 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/reports/financial "HTTP/1.1 200 OK"
+2026-09-25 15:17:11,946 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/reports/purchases "HTTP/1.1 200 OK"
+2026-09-25 15:17:12,050 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/reports/inventory "HTTP/1.1 200 OK"
+2026-09-25 15:17:12,520 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/reports/medicine "HTTP/1.1 200 OK"
+2026-09-25 15:17:12,616 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/settings/billing "HTTP/1.1 200 OK"
+2026-09-25 15:17:12,908 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/settings/printer "HTTP/1.1 200 OK"
+2026-09-25 15:17:12,995 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/settings/inventory "HTTP/1.1 200 OK"
+2026-09-25 15:17:13,202 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/settings/appearance "HTTP/1.1 200 OK"
+2026-09-25 15:17:13,323 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/settings/general "HTTP/1.1 200 OK"
+2026-09-25 15:17:13,580 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/security/settings "HTTP/1.1 200 OK"
+2026-09-25 15:17:13,740 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/medicines "HTTP/1.1 200 OK"
+2026-09-25 15:17:13,994 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/inventory/summary "HTTP/1.1 200 OK"
+2026-09-25 15:17:14,103 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/inventory/stock "HTTP/1.1 200 OK"
+2026-09-25 15:22:29,287 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-25 15:22:30,512 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.schemas
+2026-09-25 15:22:30,512 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.tables
+2026-09-25 15:22:30,512 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.types
+2026-09-25 15:22:30,512 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.constraints
+2026-09-25 15:22:30,513 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.defaults
+2026-09-25 15:22:30,513 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.comments
+2026-09-25 15:22:30,513 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.checkconstraint_byname
+2026-09-25 15:25:27,496 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-25 15:25:28,667 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.schemas
+2026-09-25 15:25:28,668 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.tables
+2026-09-25 15:25:28,668 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.types
+2026-09-25 15:25:28,668 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.constraints
+2026-09-25 15:25:28,668 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.defaults
+2026-09-25 15:25:28,668 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.comments
+2026-09-25 15:25:28,668 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.checkconstraint_byname

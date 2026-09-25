@@ -12,7 +12,14 @@ Write-Host "Installing PyInstaller..." -ForegroundColor Cyan
 Write-Host "Preparing clean database template..." -ForegroundColor Cyan
 & .\backend\venv\Scripts\python.exe prepare_build.py
 
-# 3. Build Backend with PyInstaller (one-directory mode)
+# 3. Build Frontend (Next.js static export)
+Write-Host "Building Frontend (Next.js)..." -ForegroundColor Cyan
+Set-Location frontend
+npm install --prefer-offline
+npm run build
+Set-Location ..
+
+# 4. Build Backend with PyInstaller (one-directory mode)
 Write-Host "Building Backend (one-directory mode)..." -ForegroundColor Cyan
 & .\backend\venv\Scripts\python.exe -m PyInstaller pms-backend.spec --noconfirm
 
@@ -31,28 +38,24 @@ if (-not (Test-Path $internalDir)) {
 $fileCount = (Get-ChildItem $backendDir -Recurse -File).Count
 Write-Host "Backend built: $backendDir ($fileCount files, _internal/ present)" -ForegroundColor Green
 
-# 4. Copy one-dir backend to pms-backend/ for Tauri resources (preserves _internal/ structure natively via array syntax)
+# 5. Copy one-dir backend to pms-backend/ for Tauri resources (preserves _internal/ structure natively via array syntax)
 Write-Host "Copying backend to pms-backend/ for Tauri..." -ForegroundColor Cyan
 $bundleTarget = "frontend\src-tauri\pms-backend"
 if (Test-Path $bundleTarget) { Remove-Item $bundleTarget -Recurse -Force }
+if (Test-Path "frontend\src-tauri\resources\pms-backend") { Remove-Item "frontend\src-tauri\resources\pms-backend" -Recurse -Force }
 New-Item -ItemType Directory -Path $bundleTarget -Force | Out-Null
 Copy-Item "$backendDir\*" -Destination $bundleTarget -Recurse -Force
+
 Write-Host "  EXE: $(Test-Path "$bundleTarget\pms-backend-x86_64-pc-windows-msvc.exe")" -ForegroundColor Green
 Write-Host "  _internal/: $(Test-Path "$bundleTarget\_internal")" -ForegroundColor Green
 Write-Host "  Files: $((Get-ChildItem $bundleTarget -Recurse -File).Count)" -ForegroundColor Green
-
-# 5. Build Frontend (Next.js static export)
-Write-Host "Building Frontend (Next.js)..." -ForegroundColor Cyan
-Set-Location frontend
-npm install --prefer-offline
-npm run build
-Set-Location ..
 
 # 6. Build Tauri NSIS installer
 Write-Host "Building Tauri Application (NSIS Installer)..." -ForegroundColor Cyan
 Set-Location frontend
 npm run tauri build
 Set-Location ..
+
 
 Write-Host "=============================================" -ForegroundColor Green
 Write-Host " Build Complete!" -ForegroundColor Green

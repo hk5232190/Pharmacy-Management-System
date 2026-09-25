@@ -32,9 +32,13 @@ def upgrade() -> None:
 
     # Copy data from pharmacy_profile to printer_settings
     conn = op.get_bind()
+    insp = sa.inspect(conn)
+    prof_cols = [c['name'] for c in insp.get_columns('pharmacy_profile')] if insp.has_table('pharmacy_profile') else []
+    footer_col = "ReceiptFooter1" if "ReceiptFooter1" in prof_cols else "NULL as ReceiptFooter1"
     # Read the first pharmacy profile
-    res = conn.execute(sa.text("SELECT PharmacyName, Address, PhoneNumber, DrugLicenseNumber, NtnStrn, Website, ReceiptLogoPath, ReceiptFooter1 FROM pharmacy_profile LIMIT 1"))
+    res = conn.execute(sa.text(f"SELECT PharmacyName, Address, PhoneNumber, DrugLicenseNumber, NtnStrn, Website, ReceiptLogoPath, {footer_col} FROM pharmacy_profile LIMIT 1"))
     profile = res.fetchone()
+
     
     if profile:
         params = {

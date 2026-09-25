@@ -6820,3 +6820,20 @@ NoneType: None
 2026-09-25 10:00:21,418 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
 2026-09-25 10:00:38,358 - pms - INFO - PRODUCTION_TRACE auth accepted username=admin user_id=1
 2026-09-25 10:02:06,157 - pms - INFO - AUDIT: User admin received customer payment PAY-202609-0003 of Rs 300.00 from API Test Customer 095700.
+2026-09-25 11:49:43,495 - pms - CRITICAL - SECURITY: SECRET_KEY is set to the insecure default value. Set a strong random SECRET_KEY in backend/.env before any production deployment.
+2026-09-25 11:49:44,266 - pms - INFO - PRODUCTION_TRACE license storage path=E:\Projects\PMS-Software\backend\licenses\active.lic exists=True
+2026-09-25 11:49:46,972 - pms - INFO - Starting Pharmacy Management System backend...
+2026-09-25 11:49:48,412 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.schemas
+2026-09-25 11:49:48,415 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.tables
+2026-09-25 11:49:48,417 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.types
+2026-09-25 11:49:48,418 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.constraints
+2026-09-25 11:49:48,419 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.defaults
+2026-09-25 11:49:48,420 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.comments
+2026-09-25 11:49:48,420 - alembic.runtime.plugins - INFO - setup plugin alembic.autogenerate.checkconstraint_byname
+2026-09-25 11:49:48,708 - pms - INFO - Database schema already at migration head (d1e2f3a4b5c6).
+2026-09-25 11:49:49,116 - pms - INFO - Completed startup system notifications synchronization.
+2026-09-25 11:50:09,607 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-25 11:50:10,789 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-25 11:50:27,917 - pms - INFO - PRODUCTION_TRACE auth accepted username=admin user_id=1
+2026-09-25 14:10:59,193 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic
+2026-09-25 14:18:40,454 - pms - INFO - PRODUCTION_TRACE license status=Active path=E:\Projects\PMS-Software\backend\licenses\active.lic

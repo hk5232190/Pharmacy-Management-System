@@ -35,12 +35,21 @@ def upgrade() -> None:
         batch_op.add_column(sa.Column('PharmacySlogan', sa.String(length=255), nullable=True))
         batch_op.add_column(sa.Column('NtnStrn', sa.String(length=100), nullable=True))
 
+    bind = op.get_bind()
+    insp = sa.inspect(bind)
+    existing_cols = [c['name'] for c in insp.get_columns('sale_returns')]
+
     with op.batch_alter_table('sale_returns', schema=None) as batch_op:
-        batch_op.alter_column('RefundMode',
-               existing_type=sa.VARCHAR(length=50),
-               type_=sa.String(length=30),
-               nullable=False,
-               existing_server_default=sa.text("'Cash Refund'"))
+        if 'RefundMode' in existing_cols:
+            batch_op.alter_column('RefundMode',
+                   existing_type=sa.VARCHAR(length=50),
+                   type_=sa.String(length=30),
+                   nullable=False,
+                   existing_server_default=sa.text("'Cash Refund'"))
+        else:
+            batch_op.add_column(sa.Column('RefundMode', sa.String(length=30), nullable=False, server_default=sa.text("'Cash Refund'")))
+
+
 
     # ### end Alembic commands ###
 

@@ -19,9 +19,11 @@ Strategy (never touches a database it could damage, never crashes startup):
 """
 
 import os
+import sys
 import re
 from pathlib import Path
 from typing import Optional
+
 
 from alembic import command
 from alembic.config import Config
@@ -36,9 +38,35 @@ _HEAD_CACHE: Optional[str] = None
 
 
 def _alembic_config(database_url: str) -> Config:
-    """Build an Alembic Config rooted at backend/, driving the shipped alembic.ini."""
-    cfg = Config(str(BACKEND_DIR / "alembic.ini"))
-    cfg.set_main_option("script_location", str(BACKEND_DIR / "alembic"))
+    """Build an Alembic Config finding alembic.ini and script_location in dev or frozen bundle."""
+    search_dirs = [
+        BACKEND_DIR,
+        Path(getattr(sys, "_MEIPASS", BACKEND_DIR)),
+    ]
+    if getattr(sys, "frozen", False):
+        exe_dir = Path(sys.executable).parent
+        search_dirs.extend([exe_dir, exe_dir / "_internal"])
+
+    ini_path = None
+    for d in search_dirs:
+        p = d / "alembic.ini"
+        if p.is_file():
+            ini_path = p
+            break
+    if not ini_path:
+        ini_path = BACKEND_DIR / "alembic.ini"
+
+    script_path = None
+    for d in search_dirs:
+        p = d / "alembic"
+        if p.is_dir() and (p / "env.py").is_file():
+            script_path = p
+            break
+    if not script_path:
+        script_path = BACKEND_DIR / "alembic"
+
+    cfg = Config(str(ini_path))
+    cfg.set_main_option("script_location", str(script_path))
     cfg.set_main_option("sqlalchemy.url", database_url)
     return cfg
 
@@ -69,49 +97,103 @@ def _has_schema_tables(engine: Engine) -> bool:
     return bool(names)
 
 
-def run_migrations(engine: Engine) -> bool:
-    """Apply/acknowledge Alembic migrations in-process. Never raises.
+def heal_schema(engine: Engine) -> None:
+    """Ensure all tables and columns declared in models.py exist in the SQLite database.
+    
+    Safe on both fresh installs and existing client databases:
+    - Creates any missing tables (e.g. customer_payments, security_settings, general_settings)
+    - Adds any missing columns (e.g. stock_batches.Source, billing_settings.DefaultDiscountRate)
+    - NEVER drops, modifies, or overwrites existing columns or data.
+    """
+    import models
+    from models import Base
 
-    Returns True if the schema was upgraded/stamped (or was already current),
-    False if migrations could not run safely (logged, startup continues).
+    # 1. Create any missing tables (does not alter existing tables)
+    Base.metadata.create_all(bind=engine)
+
+    # 2. Reconcile missing columns on existing tables
+    insp = inspect(engine)
+    with engine.begin() as conn:
+        for table_name, table in Base.metadata.tables.items():
+            existing_cols = {col["name"] for col in insp.get_columns(table_name)}
+            for col in table.columns:
+                if col.name not in existing_cols:
+                    col_type = col.type.compile(dialect=engine.dialect)
+                    default_clause = ""
+                    if col.server_default is not None:
+                        arg = col.server_default.arg
+                        txt = arg.text if hasattr(arg, "text") else str(arg)
+                        default_clause = f" DEFAULT {txt}"
+                    elif col.default is not None:
+                        arg = col.default.arg
+                        if callable(arg):
+                            try:
+                                arg = arg(None)
+                            except Exception:
+                                arg = None
+                        if isinstance(arg, str):
+                            default_clause = f" DEFAULT '{arg}'"
+                        elif isinstance(arg, (int, float)):
+                            default_clause = f" DEFAULT {arg}"
+                        elif isinstance(arg, bool):
+                            default_clause = f" DEFAULT {1 if arg else 0}"
+                    elif not col.nullable:
+                        t = col_type.lower()
+                        if "int" in t or "bool" in t:
+                            default_clause = " DEFAULT 0"
+                        elif any(k in t for k in ["numeric", "float", "real", "decimal"]):
+                            default_clause = " DEFAULT 0.0"
+                        else:
+                            default_clause = " DEFAULT ''"
+
+                    null_clause = " NOT NULL" if (not col.nullable and default_clause) else ""
+                    sql = f'ALTER TABLE "{table_name}" ADD COLUMN "{col.name}" {col_type}{default_clause}{null_clause}'
+                    logger.info(f"Schema healing: adding missing column {table_name}.{col.name} ({col_type})")
+                    conn.execute(text(sql))
+
+
+def run_migrations(engine: Engine) -> bool:
+    """Apply/acknowledge migrations and reconcile schema in-process. Never raises.
+
+    1. Runs Alembic migrations if tracked and behind head.
+    2. Runs schema healing to ensure all model tables/columns exist (including stock_batches.Source).
+    3. Stamps alembic_version to head.
+    4. Never touches or resets existing client data.
     """
     try:
         database_url = os.environ.get("DATABASE_URL", "")
         if not database_url:
             database_url = engine.url.render_as_string(hide_password=False)
-        # The env.py script reads DATABASE_URL from the environment; set it so
-        # the in-process runner targets exactly the same file as the app engine.
         os.environ["DATABASE_URL"] = database_url
 
         cfg = _alembic_config(database_url)
         head = _migration_head(cfg)
-
         stamped = _stamped_revision(engine)
 
-        if stamped == head:
-            logger.info(f"Database schema already at migration head ({head}).")
-            return True
-
-        if stamped is not None:
+        # 1. Run pending Alembic migrations if version is tracked and behind head
+        if stamped is not None and stamped != head:
             logger.info(f"Database at revision {stamped}; upgrading to head ({head}).")
-            command.upgrade(cfg, "head")
-            logger.info("Database schema upgraded to head.")
-            return True
+            try:
+                command.upgrade(cfg, "head")
+                logger.info("Database schema upgraded via Alembic to head.")
+            except Exception as e:
+                logger.warning(f"Alembic upgrade warning: {e}. Proceeding to auto-healing...")
 
-        if _has_schema_tables(engine):
-            # Full schema present but never stamped (clean baseline / fresh copy):
-            # acknowledge current version without replaying any DDL.
-            logger.info(f"Unstamped schema detected; stamping to head ({head}).")
-            command.stamp(cfg, "head")
-            logger.info("Database schema acknowledged (stamped to head).")
-            return True
+        # 2. Run schema healing: creates any missing tables and adds missing columns
+        heal_schema(engine)
 
-        # Truly empty database: build the entire schema from migrations.
-        logger.info("Empty database detected; running migrations to build schema.")
-        command.upgrade(cfg, "head")
-        logger.info("Database schema created via migrations.")
+        # 3. Ensure alembic_version is stamped to head
+        new_stamped = _stamped_revision(engine)
+        if new_stamped != head:
+            try:
+                command.stamp(cfg, "head")
+                logger.info(f"Database schema acknowledged (stamped to head {head}).")
+            except Exception as e:
+                logger.warning(f"Alembic stamp warning: {e}")
+
         return True
 
     except Exception as exc:  # pragma: no cover - defensive boundary
-        logger.error(f"Migrations could not be run safely ({exc}); continuing startup.")
+        logger.error(f"Migrations/schema healing error ({exc}); continuing startup.")
         return False
+
