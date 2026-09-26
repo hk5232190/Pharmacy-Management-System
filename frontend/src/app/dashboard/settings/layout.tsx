@@ -131,9 +131,9 @@ export default function SettingsLayout({ children }: { children: ReactNode }) {
         </div>
       </div>
 
-      <div className="flex flex-1 overflow-hidden p-6 gap-8 bg-slate-50/50 dark:bg-[#0a0a0a]">
+      <div className="flex flex-1 overflow-hidden p-4 md:p-6 gap-4 md:gap-6 lg:gap-8 bg-slate-50/50 dark:bg-[#0a0a0a]">
         {/* Settings Sidebar */}
-        <aside className="w-80 shrink-0 hidden md:block">
+        <aside className="settings-sidebar-panel w-72 lg:w-80 shrink-0 hidden md:block">
           <div className="h-full rounded-2xl bg-white dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800/80 shadow-[0_8px_30px_rgb(0,0,0,0.06)] dark:shadow-none overflow-hidden flex flex-col relative transition-all duration-300">
             {/* Top decorative gradient line */}
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 opacity-90"></div>

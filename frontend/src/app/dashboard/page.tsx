@@ -115,7 +115,7 @@ function DashKPICard({
     <div
       onClick={onClick}
       className={cn(
-        "group relative bg-white dark:bg-card rounded-xl border border-border/80 border-l-[4px] shadow-xs hover:shadow-md transition-all duration-200 p-4 sm:p-5 flex flex-col justify-between min-h-[162px] overflow-hidden",
+        "group relative bg-white dark:bg-card rounded-xl border border-border/80 border-l-[4px] shadow-xs hover:shadow-md transition-all duration-200 p-3.5 sm:p-4 flex flex-col justify-between min-h-[125px] sm:min-h-[135px] overflow-hidden",
         a.border,
         onClick && "cursor-pointer hover:border-border hover:-translate-y-0.5 active:translate-y-0"
       )}
@@ -123,27 +123,26 @@ function DashKPICard({
       <div className="flex items-center justify-between">
         <div
           className={cn(
-            "w-11 h-11 rounded-xl flex items-center justify-center shrink-0 border transition-transform duration-200 group-hover:scale-105 shadow-2xs",
+            "w-9 h-9 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl flex items-center justify-center shrink-0 border transition-transform duration-200 group-hover:scale-105 shadow-2xs",
             a.bg,
             a.iconBorder
           )}
         >
-          <span className={a.icon}>{icon}</span>
+          <span className={cn(a.icon, "[&>svg]:w-4.5 [&>svg]:h-4.5 sm:[&>svg]:w-5 sm:[&>svg]:h-5")}>{icon}</span>
         </div>
-
       </div>
-      <div className="mt-4 space-y-1">
-        <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground/85 truncate" title={title}>
+      <div className="mt-2.5 sm:mt-3 space-y-0.5">
+        <p className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-muted-foreground/85 truncate" title={title}>
           {title}
         </p>
         <p
-          className={cn("text-2xl sm:text-[1.65rem] font-black leading-tight tabular-nums truncate tracking-tight py-0.5", a.text)}
+          className={cn("text-xl sm:text-2xl font-black leading-tight tabular-nums truncate tracking-tight py-0.5", a.text)}
           title={String(value)}
         >
           {value}
         </p>
         {subtitle && (
-          <p className="text-[11px] text-muted-foreground/75 font-medium truncate" title={subtitle}>
+          <p className="text-[10px] sm:text-[11px] text-muted-foreground/75 font-medium truncate" title={subtitle}>
             {subtitle}
           </p>
         )}
@@ -204,7 +203,7 @@ export default function DashboardPageWrapper() {
   // Only show full-page loader if we have no data and no error yet (initial load)
   if (!data && !error) {
     return (
-      <div className="flex-1 p-8 flex justify-center items-center h-screen bg-background text-muted-foreground">
+      <div className="flex-1 p-4 sm:p-6 lg:p-8 flex justify-center items-center min-h-[60vh] bg-background text-muted-foreground">
         <div className="animate-pulse flex flex-col items-center">
           <Activity className="w-12 h-12 mb-4 animate-spin text-blue-500" />
           <h2 className="text-lg font-medium">Loading Dashboard Data...</h2>
@@ -216,10 +215,10 @@ export default function DashboardPageWrapper() {
   if (!data) return null;
 
   return (
-    <div className="flex-1 space-y-8 p-8 bg-slate-50/50 dark:bg-background min-h-screen">
-      <div className="flex items-center justify-between mb-8 pb-4 border-b border-border">
+    <div className="flex-1 space-y-6 lg:space-y-8 p-4 sm:p-6 lg:p-8 bg-slate-50/50 dark:bg-background min-h-screen">
+      <div className="flex flex-wrap items-start sm:items-center justify-between gap-3 mb-6 pb-4 border-b border-border">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight text-foreground">Dashboard Overview</h2>
+          <h2 className="dash-heading text-2xl sm:text-3xl font-bold tracking-tight text-foreground">Dashboard Overview</h2>
           <p className="text-sm text-muted-foreground mt-1">Live metrics from your pharmacy operations</p>
         </div>
         <div className="flex items-center space-x-4">
@@ -255,7 +254,7 @@ export default function DashboardPageWrapper() {
         </div>
 
         {/* KPI Cards — Row 1: Period-filtered metrics */}
-        <div className="grid gap-4 grid-cols-2 lg:grid-cols-5">
+        <div className="kpi-grid grid gap-2.5 sm:gap-3 lg:gap-3.5 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
           <DashKPICard
             title={`${getTimeframeLabel()} Sales`}
             value={formatCurrency(data.today_sales)}
@@ -299,7 +298,7 @@ export default function DashboardPageWrapper() {
         </div>
 
         {/* KPI Cards — Row 2: Stock & All-Time */}
-        <div className="grid gap-4 grid-cols-2 lg:grid-cols-5">
+        <div className="kpi-grid grid gap-2.5 sm:gap-3 lg:gap-3.5 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
           <DashKPICard
             title="Low Stock"
             value={data.low_stock_count}

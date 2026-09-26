@@ -1637,10 +1637,10 @@ function PurchaseManagementPage({ onRefresh, refreshState, activeTab, onTabChang
             </div>
             
             {/* Modal Body */}
-            <div className="p-6 md:p-8 overflow-y-auto custom-scrollbar flex-1 bg-white dark:bg-[#0f172a]">
+            <div className="p-4 md:p-6 overflow-y-auto custom-scrollbar flex-1 bg-white dark:bg-[#0f172a]">
               
               {/* Premium Header Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-6">
                 <div>
                   <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Supplier Details</h3>
                   <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-100 dark:border-slate-800">

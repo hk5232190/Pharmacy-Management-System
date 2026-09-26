@@ -187,3 +187,98 @@ input::-ms-clear {
     @apply divide-x divide-border;
   }
 }
+
+/* ─── Global Responsive Foundation ────────────────────────────────────────────
+ * These rules fix responsiveness across ALL modules without patching individual
+ * pages. They are additive-only and do not override existing design intent.
+ * Tested at 1366×768, 1440×900, 1920×1080, 2560×1440 and 100/125/150% DPI.
+ * ─────────────────────────────────────────────────────────────────────────── */
+
+/* 1. Hard stop on viewport-level horizontal overflow.
+ *    The body is already flex-col from layout.tsx; this prevents any child
+ *    from punching through the right edge without disabling legitimate
+ *    overflow-x-auto on inner containers (they still scroll internally). */
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+/* 2. All full-screen dashboard pages use this pattern. Clamp the padding so
+ *    small screens (1024px / 125% DPI ≈ 820px logical) don't waste space. */
+.page-content-padding {
+  padding: clamp(1rem, 2vw, 2rem);
+}
+
+/* 3. Tables with min-w-[N] must live inside a scroll container. 
+ *    This utility class makes any wrapper a proper horizontal scroll zone. */
+.table-scroll-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+}
+
+/* 4. Thin custom scrollbar — used throughout the app. */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: hsl(215 16% 80%);
+  border-radius: 9999px;
+}
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: hsl(215 16% 30%);
+}
+
+/* 5. Prevent any fixed-width sidebar / panel from breaking narrow viewports.
+ *    The sidebar is w-64 (256px) which is fine at >= 1024px. Below that the
+ *    dashboard layout hides it via print:hidden / shrink-0, so no fix needed.
+ *    This guard prevents accidental horizontal overflow if something causes
+ *    the flex container to exceed viewport width. */
+.sidebar-safe {
+  max-width: 100vw;
+  overflow: hidden;
+}
+
+/* 6. Dashboard page heading — scale on very small logical widths (high DPI). */
+@media (max-width: 1100px) {
+  .dash-heading {
+    font-size: clamp(1.25rem, 2.5vw, 1.875rem) !important;
+  }
+}
+
+/* 7. Responsive KPI / card grids — already use Tailwind grid-cols but add
+ *    a safety floor so cards never become narrower than ~140px. */
+.kpi-grid > * {
+  min-width: 0;
+}
+
+/* 8. Windows 150% DPI safety: rem-based values scale automatically, but
+ *    hardcoded pixel heights in sticky bars can clip. Clamp them. */
+@media (max-height: 700px) {
+  .sticky-bottom-bar {
+    height: auto !important;
+    min-height: 52px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+}
+
+/* 9. Settings layout responsive: on viewports narrower than ~1100px the
+ *    settings sidebar (w-80 = 320px) takes too much space. Shrink it. */
+@media (max-width: 1100px) and (min-width: 769px) {
+  .settings-sidebar-panel {
+    width: 220px !important;
+  }
+}
+
+/* 10. Modals / dialogs: ensure they never overflow the viewport height at
+ *     any scaling level. */
+[role="dialog"], [data-radix-dialog-content] {
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
+}
+

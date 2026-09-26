@@ -1,5 +1,5 @@
 from datetime import timedelta
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
@@ -13,6 +13,46 @@ from models import User, SecuritySettings
 from core.security import verify_password, create_access_token, get_password_hash_and_salt
 from core.exceptions import AuthenticationError, ValidationError
 from core.logger import logger
+
+
+def _assert_license_active():
+    """
+    Backend license gate — called at login time.
+    Raises HTTP 403 if there is no valid active license for this machine.
+    This is the single source of truth; the frontend is NOT trusted.
+    """
+    from core.config import DATA_DIR, IS_FROZEN
+    from utils.license_engine import validate_license
+    from core.exceptions import PMSException
+
+    license_dir = str(DATA_DIR / "licenses") if IS_FROZEN else os.path.join(
+        os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "licenses"
+    )
+    active_path = os.path.join(license_dir, "active.lic")
+
+    if not os.path.exists(active_path):
+        logger.warning("PRODUCTION_TRACE login blocked: no active license file")
+        raise HTTPException(
+            status_code=403,
+            detail="No active license found. Please activate your license before logging in.",
+        )
+    try:
+        with open(active_path, "rb") as f:
+            content = f.read()
+        validate_license(content)
+        logger.info("PRODUCTION_TRACE login license check passed")
+    except PMSException as e:
+        logger.warning("PRODUCTION_TRACE login blocked: license invalid — %s", e)
+        raise HTTPException(
+            status_code=403,
+            detail=f"License validation failed: {e.message}. Please activate a valid license.",
+        )
+    except Exception as e:
+        logger.error("PRODUCTION_TRACE login blocked: unexpected license error — %s", e)
+        raise HTTPException(
+            status_code=403,
+            detail="License check failed. Please contact support.",
+        )
 
 router = APIRouter()
 
@@ -53,6 +93,12 @@ def login_for_access_token(
     form_data: OAuth2PasswordRequestForm = Depends(),
     remember_me: bool = False
 ):
+    # ── License gate (backend-enforced) ─────────────────────────────────────
+    # This check runs before credentials are validated so the backend never
+    # issues tokens on an unlicensed machine, regardless of how the client
+    # reached this endpoint (direct URL, "Back to Login", refresh, API call…).
+    _assert_license_active()
+
     user = db.query(User).filter(User.Username == form_data.username).first()
     if not user:
         logger.warning("PRODUCTION_TRACE auth rejected username=%s reason=user-not-found", form_data.username)

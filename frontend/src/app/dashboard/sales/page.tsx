@@ -1216,7 +1216,7 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
 
   return (
     <div className="flex flex-col min-h-full bg-slate-50/50 dark:bg-background relative">
-      <div className="flex-1 p-4 lg:p-6 pb-6">
+      <div className="flex-1 p-3 sm:p-4 lg:p-6 pb-4 sm:pb-6">
 
         {/* Header */}
         <div className="mb-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -2302,7 +2302,7 @@ function POSBillingPage({ onRefresh, refreshState, activeTab, onTabChange }: { o
 
       {/* Footer Shortcuts */}
       {activeTab === 'pos' && showKeyboardShortcuts && (
-        <div className="sticky bottom-0 left-0 right-0 z-50 h-16 bg-white dark:bg-card border-t border-border flex items-center px-6 gap-6 shadow-[0_-10px_30px_rgba(0,0,0,0.1)] overflow-x-auto whitespace-nowrap mt-auto">
+        <div className="sticky-bottom-bar sticky bottom-0 left-0 right-0 z-50 h-16 bg-white dark:bg-card border-t border-border flex items-center px-4 sm:px-6 gap-3 sm:gap-6 shadow-[0_-10px_30px_rgba(0,0,0,0.1)] overflow-x-auto whitespace-nowrap mt-auto">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <span className="bg-secondary/80 text-foreground font-mono px-2 py-1 rounded text-xs font-semibold shadow-sm border border-border/50">F2</span>
             <span className="font-medium">Search Medicine</span>

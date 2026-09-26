@@ -1068,7 +1068,7 @@ function InventoryManagementPageInner({
   return (
     <div className="flex flex-col h-full bg-slate-50/50 dark:bg-background overflow-hidden print-container">
       {/* Scrollable Container */}
-      <div className="flex-1 overflow-auto custom-scrollbar p-6 print-content">
+      <div className="flex-1 overflow-auto custom-scrollbar p-3 sm:p-4 lg:p-6 print-content">
         
         {/* Header */}
         <div className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">

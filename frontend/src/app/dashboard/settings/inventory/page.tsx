@@ -99,7 +99,7 @@ export default function InventorySettingsPage() {
   };
 
   if (isLoading) {
-    return <div className="p-8 flex justify-center"><RefreshCw className="h-8 w-8 animate-spin text-slate-400" /></div>;
+    return <div className="p-6 flex justify-center"><RefreshCw className="h-8 w-8 animate-spin text-slate-400" /></div>;
   }
 
   return (

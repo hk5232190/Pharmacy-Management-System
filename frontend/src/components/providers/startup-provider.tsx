@@ -3,7 +3,6 @@ import { getAccessToken, resolveApiBaseUrl } from "@/lib/api-client";
 
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { Loader2 } from "lucide-react";
 import { resetAuthState } from "@/lib/auth-session";
 
 export function StartupProvider({ children }: { children: React.ReactNode }) {
@@ -111,19 +110,8 @@ export function StartupProvider({ children }: { children: React.ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  if (!isReady) {
-    return (
-      <div className="flex flex-col h-screen w-full items-center justify-center bg-slate-50">
-        <div className="flex flex-col items-center gap-4 animate-in fade-in zoom-in duration-500">
-          <div className="bg-primary/10 p-4 rounded-full">
-            <Loader2 className="h-10 w-10 text-primary animate-spin" />
-          </div>
-          <h2 className="text-xl font-bold text-slate-800 tracking-tight">Initializing PMS...</h2>
-          <p className="text-sm font-medium text-slate-500">Verifying security protocols</p>
-        </div>
-      </div>
-    );
-  }
-
+  // Checks run silently in the background; never show a blocking splash.
+  // Children are rendered immediately — any required redirect happens as a
+  // seamless Next.js navigation without a visible loading screen.
   return <>{children}</>;
 }

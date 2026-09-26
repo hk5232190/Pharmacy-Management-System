@@ -212,7 +212,7 @@ export default function MastersLayout({ children }: { children: React.ReactNode 
   }
 
   return (
-    <div className="p-6 md:p-8 space-y-6">
+    <div className="p-4 md:p-6 lg:p-8 space-y-4 md:space-y-6">
 
       {/* Page Header */}
       <div className="flex flex-col md:flex-row justify-between items-start gap-4">

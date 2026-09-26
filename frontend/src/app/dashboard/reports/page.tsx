@@ -367,7 +367,7 @@ function ReportsPageInner({
   // (handleRefresh is managed by wrapper and passed as onRefresh)
 
   return (
-    <div className="flex-1 space-y-6 p-8 print:p-0 print:space-y-0 bg-slate-50/50 print:bg-white dark:bg-background min-h-screen">
+    <div className="flex-1 space-y-4 sm:space-y-6 p-4 sm:p-6 lg:p-8 print:p-0 print:space-y-0 bg-slate-50/50 print:bg-white dark:bg-background min-h-screen">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-4 border-b border-border print:hidden">
         <div>
           <h2 className="text-3xl font-bold tracking-tight text-foreground">Reports & Analytics</h2>

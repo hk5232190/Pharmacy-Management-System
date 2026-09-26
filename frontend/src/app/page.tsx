@@ -73,7 +73,11 @@ export default function LoginPage() {
 
       if (!response.ok) {
         console.warn("[PMS production trace] login rejected", { apiBaseUrl: baseUrl, status: response.status });
-        throw new Error(data.error || "Authentication failed");
+        // 403 = backend license gate; surface the detail clearly
+        if (response.status === 403) {
+          throw new Error(data.detail || "No valid license. Please activate your license first.");
+        }
+        throw new Error(data.detail || data.error || "Authentication failed");
       }
 
       console.info("[PMS production trace] login accepted", { apiBaseUrl: baseUrl });
