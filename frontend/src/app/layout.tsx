@@ -6,16 +6,6 @@ import { ProfileProvider } from "@/contexts/ProfileContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { SystemPreferencesProvider } from "@/contexts/SystemPreferencesContext";
 import { Toaster } from "@/components/ui/sonner";
-import { Inter } from "next/font/google";
-
-const inter = Inter({
-  variable: "--font-sans",
-  subsets: ["latin"],
-  display: "swap",
-  preload: false,   // skip network fetch during build; font loads from browser cache
-  fallback: ["system-ui", "-apple-system", "Segoe UI", "Arial", "sans-serif"],
-});
-
 export const metadata: Metadata = {
   title: "Pharmacy Management System",
   description: "Pharmacy Management Simplified",
@@ -29,7 +19,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} h-full antialiased`}
+      className="h-full antialiased font-sans"
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col" suppressHydrationWarning>
